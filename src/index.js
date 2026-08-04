@@ -5,6 +5,7 @@ const TEAMS = [
 ];
 
 const CURRENT_SEASON = "20252026";
+const MAX_BOXSCORE_FETCHES = 20;
 
 export default {
   async fetch(request, env) {
@@ -62,7 +63,7 @@ async function refreshTeam(team, season, env) {
 
 async function buildTeamStats(team, season) {
   const games = await fetchTeamGameLog(team, season);
-  return computeDerivedStats(games);
+  return computeDerivedStats(games, team);
 }
 
 async function fetchTeamGameLog(team, season) {
@@ -72,7 +73,9 @@ async function fetchTeamGameLog(team, season) {
   if (!res.ok) throw new Error(`schedule fetch failed: ${res.status}`);
   const schedule = await res.json();
 
-  const completed = (schedule.games || []).filter(g => g.gameState === "OFF");
+  const completed = (schedule.games || [])
+    .filter(g => g.gameState === "OFF")
+    .slice(-MAX_BOXSCORE_FETCHES);
 
   const boxscores = await Promise.all(
     completed.map(async g => {
@@ -85,18 +88,22 @@ async function fetchTeamGameLog(team, season) {
   return boxscores.filter(Boolean);
 }
 
-function computeDerivedStats(boxscores) {
+function computeDerivedStats(boxscores, teamAbbrev) {
   const perGame = boxscores.map(b => {
     const home = b.homeTeam;
     const away = b.awayTeam;
+    const isHome = home?.abbrev === teamAbbrev;
+    const selected = isHome ? home : away;
+    const opponent = isHome ? away : home;
+
     return {
       gameId: b.id,
       date: b.gameDate,
-      shotsFor: home?.sog ?? 0,
-      shotsAgainst: away?.sog ?? 0,
-      goalsFor: home?.score ?? 0,
-      goalsAgainst: away?.score ?? 0,
-      corsiFor: (home?.sog ?? 0) + (home?.blocks ?? 0) + (home?.missedShots ?? 0),
+      shotsFor: selected?.sog ?? 0,
+      shotsAgainst: opponent?.sog ?? 0,
+      goalsFor: selected?.score ?? 0,
+      goalsAgainst: opponent?.score ?? 0,
+      corsiFor: (selected?.sog ?? 0) + (selected?.blocks ?? 0) + (selected?.missedShots ?? 0),
       xGoalsFor: null, // placeholder — needs play-by-play shot coordinates
     };
   });

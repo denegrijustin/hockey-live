@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.wrangler/
+.config/
+.cache/
+.npm-cache/
+.pnpm-home/
+.pnpm-store/
+.tools/

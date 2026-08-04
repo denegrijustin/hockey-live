@@ -1,0 +1,14 @@
+name = "hockey-pipeline"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+[[kv_namespaces]]
+binding = "TEAM_STATS"
+id = "edd6875957fa43e4806ba12c9d78f957"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+[triggers]
+crons = ["0 9 * * *"]

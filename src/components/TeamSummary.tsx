@@ -25,7 +25,7 @@ export function TeamSummary({
       style={{ "--team-color": team.color } as React.CSSProperties}
     >
       <div className="summary-top">
-        <img src={`/logos/${team.id}.svg`} alt="" />
+        <img src={`/logos/${team.id}.svg`} alt="" width="47" height="47" decoding="async" />
         <div>
           <span className="eyebrow">{team.division}</span>
           <h3>

@@ -61,7 +61,7 @@ export function Standings({
                     </td>
                     <td>
                       <div className="table-team">
-                        <img src={`/logos/${t.id}.svg`} alt="" />
+                        <img src={`/logos/${t.id}.svg`} alt="" width="28" height="28" loading="lazy" decoding="async" />
                         <b>{t.name}</b>
                       </div>
                     </td>

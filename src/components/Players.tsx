@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { loadPlayers } from "../lib/api";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
 import type { Team, PlayerData, PlayerSeason } from "../types";
@@ -38,20 +38,28 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
       });
     return () => controller.abort();
   }, [key, season, retry]);
-  const skaters = data
-    .flatMap((d) => d.skaters)
-    .filter((p) => p.gp >= minimum)
-    .sort((a, b) =>
-      sort === "impact"
-        ? skaterImpact(b) / b.gp - skaterImpact(a) / a.gp
-        : sort === "negative"
-          ? skaterImpact(a) / a.gp - skaterImpact(b) / b.gp
-          : b.goals + b.assists - (a.goals + a.assists),
-    );
-  const keepers = data
-    .flatMap((d) => d.goalies)
-    .filter((p) => p.gp >= minimum)
-    .sort((a, b) => (b.savePct ?? 0) - (a.savePct ?? 0));
+  const skaters = useMemo(
+    () =>
+      data
+        .flatMap((d) => d.skaters)
+        .filter((p) => p.gp >= minimum)
+        .sort((a, b) =>
+          sort === "impact"
+            ? skaterImpact(b) / b.gp - skaterImpact(a) / a.gp
+            : sort === "negative"
+              ? skaterImpact(a) / a.gp - skaterImpact(b) / b.gp
+              : b.goals + b.assists - (a.goals + a.assists),
+        ),
+    [data, minimum, sort],
+  );
+  const keepers = useMemo(
+    () =>
+      data
+        .flatMap((d) => d.goalies)
+        .filter((p) => p.gp >= minimum)
+        .sort((a, b) => (b.savePct ?? 0) - (a.savePct ?? 0)),
+    [data, minimum],
+  );
   return (
     <section className="panel">
       <div className="panel-heading">

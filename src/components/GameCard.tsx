@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { Game, Team } from "../types";
 import { scenario, finished, signed } from "../lib/model.mjs";
 import { PlayerImpact } from "./PlayerImpact";
-export function GameCard({
+export const GameCard = memo(function GameCard({
   game,
   teams,
   analysis,
@@ -81,7 +81,7 @@ export function GameCard({
         <div className="matchup-teams">
           {[away, home].map((t, i) => (
             <div className="matchup-team" key={t.id}>
-              <img src={`/logos/${t.id}.svg`} alt="" />
+              <img src={`/logos/${t.id}.svg`} alt="" width="40" height="40" loading="lazy" decoding="async" />
               <div>
                 <span>{t.city}</span>
                 <h3>{t.short}</h3>
@@ -236,4 +236,4 @@ export function GameCard({
       </details>
     </article>
   );
-}
+});

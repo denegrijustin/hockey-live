@@ -1,49 +1,57 @@
-# Hockey Pipeline — Team Trends
+# Iceboard — NHL game intelligence
 
-Live dashboard: NHL team stats fetched nightly, cached in Cloudflare KV, served
-from a single Worker (API + static frontend).
+Responsive replacement for `hockey-pipeline`, deployed at https://hockey-pipeline.denegri-justin.workers.dev/ from this repository's `main` branch.
 
-## Already done for you
+Defaults to Edmonton, Chicago and Minnesota. All 32 teams are selectable, with preferences saved on the device. Includes a game center, separate past/future importance rankings, regulation win/loss and overtime-loss scenarios, actual game player contributions, season player comparisons, rolling team trends, standings, and NHL broadcast listings. Desktop uses a dense card grid; mobile uses single-column cards, sticky team/view controls and expandable details.
 
-- KV namespace created: `hockey-pipeline-team-stats` (id: `edd6875957fa43e4806ba12c9d78f957`)
-- `wrangler.toml` is wired with that ID already
+## Run and validate
 
-## Deploy (run from this project's root)
+Node 24 and pnpm 11 are recommended (version pinned in package.json).
 
-```bash
-npm install
-npx wrangler login          # opens a browser, one-time auth
-npm run deploy               # builds the frontend + deploys the Worker
+```sh
+pnpm install --frozen-lockfile
+pnpm dev                  # UI with packaged JSON fallbacks
+pnpm test                 # model and data integrity
+pnpm build                # TypeScript and production bundle
+pnpm exec playwright install chromium
+pnpm test:browser         # desktop and mobile integration tests
+pnpm dev:worker           # built UI + real Worker API, local KV, port 8788
 ```
 
-That's it — `npm run deploy` runs `vite build` then `wrangler deploy`, which
-uploads both the Worker code and the static assets in one shot.
+Run `pnpm build` before `dev:worker`; rebuild/reload after changes. Vite alone uses checked-in player/game snapshots; older box scores require the Worker API. No NHL credentials are needed.
 
-Your site will be live at `https://hockey-pipeline.<your-subdomain>.workers.dev`.
-Wrangler prints the exact URL at the end of `deploy`.
+## Data and refresh
 
-## First data load
+- `src/components/`: React views and reusable cards.
+- `src/lib/model.mjs`: standings reconstruction, scenarios and auditable rating formulas.
+- `src/lib/normalize.mjs`: public NHL feed normalization.
+- `src/worker.js`: same-origin API, background refresh and KV caching.
+- `public/data/manifest.json`: supported seasons and default season.
+- `public/data/seasons/`: deduplicated schedules and results for all teams.
+- `public/data/players/`: regular-season team-stint player statistics.
+- `public/data/games/`: selected recent completed box scores for offline fallback.
+- `public/logos/`: local official NHL team logo assets.
 
-The cron (`0 9 * * *`, once daily) keeps data fresh, but the very first
-request for any team/season computes on demand and caches it — so the site
-isn't empty on day one. Give the first load per team a few seconds.
+`pnpm refresh:data` discovers the current season, imports it and the previous season, refreshes team player data and recent box scores, and updates the manifest. Commit refreshed snapshots. The importer throttles requests and retries rate limits. Refresh snapshots when the season changes; the deployed manifest determines supported seasons.
 
-## Custom domain
+The existing daily 09:00 UTC Worker cron refreshes the current season in KV. Requests for a current-season snapshot older than 15 minutes return the last good snapshot and trigger a background refresh. Refresh the page again after it completes. A failed refresh preserves the previous data. Player data caches for six hours; completed box scores cache for 14 days. Snapshot timestamps are visible, and the app falls back to packaged JSON if API calls fail.
 
-If you want this on a subdomain of elskatemm.com (matching your other
-projects), add a route in `wrangler.toml`:
+Endpoints: `GET /api/season/{season}`, `/api/players/{season}/{team}`, `/api/boxscore/{gameId}`. Original `/api/team-stats` continues serving available legacy KV snapshots; it is deprecated and is no longer refreshed.
 
-```toml
-[[routes]]
-pattern = "hockey.elskatemm.com/*"
-zone_name = "elskatemm.com"
-```
+## Interpretation
 
-Then add a CNAME for `hockey` pointing to your Workers subdomain in the
-Cloudflare DNS dashboard, and redeploy.
+Importance is an editorial 0–100 index, not calibrated playoff probability: 22 baseline + 12 same conference + 12 same division + up to 26 for season-calendar progress + up to 28 for proximity to the points entry line after 10 games. Playoffs use round and series-elimination context. Preseason is unranked. Schedule length comes from the data (including 84-game seasons).
 
-## Known placeholder
+Past importance uses standings before the game day; future importance uses current standings and the target game's calendar position. Ranks are league-wide within past/future and competition cohorts, with shared ranks for equal scores. Future standings are not simulated. Past rankings are reconstructed from the latest schedule, not archived predictions.
 
-`xGoalsFor` in the computed stats is `null` — a real expected-goals model
-needs shot x/y coordinates from play-by-play data, which is a bigger next
-step if you want to go there.
+Scenarios isolate one result and freeze other games. Conference ranks use points only and share ties. The entry line is a descriptive points reference using division third place / second wild card; it does not model all official tiebreakers, games in hand, clinching, elimination or playoff odds.
+
+Skater impact = goals + 0.7×assists + 0.1×shots + 0.25×plus/minus − 0.1×penalty minutes. Goalies use saves minus 90% of shots faced, a fixed .900 benchmark. These are box-score indexes, not WAR, expected goals, causal impact or a reproduction of HockeyStats' proprietary model. Upcoming players show historical season context, not projected lineups. Before current-season regular results exist, player context uses the previous season and is labeled accordingly; traded players may appear for multiple team stints.
+
+## Deployment
+
+Cloudflare Workers Builds already connects `denegrijustin/hockey-live`, branch `main`. Build command: `npm run build`. Deploy command: `npx wrangler deploy`. The checked-in pnpm lockfile determines dependency installation; npm can invoke the same build script. `wrangler.toml` preserves the existing Worker name, TEAM_STATS KV binding and daily cron, and serves `dist` with SPA fallback. `/api/*` runs the Worker first. No credentials are committed.
+
+For an authenticated local CLI, `pnpm deploy` builds and deploys. Otherwise push `main` through the signed-in GitHub Desktop app and inspect the Cloudflare build. Roll back to a prior version through Cloudflare Deployments if necessary.
+
+Data and logos originate from NHL public feeds. This is an independent dashboard with original presentation, not affiliated with NHL or HockeyStats. No paid HockeyStats data is copied.

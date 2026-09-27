@@ -1,6 +1,6 @@
 name = "hockey-pipeline"
-main = "src/index.js"
-compatibility_date = "2026-08-01"
+main = "src/worker.js"
+compatibility_date = "2026-09-27"
 
 [[kv_namespaces]]
 binding = "TEAM_STATS"
@@ -9,6 +9,8 @@ id = "edd6875957fa43e4806ba12c9d78f957"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
 
 [triggers]
 crons = ["0 9 * * *"]

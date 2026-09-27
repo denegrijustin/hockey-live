@@ -1,9 +1,8 @@
 node_modules/
 dist/
 .wrangler/
-.config/
-.cache/
-.npm-cache/
-.pnpm-home/
-.pnpm-store/
-.tools/
+.env*
+.DS_Store
+test-results/
+playwright-report/
+*.tsbuildinfo

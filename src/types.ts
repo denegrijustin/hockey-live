@@ -1,0 +1,80 @@
+export type Team = {
+  id: string;
+  name: string;
+  short: string;
+  city: string;
+  division: string;
+  conference: string;
+  color: string;
+  logo: string;
+};
+export type Game = {
+  id: number;
+  season: number;
+  type: number;
+  date: string;
+  start: string;
+  state: string;
+  scheduleState: string;
+  venue: string;
+  home: string;
+  away: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  end: string;
+  broadcasts: string[];
+  round: number | null;
+};
+export type Snapshot = {
+  season: number;
+  updatedAt: string;
+  source: string;
+  games: Game[];
+};
+export type Player = {
+  id: number;
+  name: string;
+  team: string;
+  position: string;
+  goals: number | null;
+  assists: number | null;
+  shots: number | null;
+  plusMinus: number | null;
+  pim: number | null;
+  toi: string;
+  saves: number | null;
+  shotsAgainst: number | null;
+  goalsAgainst: number | null;
+};
+export type Boxscore = {
+  id: number;
+  state: string;
+  updatedAt: string;
+  homeShots: number | null;
+  awayShots: number | null;
+  players: Player[];
+};
+export type PlayerSeason = {
+  id: number;
+  name: string;
+  team: string;
+  position: string;
+  gp: number;
+  goals: number;
+  assists: number;
+  shots: number;
+  plusMinus: number;
+  pim: number;
+  toi: number;
+  headshot: string;
+  savePct?: number | null;
+  saves?: number | null;
+  shotsAgainst?: number | null;
+};
+export type PlayerData = {
+  season: number;
+  gameType: number;
+  updatedAt: string;
+  skaters: PlayerSeason[];
+  goalies: PlayerSeason[];
+};

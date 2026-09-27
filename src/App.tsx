@@ -85,6 +85,14 @@ export default function App() {
       .catch(() => {});
     return () => controller.abort();
   }, [manifest]);
+  const hasLive =
+    data?.games.some((g) => g.state === "LIVE" || g.state === "CRIT") ??
+    false;
+  useEffect(() => {
+    if (!hasLive) return;
+    const id = setInterval(() => setRetry((x) => x + 1), 30000);
+    return () => clearInterval(id);
+  }, [hasLive]);
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
     [data],
@@ -185,18 +193,6 @@ export default function App() {
       </header>
       <main id="main" className="page">
         <section className="hero">
-          <div>
-            <p className="eyebrow">YOUR TEAMS. THE WHOLE LEAGUE.</p>
-            <h1>
-              Every game.
-              <br />
-              <em>Bigger picture.</em>
-            </h1>
-            <p>
-              Follow the form. Understand the stakes. Find the
-              difference-makers.
-            </p>
-          </div>
           <div className="hero-aside">
             <span>THE GAME PLAN</span>
             <p>
@@ -241,9 +237,11 @@ export default function App() {
             {data
               ? `Snapshot ${new Date(data.updatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })}`
               : "Loading NHL snapshot…"}
-            {staleness > 86400000
-              ? " · Saved fallback; refresh may be pending"
-              : ""}
+            {hasLive
+              ? " · Live game in progress — auto-updating every 30s"
+              : staleness > 86400000
+                ? " · Saved fallback; refresh may be pending"
+                : ""}
           </span>
           <button onClick={() => setRetry((x) => x + 1)} disabled={loading}>
             ↻ Refresh

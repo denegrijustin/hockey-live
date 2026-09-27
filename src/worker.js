@@ -79,9 +79,15 @@ export default {
         const snapshot =
           cached ??
           (await staticData(env, request, `/data/seasons/${season}.json`));
+        // While any game is live, refresh far more often than the normal
+        // 15-minute window so scores keep pace with play.
+        const live = cached?.games?.some((g) =>
+          ["LIVE", "CRIT"].includes(g.state),
+        );
+        const staleAfter = live ? 45000 : 900000;
         if (
           season === manifest.current &&
-          (!cached || Date.now() - Date.parse(cached.updatedAt) > 900000)
+          (!cached || Date.now() - Date.parse(cached.updatedAt) > staleAfter)
         )
           background(key, () => refreshSeason(season, env), ctx);
         return snapshot

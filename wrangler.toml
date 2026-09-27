@@ -13,4 +13,8 @@ not_found_handling = "single-page-application"
 run_worker_first = ["/api/*"]
 
 [triggers]
-crons = ["0 9 * * *"]
+# 09:00 UTC: daily full refresh (also catches season rollovers).
+# */5 22-23,0-5 UTC: every 5 minutes through NHL prime time (~5pm-11pm PT /
+# 6pm-midnight MT / 7pm-1am CT / 8pm-2am ET), so live scores stay current
+# without waiting on a page load to trigger a refresh.
+crons = ["0 9 * * *", "*/5 22-23 * * *", "*/5 0-5 * * *"]

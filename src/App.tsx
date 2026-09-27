@@ -194,14 +194,6 @@ export default function App() {
       <main id="main" className="page">
         <section className="hero">
           <div className="hero-aside">
-            <span>THE GAME PLAN</span>
-            <p>
-              What’s at stake?
-              <br />
-              What changes with a win?
-              <br />
-              <strong>Who made the difference?</strong>
-            </p>
             <div>
               <b>{teams.length}</b> teams <i />{" "}
               <b>{data?.games.filter((g) => g.type === 2).length ?? "—"}</b>{" "}

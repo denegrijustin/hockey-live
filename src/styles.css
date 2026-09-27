@@ -207,7 +207,7 @@ p {
 .hero {
   display: flex;
   align-items: center;
-  padding: 42px 0 33px;
+  padding: 24px 0;
 }
 .eyebrow {
   font-size: 9px;
@@ -216,40 +216,8 @@ p {
   color: var(--mint);
   margin: 0 0 13px;
 }
-.hero h1 {
-  font-size: clamp(38px, 4.1vw, 58px);
-  line-height: 1.04;
-  letter-spacing: -2.5px;
-  margin: 0;
-}
-.hero h1 em {
-  color: var(--mint);
-  font-style: normal;
-}
-.hero > div > p:last-child {
-  font-size: 13px;
-  color: var(--muted);
-  margin: 18px 0 0;
-  line-height: 1.7;
-}
 .hero-aside {
-  padding: 5px 0;
-  min-width: 320px;
-}
-.hero-aside > span {
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: #6e9098;
-}
-.hero-aside > p {
-  font-size: 16px !important;
-  line-height: 1.65;
-  color: #acbfca;
-  margin: 12px 0 14px;
-}
-.hero-aside p strong {
-  color: #e2f0ee;
-  font-weight: 550;
+  min-width: 0;
 }
 .hero-aside > div {
   font-size: 10px;

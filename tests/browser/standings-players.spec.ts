@@ -23,3 +23,22 @@ test('current-season player face, jersey and accessible profile',async({page},in
  await page.keyboard.press('Escape');await expect(page.locator('dialog[open]')).toHaveCount(0);
  await expect(button).toBeFocused();
 });
+test('Players defaults to My three independently and supports custom teams or All 32',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('iceboard-teams',JSON.stringify(['FLA','CAR'])));
+ await page.route('**/api/players/**',r=>r.fulfill({json:{season:20262027,skaters:[],goalies:[]}}));
+ await page.goto('/'); await page.getByRole('button',{name:'Players',exact:true}).click();
+ await expect(page.locator('.team-summaries h3')).toHaveCount(3);
+ await expect(page.locator('.team-summaries')).toContainText('Edmonton');
+ await expect(page.getByRole('button',{name:'EDM',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.getByText('Choose teams',{exact:false}).click();
+ await page.getByRole('checkbox',{name:'Florida Panthers',exact:true}).check();
+ await expect(page.locator('.team-summaries h3')).toHaveCount(4);
+ await page.getByText('Choose teams',{exact:false}).click();
+ await page.getByRole('button',{name:'All 32',exact:true}).click();
+ await expect(page.getByRole('button',{name:'All 32',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('button',{name:'My three',exact:true}).click();
+ await expect(page.locator('.team-summaries h3')).toHaveCount(3);
+ await page.getByRole('button',{name:'Game center',exact:true}).click();
+ await expect(page.locator('.team-summaries h3')).toHaveCount(2);
+ await expect(page.locator('.team-summaries')).toContainText('Florida');
+});

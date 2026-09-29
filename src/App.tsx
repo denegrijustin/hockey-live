@@ -41,6 +41,7 @@ export default function App() {
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [retry, setRetry] = useState(0);
+  const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
   const [view, setView] = useState("games"),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
@@ -167,6 +168,8 @@ export default function App() {
       localStorage.setItem("iceboard-teams", JSON.stringify(ids));
     } catch {}
   };
+  const activeSelection = view === "players" ? playerTeams : selected;
+  const activeTeams = activeSelection.map(id => teams.find(t => t.id === id)!).filter(Boolean);
   const sourceSeason = season;
   const staleness = data ? Date.now() - Date.parse(data.updatedAt) : 0;
   return (
@@ -223,8 +226,8 @@ export default function App() {
         <div className="control-dock">
           <TeamPicker
             teams={teams}
-            selected={selected}
-            onChange={changeTeams}
+            selected={activeSelection}
+            onChange={view === "players" ? setPlayerTeams : changeTeams}
           />
           <nav className="view-tabs" aria-label="Dashboard views">
             {[
@@ -278,7 +281,7 @@ export default function App() {
         ) : data && analysis ? (
           <>
             <section className="team-summaries" aria-label="Selected teams">
-              {selectedTeams.slice(0, 6).map((t) => (
+              {activeTeams.slice(0, 6).map((t) => (
                 <TeamSummary
                   key={t.id}
                   team={t}
@@ -288,9 +291,9 @@ export default function App() {
                 />
               ))}
             </section>
-            {selected.length > 6 && (
+            {activeSelection.length > 6 && (
               <p className="detail-note">
-                Showing six summary cards; all {selected.length} selected teams
+                Showing six summary cards; all {activeSelection.length} selected teams
                 are included below.
               </p>
             )}
@@ -507,7 +510,7 @@ export default function App() {
               />
             )}{" "}
             {view === "players" && (
-              <Players teams={selectedTeams} season={sourceSeason} />
+              <Players teams={activeTeams} season={sourceSeason} />
             )}{" "}
             {view === "standings" && (
               <Standings

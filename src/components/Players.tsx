@@ -68,6 +68,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
         <div>
           <p className="eyebrow">WHO IS MOVING THE NEEDLE?</p>
           <h2>Player contributions</h2>
+          <p>My three by default · choose any teams or All 32 above. Player selections are independent of the game board.</p>
           <p>
             {String(season).slice(0, 4)}–{String(season).slice(6)} regular
             season · team stints, not confirmed current rosters

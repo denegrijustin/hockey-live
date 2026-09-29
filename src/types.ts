@@ -39,6 +39,7 @@ export type Snapshot = {
   games: Game[];
 };
 export type Player = {
+  hits?: number | null;
   number?: number | null;
   headshot?: string;
   id: number;
@@ -64,6 +65,7 @@ export type Boxscore = {
   players: Player[];
 };
 export type PlayerSeason = {
+  hits?: number | null;
   number?: number | null;
   id: number;
   name: string;

@@ -235,3 +235,9 @@ test('standings projection uses remaining regular games and shrinks early-season
  assert.equal(result.remaining,1); assert.ok(result.projected>3 && result.projected<4);
  assert.equal(projectedStandings(teams,table,games.map(g=>({...g,state:'FINAL'})),baseline).EDM.projected,2);
 });
+test('live projected final score cannot remove existing goals and OT adds one goal',()=>{
+ const g={home:'EDM',away:'CHI',type:2,state:'LIVE',period:3,clock:'01:00',homeScore:5,awayScore:4};
+ const p=projectGame(g);assert.ok(p.score.home>=5 && p.score.away>=4);
+ const ot=projectGame({...g,period:4,periodType:'OT',homeScore:4});
+ assert.equal(ot.score.home+ot.score.away,9);
+});

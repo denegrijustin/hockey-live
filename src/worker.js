@@ -168,7 +168,7 @@ export default {
         const season = Number(match[1]),
           team = match[2];
         if (!ids.has(team)) return json({ error: "Unknown team" }, 400);
-        const key = `dashboard-players-v2-${season}-${team}`,
+        const key = `dashboard-players-v3-${season}-${team}`,
           cached = await env.TEAM_STATS.get(key, { type: "json" });
         if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000)
           return json(cached);
@@ -178,6 +178,20 @@ export default {
         const jerseys = Object.fromEntries(Object.values(roster).flat().filter(p => p?.id).map(p => [p.id, p.sweaterNumber]));
         const data = normalizePlayers({ ...source, season, gameType: 2 }, team);
         for (const player of [...data.skaters, ...data.goalies]) player.number = jerseys[player.id] ?? null;
+        if (data.skaters.length) {
+          try {
+            const url = new URL('https://api.nhle.com/stats/rest/en/skater/realtime');
+            url.search = new URLSearchParams({isAggregate:'false',isGame:'false',limit:'100',cayenneExp:`seasonId=${season} and gameTypeId=2 and teamId=${teamIds[team]}`}).toString();
+            const response = await fetch(url, {signal:AbortSignal.timeout(10000)});
+            if (response.ok) {
+              const report = await response.json();
+              for (const p of data.skaters) {
+                const row = report.data?.find(r=>r.playerId===p.id && r.seasonId===season && r.teamAbbrevs===team && r.gamesPlayed===p.gp);
+                p.hits = row?.hits ?? null;
+              }
+            }
+          } catch { /* Keep core statistics available when the hits report lags. */ }
+        }
         ctx.waitUntil(
           env.TEAM_STATS.put(key, JSON.stringify(data), {
             expirationTtl: 86400,

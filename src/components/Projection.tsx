@@ -27,10 +27,11 @@ export function Projection({ game, before, baseline, feed, error }: { game: Game
   const winner = home === away ? 'Too close to call' : `${home > away ? game.home : game.away} favored`;
   return <section className="projection" aria-label={p.live ? 'Live winner projection' : 'Pregame projection'}>
     <div className="mini-heading">{p.live ? 'LIVE PROJECTION' : 'PREGAME PROJECTION'}<span>Model estimate</span></div>
-    <div className="prediction-head"><strong>{winner}</strong>{!p.live && p.score && <b>{game.away} {p.score.away} – {p.score.home} {game.home}</b>}</div>
+    <div className="prediction-head"><strong>{winner}</strong>{p.score && <b aria-label="Projected final score">{game.away} {p.score.away} – {p.score.home} {game.home}</b>}</div>
     <div className="prediction-labels"><span>{game.away} {away}%</span><span>{game.home} {home}%</span></div>
     <div className="comparison-track" role="img" aria-label={`${game.away} ${away} percent, ${game.home} ${home} percent estimated win chance`}><i style={{ width: `${away}%`, background: '#73d9c1' }}/><i style={{ flex: 1, background: '#f2bc67' }}/></div>
     <p className="detail-note">{p.live ? p.factors.join(' ') : 'Most likely final score · includes an OT / shootout winner'}</p>
+    {p.live && p.score && <p className="detail-note">Projected final score · most likely outcome, including OT if needed</p>}
     {p.live && <p className="prediction-change" aria-live="polite">{change ?? 'Tracking play changes from this update onward.'}</p>}
     {p.live && <p className="detail-note">Injury impact unavailable: this feed does not confirm live player injuries.</p>}
     {p.live && <p className="feed-time">{error ? 'Detailed feed delayed; estimate may be stale.' : `Snapshot ${feed ? new Date(feed.updatedAt).toLocaleTimeString() : 'awaiting detailed feed'} · checks every 30s`}</p>}

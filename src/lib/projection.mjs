@@ -51,7 +51,8 @@ export function projectGame(game, table = {}, baseline = {}, feed = null) {
       const base = homeMean / (homeMean + awayMean);
       const [hm, am] = adjustPowerPlay(homeMean, awayMean, ppMinutes || 1);
       const eventChance = 1 - Math.exp(-(hm + am) * ppMinutes / 60);
-      return { live, homeWin: eventChance * hm / (hm + am) + (1 - eventChance) * base, score: null, shotAdjustment: 0, overtime: true, factors: [`Tied in overtime; next-goal estimate uses season strength.`, ...(advantage ? [`${advantage > 0 ? game.home : game.away} has a ${situation.home}–${situation.away} skater advantage${ppMinutes ? ` (${situation.seconds}s remaining)` : '; duration unavailable'}.`] : [])] };
+      const homeWin = eventChance * hm / (hm + am) + (1 - eventChance) * base;
+      return { live, homeWin, score: {home: hs + (homeWin >= .5 ? 1 : 0), away: as + (homeWin < .5 ? 1 : 0)}, shotAdjustment: 0, overtime: true, factors: [`Tied in overtime; next-goal estimate uses season strength.`, ...(advantage ? [`${advantage > 0 ? game.home : game.away} has a ${situation.home}–${situation.away} skater advantage${ppMinutes ? ` (${situation.seconds}s remaining)` : '; duration unavailable'}.`] : [])] };
     }
     const elapsed = elapsedMinutes(game);
     if (elapsed == null) return null;

@@ -107,7 +107,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
       <p className="detail-note">
         {goalies
           ? "Goalie contribution compares saves with a fixed .900 benchmark; shot quality is not modeled."
-          : "Index = G + 0.7A + 0.1SOG + 0.25(+/−) − 0.1PIM. Positive and negative describe box-score contributions, not WAR or causal win impact."}
+          : "Index = G + 0.7A + 0.1SOG + 0.25(+/−) − 0.1PIM. Hits are displayed separately and do not change the index. A dash means the source has not published the stat. Positive and negative describe box-score contributions, not WAR or causal win impact."}
       </p>
       {loading ? (
         <div className="empty" role="status">
@@ -145,6 +145,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
                   <th>A</th>
                   <th>PTS</th>
                   <th>SOG</th>
+                  <th>Hits</th>
                   <th>+/−</th>
                   <th>PIM</th>
                   <th>Index / GP</th>
@@ -190,6 +191,7 @@ function PlayerRow({ p, season }: { p: PlayerSeason; season:number }) {
       <td>{p.assists}</td>
       <td>{p.goals + p.assists}</td>
       <td>{p.shots}</td>
+      <td>{p.hits ?? "—"}</td>
       <td className={p.plusMinus >= 0 ? "positive" : "negative"}>
         {signed(p.plusMinus)}
       </td>

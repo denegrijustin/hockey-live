@@ -84,7 +84,7 @@ export function PlayerImpact({
               <div>
                 <PlayerIdentity p={p} season={game.season} />
                 <small>
-                  {p.goals} G · {p.assists} A · {p.shots} SOG ·{" "}
+                  {p.goals} G · {p.assists} A · {p.shots} SOG · {p.hits ?? "—"} hits ·{" "}
                   {signed(p.plusMinus ?? 0)} +/− · {p.pim} PIM
                 </small>
               </div>
@@ -110,6 +110,7 @@ export function PlayerImpact({
                   <th>TOI</th>
                   <th>G</th>
                   <th>A</th>
+                  <th>Hits</th>
                   <th>+/−</th>
                   <th>Index</th>
                 </tr>
@@ -122,6 +123,7 @@ export function PlayerImpact({
                     <td>{p.toi}</td>
                     <td>{p.goals}</td>
                     <td>{p.assists}</td>
+                    <td>{p.hits ?? "—"}</td>
                     <td>{signed(p.plusMinus ?? 0)}</td>
                     <td
                       className={skaterImpact(p) >= 0 ? "positive" : "negative"}
@@ -201,7 +203,7 @@ function ContextRow({ p, season }: { p: PlayerSeason; season:number }) {
       <div>
         <PlayerIdentity p={p} season={season} />
         <small>
-          {p.gp} GP · {p.goals} G · {p.assists} A · {signed(p.plusMinus)} +/−
+          {p.gp} GP · {p.goals} G · {p.assists} A · {p.hits ?? "—"} hits · {signed(p.plusMinus)} +/−
         </small>
       </div>
       <b className={score >= 0 ? "positive" : "negative"}>

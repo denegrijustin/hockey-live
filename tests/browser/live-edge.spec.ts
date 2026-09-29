@@ -37,6 +37,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await card.scrollIntoViewIfNeeded();
   await expect(card.locator(".shot-chart")).toBeVisible();
   await expect(card.getByLabel("Live winner projection")).toBeVisible();
+  await expect(card.getByLabel("Projected final score")).toBeVisible();
   await expect(card.locator(".prediction-labels")).toContainText("%");
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
   const previousEstimate = await card.locator(".prediction-labels").innerText();

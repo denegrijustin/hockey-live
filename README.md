@@ -34,7 +34,7 @@ Run `pnpm build` before `dev:worker`; rebuild/reload after changes. Vite alone u
 
 `pnpm refresh:data` discovers the current season, imports it and the previous season, refreshes team player data and recent box scores, and updates the manifest. Commit refreshed snapshots. The importer throttles requests and retries rate limits. Refresh snapshots when the season changes; the deployed manifest determines supported seasons.
 
-The existing daily 09:00 UTC Worker cron refreshes the current season in KV. Requests for a current-season snapshot older than 15 minutes return the last good snapshot and trigger a background refresh. Refresh the page again after it completes. A failed refresh preserves the previous data. Player summaries cache for six hours. Live scoreboard, game details and box scores use 15-second edge caches; completed game details use one-hour caches. Snapshot timestamps are visible, and the app falls back to packaged JSON if API calls fail.
+The existing daily 09:00 UTC Worker cron refreshes the current season in KV. Requests for a current-season snapshot older than 15 minutes return the last good snapshot and trigger a background refresh. Refresh the page again after it completes. A failed refresh preserves the previous data. Player summaries cache for five minutes. Live scoreboard, game details and box scores use 15-second edge caches; completed game details use one-hour caches. Snapshot timestamps are visible, and the app falls back to packaged JSON if API calls fail.
 
 Endpoints: `GET /api/season/{season}`, `/api/players/{season}/{team}`, `/api/boxscore/{gameId}`, `/api/live`, `/api/game/{gameId}`, `/api/edge/{season}/{team}`. Original `/api/team-stats` continues serving available legacy KV snapshots; it is deprecated and is no longer refreshed.
 
@@ -46,7 +46,7 @@ Past importance uses standings before the game day; future importance uses curre
 
 The scenario controls have been removed from cards in favor of recent form and game evidence. Standings remain points-based references, without full official tiebreaker or playoff-probability modeling.
 
-Skater impact = goals + 0.7×assists + 0.1×shots + 0.25×plus/minus − 0.1×penalty minutes. Goalies use saves minus 90% of shots faced, a fixed .900 benchmark. These are box-score indexes, not WAR, expected goals, causal impact or a reproduction of HockeyStats' proprietary model. Upcoming players show historical season context, not projected lineups. Before current-season regular results exist, player context uses the previous season and is labeled accordingly; traded players may appear for multiple team stints.
+Skater impact = goals + 0.7×assists + 0.1×shots + 0.25×plus/minus − 0.1×penalty minutes. Goalies use saves minus 90% of shots faced, a fixed .900 benchmark. These are box-score indexes, not WAR, expected goals, causal impact or a reproduction of HockeyStats' proprietary model. Upcoming players show historical season context, not projected lineups. Player context always uses the selected season; unpublished stats remain empty. Traded players may appear for multiple team stints.
 
 ## Deployment
 
@@ -62,7 +62,7 @@ The scoreboard checks `/score/now` every 30 seconds while the tab is visible, ev
 
 Visible live cards check play-by-play every 30 seconds. Cumulative shots on goal, hits, blocks, shot maps and scoring are normalized in `src/lib/game-data.mjs`. Shootout attempts are excluded from shot charts; rink coordinates are displayed as recorded (teams switch ends). Expanded live player contributions refresh separately. Polling pauses in background tabs and outside the viewport. The regular season snapshot refreshes in the background every two minutes without collapsing cards.
 
-EDGE charts use NHL team-detail data, including top skating speed, 20+ mph bursts, shot speed, skating distance, zone-time percentages and shot-location groups. The NHL supplies team ranks and league averages. This is published season tracking data, not live player coordinates. When the requested season is unavailable, the previous season is explicitly labeled. `pnpm refresh:edge` refreshes fallback snapshots for all 32 teams; EDGE API responses cache for six hours. The tracked source season and retrieval time are displayed.
+EDGE charts use NHL team-detail data, including top skating speed, 20+ mph bursts, shot speed, skating distance, zone-time percentages and shot-location groups. The NHL supplies team ranks and league averages. This is published season tracking data, not live player coordinates. When the requested season is unavailable, charts show an unavailable state; previous-season totals are never substituted. `pnpm refresh:edge` refreshes selected-season snapshots for all 32 teams; EDGE API responses cache for five minutes and visible panels retry every five minutes. The tracked source season and retrieval time are displayed.
 
 Tests include recorded NHL fixtures and simulated polling, failed updates, zero-score preservation and LIVE→OFF transitions. They do not depend on a live NHL game being in progress.
 
@@ -72,3 +72,9 @@ Upcoming regular-season/playoff cards show the most likely final score and an es
 These are uncalibrated model estimates, not measured prediction accuracy or betting odds. They do not account for lineups, goalies, power plays or empty nets. Live feeds can lag. Pregame estimates refresh as history changes and are not stored historical forecasts. The displayed most likely score may favor a different team than the aggregate win probability.
 
 Live projections now use a coherent play-by-play snapshot and its confirmed power-play strength/time. Attacking rates rise by 170% for a one-skater advantage (240% for two), short-handed rates fall 35%, and only the remaining advantage interval receives this heuristic adjustment. Named penalty events are retained, but coincidental penalties are not assumed to create an advantage. The card explains score/time, shot pressure and strength, and records percentage-point movement since the last observed snapshot with newly received goals/penalties/shots. Multiple plays and clock changes can arrive in one poll: movement is not presented as the isolated causal effect of a single play. Tracking begins when the card loads; it is not a persistent historical probability log. NHL play-by-play does not confirm player injury status; injury adjustments are explicitly unavailable, never inferred from absence or hits.
+
+
+### Player profiles and standings
+Player contributions display NHL headshots and jersey numbers from game box scores or season rosters; missing numbers remain marked unavailable. Click a name for an accessible dialog with profile details and selected-season NHL statistics, plus a full NHL profile link. Current profile team/number is labeled separately from historical team stints. Players refresh every five minutes and default to a one-game minimum.
+
+Standings switch between current points and projected final points, grouped by league, conference or division. Forecasts use remaining regular-season schedule counts and points pace shrunk toward 20 prior-season games (55% points percentage if prior history is unavailable); they are not calibrated playoff probabilities or official tiebreak rankings. Finished seasons project to actual points. Game cards use dark home-team color tints independently of chart accent colors.

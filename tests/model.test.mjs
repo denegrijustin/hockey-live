@@ -161,13 +161,13 @@ test("scoreboard transitions scheduled to live to final without dropping histori
   assert.equal(final[0].homeScore, 4);
   assert.equal(original[0].state, "FUT");
 });
-test("EDGE has official metrics and explicit fallback season", () => {
+test("EDGE historical snapshot retains official metrics and season", () => {
   const j = JSON.parse(
     readFileSync(
-      new URL("../public/data/edge/20262027/EDM.json", import.meta.url),
+      new URL("../public/data/edge/20252026/EDM.json", import.meta.url),
     ),
   );
-  assert.equal(j.requestedSeason, 20262027);
+  assert.equal(j.requestedSeason, 20252026);
   assert.ok(j.season <= j.requestedSeason);
   assert.equal(j.metrics.length, 4);
   assert.ok(
@@ -225,4 +225,13 @@ test('play feed retains penalty player, duration, ordered plays and current stre
   assert.equal(data.plays.at(-1).penalty,'tripping');
   assert.equal(data.plays.at(-1).duration,2);
   assert.equal(data.injuryStatus,'unavailable');
+});
+
+import { projectedStandings } from '../src/lib/standings-projection.mjs';
+test('standings projection uses remaining regular games and shrinks early-season pace',()=>{
+ const teams=[{id:'EDM'}],table={EDM:{gp:1,pts:2}},baseline={EDM:{gp:82,pts:82}};
+ const games=[{type:2,home:'EDM',away:'CHI',state:'FINAL'},{type:2,home:'EDM',away:'MIN',state:'FUT'},{type:1,home:'EDM',away:'CHI',state:'FUT'}];
+ const result=projectedStandings(teams,table,games,baseline).EDM;
+ assert.equal(result.remaining,1); assert.ok(result.projected>3 && result.projected<4);
+ assert.equal(projectedStandings(teams,table,games.map(g=>({...g,state:'FINAL'})),baseline).EDM.projected,2);
 });

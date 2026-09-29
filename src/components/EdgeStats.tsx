@@ -40,20 +40,21 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
     setError(false);
   }, [team.id, season]);
   useEffect(() => {
-    if (!visible || data) return;
+    if (!visible) return;
     let active = true;
     setError(false);
-    loadEdge(season, team.id)
+    const refresh = () => loadEdge(season, team.id)
       .then((d) => {
-        if (active) setData(d);
+        if (d.season !== season || !Array.isArray(d.metrics)) throw Error("Selected season not published");
+        if (active) { setData(d); setError(false); }
       })
       .catch(() => {
-        if (active) setError(true);
+        if (active) { setData(null); setError(true); }
       });
-    return () => {
-      active = false;
-    };
-  }, [visible, team.id, season, retry, data]);
+    refresh();
+    const timer = setInterval(refresh, 300000);
+    return () => { active = false; clearInterval(timer); };
+  }, [visible, team.id, season, retry]);
   return (
     <div ref={ref} className="edge-card">
       <div className="edge-heading">
@@ -67,7 +68,7 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
         <p className="detail-note">
           {error ? (
             <>
-              EDGE data is not available right now.{" "}
+              Selected-season EDGE data is not published or is temporarily unavailable. No previous-season totals are substituted.{" "}
               <button onClick={() => setRetry((x) => x + 1)}>Retry</button>
             </>
           ) : (

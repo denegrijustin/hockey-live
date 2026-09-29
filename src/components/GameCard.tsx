@@ -36,7 +36,7 @@ export const GameCard = memo(function GameCard({
     analysis.score >= 75 ? "high" : analysis.score >= 50 ? "medium" : "low";
   const day = new Date(game.start);
   return (
-    <article className={`game-card ${scoreClass} ${live ? "live-card" : ""}`}>
+    <article style={{background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, #09141d), #0e1b25)`}} className={`game-card ${scoreClass} ${live ? "live-card" : ""}`}>
       <div className="game-card-top">
         <span className="game-date">
           {day.toLocaleDateString("en-US", {

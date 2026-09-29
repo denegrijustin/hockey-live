@@ -6,6 +6,7 @@ export type Team = {
   division: string;
   conference: string;
   color: string;
+  cardColor?: string;
   logo: string;
 };
 export type Game = {
@@ -38,6 +39,8 @@ export type Snapshot = {
   games: Game[];
 };
 export type Player = {
+  number?: number | null;
+  headshot?: string;
   id: number;
   name: string;
   team: string;
@@ -61,6 +64,7 @@ export type Boxscore = {
   players: Player[];
 };
 export type PlayerSeason = {
+  number?: number | null;
   id: number;
   name: string;
   team: string;

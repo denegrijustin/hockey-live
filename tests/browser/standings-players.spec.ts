@@ -1,0 +1,25 @@
+import {test,expect} from '@playwright/test';
+test('standings groups and projected totals work on all screen sizes',async({page},info)=>{
+ await page.goto('/'); await page.getByRole('button',{name:'Standings',exact:true}).click();
+ await page.getByLabel('Group standings').selectOption('conference');
+ await expect(page.getByRole('heading',{name:'Eastern Conference'})).toBeVisible();
+ await expect(page.locator('tbody tr')).toHaveCount(32);
+ await page.getByLabel('Standings view').selectOption('projected');
+ await expect(page.getByRole('columnheader',{name:'Projected PTS'})).toHaveCount(2);
+ await page.getByLabel('Group standings').selectOption('division');
+ await expect(page.getByRole('columnheader',{name:'Projected PTS'})).toHaveCount(4);
+ await page.screenshot({path:`../nhl-standings-${info.project.name}.png`});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+test('current-season player face, jersey and accessible profile',async({page},info)=>{
+ await page.route('**/api/players/**',r=>r.fulfill({json:{season:20262027,gameType:2,updatedAt:new Date().toISOString(),skaters:[{id:8478402,name:'Connor McDavid',team:'EDM',number:97,headshot:'https://assets.nhle.com/mugs/nhl/20262027/EDM/8478402.png',position:'C',gp:1,goals:1,assists:2,shots:4,plusMinus:2,pim:0}],goalies:[]}}));
+ await page.route('**/api/player/8478402',r=>r.fulfill({json:{name:'Connor McDavid',number:97,team:'EDM',headshot:'https://assets.nhle.com/mugs/nhl/20262027/EDM/8478402.png',position:'C',birthDate:'1997-01-13',height:73,weight:194,shoots:'L',seasons:[]}}));
+ await page.goto('/');await page.getByRole('button',{name:'Players',exact:true}).click();
+ const button=page.getByRole('button',{name:'View Connor McDavid details'}).first();
+ await expect(button).toContainText('#97'); await expect(button.locator('img')).toHaveCount(1);
+ await button.click(); await expect(page.locator('dialog[open]')).toContainText('Statistics for this season have not been published yet.');
+ await expect.poll(()=>page.locator('dialog[open] .profile-bio img').evaluate((el:HTMLImageElement)=>el.complete ? el.naturalWidth : 0),{timeout:15000}).toBeGreaterThan(0);
+ await page.screenshot({path:`../nhl-player-${info.project.name}.png`});
+ await page.keyboard.press('Escape');await expect(page.locator('dialog[open]')).toHaveCount(0);
+ await expect(button).toBeFocused();
+});

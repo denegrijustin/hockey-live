@@ -29,6 +29,8 @@ export function normalizeBoxscore(b) {
       for (const p of stats[group] ?? []) {
         players.push({
           id: p.playerId,
+          number: p.sweaterNumber ?? null,
+          headshot: `https://assets.nhle.com/mugs/nhl/${b.season}/${team}/${p.playerId}.png`,
           name: value(p.name),
           team,
           position: p.position,

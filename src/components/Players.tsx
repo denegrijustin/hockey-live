@@ -1,3 +1,4 @@
+import { PlayerIdentity } from "./PlayerIdentity";
 import { useEffect, useMemo, useState } from "react";
 import { loadPlayers } from "../lib/api";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
@@ -7,9 +8,10 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
     [error, setError] = useState(""),
     [loading, setLoading] = useState(false),
     [sort, setSort] = useState("impact"),
-    [minimum, setMinimum] = useState(5),
+    [minimum, setMinimum] = useState(1),
     [retry, setRetry] = useState(0),
     [goalies, setGoalies] = useState(false);
+  useEffect(() => { const timer = setInterval(() => setRetry(x=>x+1), 300000); return () => clearInterval(timer); }, []);
   const key = teams.map((t) => t.id).join(",");
   useEffect(() => {
     const controller = new AbortController();
@@ -152,7 +154,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
               {goalies
                 ? keepers.map((p) => (
                     <tr key={`${p.team}-${p.id}`}>
-                      <td>{p.name}</td>
+                      <td><PlayerIdentity p={p} season={season} /></td>
                       <td>{p.team}</td>
                       <td>{p.gp}</td>
                       <td>{p.savePct != null ? p.savePct.toFixed(3) : "—"}</td>
@@ -164,7 +166,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
                     </tr>
                   ))
                 : skaters.map((p) => (
-                    <PlayerRow key={`${p.team}-${p.id}`} p={p} />
+                    <PlayerRow key={`${p.team}-${p.id}`} p={p} season={season} />
                   ))}
             </tbody>
           </table>
@@ -173,12 +175,12 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
     </section>
   );
 }
-function PlayerRow({ p }: { p: PlayerSeason }) {
+function PlayerRow({ p, season }: { p: PlayerSeason; season:number }) {
   const impact = skaterImpact(p) / p.gp;
   return (
     <tr>
       <td>
-        <strong>{p.name}</strong>
+        <PlayerIdentity p={p} season={season} />
       </td>
       <td>{p.team}</td>
       <td>{p.position}</td>

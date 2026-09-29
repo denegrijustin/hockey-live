@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
-import edgeFixture from "../../public/data/edge/20262027/EDM.json" with { type: "json" };
+import edgeFixture from "../../public/data/edge/20252026/EDM.json" with { type: "json" };
 test("live data updates without collapsing open cards; failure retains last score", async ({
   page,
 }) => {
@@ -73,14 +73,15 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
   page,
 }) => {
   await page.route("**/api/edge/**", (route) =>
-    route.fulfill({ json: edgeFixture }),
+    route.fulfill({ json: {...edgeFixture,season:20262027,requestedSeason:20262027} }),
   );
   await page.goto("/");
   await page.getByRole("button", { name: "NHL EDGE", exact: true }).click();
   const card = page.locator(".edge-grid .edge-card").first();
   await card.scrollIntoViewIfNeeded();
   await expect(card).toContainText("Top skating speed");
-  await expect(card).toContainText("Previous-season context");
+  await expect(card).toContainText("2026–27");
+  await expect(card).not.toContainText("Previous-season context");
   await expect(card.locator(".edge-metric")).toHaveCount(4);
   await expect(card.locator(".zone-labels")).toContainText("Offensive");
   await expect(card.locator(".location-row")).toHaveCount(3);
@@ -89,4 +90,11 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+});
+
+test('current EDGE refuses a prior-season fallback',async({page})=>{
+ await page.route('**/api/edge/**',r=>r.fulfill({json:edgeFixture}));
+ await page.goto('/'); await page.getByRole('button',{name:'NHL EDGE',exact:true}).click();
+ await expect(page.locator('.edge-grid .edge-card').first()).toContainText('No previous-season totals');
+ await expect(page.locator('.edge-metric')).toHaveCount(0);
 });

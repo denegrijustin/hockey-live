@@ -167,10 +167,7 @@ export default function App() {
       localStorage.setItem("iceboard-teams", JSON.stringify(ids));
     } catch {}
   };
-  const sourceSeason =
-    analysis && Object.values(analysis.table).some((t: any) => t.gp > 0)
-      ? season
-      : (manifest?.seasons[1] ?? season);
+  const sourceSeason = season;
   const staleness = data ? Date.now() - Date.parse(data.updatedAt) : 0;
   return (
     <>
@@ -516,6 +513,8 @@ export default function App() {
               <Standings
                 teams={teams}
                 table={analysis.table}
+                games={data.games}
+                baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
                 selected={selected}
               />
             )}

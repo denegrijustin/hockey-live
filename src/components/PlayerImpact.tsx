@@ -1,3 +1,4 @@
+import { PlayerIdentity } from "./PlayerIdentity";
 import { useFeed } from "../lib/polling";
 import { useEffect, useState } from "react";
 import { loadBox, loadPlayers } from "../lib/api";
@@ -20,6 +21,7 @@ export function PlayerImpact({
     [error, setError] = useState(""),
     [attempt, setAttempt] = useState(0);
   const data = live ? liveData : savedData;
+  useEffect(() => { if (past || live) return; const timer=setInterval(()=>setAttempt(x=>x+1),300000); return ()=>clearInterval(timer); },[past,live]);
   useEffect(() => {
     if (live) return;
     let active = true;
@@ -78,9 +80,9 @@ export function PlayerImpact({
               .reverse(),
           ].map((p) => (
             <div className="impact-row" key={p.id}>
-              <span className="impact-avatar">{p.team}</span>
+
               <div>
-                <strong>{p.name}</strong>
+                <PlayerIdentity p={p} season={game.season} />
                 <small>
                   {p.goals} G · {p.assists} A · {p.shots} SOG ·{" "}
                   {signed(p.plusMinus ?? 0)} +/− · {p.pim} PIM
@@ -115,7 +117,7 @@ export function PlayerImpact({
               <tbody>
                 {skaters.map((p) => (
                   <tr key={p.id}>
-                    <td>{p.name}</td>
+                    <td><PlayerIdentity p={p} season={game.season} /></td>
                     <td>{p.team}</td>
                     <td>{p.toi}</td>
                     <td>{p.goals}</td>
@@ -138,7 +140,7 @@ export function PlayerImpact({
             {goalies.map((p) => (
               <div className="goalie-line" key={p.id}>
                 <span>
-                  {p.name} · {p.saves}/{p.shotsAgainst} saves
+                  <PlayerIdentity p={p} season={game.season} /> {p.saves}/{p.shotsAgainst} saves
                 </span>
                 <b className={goalieImpact(p)! >= 0 ? "positive" : "negative"}>
                   {signed(goalieImpact(p)!, 2)}
@@ -167,22 +169,22 @@ export function PlayerImpact({
           ) : (
             <>
               {[...d.skaters]
-                .filter((p) => p.gp >= 5)
+                .filter((p) => p.gp >= 1)
                 .sort((a, b) => skaterImpact(b) / b.gp - skaterImpact(a) / a.gp)
                 .slice(0, 3)
                 .map((p) => (
-                  <ContextRow p={p} key={p.id} />
+                  <ContextRow p={p} key={p.id} season={sourceSeason} />
                 ))}
               {[...d.skaters]
-                .filter((p) => p.gp >= 5 && skaterImpact(p) < 0)
+                .filter((p) => p.gp >= 1 && skaterImpact(p) < 0)
                 .sort((a, b) => skaterImpact(a) / a.gp - skaterImpact(b) / b.gp)
                 .slice(0, 2)
                 .map((p) => (
-                  <ContextRow p={p} key={p.id} />
+                  <ContextRow p={p} key={p.id} season={sourceSeason} />
                 ))}
-              {!d.skaters.some((p) => p.gp >= 5 && skaterImpact(p) < 0) && (
+              {!d.skaters.some((p) => p.gp >= 1 && skaterImpact(p) < 0) && (
                 <p className="detail-note">
-                  No negative index among players with 5+ games.
+                  No negative index among players with 1+ games.
                 </p>
               )}
             </>
@@ -192,12 +194,12 @@ export function PlayerImpact({
     </>
   );
 }
-function ContextRow({ p }: { p: PlayerSeason }) {
+function ContextRow({ p, season }: { p: PlayerSeason; season:number }) {
   const score = skaterImpact(p) / p.gp;
   return (
     <div className="impact-row">
       <div>
-        <strong>{p.name}</strong>
+        <PlayerIdentity p={p} season={season} />
         <small>
           {p.gp} GP · {p.goals} G · {p.assists} A · {signed(p.plusMinus)} +/−
         </small>

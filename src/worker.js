@@ -9,6 +9,7 @@ import {
   normalizeGame,
   normalizeBoxscore,
   normalizePlayers,
+  value,
 } from "./lib/normalize.mjs";
 const API = "https://api-web.nhle.com/v1";
 const ids = new Set(teams.map((t) => t.id));
@@ -106,28 +107,11 @@ export default {
           manifest = await staticData(env, request, "/data/manifest.json");
         if (!ids.has(team) || !manifest?.seasons.includes(season))
           return json({ error: "Unknown team or season" }, 400);
-        const key = `edge-v1-${season}-${team}`,
+        const key = `edge-v2-${season}-${team}`,
           cached = await env.TEAM_STATS.get(key, { type: "json" });
-        if (cached && Date.now() - Date.parse(cached.updatedAt) < 21600000)
+        if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000)
           return json(cached);
-        let data;
-        try {
-          data = normalizeEdge(
-            await get(`/edge/team-detail/${teamIds[team]}/${season}/2`),
-            team,
-            season,
-            season,
-          );
-        } catch (e) {
-          const previous = manifest.seasons.find((s) => s < season);
-          if (!previous) throw e;
-          data = normalizeEdge(
-            await get(`/edge/team-detail/${teamIds[team]}/${previous}/2`),
-            team,
-            previous,
-            season,
-          );
-        }
+        const data = normalizeEdge(await get(`/edge/team-detail/${teamIds[team]}/${season}/2`), team, season, season);
         ctx.waitUntil(
           env.TEAM_STATS.put(key, JSON.stringify(data), {
             expirationTtl: 86400,
@@ -184,17 +168,30 @@ export default {
         const season = Number(match[1]),
           team = match[2];
         if (!ids.has(team)) return json({ error: "Unknown team" }, 400);
-        const key = `dashboard-players-${season}-${team}`,
+        const key = `dashboard-players-v2-${season}-${team}`,
           cached = await env.TEAM_STATS.get(key, { type: "json" });
-        if (cached && Date.now() - Date.parse(cached.updatedAt) < 21600000)
+        if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000)
           return json(cached);
         const source = await get(`/club-stats/${team}/${season}/2`);
+        if (Number(source.season) !== season) throw Error("Season mismatch");
+        const roster = await get(`/roster/${team}/${season}`).catch(() => ({}));
+        const jerseys = Object.fromEntries(Object.values(roster).flat().filter(p => p?.id).map(p => [p.id, p.sweaterNumber]));
         const data = normalizePlayers({ ...source, season, gameType: 2 }, team);
+        for (const player of [...data.skaters, ...data.goalies]) player.number = jerseys[player.id] ?? null;
         ctx.waitUntil(
           env.TEAM_STATS.put(key, JSON.stringify(data), {
             expirationTtl: 86400,
           }),
         );
+        return json(data);
+      }
+      if ((match = url.pathname.match(/^\/api\/player\/(\d{7})$/))) {
+        const key = `profile-${match[1]}`;
+        const cached = await env.TEAM_STATS.get(key, {type: "json"});
+        if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000) return json(cached);
+        const raw = await get(`/player/${match[1]}/landing`);
+        const data = { id:raw.playerId, name:`${value(raw.firstName)} ${value(raw.lastName)}`, number:raw.sweaterNumber, headshot:raw.headshot, position:raw.position, team:raw.currentTeamAbbrev, birthDate:raw.birthDate, height:raw.heightInInches, weight:raw.weightInPounds, shoots:raw.shootsCatches, seasons:(raw.seasonTotals ?? []).filter(s=>s.leagueAbbrev === 'NHL'), updatedAt:new Date().toISOString() };
+        ctx.waitUntil(env.TEAM_STATS.put(key,JSON.stringify(data),{expirationTtl:3600}));
         return json(data);
       }
       // Preserve the original API for existing links and clients.

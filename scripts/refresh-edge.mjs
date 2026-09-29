@@ -23,7 +23,9 @@ for (const season of [...manifest.seasons].reverse()) {
     let data;
     if (raw) data = normalizeEdge(raw, team, season, season);
     else {
-      data = {team,season,requestedSeason:season,unavailable:true,updatedAt:new Date().toISOString()};
+      const previous = manifest.seasons.find(s => s < season);
+      if (!previous) continue;
+      data = {...JSON.parse(await readFile(`public/data/edge/${previous}/${team}.json`, 'utf8')), requestedSeason:season};
     }
     await writeFile(
       `public/data/edge/${season}/${team}.json`,

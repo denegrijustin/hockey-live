@@ -107,11 +107,18 @@ export default {
           manifest = await staticData(env, request, "/data/manifest.json");
         if (!ids.has(team) || !manifest?.seasons.includes(season))
           return json({ error: "Unknown team or season" }, 400);
-        const key = `edge-v2-${season}-${team}`,
+        const key = `edge-v3-${season}-${team}`,
           cached = await env.TEAM_STATS.get(key, { type: "json" });
         if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000)
           return json(cached);
-        const data = normalizeEdge(await get(`/edge/team-detail/${teamIds[team]}/${season}/2`), team, season, season);
+        let data;
+        try {
+          data = normalizeEdge(await get(`/edge/team-detail/${teamIds[team]}/${season}/2`), team, season, season);
+        } catch (error) {
+          const previous = manifest.seasons.find(s => s < season);
+          if (!previous) throw error;
+          data = normalizeEdge(await get(`/edge/team-detail/${teamIds[team]}/${previous}/2`), team, previous, season);
+        }
         ctx.waitUntil(
           env.TEAM_STATS.put(key, JSON.stringify(data), {
             expirationTtl: 86400,

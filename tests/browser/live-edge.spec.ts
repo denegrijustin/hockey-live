@@ -93,9 +93,9 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
   ).toBe(true);
 });
 
-test('current EDGE refuses a prior-season fallback',async({page})=>{
+test('current EDGE labels a prior-season fallback',async({page})=>{
  await page.route('**/api/edge/**',r=>r.fulfill({json:edgeFixture}));
  await page.goto('/'); await page.getByRole('button',{name:'NHL EDGE',exact:true}).click();
- await expect(page.locator('.edge-grid .edge-card').first()).toContainText('No previous-season totals');
- await expect(page.locator('.edge-metric')).toHaveCount(0);
+ await expect(page.locator('.edge-grid .edge-card').first()).toContainText('Previous-season totals');
+ await expect(page.locator('.edge-grid .edge-card').first().locator('.edge-metric')).toHaveCount(4);
 });

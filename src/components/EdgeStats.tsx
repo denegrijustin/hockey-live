@@ -45,7 +45,7 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
     setError(false);
     const refresh = () => loadEdge(season, team.id)
       .then((d) => {
-        if (d.season !== season || !Array.isArray(d.metrics)) throw Error("Selected season not published");
+        if (d.season > season || !Array.isArray(d.metrics)) throw Error("Selected season not published");
         if (active) { setData(d); setError(false); }
       })
       .catch(() => {
@@ -68,7 +68,7 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
         <p className="detail-note">
           {error ? (
             <>
-              Selected-season EDGE data is not published or is temporarily unavailable. No previous-season totals are substituted.{" "}
+              EDGE data is temporarily unavailable for both the selected season and its fallback.{" "}
               <button onClick={() => setRetry((x) => x + 1)}>Retry</button>
             </>
           ) : (
@@ -81,7 +81,7 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
             {String(data.season).slice(0, 4)}–{String(data.season).slice(6)}{" "}
             regular season · {data.gamesPlayed} GP
             {data.season !== season
-              ? " · Previous-season context; current EDGE data not published yet."
+              ? " · Previous-season totals · current-season EDGE unavailable. Checks every 5 minutes and switches automatically."
               : ""}
           </p>
           <div className="edge-metrics">

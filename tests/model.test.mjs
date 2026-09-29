@@ -176,3 +176,31 @@ test("EDGE has official metrics and explicit fallback season", () => {
   assert.ok(j.metrics.every((m) => m.rank >= 1 && m.rank <= 32));
   assert.throws(() => normalizeEdge({}, "EDM", 20262027, 20262027));
 });
+
+import { projectGame, elapsedMinutes } from '../src/lib/projection.mjs';
+test('projections respect clock, score, game state and missing data', () => {
+  const game = { home:'EDM', away:'CHI', type:2, state:'FUT' };
+  const pre = projectGame(game);
+  assert.ok(pre.homeWin > .5 && pre.homeWin < .6);
+  assert.notEqual(pre.score.home, pre.score.away);
+  const live = {...game, state:'LIVE', period:3, clock:'01:00', homeScore:3, awayScore:1};
+  assert.ok(projectGame(live).homeWin > .98);
+  assert.ok(projectGame(live).homeWin > projectGame({...live, period:1}).homeWin);
+  assert.equal(elapsedMinutes({...live, period:1, clock:'11:32', intermission:true}),20);
+  assert.equal(projectGame({...live, clock:null}),null);
+  assert.equal(projectGame({...live, state:'FINAL'}),null);
+  assert.equal(projectGame({...live, periodType:'SO'}),null);
+  assert.equal(projectGame({...game, type:1}),null);
+  assert.ok(projectGame({...live, period:4, homeScore:1}).overtime);
+  const pressure = projectGame({...live, homeShots:100, awayShots:0});
+  assert.ok(pressure.shotAdjustment <= .25);
+  assert.ok(pressure.homeWin >= 0 && pressure.homeWin <= 1);
+});
+test('prior season and recent form change pregame estimates in the expected direction', () => {
+  const game = {home:'EDM',away:'CHI',type:2,state:'FUT'};
+  const neutral = projectGame(game);
+  const prior = {EDM:{gp:82,gf:320,ga:190}};
+  assert.ok(projectGame(game,{},prior).homeWin > neutral.homeWin);
+  const hot = {EDM:{gp:5,gf:20,ga:10,results:Array(5).fill({gf:4,ga:2})}};
+  assert.ok(projectGame(game,hot).homeWin > neutral.homeWin);
+});

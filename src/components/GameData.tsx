@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Game, GameFeed, Team } from "../types";
 import { useFeed } from "../lib/polling";
+import { Projection } from "./Projection";
 import { isLive } from "../lib/game-data.mjs";
 export function useVisible() {
   const ref = useRef<HTMLDivElement>(null),
@@ -70,6 +71,7 @@ export function GameData({
   if (!played)
     return (
       <div ref={ref} className="form-chart">
+        <Projection game={game} before={before} baseline={baseline} />
         <div className="mini-heading">
           RECENT FORM <span>Last 5 regular-season games</span>
         </div>
@@ -115,6 +117,7 @@ export function GameData({
     );
   return (
     <div ref={ref} className="game-data">
+      <Projection game={game} before={before} baseline={baseline} feed={data} error={error} />
       {!data ? (
         <p className="detail-note">
           {error

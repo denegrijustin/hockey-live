@@ -432,7 +432,7 @@ export default function App() {
                     <div className="game-grid">
                       {games.slice(0, limit).map((g) => (
                         <GameCard
-                          baseline={baselineAnalysis?.table}
+                          baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
                           key={`${g.id}-${selected.join("-")}`}
                           game={g}
                           teams={teams}

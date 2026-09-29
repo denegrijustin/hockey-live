@@ -36,7 +36,10 @@ test("live data updates without collapsing open cards; failure retains last scor
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
   await expect(card.locator(".shot-chart")).toBeVisible();
+  await expect(card.getByLabel("Live winner projection")).toBeVisible();
+  await expect(card.locator(".prediction-labels")).toContainText("%");
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
+  const previousEstimate = await card.locator(".prediction-labels").innerText();
   await card.getByText("Why this game matters", { exact: false }).click();
   await expect(card.locator(".card-details").first()).toHaveAttribute(
     "open",
@@ -50,6 +53,7 @@ test("live data updates without collapsing open cards; failure retains last scor
     "open",
     "",
   );
+  await expect(card.locator(".prediction-labels")).not.toHaveText(previousEstimate);
   await page.clock.fastForward(31000);
   await expect(page.locator(".live-strip")).toContainText("Update unavailable");
   await expect(card.locator(".matchup-team").last().locator("b")).toHaveText(

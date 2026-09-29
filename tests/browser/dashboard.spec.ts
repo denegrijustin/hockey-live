@@ -11,6 +11,9 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(page.locator(".team-summaries")).toContainText("Chicago");
   await expect(page.locator(".team-summaries")).toContainText("Minnesota");
   const card = page.locator(".game-card").first();
+  await expect(card.getByLabel("Pregame projection")).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+  await page.screenshot({path: `../nhl-projection-${test.info().project.name}.png`});
   await expect(card.locator(".form-chart")).toContainText("RECENT FORM");
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
   await card.getByText("Why this game matters", { exact: false }).click();

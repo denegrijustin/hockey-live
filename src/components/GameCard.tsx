@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { PlayerImpact } from "./PlayerImpact";
 import { GameData } from "./GameData";
 import { EdgeStats } from "./EdgeStats";
-export function GameCard({
+export const GameCard = memo(function GameCard({
   game,
   teams,
   analysis,
@@ -66,7 +66,9 @@ export function GameCard({
         <div className="matchup-teams">
           {[away, home].map((t, i) => (
             <div className="matchup-team" key={t.id}>
-              <img src={`/logos/${t.id}.svg`} alt="" loading="lazy" />
+              <img src={`/logos/${t.id}.svg`} alt="" loading="lazy"
+                width={40}
+                height={40} />
               <div>
                 <span>{t.city}</span>
                 <h3>{t.short}</h3>
@@ -173,4 +175,4 @@ export function GameCard({
       </details>
     </article>
   );
-}
+});

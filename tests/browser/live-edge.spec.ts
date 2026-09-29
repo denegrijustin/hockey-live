@@ -28,7 +28,7 @@ test("live data updates without collapsing open cards; failure retains last scor
     });
   });
   await page.route("**/api/game/*", (route) =>
-    route.fulfill({ json: { ...fixture, state: "LIVE" } }),
+    route.fulfill({ json: { ...fixture, state: "LIVE", homeScore: Math.min(calls - 1, 1), plays: calls > 1 ? [{id:9001,order:1,period:1,time:"19:00",type:"goal",team:fixture.home,player:"Test Scorer",penalty:null}] : [] } }),
   );
   await page.goto("/");
   await expect(page.locator(".live-strip")).toContainText("FLA");
@@ -54,6 +54,10 @@ test("live data updates without collapsing open cards; failure retains last scor
     "",
   );
   await expect(card.locator(".prediction-labels")).not.toHaveText(previousEstimate);
+  await expect(card.locator(".prediction-change")).toContainText("pp since previous update");
+  await expect(card.locator(".prediction-change")).toContainText("goal (Test Scorer)");
+  await card.locator(".projection").scrollIntoViewIfNeeded();
+  await page.screenshot({path: `../nhl-play-impact-${test.info().project.name}.png`});
   await page.clock.fastForward(31000);
   await expect(page.locator(".live-strip")).toContainText("Update unavailable");
   await expect(card.locator(".matchup-team").last().locator("b")).toHaveText(

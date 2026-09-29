@@ -40,15 +40,27 @@ export function normalizeGameFeed(j) {
     periodType: p.periodDescriptor.periodType,
     time: p.timeInPeriod,
     type: p.typeDescKey,
+    order: p.sortOrder ?? 0,
+    penalty: p.details?.descKey ?? null,
+    duration: p.details?.duration ?? null,
     team: team(p.details?.eventOwnerTeamId),
     x: p.details?.xCoord ?? null,
     y: p.details?.yCoord ?? null,
     player:
-      names[p.details?.scoringPlayerId ?? p.details?.shootingPlayerId] ?? null,
+      names[p.details?.scoringPlayerId ?? p.details?.shootingPlayerId ?? p.details?.committedByPlayerId] ?? null,
   }));
   return {
     ...normalizeScoreboard({ games: [j] }).games[0],
     updatedAt: new Date().toISOString(),
+    plays: plays.sort((a, b) => a.order - b.order),
+    situation: j.situation ? {
+      home: j.situation.homeTeam?.strength ?? null,
+      away: j.situation.awayTeam?.strength ?? null,
+      homePowerPlay: j.situation.homeTeam?.situationDescriptions?.includes("PP") ?? false,
+      awayPowerPlay: j.situation.awayTeam?.situationDescriptions?.includes("PP") ?? false,
+      seconds: j.situation.secondsRemaining ?? null,
+    } : null,
+    injuryStatus: "unavailable",
     shots: plays.filter(
       (p) => ["goal", "shot-on-goal"].includes(p.type) && p.periodType !== "SO",
     ),

@@ -86,6 +86,9 @@ export type PlayerData = {
 };
 export type Scoreboard = { updatedAt: string; date: string; games: Game[] };
 export type GameFeed = Game & {
+  plays?: { id: number; order: number; period: number; time: string; type: string; team: string | null; player: string | null; penalty: string | null; duration: number | null }[];
+  situation?: { home: number | null; away: number | null; homePowerPlay: boolean; awayPowerPlay: boolean; seconds: number | null } | null;
+  injuryStatus?: string;
   updatedAt: string;
   shots: {
     id: number;

@@ -2004,3 +2004,5 @@ footer b {
 }
 
 .projection{padding:12px 0;margin-bottom:14px;border-bottom:1px solid #344954}.prediction-head,.prediction-labels{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:10px 0}.prediction-head strong{color:#b8efde}.prediction-labels{font-size:12px;font-variant-numeric:tabular-nums}.projection .comparison-track{height:9px}.projection summary{min-height:36px;display:flex;align-items:center}
+
+.prediction-change{font-size:12px;line-height:1.6;padding:10px;background:#0b2029;border-left:2px solid #73d9c1;border-radius:4px}

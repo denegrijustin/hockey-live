@@ -24,12 +24,23 @@ function poisson(mean) {
 /** @param {any} game @param {any} table @param {any} baseline @param {any} feed */
 export function projectGame(game, table = {}, baseline = {}, feed = null) {
   if (['OFF', 'FINAL'].includes(game.state) || game.type === 1) return null;
+  // Use one coherent play-by-play snapshot for score, clock, strength and events.
+  if (feed && ['LIVE', 'CRIT'].includes(game.state) && ['LIVE', 'CRIT'].includes(feed.state)) game = feed;
   const h = strength(table?.[game.home], baseline?.[game.home]);
   const a = strength(table?.[game.away], baseline?.[game.away]);
   let homeMean = clamp((h.attack + a.defense) / 2 + .12 + h.form, 1, 6);
   let awayMean = clamp((a.attack + h.defense) / 2 - .12 + a.form, 1, 6);
   const live = ['LIVE', 'CRIT'].includes(game.state);
   let hs = 0, as = 0, shotAdjustment = 0;
+  const situation = feed?.situation;
+  const advantage = situation?.homePowerPlay && situation.home > situation.away ? 1 : situation?.awayPowerPlay && situation.away > situation.home ? -1 : 0;
+  const ppMinutes = advantage && Number.isFinite(situation.seconds) ? clamp(situation.seconds / 60, 0, 5) : 0;
+  const ppBoost = situation && Math.abs(situation.home - situation.away) > 1 ? 2.4 : 1.7;
+  const factors = [];
+  const adjustPowerPlay = (hm, am, remaining) => {
+    const fraction = remaining > 0 ? Math.min(ppMinutes, remaining) / remaining : 0;
+    return [hm * (1 + fraction * (advantage === 1 ? ppBoost : advantage === -1 ? -.35 : 0)), am * (1 + fraction * (advantage === -1 ? ppBoost : advantage === 1 ? -.35 : 0))];
+  };
   if (live) {
     if (game.homeScore == null || game.awayScore == null) return null;
     hs = game.homeScore; as = game.awayScore;
@@ -37,7 +48,10 @@ export function projectGame(game, table = {}, baseline = {}, feed = null) {
     if (game.periodType === 'SO') return null;
     if ((game.period ?? 0) > 3) {
       if (hs !== as) return null; // Await the official final after a sudden-death goal.
-      return { live, homeWin: homeMean / (homeMean + awayMean), score: null, shotAdjustment: 0, overtime: true };
+      const base = homeMean / (homeMean + awayMean);
+      const [hm, am] = adjustPowerPlay(homeMean, awayMean, ppMinutes || 1);
+      const eventChance = 1 - Math.exp(-(hm + am) * ppMinutes / 60);
+      return { live, homeWin: eventChance * hm / (hm + am) + (1 - eventChance) * base, score: null, shotAdjustment: 0, overtime: true, factors: [`Tied in overtime; next-goal estimate uses season strength.`, ...(advantage ? [`${advantage > 0 ? game.home : game.away} has a ${situation.home}–${situation.away} skater advantage${ppMinutes ? ` (${situation.seconds}s remaining)` : '; duration unavailable'}.`] : [])] };
     }
     const elapsed = elapsedMinutes(game);
     if (elapsed == null) return null;
@@ -55,6 +69,12 @@ export function projectGame(game, table = {}, baseline = {}, feed = null) {
     shotAdjustment = clamp(overall * .2 + (recentH - recentA) / (recentH + recentA + 10) * .15, -.25, .25);
     homeMean *= (60 - elapsed) / 60 * (1 + shotAdjustment);
     awayMean *= (60 - elapsed) / 60 * (1 - shotAdjustment);
+    [homeMean, awayMean] = adjustPowerPlay(homeMean, awayMean, 60 - elapsed);
+    factors.push(hs === as ? `Tied ${hs}–${as} with ${(60 - elapsed).toFixed(1)} regulation minutes left.` : `${hs > as ? game.home : game.away} leads ${Math.max(hs, as)}–${Math.min(hs, as)} with ${(60 - elapsed).toFixed(1)} regulation minutes left.`);
+    if (advantage) factors.push(`${advantage > 0 ? game.home : game.away} power play: ${situation.home}–${situation.away} skaters (home–away)${ppMinutes ? `, ${situation.seconds}s remaining` : ', duration unavailable; no strength adjustment'}.`);
+    if (recentH + recentA) factors.push(`Last 10 minutes: ${game.home} ${recentH}, ${game.away} ${recentA} shots on goal.`);
+    else if (totalH != null && totalA != null) factors.push(`Shots on goal: ${game.home} ${totalH}, ${game.away} ${totalA}.`);
+    factors.push('Season scoring history and recent form set the starting strength.');
   }
   const hp = poisson(homeMean), ap = poisson(awayMean);
   const tieShare = h.attack / (h.attack + a.attack);
@@ -70,5 +90,5 @@ export function projectGame(game, table = {}, baseline = {}, feed = null) {
     } else { if (home > away) homeWin += p; add(home, away, p); }
   }
   const likely = [...scores.entries()].sort((x, y) => y[1] - x[1])[0][0].split(':').map(Number);
-  return { live, homeWin: homeWin / mass, score: { home: likely[0], away: likely[1] }, shotAdjustment, overtime: false };
+  return { live, homeWin: homeWin / mass, score: { home: likely[0], away: likely[1] }, shotAdjustment, overtime: false, factors };
 }

@@ -204,3 +204,25 @@ test('prior season and recent form change pregame estimates in the expected dire
   const hot = {EDM:{gp:5,gf:20,ga:10,results:Array(5).fill({gf:4,ga:2})}};
   assert.ok(projectGame(game,hot).homeWin > neutral.homeWin);
 });
+test('active power play affects probability only for remaining advantage; penalties alone do not', () => {
+  const game={home:'EDM',away:'CHI',type:2,state:'LIVE',homeScore:1,awayScore:1,period:3,clock:'05:00',shots:[]};
+  const base=projectGame(game,{}, {},game).homeWin;
+  const pp={...game,situation:{home:5,away:4,homePowerPlay:true,awayPowerPlay:false,seconds:120}};
+  assert.ok(projectGame(game,{}, {},pp).homeWin > base);
+  assert.ok(projectGame(game,{}, {},{...pp,situation:{...pp.situation,seconds:30}}).homeWin < projectGame(game,{}, {},pp).homeWin);
+  assert.equal(projectGame(game,{}, {},{...pp,situation:{...pp.situation,seconds:0}}).homeWin,base);
+  assert.equal(projectGame(game,{}, {},{...pp,situation:{...pp.situation,away:5}}).homeWin,base);
+  assert.ok(projectGame(game,{}, {},{...game,situation:{home:4,away:5,awayPowerPlay:true,seconds:120}}).homeWin < base);
+  assert.ok(projectGame(game,{}, {},{...pp,homeScore:2}).homeWin > projectGame(game,{}, {},pp).homeWin);
+});
+test('play feed retains penalty player, duration, ordered plays and current strength', () => {
+  const raw=JSON.parse(readFileSync(new URL('./fixtures/raw-live-game.json',import.meta.url)));
+  raw.situation={homeTeam:{strength:5,situationDescriptions:['PP']},awayTeam:{strength:4},secondsRemaining:52};
+  raw.plays.push({eventId:9999,sortOrder:9999,periodDescriptor:{number:2,periodType:'REG'},timeInPeriod:'17:02',typeDescKey:'penalty',details:{eventOwnerTeamId:raw.awayTeam.id,descKey:'tripping',duration:2}});
+  const data=normalizeGameFeed(raw);
+  assert.equal(data.situation.seconds,52);
+  assert.equal(data.situation.homePowerPlay,true);
+  assert.equal(data.plays.at(-1).penalty,'tripping');
+  assert.equal(data.plays.at(-1).duration,2);
+  assert.equal(data.injuryStatus,'unavailable');
+});

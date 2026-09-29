@@ -125,3 +125,54 @@ test("packaged data covers 32 teams and has unique games", () => {
     );
   }
 });
+
+import {
+  normalizeGameFeed,
+  normalizeScoreboard,
+  normalizeEdge,
+  mergeScores,
+} from "../src/lib/game-data.mjs";
+test("live normalization keeps zero scores, shots, period and feed clock", () => {
+  const raw = JSON.parse(
+    readFileSync(new URL("./fixtures/raw-live-game.json", import.meta.url)),
+  );
+  raw.homeTeam.score = 0;
+  raw.clock.timeRemaining = "05:13";
+  const feed = normalizeGameFeed(raw);
+  assert.equal(feed.homeScore, 0);
+  assert.equal(feed.clock, "05:13");
+  assert.ok(feed.shots.length);
+  assert.ok(feed.shots.every((s) => s.periodType !== "SO"));
+  assert.ok(feed.stats.some((s) => s.label === "hit"));
+});
+test("scoreboard transitions scheduled to live to final without dropping historical games", () => {
+  const original = [
+    game(1, "2026-09-29", { state: "FUT" }),
+    game(2, "2026-09-28"),
+  ];
+  const live = mergeScores(original, {
+    games: [{ ...original[0], state: "LIVE", homeScore: 0, clock: "19:00" }],
+  });
+  assert.equal(live[0].state, "LIVE");
+  assert.equal(live[1].id, 2);
+  const final = mergeScores(live, {
+    games: [{ ...live[0], state: "OFF", homeScore: 4 }],
+  });
+  assert.equal(final[0].homeScore, 4);
+  assert.equal(original[0].state, "FUT");
+});
+test("EDGE has official metrics and explicit fallback season", () => {
+  const j = JSON.parse(
+    readFileSync(
+      new URL("../public/data/edge/20262027/EDM.json", import.meta.url),
+    ),
+  );
+  assert.equal(j.requestedSeason, 20262027);
+  assert.ok(j.season <= j.requestedSeason);
+  assert.equal(j.metrics.length, 4);
+  assert.ok(
+    Math.abs(j.zones.reduce((sum, z) => sum + z.value, 0) - 1) < 0.00001,
+  );
+  assert.ok(j.metrics.every((m) => m.rank >= 1 && m.rank <= 32));
+  assert.throws(() => normalizeEdge({}, "EDM", 20262027, 20262027));
+});

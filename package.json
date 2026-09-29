@@ -12,7 +12,8 @@
     "test": "node --test tests/model.test.mjs",
     "test:browser": "playwright test",
     "dev:worker": "wrangler dev --port 8788",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "pnpm build && wrangler deploy",
+    "refresh:edge": "node scripts/refresh-edge.mjs"
   },
   "dependencies": {
     "react": "19.3.0",

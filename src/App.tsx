@@ -1,6 +1,9 @@
+import { EdgePanel } from "./components/EdgeStats";
+import { useFeed } from "./lib/polling";
+import { mergeScores, isLive } from "./lib/game-data.mjs";
 import { useEffect, useMemo, useState } from "react";
 import rawTeams from "./data/teams.json";
-import type { Game, Snapshot, Team } from "./types";
+import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { loadSeason } from "./lib/api";
 import { analyzeSeason, finished } from "./lib/model.mjs";
 import { TeamPicker } from "./components/TeamPicker";
@@ -33,7 +36,7 @@ export default function App() {
       seasons: number[];
     } | null>(null),
     [season, setSeason] = useState(0),
-    [data, setData] = useState<Snapshot | null>(null),
+    [storedData, setData] = useState<Snapshot | null>(null),
     [baseline, setBaseline] = useState<Snapshot | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
@@ -85,14 +88,31 @@ export default function App() {
       .catch(() => {});
     return () => controller.abort();
   }, [manifest]);
-  const hasLive =
-    data?.games.some((g) => g.state === "LIVE" || g.state === "CRIT") ??
-    false;
+  const { data: scoreboard, error: liveError } = useFeed<Scoreboard>(
+    season === manifest?.current ? "/api/live" : null,
+  );
+  const data = useMemo<Snapshot | null>(
+    () =>
+      storedData
+        ? { ...storedData, games: mergeScores(storedData.games, scoreboard) }
+        : null,
+    [storedData, scoreboard],
+  );
   useEffect(() => {
-    if (!hasLive) return;
-    const id = setInterval(() => setRetry((x) => x + 1), 30000);
-    return () => clearInterval(id);
-  }, [hasLive]);
+    if (!season || season !== manifest?.current) return;
+    const controller = new AbortController();
+    const timer = setInterval(() => {
+      if (!document.hidden)
+        loadSeason(season, controller.signal)
+          .then(setData)
+          .catch(() => {});
+    }, 120000);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [season, manifest]);
+  const hasLive = scoreboard?.games.some(isLive) ?? false;
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
     [data],
@@ -125,14 +145,16 @@ export default function App() {
             Math.abs(Date.parse(g.start) - today.getTime()) <= distance),
       )
       .sort((a, b) =>
-        sort === "importance"
-          ? analysis.analysis[b.id].score - analysis.analysis[a.id].score ||
-            (period === "past"
+        isLive(a) !== isLive(b)
+          ? Number(isLive(b)) - Number(isLive(a))
+          : sort === "importance"
+            ? analysis.analysis[b.id].score - analysis.analysis[a.id].score ||
+              (period === "past"
+                ? b.start.localeCompare(a.start)
+                : a.start.localeCompare(b.start))
+            : period === "past"
               ? b.start.localeCompare(a.start)
-              : a.start.localeCompare(b.start))
-          : period === "past"
-            ? b.start.localeCompare(a.start)
-            : a.start.localeCompare(b.start),
+              : a.start.localeCompare(b.start),
       );
   }, [data, analysis, selected, type, period, range, query, sort]);
   useEffect(
@@ -211,6 +233,7 @@ export default function App() {
             {[
               ["games", "Game center"],
               ["trends", "Team trends"],
+              ["edge", "NHL EDGE"],
               ["players", "Players"],
               ["standings", "Standings"],
             ].map(([id, label]) => (
@@ -273,6 +296,45 @@ export default function App() {
                 Showing six summary cards; all {selected.length} selected teams
                 are included below.
               </p>
+            )}
+            {scoreboard && view === "games" && (
+              <section className="live-strip" aria-label="Live NHL scoreboard">
+                <div>
+                  <b>LIVE AROUND THE LEAGUE</b>
+                  <small>
+                    {liveError ||
+                      `Checked ${new Date(scoreboard.updatedAt).toLocaleTimeString()} · every 30s`}
+                  </small>
+                </div>
+                {scoreboard.games.filter(isLive).length ? (
+                  scoreboard.games.filter(isLive).map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => {
+                        changeTeams([g.away, g.home]);
+                        setPeriod("future");
+                        setType(g.type);
+                        setRange("7");
+                        setSort("date");
+                        setQuery("");
+                      }}
+                    >
+                      <i />
+                      {g.away} {g.awayScore} — {g.homeScore} {g.home}
+                      <small>
+                        {g.intermission
+                          ? "Intermission"
+                          : `P${g.period} ${g.clock ?? ""}`}
+                      </small>
+                    </button>
+                  ))
+                ) : (
+                  <span>No games live in the latest feed.</span>
+                )}
+              </section>
+            )}
+            {view === "edge" && (
+              <EdgePanel teams={selectedTeams} season={season} />
             )}
             {view === "games" && (
               <>
@@ -370,6 +432,7 @@ export default function App() {
                     <div className="game-grid">
                       {games.slice(0, limit).map((g) => (
                         <GameCard
+                          baseline={baselineAnalysis?.table}
                           key={`${g.id}-${selected.join("-")}`}
                           game={g}
                           teams={teams}

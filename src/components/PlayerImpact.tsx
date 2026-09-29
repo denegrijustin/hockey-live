@@ -1,3 +1,4 @@
+import { useFeed } from "../lib/polling";
 import { useEffect, useState } from "react";
 import { loadBox, loadPlayers } from "../lib/api";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
@@ -9,12 +10,18 @@ export function PlayerImpact({
   game: Game;
   sourceSeason: number;
 }) {
+  const live = ["LIVE", "CRIT"].includes(game.state);
   const past = ["OFF", "FINAL"].includes(game.state);
-  const [data, setData] = useState<Boxscore | null>(null),
+  const { data: liveData, error: liveError } = useFeed<Boxscore>(
+    live ? `/api/boxscore/${game.id}` : null,
+  );
+  const [savedData, setData] = useState<Boxscore | null>(null),
     [context, setContext] = useState<PlayerData[]>([]),
     [error, setError] = useState(""),
     [attempt, setAttempt] = useState(0);
+  const data = live ? liveData : savedData;
   useEffect(() => {
+    if (live) return;
     let active = true;
     setData(null);
     setContext([]);
@@ -35,11 +42,12 @@ export function PlayerImpact({
     return () => {
       active = false;
     };
-  }, [game.id, past, sourceSeason, attempt]);
-  if (error)
+  }, [game.id, past, live, sourceSeason, attempt]);
+  if (error || (liveError && !data))
     return (
       <div className="inline-error">
-        {error} <button onClick={() => setAttempt((x) => x + 1)}>Retry</button>
+        {error || liveError}{" "}
+        <button onClick={() => setAttempt((x) => x + 1)}>Retry</button>
       </div>
     );
   if (!data && !context.length)
@@ -58,8 +66,8 @@ export function PlayerImpact({
     return (
       <>
         <p className="detail-note">
-          Actual box-score index · positive / negative contribution. See
-          methodology for weights.
+          {live ? "Live" : "Actual"} box-score index · positive / negative
+          contribution. See methodology for weights.
         </p>
         <div className="impact-list">
           {[

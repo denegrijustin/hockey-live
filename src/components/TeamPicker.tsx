@@ -24,7 +24,13 @@ export function TeamPicker({
               )
             }
           >
-            <img src={`/logos/${id}.svg`} alt="" width="25" height="25" decoding="async" />
+            <img
+              src={`/logos/${id}.svg`}
+              alt=""
+              width="25"
+              height="25"
+              decoding="async"
+            />
             {id}
           </button>
         ))}
@@ -65,7 +71,14 @@ export function TeamPicker({
                   )
                 }
               />
-              <img src={`/logos/${t.id}.svg`} alt="" width="24" height="24" loading="lazy" decoding="async" />
+              <img
+                src={`/logos/${t.id}.svg`}
+                alt=""
+                width="24"
+                height="24"
+                loading="lazy"
+                decoding="async"
+              />
               {t.name}
             </label>
           ))}

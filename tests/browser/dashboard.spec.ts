@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-test("default teams, league selection, scenarios and season navigation", async ({
+test("default teams, league selection, graphs and season navigation", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -11,10 +11,11 @@ test("default teams, league selection, scenarios and season navigation", async (
   await expect(page.locator(".team-summaries")).toContainText("Chicago");
   await expect(page.locator(".team-summaries")).toContainText("Minnesota");
   const card = page.locator(".game-card").first();
-  await expect(card.locator(".scenario-grid")).toContainText("REG WIN");
+  await expect(card.locator(".form-chart")).toContainText("RECENT FORM");
+  await expect(card.locator(".scenario-grid")).toHaveCount(0);
   await card.getByText("Why this game matters", { exact: false }).click();
   await expect(card.locator(".detail-body").first()).toContainText(
-    "isolated scenarios",
+    "Equal ratings share ranks.",
   );
   await page.getByRole("button", { name: "All 32", exact: true }).click();
   await expect(page.locator(".results-line")).toContainText(

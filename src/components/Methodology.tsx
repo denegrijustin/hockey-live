@@ -2,7 +2,7 @@ export function Methodology() {
   return (
     <details className="methodology">
       <summary>
-        How ratings & scenarios work <span>↗</span>
+        How ratings & data work <span>↗</span>
       </summary>
       <div className="method-grid">
         <section>
@@ -24,21 +24,20 @@ export function Methodology() {
           </p>
         </section>
         <section>
-          <h3>Win / loss consequences</h3>
+          <h3>Graphs & NHL EDGE</h3>
           <p>
-            Scenarios show an isolated regulation win (+2, opponent +0),
-            regulation loss (+0, opponent +2), or overtime/shootout loss (+1,
-            opponent +2). Other games are held constant. Future games use
-            current points, not a forecast of intervening results; past games
-            use prior-day points.
+            Upcoming games show the last five regular-season results.
+            Previous-season form is labeled when current results are not
+            available. Completed and live games show cumulative shots on goal,
+            hits, blocks, scoring and recorded shot locations. Shootouts are
+            excluded from shot graphs.
           </p>
           <p>
-            Conference ranks are points-only, with ties shown explicitly. The
-            entry-line reference is the lower of the division’s third-place
-            points and the conference’s second-wild-card points. It is a
-            reference, not a clinching calculation; official head-to-head
-            tiebreaks and games in hand are not modeled. Preseason has no
-            standings consequences; playoffs use series wins.
+            NHL EDGE charts use published team tracking statistics: skating
+            speed, speed bursts, shot speed, distance, shot locations and puck
+            zone time. White bar markers show league averages. EDGE is season
+            context, not real-time player tracking; previous-season fallback is
+            explicitly labeled. Totals depend on games played.
           </p>
         </section>
         <section>
@@ -61,7 +60,11 @@ export function Methodology() {
           <h3>Source & freshness</h3>
           <p>
             Schedules, results and box scores come from the NHL public data
-            feed. The Worker refreshes the current schedule nightly and
+            feed. Live scoreboard and visible live game details check every 30
+            seconds while the tab is visible. Times shown are received feed
+            times, not a locally simulated clock. Feed or network delays are
+            possible; failed updates retain the last response and display an
+            error. The Worker refreshes the current schedule nightly and
             revalidates snapshots older than 15 minutes on visits. Player
             summaries cache for six hours. A dated build snapshot remains
             available if the feed fails.

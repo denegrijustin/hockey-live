@@ -1633,3 +1633,372 @@ footer b {
     transition: none !important;
   }
 }
+/* Game evidence and NHL EDGE */
+.live-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  margin: 20px 0;
+  border: 1px solid #3d796e;
+  background: #122c2b;
+  border-radius: 12px;
+}
+.live-strip > div {
+  margin-right: auto;
+}
+.live-strip b {
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.live-strip small {
+  display: block;
+  color: #a8c6c1;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.live-strip button {
+  padding: 12px;
+  background: #173b37;
+  border: 1px solid #488779;
+  border-radius: 8px;
+}
+.live-strip i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #7ce9c7;
+  border-radius: 100%;
+  margin-right: 8px;
+}
+.live-card {
+  border-color: #68c4ae;
+}
+.form-chart,
+.game-data {
+  padding: 18px 0;
+  border-top: 1px solid var(--border, #29414d);
+}
+.mini-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #a8c7d3;
+  margin-bottom: 14px;
+}
+.mini-heading span {
+  letter-spacing: 0;
+  font-size: 10px;
+  color: #849aa8;
+}
+.form-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.form-team > b {
+  font-size: 12px;
+  width: 30px;
+}
+.form-team > small {
+  font-size: 9px;
+  color: #94aab7;
+  max-width: 52px;
+}
+.form-results {
+  display: flex;
+  gap: 5px;
+  flex: 1;
+}
+.form-results > span {
+  flex: 1;
+  text-align: center;
+  padding: 9px 2px;
+  border-radius: 5px;
+  font-size: 11px;
+  background: #303b44;
+}
+.form-results small {
+  display: block;
+  font-size: 9px;
+  margin-top: 5px;
+  opacity: 0.8;
+}
+.form-results .form-win {
+  background: #214a40;
+  color: #8ae1bd;
+}
+.form-results .form-loss {
+  background: #422f3a;
+  color: #f1a4b3;
+}
+.form-results .form-ot {
+  background: #3c3b2b;
+  color: #e1ce91;
+}
+.chart-key {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  align-items: center;
+}
+.chart-key i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+.chart-key small {
+  margin-left: auto;
+  color: #92a8b5;
+  font-size: 9px;
+}
+.shot-chart {
+  width: 100%;
+  height: auto;
+  margin-top: 10px;
+}
+.shot-chart line,
+.shot-chart .chart-axis {
+  stroke: #2b4451;
+  fill: none;
+}
+.shot-chart text {
+  fill: #91aab8;
+  font-size: 9px;
+}
+.comparison-row {
+  margin: 12px 0;
+}
+.comparison-row > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.comparison-row span {
+  color: #93adb9;
+  font-size: 10px;
+}
+.comparison-track {
+  display: flex;
+  height: 5px;
+  gap: 3px;
+  margin-top: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.feed-time {
+  font-size: 9px;
+  color: #93adb9;
+  margin-top: 15px;
+}
+.shot-map {
+  width: 100%;
+  margin-top: 12px;
+}
+.shot-map rect {
+  fill: #0d202b;
+  stroke: #6f8894;
+  stroke-width: 1;
+}
+.shot-map path,
+.shot-map .rink-circle {
+  fill: none;
+  stroke: #40616f;
+  stroke-width: 0.6;
+}
+.goal-list {
+  padding-left: 18px;
+  font-size: 11px;
+}
+.goal-list li {
+  margin: 10px 0;
+}
+.goal-list span {
+  float: right;
+  color: #92a9b6;
+}
+.edge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.edge-card {
+  min-width: 0;
+  padding: 20px;
+  background: #102530;
+  border: 1px solid #2c4653;
+  border-radius: 10px;
+  min-height: 260px;
+}
+.edge-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.edge-heading img {
+  width: 40px;
+  height: 40px;
+}
+.edge-heading h3 {
+  font-size: 17px;
+  margin: 5px 0;
+}
+.edge-heading .eyebrow {
+  margin: 0;
+  font-size: 9px;
+}
+.edge-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 14px;
+  margin-top: 20px;
+}
+.edge-metric > span {
+  font-size: 11px;
+  color: #adc3ce;
+}
+.edge-metric > div {
+  margin: 6px 0;
+}
+.edge-metric strong {
+  font-size: 21px;
+}
+.edge-metric small {
+  font-size: 9px;
+  color: #92aebb;
+}
+.edge-metric b {
+  float: right;
+  font-size: 11px;
+  color: #8cdfc5;
+  margin-top: 7px;
+}
+.edge-bar {
+  height: 6px;
+  position: relative;
+  background: #243c49;
+  border-radius: 2px;
+}
+.edge-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+.edge-bar span {
+  position: absolute;
+  top: -3px;
+  height: 12px;
+  width: 2px;
+  background: #e3edf2;
+}
+.edge-card h4 {
+  font-size: 12px;
+  margin: 24px 0 12px;
+}
+.zone-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.zone-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 9px;
+  font-size: 9px;
+  color: #a7bec9;
+}
+.zone-labels b,
+.zone-labels small {
+  display: block;
+  margin-top: 5px;
+}
+.zone-labels b {
+  font-size: 15px;
+  color: #dceaf0;
+}
+.zone-labels small {
+  font-size: 9px;
+}
+.location-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 10px;
+}
+.location-row > span {
+  width: 70px;
+}
+.location-row > div {
+  flex: 1;
+  height: 7px;
+  background: #253d49;
+}
+.location-row i {
+  display: block;
+  height: 7px;
+}
+.location-row b {
+  width: 30px;
+  text-align: right;
+}
+.location-row small {
+  width: 35px;
+  color: #91a9b5;
+}
+.edge-card > a {
+  font-size: 11px;
+  color: #8bdbc7;
+}
+.card-details .edge-card {
+  margin: 10px 0;
+  padding: 12px;
+}
+.view-tabs {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.view-tabs button {
+  flex-shrink: 0;
+}
+@media (max-width: 1200px) {
+  .edge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .edge-grid {
+    grid-template-columns: 1fr;
+  }
+  .edge-card {
+    padding: 16px;
+  }
+  .live-strip {
+    padding: 14px;
+  }
+  .live-strip > div {
+    width: 100%;
+  }
+  .live-strip button {
+    flex: 1;
+    min-width: 170px;
+  }
+  .view-tabs button {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+  .mini-heading {
+    font-size: 9px;
+  }
+  .form-results {
+    gap: 3px;
+  }
+}

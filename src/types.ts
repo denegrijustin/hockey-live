@@ -9,6 +9,12 @@ export type Team = {
   logo: string;
 };
 export type Game = {
+  period?: number | null;
+  periodType?: string | null;
+  clock?: string | null;
+  intermission?: boolean;
+  homeShots?: number | null;
+  awayShots?: number | null;
   id: number;
   season: number;
   type: number;
@@ -77,4 +83,43 @@ export type PlayerData = {
   updatedAt: string;
   skaters: PlayerSeason[];
   goalies: PlayerSeason[];
+};
+export type Scoreboard = { updatedAt: string; date: string; games: Game[] };
+export type GameFeed = Game & {
+  updatedAt: string;
+  shots: {
+    id: number;
+    period: number;
+    periodType: string;
+    time: string;
+    type: string;
+    team: string;
+    x: number | null;
+    y: number | null;
+  }[];
+  goals: {
+    id: number;
+    period: number;
+    time: string;
+    team: string;
+    player: string | null;
+  }[];
+  stats: { label: string; home: number; away: number }[];
+};
+export type EdgeData = {
+  team: string;
+  season: number;
+  requestedSeason: number;
+  updatedAt: string;
+  gamesPlayed: number;
+  metrics: {
+    key: string;
+    label: string;
+    unit: string;
+    value: number;
+    average: number | null;
+    rank: number | null;
+  }[];
+  zones: { label: string; value: number; average: number }[];
+  locations: { label: string; shots: number; goals: number; average: number }[];
 };

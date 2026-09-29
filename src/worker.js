@@ -1,3 +1,9 @@
+import teamIds from "./data/team-ids.json";
+import {
+  normalizeScoreboard,
+  normalizeGameFeed,
+  normalizeEdge,
+} from "./lib/game-data.mjs";
 import teams from "./data/teams.json";
 import {
   normalizeGame,
@@ -7,11 +13,11 @@ import {
 const API = "https://api-web.nhle.com/v1";
 const ids = new Set(teams.map((t) => t.id));
 const tasks = new Map();
-const json = (data, status = 200) =>
+const json = (data, status = 200, ttl = 60) =>
   Response.json(data, {
     status,
     headers: {
-      "Cache-Control": "public, max-age=60",
+      "Cache-Control": `public, max-age=${ttl}`,
       "X-Content-Type-Options": "nosniff",
     },
   });
@@ -69,6 +75,67 @@ export default {
       return json({ error: "Method not allowed" }, 405);
     try {
       let match;
+      if (
+        url.pathname === "/api/live" ||
+        /^\/api\/game\/20\d{8}$/.test(url.pathname)
+      ) {
+        const cacheKey = new Request(url.origin + url.pathname);
+        const hit = await caches.default.match(cacheKey);
+        if (hit) return hit;
+        const live = url.pathname === "/api/live";
+        const data = live
+          ? normalizeScoreboard(await get("/score/now"))
+          : normalizeGameFeed(
+              await get(
+                `/gamecenter/${url.pathname.split("/").pop()}/play-by-play`,
+              ),
+            );
+        const response = json(
+          data,
+          200,
+          live || !["OFF", "FINAL"].includes(data.state) ? 15 : 3600,
+        );
+        ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+        return response;
+      }
+      if (
+        (match = url.pathname.match(/^\/api\/edge\/(20\d{6})\/([A-Z]{3})$/))
+      ) {
+        const season = Number(match[1]),
+          team = match[2],
+          manifest = await staticData(env, request, "/data/manifest.json");
+        if (!ids.has(team) || !manifest?.seasons.includes(season))
+          return json({ error: "Unknown team or season" }, 400);
+        const key = `edge-v1-${season}-${team}`,
+          cached = await env.TEAM_STATS.get(key, { type: "json" });
+        if (cached && Date.now() - Date.parse(cached.updatedAt) < 21600000)
+          return json(cached);
+        let data;
+        try {
+          data = normalizeEdge(
+            await get(`/edge/team-detail/${teamIds[team]}/${season}/2`),
+            team,
+            season,
+            season,
+          );
+        } catch (e) {
+          const previous = manifest.seasons.find((s) => s < season);
+          if (!previous) throw e;
+          data = normalizeEdge(
+            await get(`/edge/team-detail/${teamIds[team]}/${previous}/2`),
+            team,
+            previous,
+            season,
+          );
+        }
+        ctx.waitUntil(
+          env.TEAM_STATS.put(key, JSON.stringify(data), {
+            expirationTtl: 86400,
+          }),
+        );
+        return json(data);
+      }
+
       if ((match = url.pathname.match(/^\/api\/season\/(20\d{6})$/))) {
         const season = Number(match[1]),
           manifest = await staticData(env, request, "/data/manifest.json");
@@ -95,24 +162,21 @@ export default {
           : json(await refreshSeason(season, env));
       }
       if ((match = url.pathname.match(/^\/api\/boxscore\/(20\d{8})$/))) {
-        const id = match[1],
-          key = `dashboard-box-${id}`,
-          cached = await env.TEAM_STATS.get(key, { type: "json" });
-        if (
-          cached &&
-          (["OFF", "FINAL"].includes(cached.state) ||
-            Date.now() - Date.parse(cached.updatedAt) < 60000)
-        )
-          return json(cached);
-        const data = normalizeBoxscore(await get(`/gamecenter/${id}/boxscore`));
-        if (!data.players.length)
-          return json({ error: "No box score published yet" }, 404);
-        ctx.waitUntil(
-          env.TEAM_STATS.put(key, JSON.stringify(data), {
-            expirationTtl: 86400 * 14,
-          }),
+        const cacheKey = new Request(url.origin + url.pathname);
+        const cached = await caches.default.match(cacheKey);
+        if (cached) return cached;
+        const data = normalizeBoxscore(
+          await get(`/gamecenter/${match[1]}/boxscore`),
         );
-        return json(data);
+        if (!data.players.length)
+          return json({ error: "No box score published yet" }, 404, 15);
+        const response = json(
+          data,
+          200,
+          ["OFF", "FINAL"].includes(data.state) ? 3600 : 15,
+        );
+        ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+        return response;
       }
       if (
         (match = url.pathname.match(/^\/api\/players\/(20\d{6})\/([A-Z]{3})$/))

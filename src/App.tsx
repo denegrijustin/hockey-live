@@ -1,7 +1,6 @@
-import { EdgePanel } from "./components/EdgeStats";
 import { useFeed } from "./lib/polling";
 import { mergeScores, isLive } from "./lib/game-data.mjs";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { loadSeason } from "./lib/api";
@@ -10,9 +9,21 @@ import { TeamPicker } from "./components/TeamPicker";
 import { TeamSummary } from "./components/TeamSummary";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
-import { Trends } from "./components/Trends";
-import { Players } from "./components/Players";
-import { Standings } from "./components/Standings";
+// Only the "games" tab is needed for first paint; the rest of the tabs
+// (and their per-team API calls) load on demand when a visitor switches
+// to them, keeping the initial bundle smaller.
+const EdgePanel = lazy(() =>
+  import("./components/EdgeStats").then((m) => ({ default: m.EdgePanel })),
+);
+const Trends = lazy(() =>
+  import("./components/Trends").then((m) => ({ default: m.Trends })),
+);
+const Players = lazy(() =>
+  import("./components/Players").then((m) => ({ default: m.Players })),
+);
+const Standings = lazy(() =>
+  import("./components/Standings").then((m) => ({ default: m.Standings })),
+);
 const teams: Team[] = rawTeams;
 const defaults = ["EDM", "CHI", "MIN"];
 function initialTeams() {
@@ -92,22 +103,27 @@ export default function App() {
   const { data: scoreboard, error: liveError } = useFeed<Scoreboard>(
     season === manifest?.current ? "/api/live" : null,
   );
-  const data = useMemo<Snapshot | null>(
-    () =>
-      storedData
-        ? { ...storedData, games: mergeScores(storedData.games, scoreboard) }
-        : null,
-    [storedData, scoreboard],
-  );
+  const data = useMemo<Snapshot | null>(() => {
+    if (!storedData) return null;
+    const games = mergeScores(storedData.games, scoreboard);
+    // Same array back means nothing actually changed for this tick — keep
+    // the same Snapshot reference so analyzeSeason isn't redone for nothing.
+    return games === storedData.games ? storedData : { ...storedData, games };
+  }, [storedData, scoreboard]);
   useEffect(() => {
     if (!season || season !== manifest?.current) return;
     const controller = new AbortController();
+    // The /api/live feed (below) already carries in-progress scores every
+    // 30s, so this only needs to catch things that feed doesn't cover:
+    // newly finished games rolling into the schedule, standings drift from
+    // games elsewhere in the league. A 5-minute cadence keeps that current
+    // without re-downloading the full season on top of the live poll.
     const timer = setInterval(() => {
       if (!document.hidden)
         loadSeason(season, controller.signal)
           .then(setData)
           .catch(() => {});
-    }, 120000);
+    }, 300000);
     return () => {
       controller.abort();
       clearInterval(timer);
@@ -334,7 +350,9 @@ export default function App() {
               </section>
             )}
             {view === "edge" && (
-              <EdgePanel teams={selectedTeams} season={season} />
+              <Suspense fallback={<div className="empty" role="status">Loading NHL EDGE…</div>}>
+                <EdgePanel teams={selectedTeams} season={season} />
+              </Suspense>
             )}
             {view === "games" && (
               <>
@@ -503,23 +521,29 @@ export default function App() {
               </>
             )}
             {view === "trends" && (
-              <Trends
-                teams={selectedTeams}
-                table={analysis.table}
-                season={season}
-              />
+              <Suspense fallback={<div className="empty" role="status">Loading team trends…</div>}>
+                <Trends
+                  teams={selectedTeams}
+                  table={analysis.table}
+                  season={season}
+                />
+              </Suspense>
             )}{" "}
             {view === "players" && (
-              <Players teams={activeTeams} season={sourceSeason} />
+              <Suspense fallback={<div className="empty" role="status">Loading player contributions…</div>}>
+                <Players teams={activeTeams} season={sourceSeason} />
+              </Suspense>
             )}{" "}
             {view === "standings" && (
-              <Standings
-                teams={teams}
-                table={analysis.table}
-                games={data.games}
-                baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
-                selected={selected}
-              />
+              <Suspense fallback={<div className="empty" role="status">Loading standings…</div>}>
+                <Standings
+                  teams={teams}
+                  table={analysis.table}
+                  games={data.games}
+                  baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
+                  selected={selected}
+                />
+              </Suspense>
             )}
           </>
         ) : null}

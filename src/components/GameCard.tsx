@@ -1,10 +1,17 @@
-import { memo, useState } from "react";
+import { lazy, memo, Suspense, useState } from "react";
 import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
-import { PlayerImpact } from "./PlayerImpact";
 import { GameData } from "./GameData";
-import { EdgeStats } from "./EdgeStats";
+// These two only render inside a collapsed <details> panel once a visitor
+// opens it, so they're loaded on demand instead of shipping in every
+// card's initial bundle (there can be dozens of cards on one page).
+const PlayerImpact = lazy(() =>
+  import("./PlayerImpact").then((m) => ({ default: m.PlayerImpact })),
+);
+const EdgeStats = lazy(() =>
+  import("./EdgeStats").then((m) => ({ default: m.EdgeStats })),
+);
 export const GameCard = memo(function GameCard({
   game,
   teams,
@@ -149,10 +156,12 @@ export const GameCard = memo(function GameCard({
           NHL EDGE · team comparison <span>+</span>
         </summary>
         {edgeOpen && (
-          <div className="detail-body">
-            <EdgeStats team={away} season={game.season} />
-            <EdgeStats team={home} season={game.season} />
-          </div>
+          <Suspense fallback={<div className="detail-body loading">Loading NHL EDGE…</div>}>
+            <div className="detail-body">
+              <EdgeStats team={away} season={game.season} />
+              <EdgeStats team={home} season={game.season} />
+            </div>
+          </Suspense>
         )}
       </details>
       <details
@@ -168,9 +177,11 @@ export const GameCard = memo(function GameCard({
           <span>+</span>
         </summary>
         {impactOpen && (
-          <div className="detail-body">
-            <PlayerImpact game={game} sourceSeason={sourceSeason} />
-          </div>
+          <Suspense fallback={<div className="detail-body loading">Loading player contributions…</div>}>
+            <div className="detail-body">
+              <PlayerImpact game={game} sourceSeason={sourceSeason} />
+            </div>
+          </Suspense>
         )}
       </details>
     </article>

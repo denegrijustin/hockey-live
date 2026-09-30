@@ -161,6 +161,28 @@ test("scoreboard transitions scheduled to live to final without dropping histori
   assert.equal(final[0].homeScore, 4);
   assert.equal(original[0].state, "FUT");
 });
+test("mergeScores keeps identical array/game references on a no-op poll tick", () => {
+  // The live poll runs every 30s regardless of whether anything changed;
+  // downstream standings/importance recomputation is expensive over a full
+  // season, so a tick that brings no new values must not force a re-render.
+  const original = [
+    game(1, "2026-09-29", { state: "LIVE", homeScore: 2, awayScore: 1 }),
+    game(2, "2026-09-28"),
+  ];
+  const same = mergeScores(original, {
+    games: [{ ...original[0] }],
+  });
+  assert.equal(same, original, "array reference should be unchanged");
+  assert.equal(same[0], original[0], "unchanged game object should be unchanged");
+  const noMatch = mergeScores(original, { games: [] });
+  assert.equal(noMatch, original);
+  const changed = mergeScores(original, {
+    games: [{ ...original[0], homeScore: 3 }],
+  });
+  assert.notEqual(changed, original);
+  assert.notEqual(changed[0], original[0]);
+  assert.equal(changed[1], original[1], "untouched game keeps its reference");
+});
 test("EDGE historical snapshot retains official metrics and season", () => {
   const j = JSON.parse(
     readFileSync(

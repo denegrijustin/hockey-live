@@ -1,3 +1,4 @@
+import { iceTilt, playMinute, pulseMinute } from "../lib/pulse.mjs";
 import { useEffect, useRef, useState } from "react";
 import type { Game, GameFeed, Team } from "../types";
 import { useFeed } from "../lib/polling";
@@ -145,6 +146,9 @@ export function GameData({
             <small>Cumulative shots on goal</small>
           </div>
           <ShotChart data={data} home={home} away={away} />
+          <div className="mini-heading">HITS <span>Cumulative · same time scale</span></div>
+          {data.plays ? <ShotChart data={data} home={home} away={away} metric="hits" /> : <p className="detail-note">Hit timeline unavailable in this saved snapshot.</p>}
+          <IceTilt data={data} />
           <ComparisonBar
             label="Shots on goal"
             away={data.awayShots ?? 0}
@@ -224,31 +228,29 @@ function ShotChart({
   data,
   home,
   away,
+  metric = "shots",
 }: {
+  metric?: "shots" | "hits";
   data: GameFeed;
   home: Team;
   away: Team;
 }) {
-  const minutes = (s: GameFeed["shots"][number]) =>
-    (s.period - 1) * 20 +
-    Number(s.time.split(":")[0]) +
-    Number(s.time.split(":")[1]) / 60;
-  const end = Math.max(
-      20,
-      (data.period ?? 3) > 3 && data.type === 2
-        ? 60 + 5 * ((data.period ?? 3) - 3)
-        : (data.period ?? 3) * 20,
-      ...data.shots.map(minutes),
-    ),
-    max = Math.max(1, data.homeShots ?? 0, data.awayShots ?? 0);
+  const events = metric === "shots" ? data.shots : (data.plays ?? []).filter(p=>p.type === 'hit');
+  const minutes = (s: any) => playMinute(s,data.type) ?? 0;
+  const elapsed = pulseMinute(data) ?? Math.max(0,...events.map(minutes));
+  const end = Math.max(20, Math.ceil(elapsed / 20) * 20);
+  const countFor = (id:string) => events.filter(s=>s.team===id && minutes(s)<=elapsed).length;
+  const max = Math.max(1,countFor(home.id),countFor(away.id));
   return (
     <svg
-      className="shot-chart"
+      className={`shot-chart ${metric === "hits" ? "hit-chart" : ""}`}
       viewBox="0 0 360 115"
       role="img"
-      aria-label={`${away.id} ${data.awayShots ?? 0}, ${home.id} ${data.homeShots ?? 0} shots on goal`}
+      aria-label={`${away.id} ${countFor(away.id)}, ${home.id} ${countFor(home.id)} ${metric === "hits" ? "hits" : "shots on goal"}`}
     >
       <path d="M24 10V92H350" className="chart-axis" />
+      <text x="20" y="15" textAnchor="end">{max}</text>
+      <text x="20" y="92" textAnchor="end">0</text>
       {[20, 40, 60]
         .filter((n) => n <= end)
         .map((n) => (
@@ -267,13 +269,13 @@ function ShotChart({
       {[away, home].map((t) => {
         let count = 0;
         const points = ["24,92"];
-        for (const shot of data.shots.filter((s) => s.team === t.id)) {
+        for (const shot of events.filter((s) => s.team === t.id && minutes(s)<=elapsed).sort((a,b)=>minutes(a)-minutes(b))) {
           const x = 24 + (minutes(shot) / end) * 326;
           points.push(`${x},${92 - (count / max) * 76}`);
           count++;
           points.push(`${x},${92 - (count / max) * 76}`);
         }
-        points.push(`350,${92 - (count / max) * 76}`);
+        points.push(`${24 + elapsed/end*326},${92 - (count / max) * 76}`);
         return (
           <polyline
             key={t.id}
@@ -286,4 +288,14 @@ function ShotChart({
       })}
     </svg>
   );
+}
+
+function IceTilt({data}:{data:GameFeed}) {
+ const tilt=iceTilt(data);
+ if (!tilt) return <p className="detail-note">Ice-tilt estimate unavailable in this snapshot.</p>;
+ const h=tilt.homeShare==null?null:Math.round(tilt.homeShare*100);
+ return <div className="ice-tilt"><div className="mini-heading">ICE TILT <span>Shot-pressure proxy · all strengths</span></div>
+ <div className="prediction-labels"><span>{data.away} {h==null?'—':`${100-h}%`}</span><span>{data.home} {h==null?'—':`${h}%`}</span></div>
+ <ComparisonBar label="Unblocked attempts" away={tilt.away} home={tilt.home} awayColor="#73d9c1" homeColor="#f2bc67" />
+ <p className="detail-note">{h==null?'No unblocked attempts in this window.':`${h===50?'Even pressure':`${h>50?data.home:data.away} has more shot pressure`}.`} Last {tilt.minutes.toFixed(1)} playing minutes: shots on goal + missed shots (goals counted once). Includes power plays. This estimates pressure, not measured offensive-zone possession or live NHL EDGE zone time.</p></div>;
 }

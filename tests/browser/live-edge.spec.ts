@@ -35,12 +35,14 @@ test("live data updates without collapsing open cards; failure retains last scor
   await page.locator(".live-strip button").first().click();
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
-  await expect(card.locator(".shot-chart")).toBeVisible();
+  await expect(card.locator(".shot-chart").first()).toBeVisible();
   await expect(card.getByLabel("Live winner projection")).toBeVisible();
   await expect(card.getByLabel("Projected final score")).toBeVisible();
-  await expect(card.locator(".prediction-labels")).toContainText("%");
+  await expect(card.locator(".projection .prediction-labels")).toContainText("%");
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
-  const previousEstimate = await card.locator(".prediction-labels").innerText();
+  await expect(card.locator(".hit-chart")).toBeVisible();
+  await expect(card.locator(".ice-tilt")).toContainText("Shot-pressure proxy");
+  const previousEstimate = await card.locator(".projection .prediction-labels").innerText();
   await card.getByText("Why this game matters", { exact: false }).click();
   await expect(card.locator(".card-details").first()).toHaveAttribute(
     "open",
@@ -54,11 +56,11 @@ test("live data updates without collapsing open cards; failure retains last scor
     "open",
     "",
   );
-  await expect(card.locator(".prediction-labels")).not.toHaveText(previousEstimate);
+  await expect(card.locator(".projection .prediction-labels")).not.toHaveText(previousEstimate);
   await expect(card.locator(".prediction-change")).toContainText("pp since previous update");
   await expect(card.locator(".prediction-change")).toContainText("goal (Test Scorer)");
-  await card.locator(".projection").scrollIntoViewIfNeeded();
-  await page.screenshot({path: `../nhl-play-impact-${test.info().project.name}.png`});
+  await card.locator(".hit-chart").scrollIntoViewIfNeeded();
+  await page.screenshot({path: `../nhl-pulse-${test.info().project.name}.png`});
   await page.clock.fastForward(31000);
   await expect(page.locator(".live-strip")).toContainText("Update unavailable");
   await expect(card.locator(".matchup-team").last().locator("b")).toHaveText(

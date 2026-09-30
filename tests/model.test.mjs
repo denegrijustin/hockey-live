@@ -241,3 +241,20 @@ test('live projected final score cannot remove existing goals and OT adds one go
  const ot=projectGame({...g,period:4,periodType:'OT',homeScore:4});
  assert.equal(ot.score.home+ot.score.away,9);
 });
+
+import { iceTilt, playMinute, pulseMinute } from '../src/lib/pulse.mjs';
+test('ice tilt counts recent unblocked attempts, excludes blocks and shootouts, and handles no data',()=>{
+ const game={type:2,home:'EDM',away:'CHI',state:'LIVE',period:2,clock:'10:00',plays:[
+ {type:'shot-on-goal',team:'EDM',period:2,time:'02:00'},
+ {type:'goal',team:'EDM',period:2,time:'05:00'},
+ {type:'missed-shot',team:'CHI',period:2,time:'08:00'},
+ {type:'blocked-shot',team:'CHI',period:2,time:'09:00'},
+ {type:'shot-on-goal',team:'CHI',period:1,time:'10:00'},
+ {type:'goal',team:'CHI',period:5,periodType:'SO',time:'00:00'},
+ ]};
+ const result=iceTilt(game);assert.equal(result.home,2);assert.equal(result.away,1);assert.equal(result.homeShare,2/3);
+ assert.equal(iceTilt({...game,plays:[]}).homeShare,null);
+ assert.equal(iceTilt({...game,plays:undefined}),null);
+ assert.equal(pulseMinute({...game,period:1,intermission:true,clock:'12:00'}),20);
+ assert.equal(playMinute({period:5,time:'01:00'},3),81);
+});

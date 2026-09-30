@@ -587,6 +587,20 @@ p {
   gap: 16px;
   align-items: start;
 }
+.game-day-heading {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--mint);
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.game-day-heading:first-child {
+  padding-top: 0;
+  border-top: none;
+}
 .game-card {
   --rating: #97b7c4;
   background: #13232e;

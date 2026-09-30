@@ -40,6 +40,21 @@ function initialTeams() {
 }
 const seasonLabel = (s: number) =>
   `${String(s).slice(0, 4)}–${String(s).slice(6)}`;
+// Groups the game-center list under a day heading when sorted chronologically.
+function dayHeading(dateStr: string) {
+  const start = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diff = Math.round(
+    (start(new Date(`${dateStr}T00:00:00`)) - start(new Date())) / 86400000,
+  );
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams),
     [manifest, setManifest] = useState<{
@@ -184,6 +199,21 @@ export default function App() {
       localStorage.setItem("iceboard-teams", JSON.stringify(ids));
     } catch {}
   };
+  // Importance-ranked, 30-day results make sense for a handful of teams a
+  // fan actually follows, but across all 32 it's an unreadable jumble.
+  // Default Game Center to a plain today-first weekly calendar instead —
+  // still overridable from the Sort/Window controls — and switch back to
+  // the importance view once the selection narrows again.
+  const isAllTeams = selected.length === teams.length;
+  useEffect(() => {
+    if (isAllTeams) {
+      setSort("date");
+      setRange("7");
+    } else {
+      setSort("importance");
+      setRange("30");
+    }
+  }, [isAllTeams]);
   const activeSelection = view === "players" ? playerTeams : selected;
   const activeTeams = activeSelection.map(id => teams.find(t => t.id === id)!).filter(Boolean);
   const sourceSeason = season;
@@ -441,26 +471,37 @@ export default function App() {
                     {games.length} games · {selected.length} selected teams
                   </span>
                   <span>
-                    Rank = league-wide {period === "past" ? "past" : "future"}{" "}
-                    importance · ties share rank
+                    {sort === "date"
+                      ? "Today's games first, then the rest of the week in order"
+                      : `Rank = league-wide ${period === "past" ? "past" : "future"} importance · ties share rank`}
                   </span>
                 </div>
                 {games.length ? (
                   <>
                     <div className="game-grid">
-                      {games.slice(0, limit).map((g) => (
-                        <GameCard
-                          baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
-                          key={`${g.id}-${selected.join("-")}`}
-                          game={g}
-                          teams={teams}
-                          before={analysis.before[g.id]}
-                          analysis={analysis.analysis[g.id]}
-                          selected={selected}
-                          sourceSeason={sourceSeason}
-                          allGames={data.games}
-                        />
-                      ))}
+                      {games.slice(0, limit).flatMap((g, i, arr) => {
+                        const elements = [];
+                        if (sort === "date" && (i === 0 || arr[i - 1].date !== g.date))
+                          elements.push(
+                            <div className="game-day-heading" key={`day-${g.date}`}>
+                              {dayHeading(g.date)}
+                            </div>,
+                          );
+                        elements.push(
+                          <GameCard
+                            baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
+                            key={`${g.id}-${selected.join("-")}`}
+                            game={g}
+                            teams={teams}
+                            before={analysis.before[g.id]}
+                            analysis={analysis.analysis[g.id]}
+                            selected={selected}
+                            sourceSeason={sourceSeason}
+                            allGames={data.games}
+                          />,
+                        );
+                        return elements;
+                      })}
                     </div>
                     {games.length > limit && (
                       <button

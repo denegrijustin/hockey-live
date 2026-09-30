@@ -40,6 +40,27 @@ test("default teams, league selection, graphs and season navigation", async ({
     ),
   ).toBe(true);
 });
+test("All 32 defaults Game Center to a today-first weekly calendar; My three restores importance ranking", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".game-card").first()).toBeVisible();
+  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
+  await expect(page.getByLabel("Window")).toHaveValue("30");
+  await page.getByRole("button", { name: "All 32", exact: true }).click();
+  await expect(page.getByLabel("Sort by")).toHaveValue("date");
+  await expect(page.getByLabel("Window")).toHaveValue("7");
+  await expect(page.locator(".game-day-heading").first()).toBeVisible();
+  await expect(page.locator(".results-line")).toContainText(
+    "Today's games first",
+  );
+  // A visitor can still override the default manually.
+  await page.getByLabel("Sort by").selectOption("importance");
+  await expect(page.locator(".game-day-heading")).toHaveCount(0);
+  await page.getByRole("button", { name: "My three", exact: true }).click();
+  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
+  await expect(page.getByLabel("Window")).toHaveValue("30");
+});
 test("recent actual game contribution and mobile card layout", async ({
   page,
 }, info) => {

@@ -12,6 +12,9 @@ const PlayerImpact = lazy(() =>
 const EdgeStats = lazy(() =>
   import("./EdgeStats").then((m) => ({ default: m.EdgeStats })),
 );
+const GameOverlay = lazy(() =>
+  import("./GameOverlay").then((m) => ({ default: m.GameOverlay })),
+);
 export const GameCard = memo(function GameCard({
   game,
   teams,
@@ -32,7 +35,8 @@ export const GameCard = memo(function GameCard({
   const past = finished(game),
     live = isLive(game),
     [impactOpen, setImpactOpen] = useState(false),
-    [edgeOpen, setEdgeOpen] = useState(false);
+    [edgeOpen, setEdgeOpen] = useState(false),
+    [overlayOpen, setOverlayOpen] = useState(false);
   const home = teams.find((t) => t.id === game.home)!,
     away = teams.find((t) => t.id === game.away)!;
   const rank =
@@ -112,6 +116,27 @@ export const GameCard = memo(function GameCard({
         before={before}
         baseline={baseline}
       />
+      <button
+        type="button"
+        className="expand-game"
+        onClick={() => setOverlayOpen(true)}
+      >
+        ⤢ Full game view <span>Ice time · player tracker · momentum</span>
+      </button>
+      {overlayOpen && (
+        <Suspense fallback={null}>
+          <GameOverlay
+            game={game}
+            home={home}
+            away={away}
+            before={before}
+            baseline={baseline}
+            sourceSeason={sourceSeason}
+            analysis={analysis}
+            onClose={() => setOverlayOpen(false)}
+          />
+        </Suspense>
+      )}
       <details className="card-details">
         <summary>
           Why this game matters <span>+</span>

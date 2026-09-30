@@ -4,13 +4,11 @@ import { useEffect, useState } from "react";
 import { loadBox, loadPlayers } from "../lib/api";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
 import type { Game, Boxscore, PlayerData, PlayerSeason } from "../types";
-export function PlayerImpact({
-  game,
-  sourceSeason,
-}: {
-  game: Game;
-  sourceSeason: number;
-}) {
+// Shared by the inline "Player impact" panel and the full-game overlay's
+// per-team tracker, so both stay in sync on how box-score data is sourced:
+// a 30s-polled live boxscore while the game is in progress, the saved final
+// boxscore once it's over, or season-context stats before puck drop.
+export function usePlayerBox(game: Game, sourceSeason: number) {
   const live = ["LIVE", "CRIT"].includes(game.state);
   const past = ["OFF", "FINAL"].includes(game.state);
   const { data: liveData, error: liveError } = useFeed<Boxscore>(
@@ -45,11 +43,27 @@ export function PlayerImpact({
       active = false;
     };
   }, [game.id, past, live, sourceSeason, attempt]);
-  if (error || (liveError && !data))
+  return {
+    data,
+    context,
+    error: error || (liveError && !data ? liveError : ""),
+    live,
+    past,
+    retry: () => setAttempt((x) => x + 1),
+  };
+}
+export function PlayerImpact({
+  game,
+  sourceSeason,
+}: {
+  game: Game;
+  sourceSeason: number;
+}) {
+  const { data, context, error, live, retry } = usePlayerBox(game, sourceSeason);
+  if (error && !data)
     return (
       <div className="inline-error">
-        {error || liveError}{" "}
-        <button onClick={() => setAttempt((x) => x + 1)}>Retry</button>
+        {error} <button onClick={retry}>Retry</button>
       </div>
     );
   if (!data && !context.length)

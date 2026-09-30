@@ -107,6 +107,77 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
   ).toBe(true);
 });
 
+test("full game overlay shows projection, ice tilt and a per-team player tracker with ice time", async ({
+  page,
+}) => {
+  const game = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
+  await page.route("**/api/live", (route) =>
+    route.fulfill({
+      json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] },
+    }),
+  );
+  const plays = fixture.shots.map((s, i) => ({
+    id: s.id,
+    order: i + 1,
+    period: s.period,
+    periodType: s.periodType,
+    time: s.time,
+    team: s.team,
+    type: "shot-on-goal",
+    player: s.player,
+    penalty: null,
+    duration: null,
+  }));
+  await page.route("**/api/game/*", (route) =>
+    route.fulfill({ json: { ...fixture, plays } }),
+  );
+  const boxscore = {
+    id: fixture.id,
+    state: "LIVE",
+    updatedAt: new Date().toISOString(),
+    homeShots: fixture.homeShots,
+    awayShots: fixture.awayShots,
+    players: [
+      { id: 1, number: 9, name: "FLA Top Scorer", team: "FLA", position: "C", hits: 2, goals: 2, assists: 1, shots: 4, plusMinus: 2, pim: 0, toi: "18:32", saves: null, shotsAgainst: null, goalsAgainst: null },
+      { id: 2, number: 10, name: "FLA Bottom Player", team: "FLA", position: "D", hits: 0, goals: 0, assists: 0, shots: 0, plusMinus: -3, pim: 4, toi: "9:10", saves: null, shotsAgainst: null, goalsAgainst: null },
+      { id: 3, number: 1, name: "FLA Goalie", team: "FLA", position: "G", hits: null, goals: null, assists: null, shots: null, plusMinus: null, pim: null, toi: "42:00", saves: 28, shotsAgainst: 30, goalsAgainst: 2 },
+      { id: 4, number: 19, name: "CAR Top Scorer", team: "CAR", position: "C", hits: 1, goals: 1, assists: 2, shots: 3, plusMinus: 1, pim: 0, toi: "17:45", saves: null, shotsAgainst: null, goalsAgainst: null },
+      { id: 5, number: 20, name: "CAR Bottom Player", team: "CAR", position: "D", hits: 0, goals: 0, assists: 0, shots: 1, plusMinus: -2, pim: 6, toi: "8:02", saves: null, shotsAgainst: null, goalsAgainst: null },
+      { id: 6, number: 30, name: "CAR Goalie", team: "CAR", position: "G", hits: null, goals: null, assists: null, shots: null, plusMinus: null, pim: null, toi: "42:00", saves: 24, shotsAgainst: 26, goalsAgainst: 1 },
+    ],
+  };
+  await page.route("**/api/boxscore/**", (route) => route.fulfill({ json: boxscore }));
+  await page.goto("/");
+  await expect(page.locator(".live-strip")).toContainText("FLA");
+  await page.locator(".live-strip button").first().click();
+  const card = page.locator(".live-card").first();
+  await card.getByRole("button", { name: /Full game view/ }).click();
+  const dialog = page.locator("dialog.game-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("open", "");
+  await expect(dialog.locator(".dialog-team")).toHaveCount(2);
+  await expect(dialog).toContainText("Florida Panthers");
+  await expect(dialog).toContainText("Carolina Hurricanes");
+  // Real-time / projection content, reused from the inline card's GameData.
+  await expect(dialog.getByLabel("Live winner projection")).toBeVisible();
+  await expect(dialog.locator(".ice-tilt")).toContainText("ICE TILT");
+  await expect(dialog.locator(".shot-chart")).toHaveCount(2);
+  // Player tracker: ice time and top/bottom-3 broken out per team.
+  await expect(dialog).toContainText("PLAYER TRACKER");
+  const trackerTeams = dialog.locator(".tracker-team");
+  await expect(trackerTeams).toHaveCount(2);
+  await expect(trackerTeams.first()).toContainText("Top performers");
+  await expect(trackerTeams.first()).toContainText("FLA Top Scorer");
+  await expect(trackerTeams.first()).toContainText("18:32");
+  await expect(trackerTeams.first()).toContainText("Struggling");
+  await expect(trackerTeams.first()).toContainText("FLA Bottom Player");
+  await expect(trackerTeams.last()).toContainText("CAR Top Scorer");
+  await expect(trackerTeams.last()).toContainText("CAR Bottom Player");
+  await expect(dialog).toContainText("FLA Goalie");
+  await expect(dialog).toContainText("CAR Goalie");
+  await dialog.getByRole("button", { name: "Close full game view" }).click();
+  await expect(dialog).toHaveCount(0);
+});
 test('current EDGE labels a prior-season fallback',async({page})=>{
  await page.route('**/api/edge/**',r=>r.fulfill({json:edgeFixture}));
  await page.goto('/'); await page.getByRole('button',{name:'NHL EDGE',exact:true}).click();

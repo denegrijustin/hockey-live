@@ -1,18 +1,28 @@
-import { EdgePanel } from "./components/EdgeStats";
 import { useFeed } from "./lib/polling";
 import { mergeScores, isLive } from "./lib/game-data.mjs";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { loadSeason } from "./lib/api";
 import { analyzeSeason, finished } from "./lib/model.mjs";
 import { TeamPicker } from "./components/TeamPicker";
-import { TeamSummary } from "./components/TeamSummary";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
-import { Trends } from "./components/Trends";
-import { Players } from "./components/Players";
-import { Standings } from "./components/Standings";
+// Only the "games" tab is needed for first paint; the rest of the tabs
+// (and their per-team API calls) load on demand when a visitor switches
+// to them, keeping the initial bundle smaller.
+const EdgePanel = lazy(() =>
+  import("./components/EdgeStats").then((m) => ({ default: m.EdgePanel })),
+);
+const Trends = lazy(() =>
+  import("./components/Trends").then((m) => ({ default: m.Trends })),
+);
+const Players = lazy(() =>
+  import("./components/Players").then((m) => ({ default: m.Players })),
+);
+const Standings = lazy(() =>
+  import("./components/Standings").then((m) => ({ default: m.Standings })),
+);
 const teams: Team[] = rawTeams;
 const defaults = ["EDM", "CHI", "MIN"];
 function initialTeams() {
@@ -29,6 +39,21 @@ function initialTeams() {
 }
 const seasonLabel = (s: number) =>
   `${String(s).slice(0, 4)}–${String(s).slice(6)}`;
+// Groups the game-center list under a day heading when sorted chronologically.
+function dayHeading(dateStr: string) {
+  const start = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diff = Math.round(
+    (start(new Date(`${dateStr}T00:00:00`)) - start(new Date())) / 86400000,
+  );
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams),
     [manifest, setManifest] = useState<{
@@ -45,7 +70,7 @@ export default function App() {
   const [view, setView] = useState("games"),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
-    [sort, setSort] = useState("importance"),
+    [sort, setSort] = useState("date"),
     [range, setRange] = useState("30"),
     [query, setQuery] = useState(""),
     [limit, setLimit] = useState(18);
@@ -92,22 +117,27 @@ export default function App() {
   const { data: scoreboard, error: liveError } = useFeed<Scoreboard>(
     season === manifest?.current ? "/api/live" : null,
   );
-  const data = useMemo<Snapshot | null>(
-    () =>
-      storedData
-        ? { ...storedData, games: mergeScores(storedData.games, scoreboard) }
-        : null,
-    [storedData, scoreboard],
-  );
+  const data = useMemo<Snapshot | null>(() => {
+    if (!storedData) return null;
+    const games = mergeScores(storedData.games, scoreboard);
+    // Same array back means nothing actually changed for this tick — keep
+    // the same Snapshot reference so analyzeSeason isn't redone for nothing.
+    return games === storedData.games ? storedData : { ...storedData, games };
+  }, [storedData, scoreboard]);
   useEffect(() => {
     if (!season || season !== manifest?.current) return;
     const controller = new AbortController();
+    // The /api/live feed (below) already carries in-progress scores every
+    // 30s, so this only needs to catch things that feed doesn't cover:
+    // newly finished games rolling into the schedule, standings drift from
+    // games elsewhere in the league. A 5-minute cadence keeps that current
+    // without re-downloading the full season on top of the live poll.
     const timer = setInterval(() => {
       if (!document.hidden)
         loadSeason(season, controller.signal)
           .then(setData)
           .catch(() => {});
-    }, 120000);
+    }, 300000);
     return () => {
       controller.abort();
       clearInterval(timer);
@@ -158,6 +188,26 @@ export default function App() {
               : a.start.localeCompare(b.start),
       );
   }, [data, analysis, selected, type, period, range, query, sort]);
+  // The "Upcoming" list excludes finished games entirely, so a game that
+  // already wrapped up earlier today would otherwise vanish until you
+  // switch to "Past games". Surface those in a compact, collapsed strip
+  // instead of full-size cards crowding the upcoming list.
+  const todayStr = new Date().toLocaleDateString("en-CA");
+  const finishedToday = useMemo(() => {
+    if (!data) return [];
+    return data.games
+      .filter(
+        (g) =>
+          g.date === todayStr &&
+          finished(g) &&
+          g.type === type &&
+          (selected.includes(g.home) || selected.includes(g.away)) &&
+          `${g.home} ${g.away} ${teams.find((t) => t.id === g.home)?.name} ${teams.find((t) => t.id === g.away)?.name}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+      )
+      .sort((a, b) => a.start.localeCompare(b.start));
+  }, [data, type, selected, query, todayStr]);
   useEffect(
     () => setLimit(18),
     [season, selected, type, period, range, query, sort],
@@ -168,6 +218,15 @@ export default function App() {
       localStorage.setItem("iceboard-teams", JSON.stringify(ids));
     } catch {}
   };
+  // Game Center defaults to chronological order — today's games first, then
+  // the rest of the week — since that's readable at any team-selection size;
+  // Importance stays available from the Sort control for anyone who wants a
+  // ranked view instead. A 30-day window suits a handful of followed teams,
+  // but across all 32 it's a wall of games, so narrow the window there.
+  const isAllTeams = selected.length === teams.length;
+  useEffect(() => {
+    setRange(isAllTeams ? "7" : "30");
+  }, [isAllTeams]);
   const activeSelection = view === "players" ? playerTeams : selected;
   const activeTeams = activeSelection.map(id => teams.find(t => t.id === id)!).filter(Boolean);
   const sourceSeason = season;
@@ -280,23 +339,6 @@ export default function App() {
           </div>
         ) : data && analysis ? (
           <>
-            <section className="team-summaries" aria-label="Selected teams">
-              {activeTeams.slice(0, 6).map((t) => (
-                <TeamSummary
-                  key={t.id}
-                  team={t}
-                  standing={analysis.table[t.id]}
-                  baseline={baselineAnalysis?.table[t.id]}
-                  games={data.games}
-                />
-              ))}
-            </section>
-            {activeSelection.length > 6 && (
-              <p className="detail-note">
-                Showing six summary cards; all {activeSelection.length} selected teams
-                are included below.
-              </p>
-            )}
             {scoreboard && view === "games" && (
               <section className="live-strip" aria-label="Live NHL scoreboard">
                 <div>
@@ -334,7 +376,9 @@ export default function App() {
               </section>
             )}
             {view === "edge" && (
-              <EdgePanel teams={selectedTeams} season={season} />
+              <Suspense fallback={<div className="empty" role="status">Loading NHL EDGE…</div>}>
+                <EdgePanel teams={selectedTeams} season={season} />
+              </Suspense>
             )}
             {view === "games" && (
               <>
@@ -418,22 +462,27 @@ export default function App() {
                     />
                   </label>
                 </div>
-                <div className="results-line">
-                  <span role="status">
-                    {games.length} games · {selected.length} selected teams
-                  </span>
-                  <span>
-                    Rank = league-wide {period === "past" ? "past" : "future"}{" "}
-                    importance · ties share rank
-                  </span>
-                </div>
-                {games.length ? (
-                  <>
+                {period === "future" && finishedToday.length > 0 && (
+                  <details className="finished-today">
+                    <summary>
+                      <span className="finished-today-label">
+                        <i />
+                        Finished today <b>{finishedToday.length}</b>
+                      </span>
+                      <span className="finished-today-scores">
+                        {finishedToday.map((g) => (
+                          <span key={g.id}>
+                            {g.away} {g.awayScore}–{g.homeScore} {g.home}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="expand-icon">+</span>
+                    </summary>
                     <div className="game-grid">
-                      {games.slice(0, limit).map((g) => (
+                      {finishedToday.map((g) => (
                         <GameCard
                           baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
-                          key={`${g.id}-${selected.join("-")}`}
+                          key={`finished-${g.id}`}
                           game={g}
                           teams={teams}
                           before={analysis.before[g.id]}
@@ -443,6 +492,45 @@ export default function App() {
                           allGames={data.games}
                         />
                       ))}
+                    </div>
+                  </details>
+                )}
+                <div className="results-line">
+                  <span role="status">
+                    {games.length} games · {selected.length} selected teams
+                  </span>
+                  <span>
+                    {sort === "date"
+                      ? "Today's games first, then the rest of the week in order"
+                      : `Rank = league-wide ${period === "past" ? "past" : "future"} importance · ties share rank`}
+                  </span>
+                </div>
+                {games.length ? (
+                  <>
+                    <div className="game-grid">
+                      {games.slice(0, limit).flatMap((g, i, arr) => {
+                        const elements = [];
+                        if (sort === "date" && (i === 0 || arr[i - 1].date !== g.date))
+                          elements.push(
+                            <div className="game-day-heading" key={`day-${g.date}`}>
+                              {dayHeading(g.date)}
+                            </div>,
+                          );
+                        elements.push(
+                          <GameCard
+                            baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
+                            key={`${g.id}-${selected.join("-")}`}
+                            game={g}
+                            teams={teams}
+                            before={analysis.before[g.id]}
+                            analysis={analysis.analysis[g.id]}
+                            selected={selected}
+                            sourceSeason={sourceSeason}
+                            allGames={data.games}
+                          />,
+                        );
+                        return elements;
+                      })}
                     </div>
                     {games.length > limit && (
                       <button
@@ -503,23 +591,29 @@ export default function App() {
               </>
             )}
             {view === "trends" && (
-              <Trends
-                teams={selectedTeams}
-                table={analysis.table}
-                season={season}
-              />
+              <Suspense fallback={<div className="empty" role="status">Loading team trends…</div>}>
+                <Trends
+                  teams={selectedTeams}
+                  table={analysis.table}
+                  season={season}
+                />
+              </Suspense>
             )}{" "}
             {view === "players" && (
-              <Players teams={activeTeams} season={sourceSeason} />
+              <Suspense fallback={<div className="empty" role="status">Loading player contributions…</div>}>
+                <Players teams={activeTeams} season={sourceSeason} />
+              </Suspense>
             )}{" "}
             {view === "standings" && (
-              <Standings
-                teams={teams}
-                table={analysis.table}
-                games={data.games}
-                baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
-                selected={selected}
-              />
+              <Suspense fallback={<div className="empty" role="status">Loading standings…</div>}>
+                <Standings
+                  teams={teams}
+                  table={analysis.table}
+                  games={data.games}
+                  baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
+                  selected={selected}
+                />
+              </Suspense>
             )}
           </>
         ) : null}

@@ -15,11 +15,33 @@ export function normalizeScoreboard(j) {
     })),
   };
 }
+const LIVE_FIELDS = [
+  "state",
+  "homeScore",
+  "awayScore",
+  "period",
+  "periodType",
+  "clock",
+  "intermission",
+  "homeShots",
+  "awayShots",
+];
+// Keeps the same game (and, if nothing changed league-wide, the same array)
+// reference when a poll tick brings no new information. Downstream
+// standings/importance recomputation is expensive over a full season, so
+// referential stability here is what lets React (and useMemo) skip it on
+// every no-op tick instead of re-deriving the league table every 30s.
 export function mergeScores(games, scoreboard) {
   const updates = new Map((scoreboard?.games ?? []).map((g) => [g.id, g]));
-  return games.map((g) =>
-    updates.has(g.id) ? { ...g, ...updates.get(g.id) } : g,
-  );
+  if (!updates.size) return games;
+  let changed = false;
+  const next = games.map((g) => {
+    const u = updates.get(g.id);
+    if (!u || LIVE_FIELDS.every((k) => g[k] === u[k])) return g;
+    changed = true;
+    return { ...g, ...u };
+  });
+  return changed ? next : games;
 }
 export function normalizeGameFeed(j) {
   const team = (id) =>

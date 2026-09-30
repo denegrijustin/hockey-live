@@ -32,6 +32,12 @@ export const GameCard = memo(function GameCard({
     analysis.rank == null
       ? "Unranked"
       : `${analysis.tied ? "T" : ""}#${analysis.rank}`;
+  const broadcasts = [...new Set(game.broadcasts)];
+  const broadcastLabel = broadcasts.length
+    ? broadcasts.length > 2
+      ? `${broadcasts.slice(0, 2).join(" · ")} +${broadcasts.length - 2}`
+      : broadcasts.join(" · ")
+    : "TV TBD";
   const scoreClass =
     analysis.score >= 75 ? "high" : analysis.score >= 50 ? "medium" : "low";
   const day = new Date(game.start);
@@ -55,11 +61,8 @@ export const GameCard = memo(function GameCard({
                   timeZoneName: "short",
                 })}
         </span>
-        <span
-          className="cohort-rank"
-          title={`League-wide ${past ? "past" : "upcoming"} ranking`}
-        >
-          {rank} <span>{past ? "PAST" : live ? "IN PLAY" : "FUTURE"}</span>
+        <span className="tv-network" title={broadcasts.join(" · ") || "TV network has not been announced"}>
+          <span>TV</span> {broadcastLabel}
         </span>
       </div>
       <div className="matchup">

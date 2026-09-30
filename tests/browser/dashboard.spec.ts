@@ -11,6 +11,8 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(page.locator(".team-summaries")).toContainText("Chicago");
   await expect(page.locator(".team-summaries")).toContainText("Minnesota");
   const card = page.locator(".game-card").first();
+  await expect(card.locator(".tv-network")).toBeVisible();
+  await expect(card.locator(".tv-network")).not.toContainText("T#");
   await expect(card.getByLabel("Pregame projection")).toBeVisible();
   await card.scrollIntoViewIfNeeded();
   await page.screenshot({path: `../nhl-projection-${test.info().project.name}.png`});
@@ -26,7 +28,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   );
   await page.getByRole("button", { name: "My three", exact: true }).click();
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
-  await expect(page.locator(".game-card").first()).toContainText("PAST");
+  await expect(page.locator(".game-card").first()).toContainText("FINAL");
   await page.getByRole("button", { name: "Team trends", exact: true }).click();
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
   await page.getByRole("button", { name: "Standings", exact: true }).click();

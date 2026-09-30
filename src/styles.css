@@ -617,20 +617,22 @@ p {
   font-size: 8px;
   color: #8da8b8;
 }
-.cohort-rank {
+.tv-network {
   font-size: 11px;
   font-weight: 700;
-  white-space: nowrap;
+  line-height: 1.25;
+  text-align: right;
+  max-width: 48%;
   background: #1c3340;
   color: #b7d2df;
   padding: 5px 7px;
   border-radius: 5px;
 }
-.cohort-rank > span {
+.tv-network > span {
   font-size: 7px;
   letter-spacing: 0.6px;
   color: #8eabb8;
-  margin-left: 3px;
+  margin-right: 3px;
 }
 .matchup {
   display: flex;

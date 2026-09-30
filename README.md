@@ -83,3 +83,5 @@ Players has its own team selection, starting with EDM/CHI/MIN each page load, in
 
 ### Game pulse and ice tilt
 Game pulse displays separate cumulative shots-on-goal and hit timelines using matching time scales and team colors. Lines end at the reported game clock. Ice tilt is explicitly a shot-pressure proxy: each team's share of unblocked attempts (shots on goal including goals, plus misses) in the last ten playing minutes, at all strengths. Blocked shots are excluded because their event owner may be the defending team. Zero attempts show no estimate, not a fabricated 50/50 possession split. This is not measured zone possession or live NHL EDGE tracking; older saved snapshots without full plays show an unavailable message.
+
+Game cards show the published TV/streaming network in the top-right badge, replacing the league-wide T# rank badge. Up to two networks are shown there with a count for additional feeds; the full list remains in the expanded game details. Unannounced assignments display `TV TBD`.

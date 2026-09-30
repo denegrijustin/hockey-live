@@ -6,7 +6,6 @@ import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { loadSeason } from "./lib/api";
 import { analyzeSeason, finished } from "./lib/model.mjs";
 import { TeamPicker } from "./components/TeamPicker";
-import { TeamSummary } from "./components/TeamSummary";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs
@@ -340,23 +339,6 @@ export default function App() {
           </div>
         ) : data && analysis ? (
           <>
-            <section className="team-summaries" aria-label="Selected teams">
-              {activeTeams.slice(0, 6).map((t) => (
-                <TeamSummary
-                  key={t.id}
-                  team={t}
-                  standing={analysis.table[t.id]}
-                  baseline={baselineAnalysis?.table[t.id]}
-                  games={data.games}
-                />
-              ))}
-            </section>
-            {activeSelection.length > 6 && (
-              <p className="detail-note">
-                Showing six summary cards; all {activeSelection.length} selected teams
-                are included below.
-              </p>
-            )}
             {scoreboard && view === "games" && (
               <section className="live-strip" aria-label="Live NHL scoreboard">
                 <div>

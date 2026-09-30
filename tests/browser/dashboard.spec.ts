@@ -7,10 +7,19 @@ test("default teams, league selection, graphs and season navigation", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await expect(page.locator(".team-summaries h3")).toHaveCount(3);
-  await expect(page.locator(".team-summaries")).toContainText("Edmonton");
-  await expect(page.locator(".team-summaries")).toContainText("Chicago");
-  await expect(page.locator(".team-summaries")).toContainText("Minnesota");
+  await expect(page.locator(".team-menu summary span")).toHaveText("3");
+  await expect(page.getByRole("button", { name: "EDM", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: "CHI", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: "MIN", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   const card = page.locator(".game-card").first();
   await expect(card.getByLabel("Pregame projection")).toBeVisible();
   await card.scrollIntoViewIfNeeded();

@@ -71,7 +71,7 @@ export default function App() {
   const [view, setView] = useState("games"),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
-    [sort, setSort] = useState("importance"),
+    [sort, setSort] = useState("date"),
     [range, setRange] = useState("30"),
     [query, setQuery] = useState(""),
     [limit, setLimit] = useState(18);
@@ -189,6 +189,26 @@ export default function App() {
               : a.start.localeCompare(b.start),
       );
   }, [data, analysis, selected, type, period, range, query, sort]);
+  // The "Upcoming" list excludes finished games entirely, so a game that
+  // already wrapped up earlier today would otherwise vanish until you
+  // switch to "Past games". Surface those in a compact, collapsed strip
+  // instead of full-size cards crowding the upcoming list.
+  const todayStr = new Date().toLocaleDateString("en-CA");
+  const finishedToday = useMemo(() => {
+    if (!data) return [];
+    return data.games
+      .filter(
+        (g) =>
+          g.date === todayStr &&
+          finished(g) &&
+          g.type === type &&
+          (selected.includes(g.home) || selected.includes(g.away)) &&
+          `${g.home} ${g.away} ${teams.find((t) => t.id === g.home)?.name} ${teams.find((t) => t.id === g.away)?.name}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+      )
+      .sort((a, b) => a.start.localeCompare(b.start));
+  }, [data, type, selected, query, todayStr]);
   useEffect(
     () => setLimit(18),
     [season, selected, type, period, range, query, sort],
@@ -199,20 +219,14 @@ export default function App() {
       localStorage.setItem("iceboard-teams", JSON.stringify(ids));
     } catch {}
   };
-  // Importance-ranked, 30-day results make sense for a handful of teams a
-  // fan actually follows, but across all 32 it's an unreadable jumble.
-  // Default Game Center to a plain today-first weekly calendar instead —
-  // still overridable from the Sort/Window controls — and switch back to
-  // the importance view once the selection narrows again.
+  // Game Center defaults to chronological order — today's games first, then
+  // the rest of the week — since that's readable at any team-selection size;
+  // Importance stays available from the Sort control for anyone who wants a
+  // ranked view instead. A 30-day window suits a handful of followed teams,
+  // but across all 32 it's a wall of games, so narrow the window there.
   const isAllTeams = selected.length === teams.length;
   useEffect(() => {
-    if (isAllTeams) {
-      setSort("date");
-      setRange("7");
-    } else {
-      setSort("importance");
-      setRange("30");
-    }
+    setRange(isAllTeams ? "7" : "30");
   }, [isAllTeams]);
   const activeSelection = view === "players" ? playerTeams : selected;
   const activeTeams = activeSelection.map(id => teams.find(t => t.id === id)!).filter(Boolean);
@@ -466,6 +480,39 @@ export default function App() {
                     />
                   </label>
                 </div>
+                {period === "future" && finishedToday.length > 0 && (
+                  <details className="finished-today">
+                    <summary>
+                      <span className="finished-today-label">
+                        <i />
+                        Finished today <b>{finishedToday.length}</b>
+                      </span>
+                      <span className="finished-today-scores">
+                        {finishedToday.map((g) => (
+                          <span key={g.id}>
+                            {g.away} {g.awayScore}–{g.homeScore} {g.home}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="expand-icon">+</span>
+                    </summary>
+                    <div className="game-grid">
+                      {finishedToday.map((g) => (
+                        <GameCard
+                          baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
+                          key={`finished-${g.id}`}
+                          game={g}
+                          teams={teams}
+                          before={analysis.before[g.id]}
+                          analysis={analysis.analysis[g.id]}
+                          selected={selected}
+                          sourceSeason={sourceSeason}
+                          allGames={data.games}
+                        />
+                      ))}
+                    </div>
+                  </details>
+                )}
                 <div className="results-line">
                   <span role="status">
                     {games.length} games · {selected.length} selected teams

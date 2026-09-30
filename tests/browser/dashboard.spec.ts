@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import manifest from "../../public/data/manifest.json" with { type: "json" };
 test("default teams, league selection, graphs and season navigation", async ({
   page,
 }) => {
@@ -40,26 +41,104 @@ test("default teams, league selection, graphs and season navigation", async ({
     ),
   ).toBe(true);
 });
-test("All 32 defaults Game Center to a today-first weekly calendar; My three restores importance ranking", async ({
+test("Game Center defaults to chronological order; All 32 narrows the window, not the sort", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
-  await expect(page.getByLabel("Window")).toHaveValue("30");
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
   await expect(page.getByLabel("Sort by")).toHaveValue("date");
-  await expect(page.getByLabel("Window")).toHaveValue("7");
+  await expect(page.getByLabel("Window")).toHaveValue("30");
   await expect(page.locator(".game-day-heading").first()).toBeVisible();
   await expect(page.locator(".results-line")).toContainText(
     "Today's games first",
   );
-  // A visitor can still override the default manually.
+  await page.getByRole("button", { name: "All 32", exact: true }).click();
+  await expect(page.getByLabel("Sort by")).toHaveValue("date");
+  await expect(page.getByLabel("Window")).toHaveValue("7");
+  await expect(page.locator(".game-day-heading").first()).toBeVisible();
+  // A visitor can still switch to importance ranking manually.
   await page.getByLabel("Sort by").selectOption("importance");
   await expect(page.locator(".game-day-heading")).toHaveCount(0);
+  await expect(page.locator(".results-line")).toContainText(
+    "Rank = league-wide",
+  );
   await page.getByRole("button", { name: "My three", exact: true }).click();
-  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
   await expect(page.getByLabel("Window")).toHaveValue("30");
+});
+test("finished-today games collapse into a compact expandable strip", async ({
+  page,
+}) => {
+  const today = new Date().toLocaleDateString("en-CA");
+  const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString("en-CA");
+  const season = manifest.current;
+  const snapshot = {
+    season,
+    updatedAt: new Date().toISOString(),
+    source: "test fixture",
+    games: [
+      {
+        id: 9101,
+        season,
+        type: 2,
+        date: today,
+        start: `${today}T18:00:00Z`,
+        state: "FINAL",
+        scheduleState: "OK",
+        venue: "Test Arena",
+        home: "EDM",
+        away: "CHI",
+        homeScore: 4,
+        awayScore: 2,
+        end: "REG",
+        broadcasts: [],
+        round: null,
+      },
+      {
+        id: 9102,
+        season,
+        type: 2,
+        date: tomorrow,
+        start: `${tomorrow}T23:00:00Z`,
+        state: "FUT",
+        scheduleState: "OK",
+        venue: "Test Arena",
+        home: "MIN",
+        away: "CHI",
+        homeScore: null,
+        awayScore: null,
+        end: "",
+        broadcasts: [],
+        round: null,
+      },
+    ],
+  };
+  await page.route(`**/api/season/${season}`, (route) =>
+    route.fulfill({ json: snapshot }),
+  );
+  await page.route(`**/data/seasons/${season}.json`, (route) =>
+    route.fulfill({ json: snapshot }),
+  );
+  await page.goto("/");
+  // The finished-today strip sits before the main upcoming grid in the DOM,
+  // and its own card is hidden (inside a closed <details>) until expanded —
+  // so scope to the grid that follows the strip to find the visible one.
+  await expect(
+    page.locator(".finished-today ~ .game-grid .game-card").first(),
+  ).toBeVisible();
+  const strip = page.locator(".finished-today");
+  await expect(strip).toBeVisible();
+  await expect(strip).toContainText("Finished today");
+  await expect(strip).toContainText("1");
+  await expect(strip).toContainText("CHI 2");
+  await expect(strip).toContainText("4 EDM");
+  // Collapsed by default: the full game card exists but isn't shown yet,
+  // since it's inside the closed <details>.
+  await expect(strip).not.toHaveAttribute("open", "");
+  await expect(strip.locator(".game-card")).toBeHidden();
+  await strip.locator("> summary").click();
+  await expect(strip).toHaveAttribute("open", "");
+  await expect(strip.locator(".game-card")).toBeVisible();
+  await expect(strip.locator(".game-card")).toContainText("Edmonton");
 });
 test("recent actual game contribution and mobile card layout", async ({
   page,

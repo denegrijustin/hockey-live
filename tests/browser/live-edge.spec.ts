@@ -35,6 +35,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await page.locator(".live-strip button").first().click();
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
+  await card.locator(".game-card-summary").click();
   await expect(card.locator(".shot-chart").first()).toBeVisible();
   await expect(card.getByLabel("Live winner projection")).toBeVisible();
   await expect(card.getByLabel("Projected final score")).toBeVisible();
@@ -55,6 +56,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await shotsGraph.locator('.shot-chart').hover({position:{x:bounds!.width/2,y:bounds!.height/2}});
   await expect(shotsGraph.locator('.pulse-readout')).toContainText('Selected point');
   const previousEstimate = await card.locator(".projection .prediction-labels").innerText();
+  await card.getByRole("button", { name: /Open full game card/ }).click();
   await card.getByText("Why this game matters", { exact: false }).click();
   await expect(card.locator(".card-details").first()).toHaveAttribute(
     "open",
@@ -151,6 +153,8 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(page.locator(".live-strip")).toContainText("FLA");
   await page.locator(".live-strip button").first().click();
   const card = page.locator(".live-card").first();
+  await card.locator(".game-card-summary").click();
+  await card.getByRole("button", { name: /Open full game card/ }).click();
   await card.getByRole("button", { name: /Full game view/ }).click();
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();

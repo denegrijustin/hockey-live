@@ -3,6 +3,7 @@ import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
+import { NetworkLogos } from "./NetworkLogos";
 // These two only render inside a collapsed <details> panel once a visitor
 // opens it, so they're loaded on demand instead of shipping in every
 // card's initial bundle (there can be dozens of cards on one page).
@@ -36,7 +37,8 @@ export const GameCard = memo(function GameCard({
     live = isLive(game),
     [impactOpen, setImpactOpen] = useState(false),
     [edgeOpen, setEdgeOpen] = useState(false),
-    [overlayOpen, setOverlayOpen] = useState(false);
+    [overlayOpen, setOverlayOpen] = useState(false),
+    [detailLevel, setDetailLevel] = useState<0 | 1 | 2>(0);
   const home = teams.find((t) => t.id === game.home)!,
     away = teams.find((t) => t.id === game.away)!;
   const rank =
@@ -44,16 +46,18 @@ export const GameCard = memo(function GameCard({
       ? "Unranked"
       : `${analysis.tied ? "T" : ""}#${analysis.rank}`;
   const broadcasts = [...new Set(game.broadcasts)];
-  const broadcastLabel = broadcasts.length
-    ? broadcasts.length > 2
-      ? `${broadcasts.slice(0, 2).join(" · ")} +${broadcasts.length - 2}`
-      : broadcasts.join(" · ")
-    : "TV TBD";
   const scoreClass =
     analysis.score >= 75 ? "high" : analysis.score >= 50 ? "medium" : "low";
   const day = new Date(game.start);
   return (
-    <article style={{background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, #09141d), #0e1b25)`}} className={`game-card ${scoreClass} ${live ? "live-card" : ""}`}>
+    <article style={{background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, #09141d), #0e1b25)`}} className={`game-card ${scoreClass} ${live ? "live-card" : ""} detail-level-${detailLevel}`}>
+      <button
+        type="button"
+        className="game-card-summary"
+        aria-expanded={detailLevel > 0}
+        aria-label={`${away.name} at ${home.name}. ${detailLevel === 0 ? "Show expanded details" : "Matchup summary"}`}
+        onClick={() => detailLevel === 0 && setDetailLevel(1)}
+      >
       <div className="game-card-top">
         <span className="game-date">
           {day.toLocaleDateString("en-US", {
@@ -72,8 +76,8 @@ export const GameCard = memo(function GameCard({
                   timeZoneName: "short",
                 })}
         </span>
-        <span className="tv-network" title={broadcasts.join(" · ") || "TV network has not been announced"}>
-          <span>TV</span> {broadcastLabel}
+        <span className="tv-network">
+          <NetworkLogos broadcasts={broadcasts} />
         </span>
       </div>
       <div className="matchup">
@@ -101,6 +105,10 @@ export const GameCard = memo(function GameCard({
           <small>/ 100</small>
         </div>
       </div>
+      {detailLevel === 0 && <span className="card-stage-hint">Tap for game details <b>⌄</b></span>}
+      </button>
+      {detailLevel >= 1 && (
+      <>
       <div className="stakes-line">
         <i />
         {analysis.kind} ·{" "}
@@ -119,6 +127,15 @@ export const GameCard = memo(function GameCard({
         before={before}
         baseline={baseline}
       />
+      </>
+      )}
+      {detailLevel === 1 && (
+        <button type="button" className="card-stage-button" onClick={() => setDetailLevel(2)}>
+          Open full game card <span>Why it matters · NHL EDGE · players</span>
+        </button>
+      )}
+      {detailLevel === 2 && (
+      <>
       <button
         type="button"
         className="expand-game"
@@ -212,6 +229,11 @@ export const GameCard = memo(function GameCard({
           </Suspense>
         )}
       </details>
+      <button type="button" className="card-collapse" onClick={() => setDetailLevel(0)}>
+        Collapse game card
+      </button>
+      </>
+      )}
     </article>
   );
 });

@@ -23,11 +23,15 @@ test("default teams, league selection, graphs and season navigation", async ({
   const card = page.locator(".game-card").first();
   await expect(card.locator(".tv-network")).toBeVisible();
   await expect(card.locator(".tv-network")).not.toContainText("T#");
+  await expect(card.locator(".network-logo img").first()).toBeVisible();
+  await expect(card.getByLabel("Pregame projection")).toBeHidden();
+  await card.locator(".game-card-summary").click();
   await expect(card.getByLabel("Pregame projection")).toBeVisible();
   await card.scrollIntoViewIfNeeded();
   await page.screenshot({path: `../nhl-projection-${test.info().project.name}.png`});
   await expect(card.locator(".form-chart")).toContainText("RECENT FORM");
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
+  await card.getByRole("button", { name: /Open full game card/ }).click();
   await card.getByText("Why this game matters", { exact: false }).click();
   await expect(card.locator(".detail-body").first()).toContainText(
     "Equal ratings share ranks.",
@@ -160,6 +164,8 @@ test("recent actual game contribution and mobile card layout", async ({
   await page.getByLabel("Competition").selectOption("1");
   await page.getByLabel("Sort by").selectOption("date");
   const card = page.locator(".game-card").first();
+  await card.locator(".game-card-summary").click();
+  await card.getByRole("button", { name: /Open full game card/ }).click();
   await card.getByText("Player impact · actual").click();
   await expect(card).toContainText("Actual box-score index");
   await expect(card.locator(".impact-row").first()).toBeVisible();

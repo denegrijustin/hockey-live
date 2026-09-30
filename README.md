@@ -31,6 +31,7 @@ Run `pnpm build` before `dev:worker`; rebuild/reload after changes. Vite alone u
 - `public/data/players/`: regular-season team-stint player statistics.
 - `public/data/games/`: selected recent completed box scores for offline fallback.
 - `public/logos/`: local official NHL team logo assets.
+- `public/network-logos/`: local broadcaster logo assets used on compact game cards.
 
 `pnpm refresh:data` discovers the current season, imports it and the previous season, refreshes team player data and recent box scores, and updates the manifest. Commit refreshed snapshots. The importer throttles requests and retries rate limits. Refresh snapshots when the season changes; the deployed manifest determines supported seasons.
 
@@ -84,4 +85,6 @@ Players has its own team selection, starting with EDM/CHI/MIN each page load, in
 ### Game pulse and ice tilt
 Game pulse displays separate cumulative shots-on-goal and hit timelines using matching time scales and team colors. Lines end at the reported game clock. Ice tilt is explicitly a shot-pressure proxy: each team's share of unblocked attempts (shots on goal including goals, plus misses) in the last ten playing minutes, at all strengths. Blocked shots are excluded because their event owner may be the defending team. Zero attempts show no estimate, not a fabricated 50/50 possession split. This is not measured zone possession or live NHL EDGE tracking; older saved snapshots without full plays show an unavailable message.
 
-Game cards show the published TV/streaming network in the top-right badge, replacing the league-wide T# rank badge. Up to two networks are shown there with a count for additional feeds; the full list remains in the expanded game details. Unannounced assignments display `TV TBD`.
+Game cards start with only the date/status, broadcaster logos, matchup and importance score. Selecting that compact summary opens projections, form or live game data; selecting **Open full game card** reveals the full-game overlay and the Why it matters, NHL EDGE and player panels. **Collapse game card** returns directly to the compact state.
+
+Published TV/streaming assignments use local broadcaster marks in the top-right badge, replacing the league-wide T# rank badge. Duplicate regional aliases from the same network brand collapse to one mark, up to three brands appear on the card, and the accessible label and expanded details retain the complete feed list. Unknown local stations use a short fallback label; unannounced assignments display `TV TBD`.

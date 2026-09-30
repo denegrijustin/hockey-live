@@ -42,6 +42,18 @@ test("live data updates without collapsing open cards; failure retains last scor
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
   await expect(card.locator(".hit-chart")).toBeVisible();
   await expect(card.locator(".ice-tilt")).toContainText("Shot-pressure proxy");
+  await expect(card.locator('.interactive-pulse').first()).toHaveAttribute('data-metric','hits');
+  const shotsGraph=card.locator('[data-metric="shots"]');
+  await expect(shotsGraph.locator('.pulse-readout img')).toHaveCount(2);
+  const scrubber=card.getByRole('slider',{name:'Shots timeline time'});
+  await scrubber.focus(); await scrubber.press('Home');
+  await expect(shotsGraph.locator('.pulse-readout')).toContainText('P1 0:00 elapsed');
+  await expect(shotsGraph.locator('.pulse-readout strong').first()).toHaveText('0 SOG');
+  await scrubber.press('End');
+  await expect(shotsGraph.locator('.pulse-readout')).toContainText('P1 20:00 elapsed');
+  const bounds=await shotsGraph.locator('.shot-chart').boundingBox();
+  await shotsGraph.locator('.shot-chart').hover({position:{x:bounds!.width/2,y:bounds!.height/2}});
+  await expect(shotsGraph.locator('.pulse-readout')).toContainText('Selected point');
   const previousEstimate = await card.locator(".projection .prediction-labels").innerText();
   await card.getByText("Why this game matters", { exact: false }).click();
   await expect(card.locator(".card-details").first()).toHaveAttribute(

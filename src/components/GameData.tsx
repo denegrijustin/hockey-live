@@ -134,20 +134,10 @@ export function GameData({
               {data.intermission ? "Intermission" : (data.clock ?? "Final")}
             </span>
           </div>
-          <div className="chart-key">
-            <span>
-              <i style={{ background: "#73d9c1" }} />
-              {away.id}
-            </span>
-            <span>
-              <i style={{ background: "#f2bc67" }} />
-              {home.id}
-            </span>
-            <small>Cumulative shots on goal</small>
-          </div>
-          <ShotChart data={data} home={home} away={away} />
-          <div className="mini-heading">HITS <span>Cumulative · same time scale</span></div>
+          <div className="mini-heading">HITS <span>Cumulative</span></div>
           {data.plays ? <ShotChart data={data} home={home} away={away} metric="hits" /> : <p className="detail-note">Hit timeline unavailable in this saved snapshot.</p>}
+          <div className="mini-heading">SHOTS ON GOAL <span>Cumulative · same time scale</span></div>
+          <ShotChart data={data} home={home} away={away} />
           <IceTilt data={data} />
           <ComparisonBar
             label="Shots on goal"
@@ -235,14 +225,36 @@ function ShotChart({
   home: Team;
   away: Team;
 }) {
+  const [inspectTime, setInspectTime] = useState<number | null>(null);
   const events = metric === "shots" ? data.shots : (data.plays ?? []).filter(p=>p.type === 'hit');
   const minutes = (s: any) => playMinute(s,data.type) ?? 0;
   const elapsed = pulseMinute(data) ?? Math.max(0,...events.map(minutes));
   const end = Math.max(20, Math.ceil(elapsed / 20) * 20);
   const countFor = (id:string) => events.filter(s=>s.team===id && minutes(s)<=elapsed).length;
   const max = Math.max(1,countFor(home.id),countFor(away.id));
+  const at = Math.min(elapsed, inspectTime ?? elapsed);
+  const totalAt = (id:string) => events.filter(s=>s.team===id && minutes(s)<=at + 1e-8).length;
+  const seconds=Math.round(at*60);
+  const periodLength = data.type===3 ? 1200 : 300;
+  const period=seconds<=3600 ? Math.max(1,Math.ceil(seconds/1200)) : 4+Math.floor((seconds-3600-1)/periodLength);
+  const inPeriod=seconds<=3600 ? seconds-(period-1)*1200 : seconds-3600-(period-4)*periodLength;
+  const timeLabel=`${period<=3?`P${period}`:`OT${period-3}`} ${Math.floor(inPeriod/60)}:${String(inPeriod%60).padStart(2,'0')} elapsed`;
+  const inspect = (event: React.PointerEvent<SVGSVGElement>) => {
+    const matrix=event.currentTarget.getScreenCTM();
+    if (!matrix) return;
+    const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
+    setInspectTime(Math.round(Math.max(0,Math.min(elapsed,(point.x-24)/326*end))*60)/60);
+  };
   return (
+    <div className="interactive-pulse" data-metric={metric}>
+    <div className="pulse-readout" aria-live="off">
+      <small>{timeLabel} · {inspectTime == null ? 'Latest' : 'Selected point'}</small>
+      <div>{[away,home].map((team,i)=><span key={team.id}><img src={`/logos/${team.id}.svg`} alt={team.name} width="26" height="26"/><b>{team.id}</b><svg width="22" height="8" aria-hidden="true"><line x1="0" x2="22" y1="4" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray={i?'4 3':undefined}/></svg><strong>{totalAt(team.id)} {metric === 'hits'?'hits':'SOG'}</strong></span>)}</div>
+    </div>
     <svg
+      onPointerMove={inspect}
+      onPointerDown={inspect}
+      onPointerLeave={event=>{if(event.pointerType==='mouse') setInspectTime(null);}}
       className={`shot-chart ${metric === "hits" ? "hit-chart" : ""}`}
       viewBox="0 0 360 115"
       role="img"
@@ -283,10 +295,15 @@ function ShotChart({
             stroke={t.id === away.id ? "#73d9c1" : "#f2bc67"}
             fill="none"
             strokeWidth="2.5"
+            strokeDasharray={t.id === home.id ? "5 3" : undefined}
           />
         );
       })}
+      <line x1={24+at/end*326} x2={24+at/end*326} y1="10" y2="92" stroke="#d7e5ed" strokeDasharray="2 3" />
     </svg>
+    <input className="pulse-scrubber" type="range" min="0" max={Math.max(1,Math.round(elapsed*60))} value={seconds} step="1" aria-label={`${metric === 'hits' ? 'Hits' : 'Shots'} timeline time`} aria-valuetext={`${timeLabel}; ${away.id} ${totalAt(away.id)}, ${home.id} ${totalAt(home.id)}`} onChange={e=>setInspectTime(Number(e.target.value)/60)} />
+    <small className="detail-note">Hover, tap or use the slider to inspect totals.</small>
+    </div>
   );
 }
 

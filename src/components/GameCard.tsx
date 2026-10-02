@@ -38,7 +38,7 @@ export const GameCard = memo(function GameCard({
     [impactOpen, setImpactOpen] = useState(false),
     [edgeOpen, setEdgeOpen] = useState(false),
     [overlayOpen, setOverlayOpen] = useState(false),
-    [detailLevel, setDetailLevel] = useState<0 | 1 | 2>(0);
+    [detailLevel, setDetailLevel] = useState<0 | 1>(0);
   const home = teams.find((t) => t.id === game.home)!,
     away = teams.find((t) => t.id === game.away)!;
   const rank =
@@ -105,7 +105,7 @@ export const GameCard = memo(function GameCard({
           <small>/ 100</small>
         </div>
       </div>
-      {detailLevel === 0 && <span className="card-stage-hint">Tap for game details <b>⌄</b></span>}
+      {detailLevel === 0 && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
       {detailLevel >= 1 && (
       <>
@@ -130,18 +130,13 @@ export const GameCard = memo(function GameCard({
       </>
       )}
       {detailLevel === 1 && (
-        <button type="button" className="card-stage-button" onClick={() => setDetailLevel(2)}>
-          Open full game card <span>Why it matters · NHL EDGE · players</span>
-        </button>
-      )}
-      {detailLevel === 2 && (
       <>
       <button
         type="button"
         className="expand-game"
         onClick={() => setOverlayOpen(true)}
       >
-        ⤢ Full game view <span>Ice time · player tracker · momentum</span>
+        ⤢ Open full game view <span>Ice time · player tracker · momentum</span>
       </button>
       {overlayOpen && (
         <Suspense fallback={null}>

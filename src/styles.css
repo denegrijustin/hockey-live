@@ -615,7 +615,6 @@ p {
   color: var(--mint);
   font-size: 13px;
 }
-.card-stage-button,
 .card-collapse {
   width: 100%;
   border: 1px solid #3b5665;
@@ -628,24 +627,12 @@ p {
   font-weight: 700;
   cursor: pointer;
 }
-.card-stage-button {
-  margin-top: 15px;
-}
-.card-stage-button span {
-  display: block;
-  margin-top: 3px;
-  color: #86a1b0;
-  font-size: 7px;
-  font-weight: 500;
-}
 .card-collapse {
   margin-top: 12px;
   border-color: transparent;
   background: transparent;
   color: #7895a5;
 }
-.card-stage-button:hover,
-.card-stage-button:focus-visible,
 .card-collapse:hover,
 .card-collapse:focus-visible {
   color: var(--mint);

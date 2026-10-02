@@ -155,10 +155,13 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   const card = page.locator(".live-card").first();
   await card.locator(".game-card-summary").click();
   await card.getByRole("button", { name: /Open full game card/ }).click();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await card.getByRole("button", { name: /Full game view/ }).click();
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("open", "");
+  await expect(dialog.getByRole("button", { name: "Close full game view" })).toBeFocused();
+  expect(await dialog.evaluate((element) => element.scrollTop)).toBe(0);
   await expect(dialog.locator(".dialog-team")).toHaveCount(2);
   await expect(dialog).toContainText("Florida Panthers");
   await expect(dialog).toContainText("Carolina Hurricanes");

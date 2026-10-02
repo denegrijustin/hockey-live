@@ -26,10 +26,19 @@ export function GameOverlay({
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
   const past = finished(game),
     live = isLive(game);
   useEffect(() => {
-    dialog.current?.showModal();
+    const element = dialog.current;
+    if (!element) return;
+    element.showModal();
+    element.scrollTop = 0;
+    const frame = requestAnimationFrame(() => {
+      element.scrollTop = 0;
+      closeButton.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
   return (
     <dialog
@@ -40,7 +49,7 @@ export function GameOverlay({
       aria-label={`${away.name} at ${home.name} full game view`}
     >
       <div className="dialog-toolbar">
-        <button className="dialog-close" onClick={onClose} aria-label="Close full game view">
+        <button ref={closeButton} className="dialog-close" onClick={onClose} aria-label="Close full game view">
           <span>Close</span> ×
         </button>
       </div>

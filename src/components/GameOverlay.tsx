@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, lazy, useLayoutEffect, useRef } from "react";
 import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
@@ -27,29 +27,45 @@ export function GameOverlay({
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
+  const pageScroll = useRef(0);
   const past = finished(game),
     live = isLive(game);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = dialog.current;
     if (!element) return;
+    pageScroll.current = window.scrollY;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     element.showModal();
     element.scrollTop = 0;
     const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       element.scrollTop = 0;
       closeButton.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+  const closeOverlay = () => {
+    const returnTo = pageScroll.current;
+    onClose();
+    requestAnimationFrame(() =>
+      window.scrollTo({ top: returnTo, left: 0, behavior: "instant" }),
+    );
+  };
   return (
     <dialog
       ref={dialog}
       className="game-dialog"
-      onClose={onClose}
-      onCancel={onClose}
+      onClose={closeOverlay}
+      onCancel={(event) => {
+        event.preventDefault();
+        closeOverlay();
+      }}
       aria-label={`${away.name} at ${home.name} full game view`}
     >
       <div className="dialog-toolbar">
-        <button ref={closeButton} className="dialog-close" onClick={onClose} aria-label="Close full game view">
+        <button ref={closeButton} className="dialog-close" onClick={closeOverlay} aria-label="Close full game view">
           <span>Close</span> ×
         </button>
       </div>

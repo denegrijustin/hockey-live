@@ -162,6 +162,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(dialog).toHaveAttribute("open", "");
   await expect(dialog.getByRole("button", { name: "Close full game view" })).toBeFocused();
   expect(await dialog.evaluate((element) => element.scrollTop)).toBe(0);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await expect(dialog.locator(".dialog-team")).toHaveCount(2);
   await expect(dialog).toContainText("Florida Panthers");
   await expect(dialog).toContainText("Carolina Hurricanes");
@@ -207,6 +208,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(dialog).toContainText("CAR Goalie");
   await dialog.getByRole("button", { name: "Close full game view" }).click();
   await expect(dialog).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 });
 test('current EDGE labels a prior-season fallback',async({page})=>{
  await page.route('**/api/edge/**',r=>r.fulfill({json:edgeFixture}));

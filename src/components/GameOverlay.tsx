@@ -39,16 +39,18 @@ export function GameOverlay({
       onCancel={onClose}
       aria-label={`${away.name} at ${home.name} full game view`}
     >
-      <button className="dialog-close" onClick={onClose} aria-label="Close full game view">
-        Close ×
-      </button>
+      <div className="dialog-toolbar">
+        <button className="dialog-close" onClick={onClose} aria-label="Close full game view">
+          <span>Close</span> ×
+        </button>
+      </div>
       <div className="dialog-matchup">
         {[away, home].map((t, i) => (
           <div className="dialog-team" key={t.id}>
             <img src={`/logos/${t.id}.svg`} alt="" width={54} height={54} />
             <div>
               <span>{t.city}</span>
-              <h3>{t.name}</h3>
+              <h3>{t.short}</h3>
             </div>
             {past || live ? (
               <b>{(i === 0 ? game.awayScore : game.homeScore) ?? "—"}</b>

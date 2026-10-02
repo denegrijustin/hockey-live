@@ -111,7 +111,7 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
 
 test("full game overlay shows projection, ice tilt and a per-team player tracker with ice time", async ({
   page,
-}) => {
+}, info) => {
   const game = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
   await page.route("**/api/live", (route) =>
     route.fulfill({
@@ -162,6 +162,29 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(dialog.locator(".dialog-team")).toHaveCount(2);
   await expect(dialog).toContainText("Florida Panthers");
   await expect(dialog).toContainText("Carolina Hurricanes");
+  if (info.project.name === "mobile") {
+    await page.setViewportSize({ width: 320, height: 800 });
+    const layout = await dialog.evaluate((element) => {
+      const rect = (node: Element) => node.getBoundingClientRect();
+      const toolbar = rect(element.querySelector(".dialog-toolbar")!);
+      const matchup = rect(element.querySelector(".dialog-matchup")!);
+      const teams = [...element.querySelectorAll(".dialog-team")].map((team) => {
+        const label = rect(team.querySelector(":scope > div")!);
+        const score = rect(team.querySelector(":scope > b, :scope > small")!);
+        return { row: rect(team), scoreGap: score.left - label.right };
+      });
+      return {
+        overflow: element.scrollWidth - element.clientWidth,
+        toolbarGap: matchup.top - toolbar.bottom,
+        rowGap: teams[1].row.top - teams[0].row.bottom,
+        scoreGaps: teams.map((team) => team.scoreGap),
+      };
+    });
+    expect(layout.overflow).toBeLessThanOrEqual(1);
+    expect(layout.toolbarGap).toBeGreaterThanOrEqual(8);
+    expect(layout.rowGap).toBeGreaterThanOrEqual(8);
+    for (const gap of layout.scoreGaps) expect(gap).toBeGreaterThanOrEqual(8);
+  }
   // Real-time / projection content, reused from the inline card's GameData.
   await expect(dialog.getByLabel("Live winner projection")).toBeVisible();
   await expect(dialog.locator(".ice-tilt")).toContainText("ICE TILT");

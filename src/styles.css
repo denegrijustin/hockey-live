@@ -852,6 +852,7 @@ p {
   color: #91b3bc;
 }
 .game-dialog {
+  position: relative;
   color: #e4eef3;
   background: #10212c;
   border: 1px solid #4e6978;
@@ -860,6 +861,19 @@ p {
   width: min(880px, calc(100vw - 32px));
   max-height: 88vh;
   overflow: auto;
+}
+.dialog-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 44px;
+  margin-bottom: 4px;
+}
+.game-dialog .dialog-close {
+  float: none;
+  min-height: 44px;
+  padding: 8px 14px;
+  font-size: 13px;
+  line-height: 1;
 }
 .game-dialog::backdrop {
   background: #000b;
@@ -953,15 +967,69 @@ p {
   margin-top: 0;
 }
 @media (max-width: 720px) {
+  .game-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .dialog-toolbar {
+    min-height: 40px;
+    margin-bottom: 10px;
+  }
+  .game-dialog .dialog-close {
+    width: 44px;
+    min-height: 40px;
+    padding: 6px;
+    font-size: 20px;
+  }
+  .game-dialog .dialog-close span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .dialog-matchup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin: 0;
+  }
+  .dialog-team {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(32px, auto);
+    column-gap: 10px;
+    width: 100%;
+  }
   .tracker-grid {
     grid-template-columns: 1fr;
   }
   .dialog-team h3 {
-    font-size: 15px;
+    overflow: hidden;
+    font-size: 17px;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .dialog-team img {
     width: 40px;
     height: 40px;
+  }
+  .dialog-team > b,
+  .dialog-team > small {
+    justify-self: end;
+    margin-left: 0;
+    text-align: right;
+  }
+  .dialog-team > b {
+    font-size: 25px;
+    line-height: 1;
+  }
+  .dialog-status {
+    margin-top: 14px;
+    line-height: 1.55;
   }
 }
 .card-details {

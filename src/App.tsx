@@ -349,7 +349,8 @@ export default function App() {
                   </small>
                 </div>
                 {scoreboard.games.filter(isLive).length ? (
-                  scoreboard.games.filter(isLive).map((g) => (
+                  <div className="live-games">
+                  {scoreboard.games.filter(isLive).map((g) => (
                     <button
                       key={g.id}
                       onClick={() => {
@@ -369,7 +370,8 @@ export default function App() {
                           : `P${g.period} ${g.clock ?? ""}`}
                       </small>
                     </button>
-                  ))
+                  ))}
+                  </div>
                 ) : (
                   <span>No games live in the latest feed.</span>
                 )}

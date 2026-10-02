@@ -1626,31 +1626,73 @@ footer b {
     padding: 15px;
   }
   .game-card-top {
+    align-items: flex-start;
     font-size: 10px;
     margin-bottom: 21px;
+  }
+  .game-date {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .tv-network {
+    flex-shrink: 0;
+    max-width: 132px;
+  }
+  .network-logo {
+    width: 28px;
+    height: 28px;
+  }
+  .network-logo img {
+    width: 24px;
+    height: 24px;
   }
   .game-date > span {
     font-size: 9px;
   }
+  .matchup {
+    gap: 10px;
+  }
+  .matchup-team {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) minmax(28px, auto);
+    column-gap: 8px;
+  }
   .matchup-team img {
-    width: 39px;
-    height: 39px;
+    width: 34px;
+    height: 34px;
+  }
+  .matchup-team > div {
+    min-width: 0;
   }
   .matchup-team h3 {
-    font-size: 18px;
+    font-size: 17px;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .matchup-team span {
     font-size: 10px;
   }
   .matchup-teams {
-    gap: 16px;
+    gap: 13px;
+  }
+  .matchup-team > b,
+  .matchup-team > small {
+    grid-column: 3;
+    justify-self: end;
+    text-align: right;
+  }
+  .matchup-team > b {
+    font-size: 22px;
+    line-height: 1;
   }
   .importance-score {
-    width: 86px;
-    height: 86px;
+    width: 70px;
+    height: 70px;
   }
   .importance-score strong {
-    font-size: 32px;
+    font-size: 27px;
   }
   .stakes-line {
     font-size: 10px;
@@ -1808,6 +1850,13 @@ footer b {
 }
 .live-strip > div {
   margin-right: auto;
+}
+.live-strip .live-games {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-right: 0;
 }
 .live-strip b {
   font-size: 11px;
@@ -2143,14 +2192,28 @@ footer b {
     padding: 16px;
   }
   .live-strip {
+    display: block;
     padding: 14px;
+    overflow: hidden;
   }
   .live-strip > div {
     width: 100%;
   }
+  .live-strip .live-games {
+    width: auto;
+    margin-top: 12px;
+    padding: 0 0 4px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
   .live-strip button {
-    flex: 1;
-    min-width: 170px;
+    flex: 0 0 150px;
+    min-width: 150px;
+    scroll-snap-align: start;
   }
   .view-tabs button {
     padding-left: 11px;
@@ -2161,6 +2224,77 @@ footer b {
   }
   .form-results {
     gap: 3px;
+  }
+}
+
+@media (max-width: 360px) {
+  .game-card {
+    padding: 12px;
+  }
+  .game-card-top {
+    gap: 7px;
+    margin-bottom: 18px;
+  }
+  .tv-network {
+    max-width: 116px;
+    min-height: 34px;
+    padding: 3px 4px;
+  }
+  .network-logos {
+    gap: 3px;
+  }
+  .network-logo {
+    width: 26px;
+    height: 26px;
+  }
+  .network-logo img {
+    width: 22px;
+    height: 22px;
+  }
+  .network-logo-fallback {
+    min-width: 26px;
+    max-width: 40px;
+    padding: 0 3px;
+    font-size: 6px;
+  }
+  .matchup {
+    gap: 8px;
+  }
+  .matchup-team {
+    grid-template-columns: 30px minmax(0, 1fr) minmax(25px, auto);
+    column-gap: 7px;
+  }
+  .matchup-team img {
+    width: 30px;
+    height: 30px;
+  }
+  .matchup-team span {
+    font-size: 9px;
+  }
+  .matchup-team h3 {
+    font-size: 16px;
+  }
+  .matchup-team > b {
+    font-size: 21px;
+  }
+  .importance-score {
+    width: 62px;
+    height: 62px;
+  }
+  .importance-score strong {
+    font-size: 24px;
+  }
+  .importance-score span {
+    font-size: 5px;
+    letter-spacing: 0.5px;
+  }
+  .card-stage-hint {
+    margin: 17px -12px -12px;
+  }
+  .prediction-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
   }
 }
 

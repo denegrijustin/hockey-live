@@ -22,6 +22,8 @@ test("default teams, league selection, graphs and season navigation", async ({
   );
   const card = page.locator(".game-card").first();
   await expect(card.locator(".tv-network")).toBeVisible();
+  await expect(card.locator(".team-record")).toHaveCount(2);
+  await expect(card.locator(".season-series")).toContainText("H2H THIS SEASON");
   await expect(card.locator(".tv-network")).not.toContainText("T#");
   await expect(card.locator(".network-logo img").first()).toBeVisible();
   await expect(card.getByLabel("Pregame projection")).toBeHidden();

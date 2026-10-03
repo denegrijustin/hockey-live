@@ -680,6 +680,24 @@ p {
   margin: 0;
   overflow-wrap: anywhere;
 }
+.matchup-team .team-record {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 4px;
+  color: #c0d2da;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.3px;
+}
+.matchup-team .team-record em {
+  color: #7893a2;
+  font-size: 6px;
+  font-style: normal;
+  font-weight: 650;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+}
 .matchup-team > small {
   font-size: 7px;
   color: #7294a5;
@@ -691,6 +709,23 @@ p {
 }
 .matchup-team .winning-score {
   color: #edf5f4;
+}
+.season-series {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(151, 183, 196, 0.16);
+  color: #819ba9;
+  font-size: 7px;
+  letter-spacing: 0.6px;
+}
+.season-series strong {
+  color: #c7d8de;
+  font-size: 8px;
+  letter-spacing: 0.2px;
 }
 .importance-score {
   display: flex;

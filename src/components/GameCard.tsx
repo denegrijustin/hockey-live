@@ -1,6 +1,10 @@
 import { lazy, memo, Suspense, useState } from "react";
 import type { Game, Team } from "../types";
-import { finished } from "../lib/model.mjs";
+import {
+  finished,
+  recordBeforeGame,
+  seasonSeriesBeforeGame,
+} from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
 import { NetworkLogos } from "./NetworkLogos";
@@ -23,6 +27,7 @@ export const GameCard = memo(function GameCard({
   before,
   sourceSeason,
   baseline,
+  allGames,
 }: {
   game: Game;
   teams: Team[];
@@ -41,6 +46,19 @@ export const GameCard = memo(function GameCard({
     [detailLevel, setDetailLevel] = useState<0 | 1>(0);
   const home = teams.find((t) => t.id === game.home)!,
     away = teams.find((t) => t.id === game.away)!;
+  const records = {
+    [away.id]: recordBeforeGame(allGames, game, away.id),
+    [home.id]: recordBeforeGame(allGames, game, home.id),
+  };
+  const series = seasonSeriesBeforeGame(allGames, game);
+  const seriesText =
+    series.played === 0
+      ? "First meeting"
+      : series.away === series.home
+        ? `Tied ${series.away}–${series.home}`
+        : series.away > series.home
+          ? `${away.id} leads ${series.away}–${series.home}`
+          : `${home.id} leads ${series.home}–${series.away}`;
   const rank =
     analysis.rank == null
       ? "Unranked"
@@ -90,6 +108,10 @@ export const GameCard = memo(function GameCard({
               <div>
                 <span>{t.city}</span>
                 <h3>{t.short}</h3>
+                <small className="team-record">
+                  {records[t.id].w}–{records[t.id].l}–{records[t.id].ot}
+                  <em>{past ? " entering" : " record"}</em>
+                </small>
               </div>
               {past || live ? (
                 <b>{(i === 0 ? game.awayScore : game.homeScore) ?? "—"}</b>
@@ -104,6 +126,10 @@ export const GameCard = memo(function GameCard({
           <span>IMPORTANCE</span>
           <small>/ 100</small>
         </div>
+      </div>
+      <div className="season-series" aria-label={`Head-to-head this season: ${seriesText}`}>
+        <span>H2H THIS SEASON</span>
+        <strong>{seriesText}</strong>
       </div>
       {detailLevel === 0 && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>

@@ -9,6 +9,8 @@ import {
   skaterImpact,
   goalieImpact,
   importance,
+  recordBeforeGame,
+  seasonSeriesBeforeGame,
 } from "../src/lib/model.mjs";
 import { normalizeGame, normalizeBoxscore } from "../src/lib/normalize.mjs";
 const teams = JSON.parse(
@@ -72,6 +74,17 @@ test("past stakes use prior-day standings; future cohort is independent", () => 
   assert.equal(a.analysis[4].rank, 1);
   assert.equal(a.analysis[5].rank, 1);
   assert.equal(a.analysis[4].tied, true);
+});
+test("game cards use the record and season series entering a matchup", () => {
+  const games = [
+    game(1, "2026-01-01"),
+    game(2, "2026-01-02", { home: "CHI", away: "EDM", homeScore: 4, awayScore: 3, end: "OT" }),
+    game(3, "2026-01-03", { state: "FUT", homeScore: null, awayScore: null }),
+  ];
+  assert.deepEqual(recordBeforeGame(games, games[2], "EDM"), { w: 1, l: 0, ot: 1 });
+  assert.deepEqual(recordBeforeGame(games, games[2], "CHI"), { w: 1, l: 1, ot: 0 });
+  assert.deepEqual(seasonSeriesBeforeGame(games, games[2]), { away: 1, home: 1, played: 2 });
+  assert.deepEqual(seasonSeriesBeforeGame(games, games[0]), { away: 0, home: 0, played: 0 });
 });
 test("calendar weighting uses actual schedule count, including 84-game seasons", () => {
   const games = Array.from({ length: 84 }, (_, i) =>

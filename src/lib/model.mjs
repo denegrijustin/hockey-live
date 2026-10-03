@@ -2,6 +2,52 @@
 export const finished = (g) => ["OFF", "FINAL"].includes(g.state);
 export const signed = (n, digits = 0) =>
   `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
+const gamesBefore = (games, game) =>
+  games.filter(
+    (candidate) =>
+      candidate.id !== game.id &&
+      candidate.season === game.season &&
+      candidate.type === game.type &&
+      finished(candidate) &&
+      candidate.start < game.start,
+  );
+export function recordBeforeGame(games, game, team) {
+  const record = { w: 0, l: 0, ot: 0 };
+  for (const result of gamesBefore(games, game)) {
+    if (result.home !== team && result.away !== team) continue;
+    const goalsFor = result.home === team ? result.homeScore : result.awayScore;
+    const goalsAgainst = result.home === team ? result.awayScore : result.homeScore;
+    if (goalsFor == null || goalsAgainst == null || goalsFor === goalsAgainst)
+      continue;
+    if (goalsFor > goalsAgainst) record.w++;
+    else if (result.end === "OT" || result.end === "SO") record.ot++;
+    else record.l++;
+  }
+  return record;
+}
+export function seasonSeriesBeforeGame(games, game) {
+  const series = { away: 0, home: 0, played: 0 };
+  for (const result of gamesBefore(games, game)) {
+    if (
+      !(
+        (result.home === game.home && result.away === game.away) ||
+        (result.home === game.away && result.away === game.home)
+      )
+    )
+      continue;
+    if (
+      result.homeScore == null ||
+      result.awayScore == null ||
+      result.homeScore === result.awayScore
+    )
+      continue;
+    const winner =
+      result.homeScore > result.awayScore ? result.home : result.away;
+    series[winner === game.away ? "away" : "home"]++;
+    series.played++;
+  }
+  return series;
+}
 export function blankStandings(teams) {
   return Object.fromEntries(
     teams.map((t) => [

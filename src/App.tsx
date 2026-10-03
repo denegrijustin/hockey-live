@@ -615,6 +615,7 @@ export default function App() {
                   games={data.games}
                   leagueTeams={teams}
                   baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
+                  currentSeason={manifest?.current ?? season}
                 />
               </Suspense>
             )}{" "}

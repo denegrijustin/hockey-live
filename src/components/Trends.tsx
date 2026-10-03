@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { playoffTrend, rollingSeries } from "../lib/model.mjs";
 import type { Game, Team } from "../types";
 export function Trends({
@@ -8,6 +8,7 @@ export function Trends({
   games,
   leagueTeams,
   baseline,
+  currentSeason,
 }: {
   teams: Team[];
   table: any;
@@ -15,10 +16,15 @@ export function Trends({
   games: Game[];
   leagueTeams: Team[];
   baseline: any;
+  currentSeason: number;
 }) {
   const [metric, setMetric] = useState("playoffs"),
     [window, setWindow] = useState(5),
     [hover, setHover] = useState<number | null>(null);
+  const current = season === currentSeason;
+  useEffect(() => {
+    if (!current && metric === "playoffs") setMetric("difference");
+  }, [current, metric]);
   const playoffHistory = useMemo(
     () => playoffTrend(games, leagueTeams, baseline),
     [games, leagueTeams, baseline],
@@ -56,7 +62,7 @@ export function Trends({
           <h2>{metric === "playoffs" ? "Playoff outlook" : "Team momentum"}</h2>
           <p>
             {metric === "playoffs"
-              ? "Estimated chance after every game"
+              ? "Current season only · estimated chance after every game"
               : "Rolling game averages"} · {String(season).slice(0, 4)}–
             {String(season).slice(6)}
           </p>
@@ -65,7 +71,7 @@ export function Trends({
           <label>
             Metric
             <select value={metric} onChange={(e) => setMetric(e.target.value)}>
-              <option value="playoffs">Playoff chance</option>
+              {current && <option value="playoffs">Playoff chance</option>}
               <option value="difference">Goal differential</option>
               <option value="gf">Goals for</option>
               <option value="ga">Goals against</option>
@@ -178,17 +184,27 @@ export function Trends({
                   const index = s.data.length - 1;
                   const point = s.data[index];
                   return point ? (
-                    <circle
+                    <g
                       key={`${s.team.id}-latest`}
-                      cx={x(index)}
-                      cy={y(point.value)}
-                      r={point.live ? 5 : 4}
-                      fill={s.team.color}
-                      stroke="#10212c"
-                      strokeWidth="2"
                     >
+                      <circle
+                        cx={x(index)}
+                        cy={y(point.value)}
+                        r={point.live ? 14 : 13}
+                        fill="#10212c"
+                        stroke={s.team.color}
+                        strokeWidth="3"
+                      />
+                      <image
+                        href={`/logos/${s.team.id}.svg`}
+                        x={x(index) - 9}
+                        y={y(point.value) - 9}
+                        width="18"
+                        height="18"
+                        aria-hidden="true"
+                      />
                       <title>{`${s.team.name}: ${point.value.toFixed(1)}%${point.live ? " live" : ""}`}</title>
-                    </circle>
+                    </g>
                   ) : null;
                 })}
               {hover !== null && (

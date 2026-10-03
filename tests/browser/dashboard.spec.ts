@@ -44,12 +44,18 @@ test("default teams, league selection, graphs and season navigation", async ({
     "32 selected teams",
   );
   await page.getByRole("button", { name: "My three", exact: true }).click();
+  await page.getByRole("button", { name: "Team trends", exact: true }).click();
+  await expect(page.locator(".chart-wrap svg")).toBeVisible();
+  await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
+  await expect(page.locator(".trend-panel")).toContainText("Current season only");
+  await expect(page.locator(".chart-wrap image")).toHaveCount(3);
+  await page.getByRole("button", { name: "Game center", exact: true }).click();
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
   await expect(page.locator(".game-card").first()).toContainText("FINAL");
   await page.getByRole("button", { name: "Team trends", exact: true }).click();
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
-  await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
-  await expect(page.locator(".trend-panel")).toContainText("Playoff outlook");
+  await expect(page.getByLabel("Metric")).toHaveValue("difference");
+  await expect(page.getByLabel("Metric").locator('option[value="playoffs"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Standings", exact: true }).click();
   await expect(page.locator("tbody tr")).toHaveCount(32);
   await page.getByRole("button", { name: "Players", exact: true }).click();

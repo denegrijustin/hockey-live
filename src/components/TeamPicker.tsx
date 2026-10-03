@@ -16,13 +16,8 @@ export function TeamPicker({
             key={id}
             className="team-pill"
             aria-pressed={selected.includes(id)}
-            onClick={() =>
-              onChange(
-                selected.includes(id)
-                  ? selected.filter((x) => x !== id)
-                  : [...selected, id],
-              )
-            }
+            title={`Show ${teams.find((team) => team.id === id)?.name ?? id} only`}
+            onClick={() => onChange([id])}
           >
             <img
               src={`/logos/${id}.svg`}

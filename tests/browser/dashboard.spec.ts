@@ -91,6 +91,26 @@ test("Game Center defaults to chronological order; All 32 narrows the window, no
   await page.getByRole("button", { name: "My three", exact: true }).click();
   await expect(page.getByLabel("Window")).toHaveValue("30");
 });
+test("featured team shortcuts filter to exactly one team", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-card").first()).toBeVisible();
+
+  for (const id of ["EDM", "CHI", "MIN"] as const) {
+    await page.getByRole("button", { name: id, exact: true }).click();
+    await expect(page.locator(".team-menu summary span")).toHaveText("1");
+    await expect(page.locator(".results-line")).toContainText("1 selected team");
+    await expect(page.locator(".game-card").first()).toBeVisible();
+    expect(
+      await page.locator(".game-card").evaluateAll(
+        (cards, teamId) =>
+          cards.every((card) =>
+            Boolean(card.querySelector(`img[src="/logos/${teamId}.svg"]`)),
+          ),
+        id,
+      ),
+    ).toBe(true);
+  }
+});
 test("finished-today games collapse into a compact expandable strip", async ({
   page,
 }) => {

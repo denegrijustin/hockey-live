@@ -23,6 +23,8 @@ test("default teams, league selection, graphs and season navigation", async ({
   const card = page.locator(".game-card").first();
   await expect(card.locator(".tv-network")).toBeVisible();
   await expect(card.locator(".team-record")).toHaveCount(2);
+  await expect(card.locator(".team-record").first()).toContainText(/playoffs/i);
+  await expect(card.locator(".team-record").first()).not.toContainText(/record/i);
   await expect(card.locator(".season-series")).toContainText("H2H THIS SEASON");
   await expect(card.locator(".tv-network")).not.toContainText("T#");
   await expect(card.locator(".network-logo img").first()).toBeVisible();
@@ -46,6 +48,8 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(page.locator(".game-card").first()).toContainText("FINAL");
   await page.getByRole("button", { name: "Team trends", exact: true }).click();
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
+  await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
+  await expect(page.locator(".trend-panel")).toContainText("Playoff outlook");
   await page.getByRole("button", { name: "Standings", exact: true }).click();
   await expect(page.locator("tbody tr")).toHaveCount(32);
   await page.getByRole("button", { name: "Players", exact: true }).click();

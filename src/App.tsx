@@ -4,7 +4,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { loadSeason } from "./lib/api";
-import { analyzeSeason, finished } from "./lib/model.mjs";
+import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
 import { TeamPicker } from "./components/TeamPicker";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
@@ -151,6 +151,18 @@ export default function App() {
   const baselineAnalysis = useMemo(
     () => (baseline ? analyzeSeason(baseline.games, teams) : null),
     [baseline],
+  );
+  const playoff = useMemo(
+    () =>
+      data && analysis
+        ? playoffChances(
+            analysis.table,
+            data.games,
+            teams,
+            baselineAnalysis?.table,
+          )
+        : {},
+    [data, analysis, baselineAnalysis],
   );
   const selectedTeams = selected
     .map((id) => teams.find((t) => t.id === id)!)
@@ -492,6 +504,7 @@ export default function App() {
                           selected={selected}
                           sourceSeason={sourceSeason}
                           allGames={data.games}
+                          playoff={playoff}
                         />
                       ))}
                     </div>
@@ -529,6 +542,7 @@ export default function App() {
                             selected={selected}
                             sourceSeason={sourceSeason}
                             allGames={data.games}
+                            playoff={playoff}
                           />,
                         );
                         return elements;
@@ -598,6 +612,9 @@ export default function App() {
                   teams={selectedTeams}
                   table={analysis.table}
                   season={season}
+                  games={data.games}
+                  leagueTeams={teams}
+                  baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
                 />
               </Suspense>
             )}{" "}

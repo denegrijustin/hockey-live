@@ -1,41 +1,63 @@
 import { useMemo, useState } from "react";
-import { rollingSeries } from "../lib/model.mjs";
-import type { Team } from "../types";
+import { playoffTrend, rollingSeries } from "../lib/model.mjs";
+import type { Game, Team } from "../types";
 export function Trends({
   teams,
   table,
   season,
+  games,
+  leagueTeams,
+  baseline,
 }: {
   teams: Team[];
   table: any;
   season: number;
+  games: Game[];
+  leagueTeams: Team[];
+  baseline: any;
 }) {
-  const [metric, setMetric] = useState("difference"),
+  const [metric, setMetric] = useState("playoffs"),
     [window, setWindow] = useState(5),
     [hover, setHover] = useState<number | null>(null);
+  const playoffHistory = useMemo(
+    () => playoffTrend(games, leagueTeams, baseline),
+    [games, leagueTeams, baseline],
+  );
   const series = useMemo(
     () =>
       teams.map((t) => ({
         team: t,
-        data: rollingSeries(table[t.id], metric, window),
+        data:
+          metric === "playoffs"
+            ? playoffHistory[t.id]
+            : rollingSeries(table[t.id], metric, window),
       })),
-    [teams, table, metric, window],
+    [teams, table, metric, window, playoffHistory],
   );
   const values = series.flatMap((s) => s.data.map((p: any) => p.value));
-  const minimum = Math.min(0, ...values),
-    maximum = Math.max(metric === "points" ? 1 : 2, ...values);
+  const minimum = metric === "playoffs" ? 0 : Math.min(0, ...values),
+    maximum = metric === "playoffs" ? 100 : Math.max(metric === "points" ? 1 : 2, ...values);
   const range = maximum - minimum || 1;
   const maxGames = Math.max(1, ...series.map((s) => s.data.length));
   const x = (i: number) => 55 + (i / Math.max(1, maxGames - 1)) * 900,
     y = (v: number) => 245 - ((v - minimum) / range) * 205;
+  const tickIndexes = [
+    ...new Set(
+      [0, 0.25, 0.5, 0.75, 1].map((position) =>
+        Math.round(position * (maxGames - 1)),
+      ),
+    ),
+  ];
   return (
     <section className="panel trend-panel">
       <div className="panel-heading">
         <div>
           <p className="eyebrow">FOLLOW THE DIRECTION</p>
-          <h2>Team momentum</h2>
+          <h2>{metric === "playoffs" ? "Playoff outlook" : "Team momentum"}</h2>
           <p>
-            Rolling game averages · {String(season).slice(0, 4)}–
+            {metric === "playoffs"
+              ? "Estimated chance after every game"
+              : "Rolling game averages"} · {String(season).slice(0, 4)}–
             {String(season).slice(6)}
           </p>
         </div>
@@ -43,13 +65,14 @@ export function Trends({
           <label>
             Metric
             <select value={metric} onChange={(e) => setMetric(e.target.value)}>
+              <option value="playoffs">Playoff chance</option>
               <option value="difference">Goal differential</option>
               <option value="gf">Goals for</option>
               <option value="ga">Goals against</option>
               <option value="points">Points percentage</option>
             </select>
           </label>
-          <label>
+          {metric !== "playoffs" && <label>
             Window
             <select
               value={window}
@@ -59,7 +82,7 @@ export function Trends({
               <option value={5}>5-game average</option>
               <option value={10}>10-game average</option>
             </select>
-          </label>
+          </label>}
         </div>
       </div>
       {!values.length ? (
@@ -81,7 +104,8 @@ export function Trends({
                   <b>
                     {series
                       .find((s) => s.team.id === t.id)
-                      ?.data[hover]?.value.toFixed(2) ?? "—"}
+                      ?.data[hover]?.value.toFixed(metric === "playoffs" ? 0 : 2) ?? "—"}
+                    {metric === "playoffs" ? "%" : ""}
                   </b>
                 )}
               </span>
@@ -91,7 +115,11 @@ export function Trends({
             <svg
               viewBox="0 0 1000 290"
               role="img"
-              aria-label={`${window}-game ${metric} averages by game number`}
+              aria-label={
+                metric === "playoffs"
+                  ? "Estimated playoff chance by game number"
+                  : `${window}-game ${metric} averages by game number`
+              }
               onMouseMove={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 setHover(
@@ -122,7 +150,9 @@ export function Trends({
                       strokeDasharray="3 5"
                     />
                     <text x="40" y={y(v) + 4} textAnchor="end">
-                      {metric === "points"
+                      {metric === "playoffs"
+                        ? Math.round(v) + "%"
+                        : metric === "points"
                         ? Math.round(v * 100) + "%"
                         : v.toFixed(1)}
                     </text>
@@ -143,6 +173,24 @@ export function Trends({
                   <title>{s.team.name}</title>
                 </polyline>
               ))}
+              {metric === "playoffs" &&
+                series.map((s) => {
+                  const index = s.data.length - 1;
+                  const point = s.data[index];
+                  return point ? (
+                    <circle
+                      key={`${s.team.id}-latest`}
+                      cx={x(index)}
+                      cy={y(point.value)}
+                      r={point.live ? 5 : 4}
+                      fill={s.team.color}
+                      stroke="#10212c"
+                      strokeWidth="2"
+                    >
+                      <title>{`${s.team.name}: ${point.value.toFixed(1)}%${point.live ? " live" : ""}`}</title>
+                    </circle>
+                  ) : null;
+                })}
               {hover !== null && (
                 <line
                   x1={x(hover)}
@@ -153,22 +201,23 @@ export function Trends({
                   strokeDasharray="4 4"
                 />
               )}
-              {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+              {tickIndexes.map((index) => (
                 <text
-                  x={x(Math.round(t * (maxGames - 1)))}
+                  x={x(index)}
                   y="275"
                   textAnchor="middle"
-                  key={t}
+                  key={index}
                 >
-                  Game {Math.round(t * (maxGames - 1)) + 1}
+                  Game {metric === "playoffs" ? index : index + 1}
                 </text>
               ))}
             </svg>
           </div>
           <p className="detail-note">
-            Aligned by team game number, not calendar date. Early windows use
-            available games only. Hover to inspect; exact values are in the
-            table below.
+            Aligned by team game number, not calendar date. {metric === "playoffs"
+              ? "The final point moves during live games as the score and live win estimate change."
+              : "Early windows use available games only."} Hover to inspect;
+            exact values are in the table below.
           </p>
           <details className="inner-details">
             <summary>View trend data table</summary>
@@ -188,9 +237,11 @@ export function Trends({
                       <tr key={`${s.team.id}-${i}`}>
                         <td>{s.team.id}</td>
                         <td>{p.date}</td>
-                        <td>{i + 1}</td>
+                        <td>{metric === "playoffs" ? p.game : i + 1}</td>
                         <td>
-                          {metric === "points"
+                          {metric === "playoffs"
+                            ? p.value.toFixed(1) + (p.live ? "% · LIVE" : "%")
+                            : metric === "points"
                             ? (p.value * 100).toFixed(1) + "%"
                             : p.value.toFixed(2)}
                         </td>

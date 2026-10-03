@@ -28,6 +28,7 @@ export const GameCard = memo(function GameCard({
   sourceSeason,
   baseline,
   allGames,
+  playoff,
 }: {
   game: Game;
   teams: Team[];
@@ -37,6 +38,7 @@ export const GameCard = memo(function GameCard({
   sourceSeason: number;
   allGames: Game[];
   baseline: any;
+  playoff: any;
 }) {
   const past = finished(game),
     live = isLive(game),
@@ -110,7 +112,7 @@ export const GameCard = memo(function GameCard({
                 <h3>{t.short}</h3>
                 <small className="team-record">
                   {records[t.id].w}–{records[t.id].l}–{records[t.id].ot}
-                  <em>{past ? " entering" : " record"}</em>
+                  <em>{Math.round(playoff[t.id]?.chance ?? 50)}% playoffs</em>
                 </small>
               </div>
               {past || live ? (

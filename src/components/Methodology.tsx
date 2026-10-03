@@ -57,6 +57,22 @@ export function Methodology() {
           </p>
         </section>
         <section>
+          <h3>Playoff chance</h3>
+          <p>
+            A transparent estimate based on projected points versus the
+            projected conference entry line. Current pace is blended with 20
+            games of previous-season pace, and uncertainty shrinks as the
+            remaining schedule gets shorter. It is not an official NHL
+            probability or a calibrated betting model.
+          </p>
+          <p>
+            During live games, the ordinary pace value for that game is
+            replaced by expected standings points from the live win estimate.
+            Goals, time, shots and confirmed power-play strength can therefore
+            move the percentage. Historical trend points use completed games.
+          </p>
+        </section>
+        <section>
           <h3>Source & freshness</h3>
           <p>
             Schedules, results and box scores come from the NHL public data

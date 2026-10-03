@@ -1,4 +1,5 @@
-/** Transparent descriptive models. No proprietary WAR or calibrated playoff probabilities. */
+/** Transparent descriptive models. No proprietary WAR or calibrated probabilities. */
+import { projectGame } from "./projection.mjs";
 export const finished = (g) => ["OFF", "FINAL"].includes(g.state);
 export const signed = (n, digits = 0) =>
   `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
@@ -321,4 +322,121 @@ export function rollingSeries(team, metric, window) {
         ) / slice.length,
     };
   });
+}
+
+const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
+function playoffField(table, teams) {
+  const qualified = new Set();
+  for (const conference of [...new Set(teams.map((team) => team.conference))]) {
+    const conferenceTeams = teams.filter((team) => team.conference === conference);
+    const automatic = new Set();
+    for (const division of [...new Set(conferenceTeams.map((team) => team.division))]) {
+      conferenceTeams
+        .filter((team) => team.division === division)
+        .sort((a, b) => table[b.id].pts - table[a.id].pts || table[b.id].rw - table[a.id].rw)
+        .slice(0, 3)
+        .forEach((team) => automatic.add(team.id));
+    }
+    automatic.forEach((id) => qualified.add(id));
+    conferenceTeams
+      .filter((team) => !automatic.has(team.id))
+      .sort((a, b) => table[b.id].pts - table[a.id].pts || table[b.id].rw - table[a.id].rw)
+      .slice(0, 2)
+      .forEach((team) => qualified.add(team.id));
+  }
+  return qualified;
+}
+
+/** Heuristic playoff likelihood; these percentages are not calibrated odds. */
+export function playoffChances(table, games, teams, baseline = {}, options = {}) {
+  const includeLive = options.includeLive !== false;
+  const rows = Object.fromEntries(
+    teams.map((team) => {
+      const current = table[team.id] ?? { gp: 0, pts: 0, rw: 0 };
+      const total = games.filter(
+        (game) => game.type === 2 && (game.home === team.id || game.away === team.id),
+      ).length;
+      const remaining = Math.max(0, total - current.gp);
+      const prior = baseline?.[team.id];
+      const priorPct = prior?.gp ? prior.pts / (2 * prior.gp) : 0.55;
+      const rate = (current.pts + 40 * priorPct) / (2 * (current.gp + 20));
+      return [team.id, { projected: current.pts + remaining * 2 * rate, remaining, rate, chance: 50 }];
+    }),
+  );
+
+  if (includeLive) {
+    for (const game of games.filter(
+      (candidate) => candidate.type === 2 && ["LIVE", "CRIT"].includes(candidate.state),
+    )) {
+      const projection = projectGame(game, table, baseline);
+      if (!projection) continue;
+      for (const [team, winChance] of [
+        [game.home, projection.homeWin],
+        [game.away, 1 - projection.homeWin],
+      ]) {
+        const row = rows[team];
+        if (!row) continue;
+        // Approximate the chance of one standings point in an OT/SO loss.
+        const liveExpected = 2 * winChance + 0.18 * (1 - winChance);
+        row.projected += liveExpected - 2 * row.rate;
+      }
+    }
+  }
+
+  const projectedTable = Object.fromEntries(
+    teams.map((team) => [team.id, {
+      ...(table[team.id] ?? {}),
+      pts: rows[team.id].projected,
+      rw: table[team.id]?.rw ?? 0,
+    }]),
+  );
+  const complete = Object.values(rows).every((row) => row.remaining === 0);
+  const qualified = complete ? playoffField(projectedTable, teams) : null;
+  for (const team of teams) {
+    const row = rows[team.id];
+    if (qualified) {
+      row.chance = qualified.has(team.id) ? 99 : 1;
+      continue;
+    }
+    const line = entryLine(projectedTable, team.id, teams);
+    const uncertainty = Math.max(2.5, Math.sqrt(row.remaining) * 0.9);
+    row.chance = clamp(100 / (1 + Math.exp(-(row.projected - line) / uncertainty)), 1, 99);
+  }
+  return rows;
+}
+
+export function playoffTrend(games, teams, baseline = {}) {
+  const table = blankStandings(teams);
+  const series = Object.fromEntries(teams.map((team) => [team.id, []]));
+  const start = playoffChances(table, games, teams, baseline, { includeLive: false });
+  for (const team of teams)
+    series[team.id].push({ date: "Season start", game: 0, value: start[team.id].chance });
+
+  const completed = games
+    .filter((game) => game.type === 2 && finished(game))
+    .sort((a, b) => a.start.localeCompare(b.start));
+  for (const date of [...new Set(completed.map((game) => game.date))]) {
+    const day = completed.filter((game) => game.date === date);
+    const played = new Set();
+    for (const game of day) {
+      applyResult(table, game);
+      played.add(game.home);
+      played.add(game.away);
+    }
+    const chances = playoffChances(table, games, teams, baseline, { includeLive: false });
+    for (const team of played)
+      series[team].push({ date, game: table[team].gp, value: chances[team].chance });
+  }
+
+  const liveTeams = new Set(
+    games
+      .filter((game) => game.type === 2 && ["LIVE", "CRIT"].includes(game.state))
+      .flatMap((game) => [game.home, game.away]),
+  );
+  if (liveTeams.size) {
+    const live = playoffChances(table, games, teams, baseline);
+    for (const team of liveTeams)
+      series[team].push({ date: "Live", game: table[team].gp + 1, value: live[team].chance, live: true });
+  }
+  return series;
 }

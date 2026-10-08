@@ -313,9 +313,11 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
               {week > 0 && <em>{gamesThisWeek} game{gamesThisWeek === 1 ? "" : "s"}</em>}
             </p>
           </div>
+          <div className="imp-layout">
+          <div className="imp-main">
           {latest === 0 && <p className="imp-note imp-empty">Results appear here as games are played.</p>}
 
-          <div className="imp-mapwrap" style={{ touchAction: zoom > 1 ? "pan-x pan-y" : "auto" }}>
+          <div className={`imp-mapwrap${zoom > 1 ? " imp-zoomed" : ""}`} style={{ touchAction: zoom > 1 ? "pan-x pan-y" : "auto" }}>
             <svg
               ref={svgRef} className="imp-svg" data-testid="imp-map" viewBox={`0 0 ${W} ${geom.H}`}
               style={{ width: `${zoom * 100}%` }} role="group" aria-label={`Conquest map, ${wk?.label ?? "Start"}. Arrow keys move between cells, Enter opens details.`}
@@ -347,7 +349,8 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
               ))}
             </svg>
           </div>
-          <p className="imp-note">Map covers the contiguous US and Canada south of about 60&deg;N. Alaska, Hawaii and the far north are left out. {total.toLocaleString()} land cells.</p>
+          <p className="imp-note">Map covers the contiguous US and Canada south of about 56&deg;N. Alaska, Hawaii and the far north are left out. {total.toLocaleString()} land cells.</p>
+          </div>
 
           <div className="imp-standings" data-testid="imp-standings">
             <h3>Top empires <span>{wk?.label ?? "Start"}</span></h3>
@@ -373,6 +376,7 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
               <strong>Landless ({standings.landless.length}):</strong>{" "}
               {standings.landless.length ? standings.landless.join(", ") : "none"}
             </p>
+          </div>
           </div>
         </>
       )}

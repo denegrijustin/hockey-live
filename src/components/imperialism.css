@@ -22,8 +22,18 @@
 .imp-weeklabel { margin: 0; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
 .imp-weeklabel span { color: var(--imp-muted); }
 .imp-weeklabel em { font-style: normal; font-size: 11px; color: var(--imp-mint); }
-.imp-mapwrap { overflow: auto; max-width: 100%; border: 1px solid var(--imp-line); border-radius: 10px; background: #0a1822; overscroll-behavior: contain; }
+/* The map fits the screen at 1x (never taller than 70% of the viewport) and does not trap the page's scrolling; only when
+   zoomed does it scroll inside its own box. */
+.imp-mapwrap { overflow: hidden; max-width: 100%; border: 1px solid var(--imp-line); border-radius: 10px; background: #0a1822; }
+.imp-mapwrap.imp-zoomed { overflow: auto; overscroll-behavior: contain; max-height: 78dvh; }
 .imp-svg { display: block; height: auto; max-width: none; }
+.imp-mapwrap:not(.imp-zoomed) .imp-svg { max-height: 70dvh; margin: 0 auto; }
+.imp-layout { display: block; }
+@media (min-width: 1000px) {
+  /* Wide screens: the standings sit beside the map instead of below it, which halves the page height. */
+  .imp-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+  .imp-layout .imp-standings { border-top: 0; padding-top: 0; position: sticky; top: 12px; max-height: calc(100dvh - 24px); overflow: auto; }
+}
 .imp-sea { fill: #0a1822; }
 .imp-cell { cursor: pointer; outline: none; }
 .imp-cell:focus-visible { stroke: #fff; stroke-width: 2.2; }

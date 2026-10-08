@@ -8,7 +8,7 @@ import { geoContains, geoDistance } from "d3-geo";
 
 const require = createRequire(import.meta.url);
 const load = (p) => JSON.parse(readFileSync(require.resolve(p), "utf8"));
-const LAT_CAP = 60;
+const LAT_CAP = 56; // Edmonton is the northernmost arena (53.5°N); anything past ~56 is empty tundra that only makes the map tall
 const OUT = new URL("../public/data/imperialism/", import.meta.url);
 mkdirSync(OUT, { recursive: true });
 

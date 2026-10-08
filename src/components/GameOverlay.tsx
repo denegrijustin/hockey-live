@@ -3,6 +3,7 @@ import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
+import { TeamComparison } from "./TeamComparison";
 const PlayerTracker = lazy(() =>
   import("./PlayerTracker").then((m) => ({ default: m.PlayerTracker })),
 );
@@ -14,6 +15,7 @@ export function GameOverlay({
   baseline,
   sourceSeason,
   analysis,
+  ranks,
   onClose,
 }: {
   game: Game;
@@ -23,6 +25,7 @@ export function GameOverlay({
   baseline: any;
   sourceSeason: number;
   analysis: any;
+  ranks?: any;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -105,6 +108,10 @@ export function GameOverlay({
         {analysis.kind} · {analysis.score}/100 importance
       </p>
       <GameData game={game} home={home} away={away} before={before} baseline={baseline} />
+      <section className="dialog-comparison" aria-label="Season team comparison">
+        <h4 className="mini-heading">SEASON COMPARISON</h4>
+        <TeamComparison away={away} home={home} season={game.season} table={before} ranks={ranks} />
+      </section>
       <Suspense fallback={<p className="loading" role="status">Loading player tracker…</p>}>
         <PlayerTracker game={game} home={home} away={away} sourceSeason={sourceSeason} />
       </Suspense>

@@ -3,7 +3,7 @@ import type { EdgeData, Team } from "../types";
 import { useVisible } from "./GameData";
 const pending = new Map<string, Promise<EdgeData>>();
 const fetchedAt = new Map<string, number>();
-function loadEdge(season: number, team: string) {
+export function loadEdge(season: number, team: string) {
   const key = `${season}/${team}`;
   if (Date.now() - (fetchedAt.get(key) ?? 0) > 300000) {
     pending.delete(key);

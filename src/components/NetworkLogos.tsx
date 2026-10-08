@@ -1,3 +1,7 @@
+import type { Ref } from "react";
+import { useVisible } from "./GameData";
+import { useEspnLink } from "./useEspnGame";
+import { isEspnFamily } from "../lib/espn-links.mjs";
 type NetworkBrand = {
   key: string;
   label: string;
@@ -42,7 +46,19 @@ function brandFor(network: string) {
   return brands.find((brand) => brand.match.test(network));
 }
 
-export function NetworkLogos({ broadcasts }: { broadcasts: string[] }) {
+export function NetworkLogos({
+  broadcasts,
+  game,
+}: {
+  broadcasts: string[];
+  game?: { date: string; away: string; home: string };
+}) {
+  const { ref, visible: inView } = useVisible();
+  const hasEspn = !!game && broadcasts.some(isEspnFamily);
+  const espnHref = useEspnLink(
+    game ?? { date: "", away: "", home: "" },
+    hasEspn && inView,
+  );
   const unique = [...new Set(broadcasts)];
   const branded = unique.map((network) => ({ network, brand: brandFor(network) }));
   const deduplicated = branded.filter(
@@ -61,21 +77,40 @@ export function NetworkLogos({ broadcasts }: { broadcasts: string[] }) {
 
   return (
     <span
+      ref={ref as unknown as Ref<HTMLSpanElement>}
       className="network-logos"
       aria-label={`TV: ${unique.join(", ")}`}
       title={unique.join(" · ")}
     >
       {visible.map(({ network, brand }) => {
+        const img = brand && (
+          <img
+            src={`/network-logos/${brand.key}.png`}
+            alt={brand.label}
+            width="28"
+            height="28"
+            loading="lazy"
+          />
+        );
         return brand ? (
-          <span className="network-logo" key={network} title={network}>
-            <img
-              src={`/network-logos/${brand.key}.png`}
-              alt={brand.label}
-              width="28"
-              height="28"
-              loading="lazy"
-            />
-          </span>
+          game && isEspnFamily(network) ? (
+            <a
+              className="network-logo network-logo-link"
+              key={network}
+              href={espnHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open this game in the ESPN app"
+              aria-label={`${brand.label}: Open this game in the ESPN app`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {img}
+            </a>
+          ) : (
+            <span className="network-logo" key={network} title={network}>
+              {img}
+            </span>
+          )
         ) : (
           <span className="network-logo network-logo-fallback" key={network} title={network}>
             {network.replace(/\s*\([^)]*\)\s*$/, "").slice(0, 5)}

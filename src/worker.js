@@ -5,6 +5,7 @@ import {
   normalizeEdge,
 } from "./lib/game-data.mjs";
 import teams from "./data/teams.json";
+import { parseEspnScoreboard } from "./lib/espn-links.mjs";
 import {
   normalizeGame,
   normalizeBoxscore,
@@ -127,6 +128,27 @@ export default {
         return json(data);
       }
 
+      if ((match = url.pathname.match(/^\/api\/espn\/(20\d{6})$/))) {
+        const date = match[1],
+          today = new Date()
+            .toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+            .replace(/-/g, "");
+        try {
+          const r = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=${date}`,
+            { signal: AbortSignal.timeout(10000) },
+          );
+          if (!r.ok) throw Error(`ESPN returned ${r.status}`);
+          return json(
+            parseEspnScoreboard(await r.json(), date, teams),
+            200,
+            date === today ? 60 : 3600,
+          );
+        } catch {
+          // ESPN is optional; clients fall back to the schedule page.
+          return json({ date, games: {} }, 200, 60);
+        }
+      }
       if ((match = url.pathname.match(/^\/api\/season\/(20\d{6})$/))) {
         const season = Number(match[1]),
           manifest = await staticData(env, request, "/data/manifest.json");

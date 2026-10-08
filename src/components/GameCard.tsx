@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useState } from "react";
+import { lazy, memo, Suspense, useMemo, useState } from "react";
 import type { Game, Team } from "../types";
 import {
   finished,
@@ -8,14 +8,15 @@ import {
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
 import { NetworkLogos } from "./NetworkLogos";
+import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 // These two only render inside a collapsed <details> panel once a visitor
 // opens it, so they're loaded on demand instead of shipping in every
 // card's initial bundle (there can be dozens of cards on one page).
 const PlayerImpact = lazy(() =>
   import("./PlayerImpact").then((m) => ({ default: m.PlayerImpact })),
 );
-const EdgeStats = lazy(() =>
-  import("./EdgeStats").then((m) => ({ default: m.EdgeStats })),
+const TeamComparison = lazy(() =>
+  import("./TeamComparison").then((m) => ({ default: m.TeamComparison })),
 );
 const GameOverlay = lazy(() =>
   import("./GameOverlay").then((m) => ({ default: m.GameOverlay })),
@@ -48,6 +49,7 @@ export const GameCard = memo(function GameCard({
     [detailLevel, setDetailLevel] = useState<0 | 1>(0);
   const home = teams.find((t) => t.id === game.home)!,
     away = teams.find((t) => t.id === game.away)!;
+  const ranks = useMemo(() => teamRanks(before, teams), [before, teams]);
   const records = {
     [away.id]: recordBeforeGame(allGames, game, away.id),
     [home.id]: recordBeforeGame(allGames, game, home.id),
@@ -71,14 +73,7 @@ export const GameCard = memo(function GameCard({
   const day = new Date(game.start);
   return (
     <article style={{background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, #09141d), #0e1b25)`}} className={`game-card ${scoreClass} ${live ? "live-card" : ""} detail-level-${detailLevel}`}>
-      <button
-        type="button"
-        className="game-card-summary"
-        aria-expanded={detailLevel > 0}
-        aria-label={`${away.name} at ${home.name}. ${detailLevel === 0 ? "Show expanded details" : "Matchup summary"}`}
-        onClick={() => detailLevel === 0 && setDetailLevel(1)}
-      >
-      <div className="game-card-top">
+      <div className="game-card-top" onClick={() => detailLevel === 0 && setDetailLevel(1)}>
         <span className="game-date">
           {day.toLocaleDateString("en-US", {
             weekday: "short",
@@ -97,9 +92,16 @@ export const GameCard = memo(function GameCard({
                 })}
         </span>
         <span className="tv-network">
-          <NetworkLogos broadcasts={broadcasts} />
+          <NetworkLogos broadcasts={broadcasts} game={game} />
         </span>
       </div>
+      <button
+        type="button"
+        className="game-card-summary"
+        aria-expanded={detailLevel > 0}
+        aria-label={`${away.name} at ${home.name}. ${detailLevel === 0 ? "Show expanded details" : "Matchup summary"}`}
+        onClick={() => detailLevel === 0 && setDetailLevel(1)}
+      >
       <div className="matchup">
         <div className="matchup-teams">
           {[away, home].map((t, i) => (
@@ -114,6 +116,11 @@ export const GameCard = memo(function GameCard({
                   {records[t.id].w}–{records[t.id].l}–{records[t.id].ot}
                   <em>{Math.round(playoff[t.id]?.chance ?? 50)}% playoffs</em>
                 </small>
+                {ranks?.[t.id] && (
+                  <small className="team-rank" title={rankTitle(ranks[t.id])}>
+                    {rankLine(ranks[t.id])} <em>by points %</em>
+                  </small>
+                )}
               </div>
               {past || live ? (
                 <b>{(i === 0 ? game.awayScore : game.homeScore) ?? "—"}</b>
@@ -174,6 +181,7 @@ export const GameCard = memo(function GameCard({
             away={away}
             before={before}
             baseline={baseline}
+            ranks={ranks}
             sourceSeason={sourceSeason}
             analysis={analysis}
             onClose={() => setOverlayOpen(false)}
@@ -226,8 +234,13 @@ export const GameCard = memo(function GameCard({
         {edgeOpen && (
           <Suspense fallback={<div className="detail-body loading">Loading NHL EDGE…</div>}>
             <div className="detail-body">
-              <EdgeStats team={away} season={game.season} />
-              <EdgeStats team={home} season={game.season} />
+              <TeamComparison
+                away={away}
+                home={home}
+                season={game.season}
+                table={before}
+                ranks={ranks}
+              />
             </div>
           </Suspense>
         )}

@@ -339,7 +339,10 @@ export default function App() {
                 ? " · Saved fallback; refresh may be pending"
                 : ""}
           </span>
-          <button onClick={() => setRetry((x) => x + 1)} disabled={loading}>
+          <button onClick={() => {
+            setRetry((x) => x + 1);
+            window.dispatchEvent(new Event("iceboard:refresh"));
+          }} disabled={loading}>
             ↻ Refresh
           </button>
         </div>
@@ -379,7 +382,7 @@ export default function App() {
                         changeTeams([g.away, g.home]);
                         setPeriod("future");
                         setType(g.type);
-                        setRange("7");
+                        setRange("all");
                         setSort("date");
                         setQuery("");
                       }}

@@ -132,3 +132,41 @@ export type EdgeData = {
   zones: { label: string; value: number; average: number }[];
   locations: { label: string; shots: number; goals: number; average: number }[];
 };
+export type RankedMatchupMetric = {
+  label: string;
+  unit: string;
+  higher: boolean;
+  group: "offense" | "defense";
+  value: number | null;
+  rank: number | null;
+  tied: boolean;
+  pool: number;
+  best: boolean;
+  worst: boolean;
+};
+export type MatchupGoalie = {
+  id: number;
+  name: string;
+  team: string;
+  gamesPlayed: number;
+  gamesStarted: number;
+  wins: number;
+  losses: number;
+  savePct: number | null;
+  gaa: number | null;
+  headshot: string;
+};
+export type TeamMatchupStats = {
+  team: string;
+  gamesPlayed: number;
+  metrics: Record<string, RankedMatchupMetric>;
+  goalies: MatchupGoalie[];
+};
+export type LeagueMatchupSnapshot = {
+  season: number;
+  updatedAt: string;
+  source: string;
+  poolSize: number;
+  stale?: boolean;
+  teams: Record<string, TeamMatchupStats>;
+};

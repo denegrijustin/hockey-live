@@ -25,7 +25,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(card.locator(".team-record")).toHaveCount(2);
   await expect(card.locator(".team-record").first()).toContainText(/playoffs/i);
   await expect(card.locator(".team-record").first()).not.toContainText(/record/i);
-  await expect(card.locator(".season-series")).toContainText("H2H THIS SEASON");
+  await expect(card.locator(".compact-meta")).toBeVisible();
   await expect(card.locator(".tv-network")).not.toContainText("T#");
   await expect(card.locator(".network-logo img").first()).toBeVisible();
   await expect(card.getByLabel("Pregame projection")).toBeHidden();
@@ -33,12 +33,10 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(card.getByLabel("Pregame projection")).toBeVisible();
   await card.scrollIntoViewIfNeeded();
   await page.screenshot({path: `../nhl-projection-${test.info().project.name}.png`});
-  await expect(card.locator(".form-chart")).toContainText("RECENT FORM");
+  await expect(card.locator(".why-watch")).toBeVisible();
+  await expect(card.locator(".lineup-brief")).toBeVisible();
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
-  await card.getByText("Why this game matters", { exact: false }).click();
-  await expect(card.locator(".detail-body").first()).toContainText(
-    "Equal ratings share ranks.",
-  );
+  await expect(card.locator(".card-details")).toHaveCount(0);
   await page.getByRole("button", { name: "All 32", exact: true }).click();
   await expect(page.locator(".results-line")).toContainText(
     "32 selected teams",
@@ -195,10 +193,11 @@ test("recent actual game contribution and mobile card layout", async ({
   await page.getByLabel("Competition").selectOption("1");
   await page.getByLabel("Sort by").selectOption("date");
   const card = page.locator(".game-card").first();
-  await card.locator(".game-card-summary").click();
-  await card.getByText("Player impact · actual").click();
-  await expect(card).toContainText("Actual box-score index");
-  await expect(card.locator(".impact-row").first()).toBeVisible();
+  await card.getByRole("button", { name: /Open Game Center for/ }).click();
+  const dialog = page.locator("dialog.game-dialog");
+  await dialog.locator(".game-center-section > summary").filter({ hasText: "Player leaders and trends" }).click();
+  await expect(dialog).toContainText("Final box score");
+  await expect(dialog.locator(".impact-row").first()).toBeVisible();
   if (info.project.name === "mobile") {
     expect(
       await page

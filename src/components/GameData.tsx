@@ -66,7 +66,7 @@ export function GameData({
   const { ref, visible } = useVisible();
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
   const { data, error } = useFeed<GameFeed>(
-    visible && played ? `/api/game/${game.id}` : null,
+    visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
     isLive(game) ? 30000 : 3600000,
   );
   if (!played)
@@ -213,6 +213,16 @@ export function GameData({
       )}
     </div>
   );
+}
+
+export function CompactGameProjection({ game, before, baseline }: { game: Game; before: any; baseline: any }) {
+  const { ref, visible } = useVisible();
+  const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
+  const { data, error } = useFeed<GameFeed>(
+    visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
+    isLive(game) ? 30000 : 3600000,
+  );
+  return <div ref={ref} className="compact-projection"><Projection game={game} before={before} baseline={baseline} feed={data} error={error} /></div>;
 }
 function ShotChart({
   data,

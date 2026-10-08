@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 export function useFeed<T>(url: string | null, interval = 30000) {
   const [data, setData] = useState<T | null>(null),
     [error, setError] = useState("");
+  const identity = useRef<string | null>(null);
   useEffect(() => {
-    setData(null);
+    const nextIdentity = url?.split("?")[0] ?? null;
+    if (identity.current !== nextIdentity) setData(null);
+    identity.current = nextIdentity;
     setError("");
     if (!url) return;
     let active = true,

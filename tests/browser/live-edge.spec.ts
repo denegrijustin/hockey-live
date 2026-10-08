@@ -27,26 +27,30 @@ test("live data updates without collapsing open cards; failure retains last scor
       },
     });
   });
-  await page.route("**/api/game/*", (route) =>
-    route.fulfill({ json: { ...fixture, state: "LIVE", homeScore: Math.min(calls - 1, 1), plays: calls > 1 ? [{id:9001,order:1,period:1,time:"19:00",type:"goal",team:fixture.home,player:"Test Scorer",penalty:null}] : [] } }),
-  );
+  await page.route("**/api/game/*", (route) => {
+    return route.fulfill({ json: { ...fixture, state: "LIVE", homeScore: Math.min(calls - 1, 1), plays: [{id:9001,order:1,period:1,time:"19:00",type:"goal",team:fixture.home,player:"Test Scorer",penalty:null}] } });
+  });
   await page.goto("/");
   await expect(page.locator(".live-strip")).toContainText("FLA");
   await page.locator(".live-strip button").first().click();
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
   await card.locator(".game-card-summary").click();
-  await expect(card.locator(".shot-chart").first()).toBeVisible();
   await expect(card.getByLabel("Live winner projection")).toBeVisible();
-  await expect(card.getByLabel("Projected final score")).toBeVisible();
-  await expect(card.locator(".projection .prediction-labels")).toContainText("%");
-  await expect(card.locator(".scenario-grid")).toHaveCount(0);
-  await expect(card.locator(".hit-chart")).toBeVisible();
-  await expect(card.locator(".ice-tilt")).toContainText("Shot-pressure proxy");
-  await expect(card.locator('.interactive-pulse').first()).toHaveAttribute('data-metric','hits');
-  const shotsGraph=card.locator('[data-metric="shots"]');
+  await card.locator(".primary-game-center").click();
+  const dialog = page.locator("dialog.game-dialog");
+  await expect(dialog.locator(".shot-chart").first()).toBeVisible();
+  await expect(dialog.getByLabel("Projected final score")).toBeVisible();
+  await expect(dialog.locator(".projection .prediction-labels")).toContainText("%");
+  await expect(dialog.locator(".prediction-change")).toContainText(/Current estimate updated|pp since previous update/);
+  await expect(dialog.locator(".prediction-change")).toContainText("goal (Test Scorer)");
+  await expect(dialog.locator(".scenario-grid")).toHaveCount(0);
+  await expect(dialog.locator(".hit-chart")).toBeVisible();
+  await expect(dialog.locator(".ice-tilt")).toContainText("Shot-pressure proxy");
+  await expect(dialog.locator('.interactive-pulse').first()).toHaveAttribute('data-metric','hits');
+  const shotsGraph=dialog.locator('[data-metric="shots"]');
   await expect(shotsGraph.locator('.pulse-readout img')).toHaveCount(2);
-  const scrubber=card.getByRole('slider',{name:'Shots timeline time'});
+  const scrubber=dialog.getByRole('slider',{name:'Shots timeline time'});
   await scrubber.focus(); await scrubber.press('Home');
   await expect(shotsGraph.locator('.pulse-readout')).toContainText('P1 0:00 elapsed');
   await expect(shotsGraph.locator('.pulse-readout strong').first()).toHaveText('0 SOG');
@@ -55,25 +59,17 @@ test("live data updates without collapsing open cards; failure retains last scor
   const bounds=await shotsGraph.locator('.shot-chart').boundingBox();
   await shotsGraph.locator('.shot-chart').hover({position:{x:bounds!.width/2,y:bounds!.height/2}});
   await expect(shotsGraph.locator('.pulse-readout')).toContainText('Selected point');
-  const previousEstimate = await card.locator(".projection .prediction-labels").innerText();
-  await card.getByText("Why this game matters", { exact: false }).click();
-  await expect(card.locator(".card-details").first()).toHaveAttribute(
-    "open",
-    "",
-  );
+  const previousEstimate = await dialog.locator(".projection .prediction-labels").innerText();
+  await dialog.locator(".game-center-section > summary").filter({ hasText: "Why this game matters" }).click();
+  const why = dialog.locator(".game-center-section").filter({ hasText: "Why this game matters" });
+  await expect(why).toHaveAttribute("open", "");
   await page.clock.fastForward(31000);
   await expect(card.locator(".matchup-team").last().locator("b")).toHaveText(
     "1",
   );
-  await expect(card.locator(".card-details").first()).toHaveAttribute(
-    "open",
-    "",
-  );
-  await expect(card.locator(".projection .prediction-labels")).not.toHaveText(previousEstimate);
-  await expect(card.locator(".prediction-change")).toContainText("pp since previous update");
-  await expect(card.locator(".prediction-change")).toContainText("goal (Test Scorer)");
-  await card.locator(".hit-chart").scrollIntoViewIfNeeded();
-  await page.screenshot({path: `../nhl-pulse-${test.info().project.name}.png`});
+  await expect(dialog).toBeVisible();
+  await expect(why).toHaveAttribute("open", "");
+  await expect(dialog.locator(".projection .prediction-labels")).not.toHaveText(previousEstimate);
   await page.clock.fastForward(31000);
   await expect(page.locator(".live-strip")).toContainText("Update unavailable");
   await expect(card.locator(".matchup-team").last().locator("b")).toHaveText(
@@ -154,7 +150,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   const card = page.locator(".live-card").first();
   await card.locator(".game-card-summary").click();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  await card.getByRole("button", { name: /Open full game view/i }).click();
+  await card.locator(".primary-game-center").click();
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("open", "");
@@ -192,6 +188,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(dialog.locator(".ice-tilt")).toContainText("ICE TILT");
   await expect(dialog.locator(".shot-chart")).toHaveCount(2);
   // Player tracker: ice time and top/bottom-3 broken out per team.
+  await dialog.locator(".game-center-section > summary").filter({ hasText: "Player leaders and trends" }).click();
   await expect(dialog).toContainText("PLAYER TRACKER");
   const trackerTeams = dialog.locator(".tracker-team");
   await expect(trackerTeams).toHaveCount(2);

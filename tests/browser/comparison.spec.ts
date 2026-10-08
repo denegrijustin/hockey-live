@@ -1,11 +1,6 @@
 import { test, expect } from "@playwright/test";
-import edgeFixture from "../../public/data/edge/20252026/EDM.json" with { type: "json" };
-test("rank line, side-by-side comparison at 320px and ESPN link", async ({ page }) => {
+test("rank line, crossover comparison at 320px, team swapping and ESPN link", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 });
-  await page.route("**/api/edge/**", (route) => {
-    const team = route.request().url().split("/").pop();
-    route.fulfill({ json: { ...edgeFixture, team } });
-  });
   await page.route("**/api/espn/*", (route) =>
     route.fulfill({ json: { date: "x", games: {} } }),
   );
@@ -16,14 +11,17 @@ test("rank line, side-by-side comparison at 320px and ESPN link", async ({ page 
   const card = page.locator(".game-card").first();
   await expect(card.locator(".team-rank")).toHaveCount(2);
   await expect(card.locator(".team-rank").first()).toContainText("by points %");
-  await card.locator(".game-card-summary").click();
-  await card.getByText("NHL EDGE · team comparison").click();
-  const cmp = card.locator(".cmp");
-  await expect(cmp.locator(".cmp-row").first()).toBeVisible();
-  await expect(cmp.locator('[data-metric^="edge-"]').first()).toBeVisible();
-  const a = await cmp.locator(".cmp-val-a").first().boundingBox();
-  const h = await cmp.locator(".cmp-val-h").first().boundingBox();
-  expect(a!.x).toBeLessThan(h!.x);
+  await card.getByRole("button", { name: /Open Game Center for/ }).click();
+  const dialog = page.locator("dialog.game-dialog");
+  const cmp = dialog.locator(".matchup-comparison");
+  await expect(cmp.locator(".crossover-row").first()).toBeVisible();
+  await expect(cmp).toContainText("Rank comparisons, not predictions");
+  const before = await cmp.locator(".comparison-title h3").innerText();
+  await cmp.getByRole("button", { name: "⇄ Swap sides" }).click();
+  await expect(cmp.locator(".comparison-title h3")).not.toHaveText(before);
+  const left = await cmp.locator(".metric-offense").first().boundingBox();
+  const right = await cmp.locator(".metric-defense").first().boundingBox();
+  expect(left!.x).toBeLessThan(right!.x);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );

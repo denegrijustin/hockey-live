@@ -12,8 +12,11 @@ import {
   normalizePlayers,
   value,
 } from "./lib/normalize.mjs";
+import { normalizeLeagueMatchups } from "./lib/matchup-data.mjs";
 const API = "https://api-web.nhle.com/v1";
+const STATS_API = "https://api.nhle.com/stats/rest/en";
 const ids = new Set(teams.map((t) => t.id));
+const idToAbbrev = Object.fromEntries(Object.entries(teamIds).map(([abbrev, id]) => [String(id), abbrev]));
 const tasks = new Map();
 const json = (data, status = 200, ttl = 60) =>
   Response.json(data, {
@@ -29,6 +32,34 @@ async function get(path) {
   });
   if (!r.ok) throw Error(`NHL returned ${r.status}`);
   return r.json();
+}
+async function statsGet(report, season, limit = 100) {
+  const url = new URL(`${STATS_API}/${report}/summary`);
+  url.search = new URLSearchParams({
+    isAggregate: "false",
+    isGame: "false",
+    start: "0",
+    limit: String(limit),
+    cayenneExp: `seasonId=${season} and gameTypeId=2`,
+  }).toString();
+  const response = await fetch(url, {
+    headers: { "User-Agent": "Iceboard/1.0" },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw Error(`NHL stats returned ${response.status}`);
+  const body = await response.json();
+  if (!Array.isArray(body.data)) throw Error("Incomplete NHL stats report");
+  return body.data;
+}
+async function refreshLeagueMatchups(season, env) {
+  const [teamRows, goalieRows] = await Promise.all([
+    statsGet("team", season, 50),
+    statsGet("goalie", season, 100),
+  ]);
+  const data = normalizeLeagueMatchups(teamRows, goalieRows, idToAbbrev, season);
+  if (data.poolSize < 20) throw Error("Incomplete NHL league comparison pool");
+  await env.TEAM_STATS.put(`league-matchups-v1-${season}`, JSON.stringify(data));
+  return data;
 }
 async function refreshSeason(season, env) {
   let index = 0;
@@ -126,6 +157,26 @@ export default {
           }),
         );
         return json(data);
+      }
+
+      if ((match = url.pathname.match(/^\/api\/league-matchups\/(20\d{6})$/))) {
+        const season = Number(match[1]),
+          manifest = await staticData(env, request, "/data/manifest.json");
+        if (!manifest?.seasons.includes(season))
+          return json({ error: "Season not supported" }, 400);
+        const key = `league-matchups-v1-${season}`,
+          cached = await env.TEAM_STATS.get(key, { type: "json" }),
+          fresh = cached && Date.now() - Date.parse(cached.updatedAt) < 300000;
+        if (fresh && url.searchParams.get("refresh") !== "1") return json(cached, 200, 60);
+        try {
+          return json(await refreshLeagueMatchups(season, env), 200, 60);
+        } catch (error) {
+          if (cached)
+            return json({ ...cached, stale: true }, 200, 60);
+          const fallback = await staticData(env, request, `/data/league-matchups/${season}.json`);
+          if (fallback) return json({ ...fallback, stale: true }, 200, 60);
+          throw error;
+        }
       }
 
       if ((match = url.pathname.match(/^\/api\/espn\/(20\d{6})$/))) {
@@ -268,9 +319,12 @@ export default {
     );
     const manifest = await r.json();
     ctx.waitUntil(
-      refreshSeason(manifest.current, env).catch((e) =>
-        console.error("Scheduled refresh failed", e.message),
-      ),
+      Promise.allSettled([
+        refreshSeason(manifest.current, env),
+        refreshLeagueMatchups(manifest.current, env),
+      ]).then((results) => results.forEach((result) => {
+        if (result.status === "rejected") console.error("Scheduled refresh failed", result.reason?.message);
+      })),
     );
   },
 };

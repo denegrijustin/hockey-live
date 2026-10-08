@@ -1,0 +1,17 @@
+{
+  "events": [
+    { "id": "401803001", "name": "Washington Capitals at New Jersey Devils", "competitions": [{ "competitors": [
+      { "homeAway": "home", "team": { "abbreviation": "NJ", "displayName": "New Jersey Devils" } },
+      { "homeAway": "away", "team": { "abbreviation": "WSH", "displayName": "Washington Capitals" } } ] }] },
+    { "id": "401803002", "name": "Utah Mammoth at Tampa Bay Lightning", "competitions": [{ "competitors": [
+      { "homeAway": "away", "team": { "abbreviation": "UTAH", "displayName": "Utah Mammoth" } },
+      { "homeAway": "home", "team": { "abbreviation": "TB", "displayName": "Tampa Bay Lightning" } } ] }] },
+    { "id": "401803003", "name": "Edmonton Oilers at Los Angeles Kings", "competitions": [{ "competitors": [
+      { "homeAway": "away", "team": { "abbreviation": "EDM", "displayName": "Edmonton Oilers" } },
+      { "homeAway": "home", "team": { "abbreviation": "LA", "displayName": "Los Angeles Kings" } } ] }] },
+    { "id": "401803004", "name": "Odd abbreviation", "competitions": [{ "competitors": [
+      { "homeAway": "away", "team": { "abbreviation": "SJX", "displayName": "San Jose Sharks" } },
+      { "homeAway": "home", "team": { "abbreviation": "VGK", "displayName": "Vegas Golden Knights" } } ] }] },
+    { "id": "401803005", "name": "Broken", "competitions": [{ "competitors": [] }] }
+  ]
+}

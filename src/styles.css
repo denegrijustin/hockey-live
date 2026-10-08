@@ -2395,3 +2395,11 @@ footer b {
 .player-identity{display:inline-flex;align-items:center;gap:10px;text-align:left;border:0;background:transparent;color:inherit;padding:3px;min-height:48px;cursor:pointer}.player-identity strong{color:#b8efde;text-decoration:underline;text-underline-offset:3px}.player-identity small{display:block;color:#b0c2ce}.player-identity img,.player-placeholder{width:44px;height:44px;flex-shrink:0;object-fit:cover;border-radius:50%;background:#243c49}.player-placeholder{display:grid;place-items:center;font-size:13px}.player-dialog{color:#e4eef3;background:#10212c;border:1px solid #4e6978;border-radius:16px;padding:24px;width:min(640px,calc(100vw - 32px));max-height:85vh;overflow:auto}.player-dialog::backdrop{background:#000b}.dialog-close{float:right;min-height:44px;padding:8px 14px}.profile-bio{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.player-dialog a{display:block;margin-top:20px;color:#73d9c1}.impact-row .player-identity{max-width:100%}
 .ice-tilt{padding:14px 0;border-top:1px solid #344954;margin-top:12px}.hit-chart{margin-bottom:16px}
 .interactive-pulse{margin-bottom:20px}.pulse-readout{padding:8px 0}.pulse-readout>small{color:#a9c1cc;font-size:11px}.pulse-readout>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:6px}.pulse-readout span{display:flex;align-items:center;gap:5px;font-size:12px}.pulse-readout img{object-fit:contain}.pulse-readout strong{font-variant-numeric:tabular-nums}.interactive-pulse .shot-chart{touch-action:pan-y;cursor:crosshair;margin-bottom:0}.pulse-scrubber{width:100%;min-height:32px;accent-color:#73d9c1}
+
+/* ===== Ranks, ESPN links, comparison hooks (GameCard/NetworkLogos/TeamComparison) ===== */
+.team-rank{display:block;margin-top:2px;color:#b8d0da;font-size:10px;line-height:1.35;overflow-wrap:anywhere;cursor:help}
+.team-rank em{font-style:normal;color:#8da8b8;font-size:9px;white-space:nowrap}
+a.network-logo-link{text-decoration:none;cursor:pointer}
+a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-offset:2px}
+.game-card-top{cursor:default}
+.dialog-comparison{margin:16px 0}

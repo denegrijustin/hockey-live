@@ -5,6 +5,7 @@ import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { loadSeason } from "./lib/api";
 import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
+import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
@@ -22,6 +23,12 @@ const Players = lazy(() =>
 );
 const Standings = lazy(() =>
   import("./components/Standings").then((m) => ({ default: m.Standings })),
+);
+const PlayoffOdds = lazy(() =>
+  import("./components/PlayoffOdds").then((m) => ({ default: m.PlayoffOdds })),
+);
+const ImperialismMap = lazy(() =>
+  import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
 );
 const teams: Team[] = rawTeams;
 const defaults = ["EDM", "CHI", "MIN"];
@@ -152,18 +159,19 @@ export default function App() {
     () => (baseline ? analyzeSeason(baseline.games, teams) : null),
     [baseline],
   );
-  const playoff = useMemo(
-    () =>
-      data && analysis
-        ? playoffChances(
-            analysis.table,
-            data.games,
-            teams,
-            baselineAnalysis?.table,
-          )
-        : {},
-    [data, analysis, baselineAnalysis],
-  );
+  // Playoff chances on the cards come from the same simulation as the Playoff odds tab, so the two never disagree.
+  // It reruns when a game finishes, not on every 30-second live-score tick.
+  const finishedCount = data ? data.games.filter(finished).length : 0;
+  const playoff = useMemo(() => {
+    if (!data || !analysis) return {};
+    try {
+      const sim = simulatePlayoffs({ games: data.games, teams, table: analysis.table, baseline: baselineAnalysis?.table, sims: 5000 });
+      return chancesForCards(sim, teams);
+    } catch {
+      return playoffChances(analysis.table, data.games, teams, baselineAnalysis?.table);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finishedCount, season, baselineAnalysis]);
   const selectedTeams = selected
     .map((id) => teams.find((t) => t.id === id)!)
     .filter(Boolean);
@@ -307,6 +315,8 @@ export default function App() {
               ["edge", "NHL EDGE"],
               ["players", "Players"],
               ["standings", "Standings"],
+              ["odds", "Playoff odds"],
+              ["map", "Imperialism map"],
             ].map(([id, label]) => (
               <button
                 aria-pressed={view === id}
@@ -637,6 +647,22 @@ export default function App() {
             )}
           </>
         ) : null}
+        {view === "odds" && data && analysis && (
+          <Suspense fallback={<div className="empty" role="status">Loading playoff odds…</div>}>
+            <PlayoffOdds
+              teams={teams}
+              games={data.games}
+              table={analysis.table}
+              baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
+              season={season}
+            />
+          </Suspense>
+        )}
+        {view === "map" && data && (
+          <Suspense fallback={<div className="empty" role="status">Loading the map…</div>}>
+            <ImperialismMap teams={teams} games={data.games} season={season} />
+          </Suspense>
+        )}
         <Methodology />
         <footer>
           <span>

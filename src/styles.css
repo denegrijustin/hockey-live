@@ -2427,6 +2427,10 @@ a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-
 .game-flow-chart{display:block;width:100%;height:auto;margin-top:5px;touch-action:pan-y;cursor:crosshair;overflow:visible}
 .flow-zero{stroke:#526d78;stroke-width:1;stroke-dasharray:3 4}
 .flow-cursor{stroke:#dce9ed;stroke-width:1;stroke-dasharray:2 3}
+.flow-time-mark line{stroke:#29434e;stroke-width:.7;stroke-dasharray:2 5}
+.flow-time-mark text{fill:#7894a1;font-size:7px;font-weight:700;letter-spacing:.25px}
+.flow-progress{stroke:#e4eff2;stroke-width:1;stroke-dasharray:2 3;opacity:.75}
+.flow-progress-dot{fill:#e4eff2;stroke:#0a1b24;stroke-width:1.5}
 .game-flow .detail-note{margin:4px 0 0;line-height:1.55}
 .finished-today-bottom{margin-top:24px}
 @media(max-width:620px){.compact-game-flow{margin-inline:12px}.game-flow{padding:9px}.flow-readout{align-items:flex-start}.game-flow .flow-readout{font-size:9px}}

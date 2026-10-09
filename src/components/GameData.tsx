@@ -259,14 +259,22 @@ function smoothFlowPath(points: { x: number; y: number }[]) {
   return path;
 }
 
+function fullGameMinutes(data: GameFeed, elapsed: number) {
+  if (data.type === 3 && (data.period ?? 0) > 3)
+    return Math.max(60, Math.ceil(elapsed / 20) * 20);
+  if (elapsed > 60 || ["OT", "SO"].includes(data.periodType ?? "")) return 65;
+  return 60;
+}
+
 function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; home: Team; away: Team; compact?: boolean }) {
   const flow = gameFlow(data);
   const [inspect, setInspect] = useState<number | null>(null);
   if (!flow?.points.length) return null;
-  const width = 360, height = compact ? 48 : 126, left = compact ? 4 : 28, right = compact ? 356 : 350;
-  const center = compact ? 25 : 64;
-  const amplitude = compact ? 18 : 48;
-  const end = Math.max(1, flow.points.at(-1)!.minute);
+  const width = 360, height = compact ? 64 : 142, left = compact ? 8 : 28, right = compact ? 352 : 350;
+  const center = compact ? 25 : 65;
+  const amplitude = compact ? 17 : 48;
+  const elapsed = Math.max(0, flow.points.at(-1)!.minute);
+  const end = fullGameMinutes(data, elapsed);
   const max = Math.max(1, ...flow.points.map((point: any) => Math.abs(point.value)));
   const x = (minute: number) => left + (minute / end) * (right - left);
   const y = (value: number) => center - (value / max) * amplitude;
@@ -287,22 +295,27 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
     const matrix = event.currentTarget.getScreenCTM();
     if (!matrix) return;
     const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
-    setInspect(Math.max(0, Math.min(end, ((point.x - left) / (right - left)) * end)));
+    setInspect(Math.max(0, Math.min(elapsed, ((point.x - left) / (right - left)) * end)));
   };
   const id = `flow-${data.id}-${compact ? "compact" : "detail"}`;
   const curve = smoothFlowPath(flow.points.map((point: any) => ({ x: x(point.minute), y: y(point.value) })));
+  const ticks = Array.from({ length: Math.floor(Math.min(60, end) / 20) + 1 }, (_, index) => index * 20);
+  if (end > 60) ticks.push(end);
   return <div className={compact ? "compact-game-flow" : "game-flow"} data-testid={compact ? "compact-game-flow" : "game-flow"}>
     <div className="flow-readout">
       <span>{compact ? "MOMENTUM" : `${flowTimeLabel(selected.minute, data.type)} · ${inspect == null ? "Latest" : "Selected point"}`}</span>
       <strong>{leader ? <><img src={`/logos/${leader.id}.svg`} alt="" /> {leader.id} +{Math.abs(selected.value).toFixed(1)}</> : "EVEN"}</strong>
     </div>
-    <svg className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Game momentum: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
+    <svg className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" data-elapsed={elapsed.toFixed(2)} data-duration={end} data-progress={(elapsed / end).toFixed(3)} aria-label={`Full-game momentum through ${flowTimeLabel(elapsed, data.type)}: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
       <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="#9bb0ba"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
+      {ticks.map((minute) => <g key={minute} className="flow-time-mark"><line x1={x(minute)} x2={x(minute)} y1="7" y2={height - 19}/><text x={x(minute)} y={height - 5} textAnchor={minute === 0 ? "start" : minute === end ? "end" : "middle"}>{minute === 0 ? "START" : minute === end ? `END · ${minute}m` : `${minute}m`}</text></g>)}
       <line x1={left} x2={right} y1={center} y2={center} className="flow-zero" />
       <path d={curve} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
+      <line x1={x(elapsed)} x2={x(elapsed)} y1="7" y2={height - 19} className="flow-progress" />
+      <circle cx={x(elapsed)} cy={y(flow.current)} r={compact ? 3.5 : 4.5} className="flow-progress-dot" />
       {!compact && <><line x1={x(selected.minute)} x2={x(selected.minute)} y1="10" y2={height - 14} className="flow-cursor"/><image href={`/logos/${home.id}.svg`} x="3" y="4" width="20" height="20"/><image href={`/logos/${away.id}.svg`} x="3" y={height - 27} width="20" height="20"/></>}
     </svg>
-    {!compact && <><input className="pulse-scrubber" type="range" min="0" max={Math.round(end * 60)} value={Math.round(selected.minute * 60)} step="1" aria-label="Game momentum timeline" aria-valuetext={`${flowTimeLabel(selected.minute, data.type)}; ${leader ? `${leader.id} momentum ${Math.abs(selected.value).toFixed(1)}` : "even momentum"}`} onChange={(event) => setInspect(Number(event.target.value) / 60)} /><p className="detail-note">{eventSummary || "No weighted events in this five-minute window."} Momentum weights recent goals, shots, missed shots, hits and penalties; events fade across five minutes. Hover, tap or use the slider to inspect.</p></>}
+    {!compact && <><input className="pulse-scrubber" type="range" min="0" max={Math.max(1, Math.round(elapsed * 60))} value={Math.round(selected.minute * 60)} step="1" aria-label="Game momentum timeline" aria-valuetext={`${flowTimeLabel(selected.minute, data.type)}; ${leader ? `${leader.id} momentum ${Math.abs(selected.value).toFixed(1)}` : "even momentum"}`} onChange={(event) => setInspect(Number(event.target.value) / 60)} /><p className="detail-note">{eventSummary || "No weighted events in this five-minute window."} Momentum weights recent goals, shots, missed shots, hits and penalties; events fade across five minutes. The line fills the full-game timeline as play advances. Hover, tap or use the slider to inspect received data.</p></>}
   </div>;
 }
 function ShotChart({

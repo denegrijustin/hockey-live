@@ -35,8 +35,13 @@ test("live data updates without collapsing open cards; failure retains last scor
   await page.locator(".live-strip button").first().click();
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
-  await expect(card.getByTestId("compact-game-flow")).toBeVisible();
-  await expect(card.getByTestId("compact-game-flow")).toContainText("MOMENTUM");
+  const compactFlow = card.getByTestId("compact-game-flow");
+  await expect(compactFlow).toBeVisible();
+  await expect(compactFlow).toContainText("MOMENTUM");
+  await expect(compactFlow.locator(".flow-time-mark")).toHaveCount(4);
+  await expect(compactFlow.locator(".flow-time-mark").first()).toContainText("START");
+  await expect(compactFlow.locator(".flow-time-mark").last()).toContainText("END · 60m");
+  expect(Number(await compactFlow.locator(".game-flow-chart").getAttribute("data-progress"))).toBeLessThan(1);
   await card.locator(".game-card-summary").click();
   await expect(card.getByLabel("Live winner projection")).toBeVisible();
   await card.locator(".primary-game-center").click();

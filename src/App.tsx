@@ -489,40 +489,6 @@ export default function App() {
                     />
                   </label>
                 </div>
-                {period === "future" && finishedToday.length > 0 && (
-                  <details className="finished-today">
-                    <summary>
-                      <span className="finished-today-label">
-                        <i />
-                        Finished today <b>{finishedToday.length}</b>
-                      </span>
-                      <span className="finished-today-scores">
-                        {finishedToday.map((g) => (
-                          <span key={g.id}>
-                            {g.away} {g.awayScore}–{g.homeScore} {g.home}
-                          </span>
-                        ))}
-                      </span>
-                      <span className="expand-icon">+</span>
-                    </summary>
-                    <div className="game-grid">
-                      {finishedToday.map((g) => (
-                        <GameCard
-                          baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
-                          key={`finished-${g.id}`}
-                          game={g}
-                          teams={teams}
-                          before={analysis.before[g.id]}
-                          analysis={analysis.analysis[g.id]}
-                          selected={selected}
-                          sourceSeason={sourceSeason}
-                          allGames={data.games}
-                          playoff={playoff}
-                        />
-                      ))}
-                    </div>
-                  </details>
-                )}
                 <div className="results-line">
                   <span role="status">
                     {games.length} games · {selected.length} selected teams
@@ -616,6 +582,40 @@ export default function App() {
                       )}
                     </div>
                   </div>
+                )}
+                {period === "future" && finishedToday.length > 0 && (
+                  <details className="finished-today finished-today-bottom">
+                    <summary>
+                      <span className="finished-today-label">
+                        <i />
+                        Finished today <b>{finishedToday.length}</b>
+                      </span>
+                      <span className="finished-today-scores">
+                        {finishedToday.map((g) => (
+                          <span key={g.id}>
+                            {g.away} {g.awayScore}–{g.homeScore} {g.home}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="expand-icon">+</span>
+                    </summary>
+                    <div className="game-grid">
+                      {finishedToday.map((g) => (
+                        <GameCard
+                          baseline={baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined}
+                          key={`finished-${g.id}`}
+                          game={g}
+                          teams={teams}
+                          before={analysis.before[g.id]}
+                          analysis={analysis.analysis[g.id]}
+                          selected={selected}
+                          sourceSeason={sourceSeason}
+                          allGames={data.games}
+                          playoff={playoff}
+                        />
+                      ))}
+                    </div>
+                  </details>
                 )}
               </>
             )}

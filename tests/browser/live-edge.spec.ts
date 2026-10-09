@@ -35,10 +35,14 @@ test("live data updates without collapsing open cards; failure retains last scor
   await page.locator(".live-strip button").first().click();
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
+  await expect(card.getByTestId("compact-game-flow")).toBeVisible();
+  await expect(card.getByTestId("compact-game-flow")).toContainText("MOMENTUM");
   await card.locator(".game-card-summary").click();
   await expect(card.getByLabel("Live winner projection")).toBeVisible();
   await card.locator(".primary-game-center").click();
   const dialog = page.locator("dialog.game-dialog");
+  await expect(dialog.getByTestId("game-flow")).toBeVisible();
+  await expect(dialog.getByRole("slider", { name: "Game momentum timeline" })).toBeVisible();
   await expect(dialog.locator(".shot-chart").first()).toBeVisible();
   await expect(dialog.getByLabel("Projected final score")).toBeVisible();
   await expect(dialog.locator(".projection .prediction-labels")).toContainText("%");

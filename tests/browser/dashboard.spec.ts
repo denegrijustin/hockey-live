@@ -163,11 +163,9 @@ test("finished-today games collapse into a compact expandable strip", async ({
     route.fulfill({ json: snapshot }),
   );
   await page.goto("/");
-  // The finished-today strip sits before the main upcoming grid in the DOM,
-  // and its own card is hidden (inside a closed <details>) until expanded —
-  // so scope to the grid that follows the strip to find the visible one.
+  // Unfinished games remain above the collapsed finished-today strip.
   await expect(
-    page.locator(".finished-today ~ .game-grid .game-card").first(),
+    page.locator(".results-line + .game-grid .game-card").first(),
   ).toBeVisible();
   const strip = page.locator(".finished-today");
   await expect(strip).toBeVisible();

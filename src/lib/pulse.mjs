@@ -25,3 +25,39 @@ export function iceTilt(game) {
   const home=attempts.filter(p=>p.team===game.home).length,away=attempts.filter(p=>p.team===game.away).length;
   return {home,away,homeShare:home+away ? home/(home+away) : null,minutes:Math.min(10,end)};
 }
+
+const FLOW_WEIGHT = {
+  goal: 5,
+  'shot-on-goal': 1.25,
+  'missed-shot': 0.65,
+  hit: 0.3,
+  penalty: -1.6,
+};
+
+/**
+ * Recent game momentum on a five-minute rolling window. Positive values favor
+ * the home team; negative values favor the away team. Older events fade
+ * linearly so the line reacts to the latest pressure instead of becoming a
+ * cumulative activity chart. A penalty is charged against the penalized team.
+ */
+export function gameFlow(game, step = 0.5) {
+  const end = pulseMinute(game);
+  if (end == null || !Array.isArray(game.plays)) return null;
+  const events = game.plays
+    .map((play) => ({ ...play, minute: playMinute(play, game.type) }))
+    .filter((play) => play.minute != null && play.minute <= end && FLOW_WEIGHT[play.type] != null);
+  const sample = (minute) => {
+    let value = 0;
+    for (const event of events) {
+      const age = minute - event.minute;
+      if (age < 0 || age > 5 || !event.team) continue;
+      const weight = FLOW_WEIGHT[event.type] * (1 - age / 5);
+      value += event.team === game.home ? weight : event.team === game.away ? -weight : 0;
+    }
+    return Math.round(value * 100) / 100;
+  };
+  const points = [];
+  for (let minute = 0; minute < end; minute += step) points.push({ minute, value: sample(minute) });
+  points.push({ minute: end, value: sample(end) });
+  return { points, current: points.at(-1)?.value ?? 0, windowMinutes: 5 };
+}

@@ -294,7 +294,7 @@ test('live projected final score cannot remove existing goals and OT adds one go
  assert.equal(ot.score.home+ot.score.away,9);
 });
 
-import { iceTilt, playMinute, pulseMinute } from '../src/lib/pulse.mjs';
+import { gameFlow, iceTilt, playMinute, pulseMinute } from '../src/lib/pulse.mjs';
 test('ice tilt counts recent unblocked attempts, excludes blocks and shootouts, and handles no data',()=>{
  const game={type:2,home:'EDM',away:'CHI',state:'LIVE',period:2,clock:'10:00',plays:[
  {type:'shot-on-goal',team:'EDM',period:2,time:'02:00'},
@@ -309,4 +309,19 @@ test('ice tilt counts recent unblocked attempts, excludes blocks and shootouts, 
  assert.equal(iceTilt({...game,plays:undefined}),null);
  assert.equal(pulseMinute({...game,period:1,intermission:true,clock:'12:00'}),20);
  assert.equal(playMinute({period:5,time:'01:00'},3),81);
+});
+
+test('game flow represents recent momentum and fades older events', () => {
+ const game={type:2,state:'LIVE',home:'EDM',away:'CHI',period:1,clock:'10:00',plays:[
+  {period:1,time:'04:00',type:'goal',team:'CHI'},
+  {period:1,time:'08:00',type:'shot-on-goal',team:'EDM'},
+  {period:1,time:'08:30',type:'hit',team:'EDM'},
+  {period:1,time:'09:00',type:'penalty',team:'CHI'},
+ ]};
+ const flow=gameFlow(game);
+ assert.ok(flow.current>0,'recent Edmonton pressure and a Chicago penalty favor Edmonton');
+ assert.equal(flow.windowMinutes,5);
+ assert.equal(gameFlow({...game,plays:undefined}),null);
+ const afterOldGoal=gameFlow({...game,clock:'06:00'});
+ assert.ok(afterOldGoal.current>=0,'the early away goal has faded out of the momentum window');
 });

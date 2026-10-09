@@ -2408,3 +2408,18 @@ a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-
 @keyframes card-reveal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:620px){.game-card-top{align-items:flex-start}.card-top-actions{max-width:58%}.tv-network{max-width:calc(100% - 45px)}.compact-meta{align-items:flex-start;flex-direction:column}.compact-meta span:last-child{text-align:left;white-space:normal}.game-center-actions{align-items:flex-start;flex-direction:column}.game-center-actions span{text-align:left}.rest-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.card-expanded{animation:none}.game-center-section>summary span{transition:none}}
+
+/* Live game flow: a five-minute rolling momentum signal. */
+.compact-game-flow{margin:22px 16px 12px;padding:8px 10px 5px;border:1px solid rgba(115,217,193,.22);border-radius:8px;background:rgba(5,17,24,.48)}
+.flow-readout{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#8faab6;font-size:8px;font-weight:750;letter-spacing:.65px}
+.flow-readout strong{display:flex;align-items:center;gap:5px;color:#dce9ed;font-size:9px;letter-spacing:.2px}
+.flow-readout img{width:18px;height:18px;object-fit:contain}
+.game-flow{margin:2px 0 22px;padding:12px;border:1px solid #294550;border-radius:10px;background:#0a1b24}
+.game-flow .flow-readout{font-size:10px;letter-spacing:0}
+.game-flow .flow-readout strong{font-size:12px}
+.game-flow-chart{display:block;width:100%;height:auto;margin-top:5px;touch-action:pan-y;cursor:crosshair;overflow:visible}
+.flow-zero{stroke:#526d78;stroke-width:1;stroke-dasharray:3 4}
+.flow-cursor{stroke:#dce9ed;stroke-width:1;stroke-dasharray:2 3}
+.game-flow .detail-note{margin:4px 0 0;line-height:1.55}
+.finished-today-bottom{margin-top:24px}
+@media(max-width:620px){.compact-game-flow{margin-inline:12px}.game-flow{padding:9px}.flow-readout{align-items:flex-start}.game-flow .flow-readout{font-size:9px}}

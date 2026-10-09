@@ -2,7 +2,7 @@ import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "reac
 import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
-import { CompactGameProjection } from "./GameData";
+import { CompactGameFlow, CompactGameProjection } from "./GameData";
 import { NetworkLogos } from "./NetworkLogos";
 import { GoalieComparison } from "./TeamComparison";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
@@ -95,6 +95,7 @@ export const GameCard = memo(function GameCard({
         <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span>{broadcasts.length ? broadcasts.join(" · ") : "Broadcast TBA"}</span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
+      {live && <CompactGameFlow game={game} home={home} away={away} />}
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">
         <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>

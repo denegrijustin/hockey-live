@@ -21,6 +21,8 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((node) => node.getBoundingClientRect().width / innerWidth)).toBeGreaterThanOrEqual(0.75);
+  expect(await dialog.evaluate((node) => node.getBoundingClientRect().height / innerHeight)).toBeGreaterThanOrEqual(0.85);
   await expect(card.locator(".card-expanded")).toHaveCount(0);
   await expect(dialog.locator(".matchup-comparison")).toBeVisible();
   await expect(dialog.locator(".goalie-comparison")).toBeVisible();
@@ -36,6 +38,8 @@ test("game cards and Game Center do not overflow a narrow mobile viewport", asyn
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((node) => node.getBoundingClientRect().width / innerWidth)).toBeGreaterThanOrEqual(0.95);
+  expect(await dialog.evaluate((node) => node.getBoundingClientRect().height / innerHeight)).toBeGreaterThanOrEqual(0.95);
   expect(await dialog.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
 });

@@ -40,7 +40,7 @@ const FLOW_WEIGHT = {
  * linearly so the line reacts to the latest pressure instead of becoming a
  * cumulative activity chart. A penalty is charged against the penalized team.
  */
-export function gameFlow(game, step = 0.5) {
+export function gameFlow(game, step = 0.25) {
   const end = pulseMinute(game);
   if (end == null || !Array.isArray(game.plays)) return null;
   const events = game.plays

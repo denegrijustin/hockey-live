@@ -243,6 +243,22 @@ function flowTimeLabel(minute: number, gameType: number) {
   return `${period <= 3 ? `P${period}` : `OT${period - 3}`} ${Math.floor(inPeriod / 60)}:${String(inPeriod % 60).padStart(2, "0")} elapsed`;
 }
 
+function smoothFlowPath(points: { x: number; y: number }[]) {
+  if (!points.length) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let index = 0; index < points.length - 1; index++) {
+    const previous = points[Math.max(0, index - 1)];
+    const current = points[index];
+    const next = points[index + 1];
+    const after = points[Math.min(points.length - 1, index + 2)];
+    const control1 = { x: current.x + (next.x - previous.x) / 6, y: current.y + (next.y - previous.y) / 6 };
+    const control2 = { x: next.x - (after.x - current.x) / 6, y: next.y - (after.y - current.y) / 6 };
+    path += ` C ${control1.x} ${control1.y}, ${control2.x} ${control2.y}, ${next.x} ${next.y}`;
+  }
+  return path;
+}
+
 function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; home: Team; away: Team; compact?: boolean }) {
   const flow = gameFlow(data);
   const [inspect, setInspect] = useState<number | null>(null);
@@ -274,6 +290,7 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
     setInspect(Math.max(0, Math.min(end, ((point.x - left) / (right - left)) * end)));
   };
   const id = `flow-${data.id}-${compact ? "compact" : "detail"}`;
+  const curve = smoothFlowPath(flow.points.map((point: any) => ({ x: x(point.minute), y: y(point.value) })));
   return <div className={compact ? "compact-game-flow" : "game-flow"} data-testid={compact ? "compact-game-flow" : "game-flow"}>
     <div className="flow-readout">
       <span>{compact ? "MOMENTUM" : `${flowTimeLabel(selected.minute, data.type)} · ${inspect == null ? "Latest" : "Selected point"}`}</span>
@@ -282,7 +299,7 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
     <svg className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Game momentum: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
       <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="#9bb0ba"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
       <line x1={left} x2={right} y1={center} y2={center} className="flow-zero" />
-      <polyline points={flow.points.map((point: any) => `${x(point.minute)},${y(point.value)}`).join(" ")} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
+      <path d={curve} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
       {!compact && <><line x1={x(selected.minute)} x2={x(selected.minute)} y1="10" y2={height - 14} className="flow-cursor"/><image href={`/logos/${home.id}.svg`} x="3" y="4" width="20" height="20"/><image href={`/logos/${away.id}.svg`} x="3" y={height - 27} width="20" height="20"/></>}
     </svg>
     {!compact && <><input className="pulse-scrubber" type="range" min="0" max={Math.round(end * 60)} value={Math.round(selected.minute * 60)} step="1" aria-label="Game momentum timeline" aria-valuetext={`${flowTimeLabel(selected.minute, data.type)}; ${leader ? `${leader.id} momentum ${Math.abs(selected.value).toFixed(1)}` : "even momentum"}`} onChange={(event) => setInspect(Number(event.target.value) / 60)} /><p className="detail-note">{eventSummary || "No weighted events in this five-minute window."} Momentum weights recent goals, shots, missed shots, hits and penalties; events fade across five minutes. Hover, tap or use the slider to inspect.</p></>}

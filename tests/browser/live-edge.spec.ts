@@ -42,6 +42,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await card.locator(".primary-game-center").click();
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog.getByTestId("game-flow")).toBeVisible();
+  await expect(dialog.getByTestId("game-flow").locator(".game-flow-chart path")).toHaveAttribute("d", / C /);
   await expect(dialog.getByRole("slider", { name: "Game momentum timeline" })).toBeVisible();
   await expect(dialog.locator(".shot-chart").first()).toBeVisible();
   await expect(dialog.getByLabel("Projected final score")).toBeVisible();

@@ -876,13 +876,16 @@ p {
 }
 .game-dialog {
   position: relative;
+  box-sizing: border-box;
   color: #e4eef3;
   background: #10212c;
   border: 1px solid #4e6978;
   border-radius: 16px;
   padding: 24px;
-  width: min(880px, calc(100vw - 32px));
-  max-height: 88vh;
+  width: min(1180px, calc(100vw - 32px));
+  max-width: none;
+  height: min(920px, calc(100dvh - 28px));
+  max-height: calc(100dvh - 28px);
   overflow: auto;
 }
 .dialog-toolbar {
@@ -991,10 +994,12 @@ p {
 }
 @media (max-width: 720px) {
   .game-dialog {
-    width: calc(100vw - 16px);
-    max-height: calc(100dvh - 16px);
-    padding: 14px;
-    border-radius: 14px;
+    width: calc(100vw - 8px);
+    max-width: none;
+    height: calc(100dvh - 8px);
+    max-height: calc(100dvh - 8px);
+    padding: 12px;
+    border-radius: 12px;
   }
   .dialog-toolbar {
     min-height: 40px;

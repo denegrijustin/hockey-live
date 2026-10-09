@@ -167,6 +167,8 @@ export function importance(g, table, teams, games) {
   if (g.type === 1)
     return {
       score: 0,
+      teamImportance: 0,
+      leagueImportance: 0,
       reasons: ["Preseason: no standings points at stake."],
       kind: "Preseason",
     };
@@ -184,13 +186,17 @@ export function importance(g, table, teams, games) {
         x.home === id ? x.homeScore > x.awayScore : x.awayScore > x.homeScore,
       ).length;
     const elimination = wins(g.home) >= 3 || wins(g.away) >= 3;
+    const teamImportance = Math.min(100, 82 + (g.round ?? 1) * 3 + (elimination ? 9 : 0));
+    const leagueImportance = Math.min(100, 76 + (g.round ?? 1) * 4 + (elimination ? 8 : 0));
     return {
-      score: Math.min(100, 72 + (g.round ?? 1) * 4 + (elimination ? 12 : 0)),
+      score: Math.round(teamImportance * 0.6 + leagueImportance * 0.4),
+      teamImportance,
+      leagueImportance,
       reasons: [
-        `Playoff round ${g.round ?? "—"}: series advancement at stake.`,
+        `Team importance ${teamImportance}/100: playoff round ${g.round ?? "—"} puts series advancement at stake.`,
         elimination
-          ? "An elimination opportunity based on completed games."
-          : "Every win moves a team toward four in the series.",
+          ? `League importance ${leagueImportance}/100: an elimination opportunity based on completed games.`
+          : `League importance ${leagueImportance}/100: every win moves a team toward four in the series.`,
       ],
       kind: "Playoff stakes",
     };
@@ -215,31 +221,34 @@ export function importance(g, table, teams, games) {
           1 - Math.abs(table[id].pts - entryLine(table, id, teams)) / 14,
         )
       : 0;
-  const pressure = Math.max(bubble(g.home), bubble(g.away));
-  const score = Math.round(
-    22 +
-      (sameConference ? 12 : 0) +
-      (sameDivision ? 12 : 0) +
-      26 * urgency +
-      28 * pressure,
-  );
+  const homePressure = bubble(g.home), awayPressure = bubble(g.away);
+  const pressure = Math.max(homePressure, awayPressure);
+  const sharedPressure = (homePressure + awayPressure) / 2;
+  const teamImportance = Math.min(100, Math.round(15 + 35 * urgency + 50 * pressure));
+  const leagueImportance = Math.min(100, Math.round(
+    10 +
+      (sameConference ? 20 : 0) +
+      (sameDivision ? 15 : 0) +
+      25 * urgency +
+      30 * sharedPressure,
+  ));
+  const score = Math.round(teamImportance * 0.6 + leagueImportance * 0.4);
   const reasons = [
-    sameDivision
-      ? "Division matchup: points gained also deny a nearby rival."
-      : sameConference
-        ? "Conference matchup: both teams compete for the same playoff places."
-        : "Cross-conference matchup: two standings points, less direct competition.",
+    `Team importance ${teamImportance}/100: ${pressure > 0 ? "at least one club is close to its conference playoff entry line" : "the available standings show limited playoff-line pressure"}.`,
+    `League importance ${leagueImportance}/100: ${sameDivision ? "a division matchup directly affects a shared race" : sameConference ? "both clubs compete for the same conference places" : "a cross-conference game has less direct race impact"}.`,
   ];
   reasons.push(
     `${Math.round(urgency * 100)}% of the scheduled season precedes this game.`,
   );
   reasons.push(
     pressure > 0
-      ? `Playoff-line pressure contributes ${Math.round(28 * pressure)} rating points.`
+      ? `The strongest team-level playoff pressure is ${Math.round(pressure * 100)}%; shared race pressure is ${Math.round(sharedPressure * 100)}%.`
       : "No established close playoff-line pressure in the available standings.",
   );
   return {
     score: Math.min(100, score),
+    teamImportance,
+    leagueImportance,
     reasons,
     kind: finished(g) ? "Pregame stakes" : "Outlook",
   };

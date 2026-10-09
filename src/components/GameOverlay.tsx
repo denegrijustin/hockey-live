@@ -121,7 +121,7 @@ export function GameOverlay({
                 timeZoneName: "short",
               })}
         {" · "}
-        {analysis.kind} · {analysis.score}/100 importance
+        {analysis.kind} · {analysis.score}/100 overall importance · Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}
       </p>
       <div className="game-center-actions">
         <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>

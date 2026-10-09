@@ -5,6 +5,9 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   const card = page.locator(".game-card").first();
   await expect(card).toBeVisible();
   await expect(card.locator(".compact-meta")).toBeVisible();
+  await expect(card.locator(".importance-score")).toContainText("IMPORTANCE");
+  await expect(card.locator(".importance-components")).toContainText(/Teams \d+ · League \d+/);
+  await expect(card).not.toContainText("WATCHABILITY");
   await expect(card.getByRole("button", { name: /Open Game Center for/ })).toBeVisible();
   await expect(card.locator(".card-expanded")).toHaveCount(0);
 

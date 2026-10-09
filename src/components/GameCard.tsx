@@ -35,7 +35,7 @@ export const GameCard = memo(function GameCard({
   const broadcasts = [...new Set(game.broadcasts)];
   const scoreClass = analysis.score >= 75 ? "high" : analysis.score >= 50 ? "medium" : "low";
   const day = new Date(game.start);
-  const watchSummary = analysis.reasons?.[0] ?? (analysis.score >= 50 ? "A matchup with meaningful standings weight." : "Lower stakes, but still part of the season story.");
+  const importanceSummary = analysis.reasons?.[0] ?? (analysis.score >= 50 ? "A matchup with meaningful standings weight." : "Lower stakes for the teams and league table.");
 
   useEffect(() => {
     if (!expanded || gameCenterOpen) return;
@@ -90,7 +90,10 @@ export const GameCard = memo(function GameCard({
               </div>
             ))}
           </div>
-          <div className="importance-score"><strong>{analysis.score}</strong><span>WATCHABILITY</span><small>/ 100</small></div>
+          <div className="importance-wrap">
+            <div className="importance-score"><strong>{analysis.score}</strong><span>IMPORTANCE</span><small>/ 100</small></div>
+            <small className="importance-components">Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}</small>
+          </div>
         </div>
         <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span>{broadcasts.length ? broadcasts.join(" · ") : "Broadcast TBA"}</span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
@@ -99,7 +102,7 @@ export const GameCard = memo(function GameCard({
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">
         <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>
-        <div className="why-watch"><span>WHY WATCH</span><p>{watchSummary}</p></div>
+        <div className="why-watch"><span>WHY IT MATTERS</span><p>{importanceSummary}</p></div>
         <CompactGameProjection game={game} before={before} baseline={baseline} />
         <GoalieComparison game={game} away={away} home={home} compact />
         <button type="button" className="card-collapse" onClick={() => setExpanded(false)}>Collapse game card</button>

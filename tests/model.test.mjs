@@ -111,6 +111,20 @@ test("calendar weighting uses actual schedule count, including 84-game seasons",
   );
   const result = importance(games[42], blankStandings(teams), teams, games);
   assert.ok(result.reasons.some((s) => s.startsWith("50%")));
+  assert.equal(result.score, Math.round(result.teamImportance * 0.6 + result.leagueImportance * 0.4));
+  assert.ok(result.reasons.some((s) => s.startsWith("Team importance")));
+  assert.ok(result.reasons.some((s) => s.startsWith("League importance")));
+});
+test("league importance rewards games inside shared playoff races", () => {
+  const table = blankStandings(teams);
+  const sameDivision = game(1, "2026-10-10", { state: "FUT", away: "CGY", homeScore: null, awayScore: null });
+  const crossConference = game(2, "2026-10-10", { state: "FUT", away: "BOS", homeScore: null, awayScore: null });
+  const schedule = [sameDivision, crossConference];
+  const divisionScore = importance(sameDivision, table, teams, schedule);
+  const crossScore = importance(crossConference, table, teams, schedule);
+  assert.equal(divisionScore.teamImportance, crossScore.teamImportance);
+  assert.ok(divisionScore.leagueImportance > crossScore.leagueImportance);
+  assert.ok(divisionScore.score > crossScore.score);
 });
 test("normalization preserves absent versus zero statistics", () => {
   const g = normalizeGame({

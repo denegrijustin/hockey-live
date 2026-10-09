@@ -8,11 +8,18 @@ export function Methodology() {
         <section>
           <h3>Importance / 100</h3>
           <p>
-            An editorial stakes index, not a win probability. Regular season: 22
-            base + 12 same conference + 12 same division + up to 26 for calendar
-            progress + up to 28 for closeness to a playoff entry line. The
-            closeness term starts after 10 games and fades to zero at a 14-point
-            gap.
+            A stakes index, not a watchability grade or win probability. Team
+            importance measures how late the game occurs and the strongest
+            club-level pressure near a conference playoff entry line. League
+            importance measures shared-race impact: conference and division
+            overlap, season timing, and how much playoff-line pressure both
+            clubs bring.
+          </p>
+          <p>
+            Overall importance weights team stakes 60% and league stakes 40%.
+            Playoff games use round and elimination context. Preseason is
+            unranked. The playoff-line term starts after 10 games and fades to
+            zero at a 14-point gap.
           </p>
           <p>
             Past games use prior-day standings, never the final standings.

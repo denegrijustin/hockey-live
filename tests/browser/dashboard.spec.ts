@@ -65,26 +65,23 @@ test("default teams, league selection, graphs and season navigation", async ({
     ),
   ).toBe(true);
 });
-test("Game Center defaults to chronological order; All 32 narrows the window, not the sort", async ({
+test("Game Center defaults to team + league importance; All 32 narrows only the window", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await expect(page.getByLabel("Sort by")).toHaveValue("date");
+  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
   await expect(page.getByLabel("Window")).toHaveValue("30");
-  await expect(page.locator(".game-day-heading").first()).toBeVisible();
-  await expect(page.locator(".results-line")).toContainText(
-    "Today's games first",
-  );
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
-  await expect(page.getByLabel("Sort by")).toHaveValue("date");
-  await expect(page.getByLabel("Window")).toHaveValue("7");
-  await expect(page.locator(".game-day-heading").first()).toBeVisible();
-  // A visitor can still switch to importance ranking manually.
-  await page.getByLabel("Sort by").selectOption("importance");
   await expect(page.locator(".game-day-heading")).toHaveCount(0);
   await expect(page.locator(".results-line")).toContainText(
-    "Rank = league-wide",
+    "Rank = combined team + league importance",
+  );
+  await page.getByRole("button", { name: "All 32", exact: true }).click();
+  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
+  await expect(page.getByLabel("Window")).toHaveValue("7");
+  await expect(page.locator(".game-day-heading")).toHaveCount(0);
+  await expect(page.locator(".results-line")).toContainText(
+    "Rank = combined team + league importance",
   );
   await page.getByRole("button", { name: "My three", exact: true }).click();
   await expect(page.getByLabel("Window")).toHaveValue("30");

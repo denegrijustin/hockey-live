@@ -77,7 +77,7 @@ export default function App() {
   const [view, setView] = useState("games"),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
-    [sort, setSort] = useState("date"),
+    [sort, setSort] = useState("importance"),
     [range, setRange] = useState("30"),
     [query, setQuery] = useState(""),
     [limit, setLimit] = useState(18);
@@ -238,11 +238,10 @@ export default function App() {
       localStorage.setItem("iceboard-teams", JSON.stringify(ids));
     } catch {}
   };
-  // Game Center defaults to chronological order — today's games first, then
-  // the rest of the week — since that's readable at any team-selection size;
-  // Importance stays available from the Sort control for anyone who wants a
-  // ranked view instead. A 30-day window suits a handful of followed teams,
-  // but across all 32 it's a wall of games, so narrow the window there.
+  // Game Center defaults to the combined team + league importance ranking.
+  // Live games still lead regardless of score, and completed games move to the
+  // finished section. A 30-day window suits a handful of followed teams, but
+  // across all 32 it's a wall of games, so narrow the window there.
   const isAllTeams = selected.length === teams.length;
   useEffect(() => {
     setRange(isAllTeams ? "7" : "30");
@@ -383,7 +382,7 @@ export default function App() {
                         setPeriod("future");
                         setType(g.type);
                         setRange("all");
-                        setSort("date");
+                        setSort("importance");
                         setQuery("");
                       }}
                     >
@@ -475,7 +474,7 @@ export default function App() {
                       value={sort}
                       onChange={(e) => setSort(e.target.value)}
                     >
-                      <option value="importance">Importance</option>
+                      <option value="importance">Importance to teams + league</option>
                       <option value="date">Game date</option>
                     </select>
                   </label>
@@ -496,7 +495,7 @@ export default function App() {
                   <span>
                     {sort === "date"
                       ? "Today's games first, then the rest of the week in order"
-                      : `Rank = league-wide ${period === "past" ? "past" : "future"} importance · ties share rank`}
+                      : `Rank = combined team + league importance among ${period === "past" ? "past" : "future"} games · ties share rank`}
                   </span>
                 </div>
                 {games.length ? (

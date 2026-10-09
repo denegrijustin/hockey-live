@@ -91,7 +91,7 @@ export const GameCard = memo(function GameCard({
             ))}
           </div>
           <div className="importance-wrap">
-            <div className="importance-score"><strong>{analysis.score}</strong><span>IMPORTANCE</span><small>/ 100</small></div>
+            <div className="importance-score"><span>GAME IMPORTANCE</span><strong>{analysis.score}<small>/100</small></strong></div>
             <small className="importance-components">Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}</small>
           </div>
         </div>

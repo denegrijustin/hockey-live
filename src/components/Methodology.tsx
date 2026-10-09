@@ -8,7 +8,7 @@ export function Methodology() {
         <section>
           <h3>Importance / 100</h3>
           <p>
-            A stakes index, not a watchability grade or win probability. Team
+            A stakes index, not an entertainment rating or win probability. Team
             importance measures how late the game occurs and the strongest
             club-level pressure near a conference playoff entry line. League
             importance measures shared-race impact: conference and division

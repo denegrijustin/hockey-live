@@ -42,7 +42,7 @@ Endpoints: `GET /api/season/{season}`, `/api/league-matchups/{season}`, `/api/pl
 
 ## Interpretation
 
-Importance is a 0–100 stakes index, not watchability or calibrated playoff probability. Team importance combines season-calendar progress with the strongest club-level pressure near a conference playoff entry line. League importance combines conference/division race overlap, calendar progress, and the shared playoff-line pressure both clubs bring. Overall importance weights team stakes 60% and league stakes 40%. Playoffs use round and series-elimination context. Preseason is unranked. Schedule length comes from the data (including 84-game seasons).
+Importance is a 0–100 stakes index, not an entertainment rating or calibrated playoff probability. Team importance combines season-calendar progress with the strongest club-level pressure near a conference playoff entry line. League importance combines conference/division race overlap, calendar progress, and the shared playoff-line pressure both clubs bring. Overall importance weights team stakes 60% and league stakes 40%. Playoffs use round and series-elimination context. Preseason is unranked. Schedule length comes from the data (including 84-game seasons).
 
 Past importance uses standings before the game day; future importance uses current standings and the target game's calendar position. Ranks are league-wide within past/future and competition cohorts, with shared ranks for equal scores. Future standings are not simulated. Past rankings are reconstructed from the latest schedule, not archived predictions.
 

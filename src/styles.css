@@ -2434,3 +2434,11 @@ a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-
 .game-flow .detail-note{margin:4px 0 0;line-height:1.55}
 .finished-today-bottom{margin-top:24px}
 @media(max-width:620px){.compact-game-flow{margin-inline:12px}.game-flow{padding:9px}.flow-readout{align-items:flex-start}.game-flow .flow-readout{font-size:9px}}
+
+/* Importance is a stakes panel, deliberately distinct from the retired circular rating badge. */
+.importance-wrap{flex-basis:100px;gap:5px}
+.importance-score{width:98px;height:76px;border-radius:10px;background:linear-gradient(145deg,#102832,#0b1922);border-color:color-mix(in srgb,var(--rating) 58%,#294653)}
+.importance-score span{order:0;margin:0 0 5px;font-size:6px;letter-spacing:.8px}
+.importance-score strong{order:1;display:flex;align-items:baseline;gap:2px;font-size:31px}
+.importance-score strong small{margin:0;font-size:8px;letter-spacing:0;opacity:.72}
+@media(max-width:620px){.importance-wrap{flex-basis:78px}.importance-score{width:76px;height:68px}.importance-score strong{font-size:25px}.importance-score span{font-size:5px;letter-spacing:.55px}.importance-components{font-size:5.5px}}

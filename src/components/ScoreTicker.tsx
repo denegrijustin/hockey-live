@@ -61,12 +61,12 @@ export function ScoreTicker({ games, teams, day, analysis, baselineFor, sourceSe
           aria-label={`${a.name} ${showScore ? g.awayScore : ""} at ${h.name} ${showScore ? g.homeScore : ""}, ${status.toLowerCase()}. Open the Game Center.`.replace(/\s+/g, " ")}
         >
           <span className={`ticker-team${winner === "away" ? " won" : winner === "home" ? " lost" : ""}`}>
-            <img src={`/logos/${a.id}.svg`} alt="" width="16" height="16" loading="lazy" decoding="async" />
+            <img src={`/logos/${a.id}.svg`} alt="" width="16" height="16" loading="eager" decoding="async" />
             {a.id} {showScore && <b>{g.awayScore ?? 0}</b>}
           </span>
           <span className="ticker-at">{showScore ? "–" : "@"}</span>
           <span className={`ticker-team${winner === "home" ? " won" : winner === "away" ? " lost" : ""}`}>
-            <img src={`/logos/${h.id}.svg`} alt="" width="16" height="16" loading="lazy" decoding="async" />
+            <img src={`/logos/${h.id}.svg`} alt="" width="16" height="16" loading="eager" decoding="async" />
             {h.id} {showScore && <b>{g.homeScore ?? 0}</b>}
           </span>
           <span className="ticker-final">{status}</span>

@@ -2451,3 +2451,59 @@ a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-
 .retry {
   margin-left: 8px;
 }
+
+/* Loading placeholder and screen-reader-only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.empty.loading {
+  padding: 0;
+  border: 0;
+}
+.skeleton-list {
+  display: grid;
+  gap: 12px;
+}
+.skeleton-card {
+  height: 132px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+}
+@keyframes skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+/* Taps respond at once, with no double-tap-zoom delay */
+button,
+summary,
+select,
+[role="button"] {
+  touch-action: manipulation;
+}
+/* iPhones zoom the page when a field under 16px is focused */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

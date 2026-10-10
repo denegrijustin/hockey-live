@@ -360,10 +360,20 @@ export default function App() {
           </div>
         ) : loading ? (
           <div className="empty loading" role="status">
-            Loading the NHL board…
+            <span className="sr-only">Loading the NHL board…</span>
+            <div className="skeleton-list" aria-hidden="true">
+              {[0, 1, 2, 3].map((i) => (
+                <div className="skeleton-card" key={i} />
+              ))}
+            </div>
           </div>
         ) : data && analysis ? (
           <>
+            {scoreboard && (
+              <p className="sr-only" role="status" aria-live="polite">
+                {scoreboard.games.filter(isLive).length} games in progress around the league
+              </p>
+            )}
             {scoreboard && view === "games" && (
               <section className="live-strip" aria-label="Live NHL scoreboard">
                 <div>

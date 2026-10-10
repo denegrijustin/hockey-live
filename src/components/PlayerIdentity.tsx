@@ -9,7 +9,7 @@ export function PlayerIdentity({p, season}: {p: {id:number; name:string; team:st
   const rows=(data?.seasons ?? []).filter((s:any)=>s.gameTypeId===2 && (season == null || s.season===season));
   return <>
     <button className="player-identity" onClick={()=>setOpen(true)} aria-label={`View ${p.name} details`}>
-      {headshot && !imageFailed ? <img src={headshot} alt="" loading="lazy" width="44" height="44" onError={()=>setImageFailed(true)}/> : <span className="player-placeholder">{p.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</span>}
+      {headshot && !imageFailed ? <img src={headshot} alt="" loading="lazy" decoding="async" width="44" height="44" onError={()=>setImageFailed(true)}/> : <span className="player-placeholder">{p.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</span>}
       <span><strong>{p.name}</strong><small>{p.team} · {p.number != null ? `#${p.number}` : 'No. unavailable'}</small></span>
     </button>
     <dialog ref={dialog} className="player-dialog" onClose={()=>setOpen(false)} onCancel={()=>setOpen(false)}>

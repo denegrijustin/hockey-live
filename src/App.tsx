@@ -1,5 +1,6 @@
 import { useFeed } from "./lib/polling";
 import { mergeScores, isLive } from "./lib/game-data.mjs";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
@@ -402,9 +403,9 @@ export default function App() {
               </section>
             )}
             {view === "edge" && (
-              <Suspense fallback={<div className="empty" role="status">Loading NHL EDGE…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL EDGE…</div>}>
                 <EdgePanel teams={selectedTeams} season={season} />
-              </Suspense>
+              </Suspense></ErrorBoundary>
             )}
             {view === "games" && (
               <>
@@ -619,7 +620,7 @@ export default function App() {
               </>
             )}
             {view === "trends" && (
-              <Suspense fallback={<div className="empty" role="status">Loading team trends…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading team trends…</div>}>
                 <Trends
                   teams={selectedTeams}
                   table={analysis.table}
@@ -629,15 +630,15 @@ export default function App() {
                   baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
                   currentSeason={manifest?.current ?? season}
                 />
-              </Suspense>
+              </Suspense></ErrorBoundary>
             )}{" "}
             {view === "players" && (
-              <Suspense fallback={<div className="empty" role="status">Loading player contributions…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading player contributions…</div>}>
                 <Players teams={activeTeams} season={sourceSeason} />
-              </Suspense>
+              </Suspense></ErrorBoundary>
             )}{" "}
             {view === "standings" && (
-              <Suspense fallback={<div className="empty" role="status">Loading standings…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading standings…</div>}>
                 <Standings
                   teams={teams}
                   table={analysis.table}
@@ -645,12 +646,12 @@ export default function App() {
                   baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
                   selected={selected}
                 />
-              </Suspense>
+              </Suspense></ErrorBoundary>
             )}
           </>
         ) : null}
         {view === "odds" && data && analysis && (
-          <Suspense fallback={<div className="empty" role="status">Loading playoff odds…</div>}>
+          <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading playoff odds…</div>}>
             <PlayoffOdds
               teams={teams}
               games={data.games}
@@ -658,12 +659,12 @@ export default function App() {
               baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
               season={season}
             />
-          </Suspense>
+          </Suspense></ErrorBoundary>
         )}
         {view === "map" && data && (
-          <Suspense fallback={<div className="empty" role="status">Loading the map…</div>}>
+          <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading the map…</div>}>
             <ImperialismMap teams={teams} games={data.games} season={season} />
-          </Suspense>
+          </Suspense></ErrorBoundary>
         )}
         <Methodology />
         <footer>

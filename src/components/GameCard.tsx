@@ -77,7 +77,7 @@ export const GameCard = memo(function GameCard({
           <div className="matchup-teams">
             {[away, home].map((team, index) => (
               <div className="matchup-team" key={team.id}>
-                <img src={`/logos/${team.id}.svg`} alt="" loading="lazy" width={40} height={40} />
+                <img src={`/logos/${team.id}.svg`} alt="" loading="lazy" decoding="async" width={40} height={40} />
                 <div>
                   <span>{team.city}</span><h3>{team.short}</h3>
                   <small className="team-record">

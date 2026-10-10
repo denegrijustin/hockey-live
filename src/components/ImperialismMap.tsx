@@ -258,7 +258,7 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
   const total = geo?.cells.length ?? 0;
   const gamesThisWeek = result && week > 0 ? result.ledger.filter((e: { week: number }) => e.week === week).length : 0;
   const name = (id: string) => byId.get(id)?.name ?? id;
-  const logo = (id: string, cls = "imp-chip-logo") => <img className={cls} src={`/logos/${id}.svg`} alt="" width={20} height={20} loading="lazy" />;
+  const logo = (id: string, cls = "imp-chip-logo") => <img className={cls} src={`/logos/${id}.svg`} alt="" width={20} height={20} loading="lazy" decoding="async" />;
 
   const path = open != null && result ? conquestPath(result, open, week) : [];
 

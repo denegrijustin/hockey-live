@@ -1602,7 +1602,7 @@ footer b {
   }
   .control-dock {
     position: sticky;
-    top: 0;
+    top: var(--ticker-h, 0px);
     margin: 0 -16px;
     padding: 0 16px;
     background: #0a141cfa;
@@ -2523,5 +2523,154 @@ select,
   }
   .game-filters:not(.open) {
     display: none;
+  }
+}
+
+/* ---------- Today's-games ticker (persistent, top of every screen) ---------- */
+:root {
+  --ticker-h: 38px;
+}
+.ticker {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  height: var(--ticker-h);
+  background: #09141b;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.ticker-title {
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  color: #09141b;
+  background: var(--mint);
+}
+.ticker-viewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: ticker-scroll var(--ticker-dur, 120s) linear infinite;
+}
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track,
+.ticker.paused .ticker-track {
+  animation-play-state: paused;
+}
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker-track li {
+  display: flex;
+}
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 16px;
+  border: 0;
+  border-right: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 0;
+  background: none;
+  color: #e8f0f5;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ticker-item:hover,
+.ticker-item:focus-visible {
+  background: rgb(255 255 255 / 8%);
+}
+.ticker-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+.ticker-team.won {
+  font-weight: 800;
+}
+.ticker-team.lost {
+  color: var(--muted);
+  font-weight: 500;
+}
+.ticker-team img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.ticker-at {
+  color: var(--muted);
+}
+.ticker-final {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.ticker-item.is-live .ticker-final {
+  color: #ff7b72;
+}
+.ticker-item.is-live .ticker-final::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #ff5a4f;
+}
+.ticker-pause {
+  padding: 0 12px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.ticker-pause:hover {
+  color: #e8f0f5;
+}
+/* Reduced motion: the strip stays put and scrolls by hand. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  .ticker-viewport {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .ticker-track .ticker-dup {
+    display: none;
+  }
+  .ticker-pause {
+    display: none;
+  }
+}
+@media (max-width: 520px) {
+  .ticker-title {
+    padding: 0 8px;
   }
 }

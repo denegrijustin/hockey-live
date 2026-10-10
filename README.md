@@ -116,3 +116,6 @@ The **Imperialism map** tab (`src/components/ImperialismMap.tsx`, engine in `src
 - `node scripts/check-budget.mjs` enforces gzip size budgets on each script, stylesheet and fetched data file. Both run in CI after the build.
 - Each lazy view (EDGE, trends, players, standings, playoff odds, map) sits in an error boundary with a "Try again" button.
 - Game cards use `content-visibility`, and lazy images decode asynchronously. `/data/*` is revalidated on every load (`public/_headers`).
+- `useSeason` (season loading, live scores, five-minute refresh) and `useGameLists` (filtered game lists) in `src/hooks` keep `App.tsx` to layout and view state. `useVisibleInterval` in `src/lib/polling.ts` is the one timer for background refreshes: it skips hidden tabs and catches up when the tab is shown.
+- On phones the competition, window, sort and search controls fold behind a Filters button.
+- `.github/workflows/refresh-fallback.yml` refreshes the saved fallback data in `public/data` weekly (and on demand), runs the data check, and opens an issue if it fails.

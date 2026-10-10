@@ -45,3 +45,31 @@ export function useFeed<T>(url: string | null, interval = 30000) {
   }, [url, interval]);
   return { data, error };
 }
+
+/**
+ * Runs `fn` every `ms` while the tab is visible. A hidden tab skips its ticks; when the tab is shown again,
+ * `fn` runs at once if a tick was missed. `enabled` false stops the timer.
+ */
+export function useVisibleInterval(fn: () => void, ms: number, enabled = true) {
+  const latest = useRef(fn);
+  latest.current = fn;
+  useEffect(() => {
+    if (!enabled) return;
+    let missed = false;
+    const timer = setInterval(() => {
+      if (document.hidden) missed = true;
+      else latest.current();
+    }, ms);
+    const show = () => {
+      if (!document.hidden && missed) {
+        missed = false;
+        latest.current();
+      }
+    };
+    document.addEventListener("visibilitychange", show);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", show);
+    };
+  }, [ms, enabled]);
+}

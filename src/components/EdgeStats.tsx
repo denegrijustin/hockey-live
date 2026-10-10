@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useVisibleInterval } from "../lib/polling";
 import type { EdgeData, Team } from "../types";
 import { useVisible } from "./GameData";
 const pending = new Map<string, Promise<EdgeData>>();
@@ -52,9 +53,9 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
         if (active) { setData(null); setError(true); }
       });
     refresh();
-    const timer = setInterval(refresh, 300000);
-    return () => { active = false; clearInterval(timer); };
+    return () => { active = false; };
   }, [visible, team.id, season, retry]);
+  useVisibleInterval(() => setRetry((x) => x + 1), 300000, visible);
   return (
     <div ref={ref} className="edge-card">
       <div className="edge-heading">

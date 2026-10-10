@@ -1,0 +1,47 @@
+name: Refresh saved fallback data
+# The live site reads fresh data from the Worker (KV). public/data is the saved copy the app falls back to when the
+# Worker or KV is unavailable, so this keeps it from going stale. Runs weekly and on demand; commits only public/data.
+on:
+  schedule:
+    - cron: "17 10 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: refresh-fallback
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch the NHL feeds
+        run: node scripts/refresh-data.mjs
+      - name: Check the data before publishing
+        run: node scripts/check-data.mjs
+      - name: Commit the refreshed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/data
+          git diff --cached --quiet && { echo "Nothing new"; exit 0; }
+          git commit -q -m "Refresh saved fallback data $(date -u +%F)"
+          git push origin HEAD:main
+      - name: Open an issue when it fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Saved fallback data refresh failed"
+          body="Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          n=$(gh issue list --repo "${{ github.repository }}" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$n" ]; then gh issue comment "$n" --repo "${{ github.repository }}" --body "$body"
+          else gh issue create --repo "${{ github.repository }}" --title "$title" --body "$body"; fi

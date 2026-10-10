@@ -1,4 +1,5 @@
 import { PlayerIdentity } from "./PlayerIdentity";
+import { useVisibleInterval } from "../lib/polling";
 import { useFeed } from "../lib/polling";
 import { useEffect, useState } from "react";
 import { loadBox, loadPlayers } from "../lib/api";
@@ -19,7 +20,7 @@ export function usePlayerBox(game: Game, sourceSeason: number) {
     [error, setError] = useState(""),
     [attempt, setAttempt] = useState(0);
   const data = live ? liveData : savedData;
-  useEffect(() => { if (past || live) return; const timer=setInterval(()=>setAttempt(x=>x+1),300000); return ()=>clearInterval(timer); },[past,live]);
+  useVisibleInterval(() => setAttempt((x) => x + 1), 300000, !past && !live);
   useEffect(() => {
     if (live) return;
     let active = true;

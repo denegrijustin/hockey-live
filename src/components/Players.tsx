@@ -1,4 +1,5 @@
 import { PlayerIdentity } from "./PlayerIdentity";
+import { useVisibleInterval } from "../lib/polling";
 import { useEffect, useMemo, useState } from "react";
 import { loadPlayers } from "../lib/api";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
@@ -11,7 +12,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
     [minimum, setMinimum] = useState(1),
     [retry, setRetry] = useState(0),
     [goalies, setGoalies] = useState(false);
-  useEffect(() => { const timer = setInterval(() => setRetry(x=>x+1), 300000); return () => clearInterval(timer); }, []);
+  useVisibleInterval(() => setRetry((x) => x + 1), 300000);
   const key = teams.map((t) => t.id).join(",");
   useEffect(() => {
     const controller = new AbortController();

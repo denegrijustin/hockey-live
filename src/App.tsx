@@ -1,10 +1,10 @@
-import { useFeed } from "./lib/polling";
-import { mergeScores, isLive } from "./lib/game-data.mjs";
+import { isLive } from "./lib/game-data.mjs";
+import { useSeason } from "./hooks/useSeason";
+import { useGameLists } from "./hooks/useGameLists";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
-import { loadSeason } from "./lib/api";
 import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
 import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
@@ -63,17 +63,8 @@ function dayHeading(dateStr: string) {
   });
 }
 export default function App() {
-  const [selected, setSelected] = useState<string[]>(initialTeams),
-    [manifest, setManifest] = useState<{
-      current: number;
-      seasons: number[];
-    } | null>(null),
-    [season, setSeason] = useState(0),
-    [storedData, setData] = useState<Snapshot | null>(null),
-    [baseline, setBaseline] = useState<Snapshot | null>(null),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(true),
-    [retry, setRetry] = useState(0);
+  const [selected, setSelected] = useState<string[]>(initialTeams);
+  const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry } = useSeason();
   const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
   const [view, setView] = useState("games"),
     [period, setPeriod] = useState("future"),
@@ -81,77 +72,8 @@ export default function App() {
     [sort, setSort] = useState("importance"),
     [range, setRange] = useState("30"),
     [query, setQuery] = useState(""),
-    [limit, setLimit] = useState(18);
-  useEffect(() => {
-    fetch("/data/manifest.json")
-      .then((r) => {
-        if (!r.ok) throw Error();
-        return r.json();
-      })
-      .then((m) => {
-        setManifest(m);
-        setSeason(m.current);
-      })
-      .catch(() => {
-        setError("Could not load the season index. Reload to retry.");
-        setLoading(false);
-      });
-  }, []);
-  useEffect(() => {
-    if (!season) return;
-    const controller = new AbortController();
-    setLoading(true);
-    setError("");
-    setData(null);
-    loadSeason(season, controller.signal)
-      .then(setData)
-      .catch(() => {
-        if (!controller.signal.aborted)
-          setError("The NHL snapshot could not be loaded. Please retry.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [season, retry]);
-  useEffect(() => {
-    if (!manifest) return;
-    const controller = new AbortController();
-    loadSeason(manifest.seasons[1], controller.signal)
-      .then(setBaseline)
-      .catch(() => {});
-    return () => controller.abort();
-  }, [manifest]);
-  const { data: scoreboard, error: liveError } = useFeed<Scoreboard>(
-    season === manifest?.current ? "/api/live" : null,
-  );
-  const data = useMemo<Snapshot | null>(() => {
-    if (!storedData) return null;
-    const games = mergeScores(storedData.games, scoreboard);
-    // Same array back means nothing actually changed for this tick — keep
-    // the same Snapshot reference so analyzeSeason isn't redone for nothing.
-    return games === storedData.games ? storedData : { ...storedData, games };
-  }, [storedData, scoreboard]);
-  useEffect(() => {
-    if (!season || season !== manifest?.current) return;
-    const controller = new AbortController();
-    // The /api/live feed (below) already carries in-progress scores every
-    // 30s, so this only needs to catch things that feed doesn't cover:
-    // newly finished games rolling into the schedule, standings drift from
-    // games elsewhere in the league. A 5-minute cadence keeps that current
-    // without re-downloading the full season on top of the live poll.
-    const timer = setInterval(() => {
-      if (!document.hidden)
-        loadSeason(season, controller.signal)
-          .then(setData)
-          .catch(() => {});
-    }, 300000);
-    return () => {
-      controller.abort();
-      clearInterval(timer);
-    };
-  }, [season, manifest]);
-  const hasLive = scoreboard?.games.some(isLive) ?? false;
+    [limit, setLimit] = useState(18),
+    [filtersOpen, setFiltersOpen] = useState(false);
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
     [data],
@@ -180,55 +102,7 @@ export default function App() {
     data?.games.filter(
       (g) => selected.includes(g.home) || selected.includes(g.away),
     ) ?? [];
-  const games = useMemo(() => {
-    if (!data || !analysis) return [];
-    const today = new Date();
-    const distance = Number(range) * 86400000;
-    return data.games
-      .filter(
-        (g) =>
-          (selected.includes(g.home) || selected.includes(g.away)) &&
-          g.type === type &&
-          finished(g) === (period === "past") &&
-          `${g.home} ${g.away} ${teams.find((t) => t.id === g.home)?.name} ${teams.find((t) => t.id === g.away)?.name}`
-            .toLowerCase()
-            .includes(query.toLowerCase()) &&
-          (range === "all" ||
-            Math.abs(Date.parse(g.start) - today.getTime()) <= distance),
-      )
-      .sort((a, b) =>
-        isLive(a) !== isLive(b)
-          ? Number(isLive(b)) - Number(isLive(a))
-          : sort === "importance"
-            ? analysis.analysis[b.id].score - analysis.analysis[a.id].score ||
-              (period === "past"
-                ? b.start.localeCompare(a.start)
-                : a.start.localeCompare(b.start))
-            : period === "past"
-              ? b.start.localeCompare(a.start)
-              : a.start.localeCompare(b.start),
-      );
-  }, [data, analysis, selected, type, period, range, query, sort]);
-  // The "Upcoming" list excludes finished games entirely, so a game that
-  // already wrapped up earlier today would otherwise vanish until you
-  // switch to "Past games". Surface those in a compact, collapsed strip
-  // instead of full-size cards crowding the upcoming list.
-  const todayStr = new Date().toLocaleDateString("en-CA");
-  const finishedToday = useMemo(() => {
-    if (!data) return [];
-    return data.games
-      .filter(
-        (g) =>
-          g.date === todayStr &&
-          finished(g) &&
-          g.type === type &&
-          (selected.includes(g.home) || selected.includes(g.away)) &&
-          `${g.home} ${g.away} ${teams.find((t) => t.id === g.home)?.name} ${teams.find((t) => t.id === g.away)?.name}`
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-      )
-      .sort((a, b) => a.start.localeCompare(b.start));
-  }, [data, type, selected, query, todayStr]);
+  const { games, finishedToday } = useGameLists({ data, analysis, teams, selected, type, period, range, query, sort });
   useEffect(
     () => setLimit(18),
     [season, selected, type, period, range, query, sort],
@@ -340,7 +214,7 @@ export default function App() {
                 : ""}
           </span>
           <button onClick={() => {
-            setRetry((x) => x + 1);
+            retry();
             window.dispatchEvent(new Event("iceboard:refresh"));
           }} disabled={loading}>
             ↻ Refresh
@@ -352,7 +226,7 @@ export default function App() {
             <p>{error}</p>
             <button
               onClick={() =>
-                season ? setRetry((x) => x + 1) : location.reload()
+                season ? retry() : location.reload()
               }
             >
               Retry
@@ -456,7 +330,16 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-                <div className="game-filters">
+                <button
+                  type="button"
+                  className="filters-toggle"
+                  aria-expanded={filtersOpen}
+                  aria-controls="game-filters"
+                  onClick={() => setFiltersOpen((v) => !v)}
+                >
+                  Filters <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
+                </button>
+                <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>
                   <label>
                     Competition
                     <select

@@ -185,6 +185,8 @@ test("recent actual game contribution and mobile card layout", async ({
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
   await page.getByRole("button", { name: /Past games/ }).click();
+  const filters = page.getByRole("button", { name: /^Filters/ });
+  if (await filters.isVisible()) await filters.click(); // folded behind a button on phones
   await page.getByLabel("Competition").selectOption("1");
   await page.getByLabel("Sort by").selectOption("date");
   const card = page.locator(".game-card").first();

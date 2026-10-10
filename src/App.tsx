@@ -178,15 +178,6 @@ export default function App() {
         </div>
       </header>
       <main id="main" className="page">
-        <section className="hero">
-          <div className="hero-aside">
-            <div>
-              <b>{teams.length}</b> teams <i />{" "}
-              <b>{data?.games.filter((g) => g.type === 2).length ?? "—"}</b>{" "}
-              regular-season games
-            </div>
-          </div>
-        </section>
         <div className="control-dock">
           <TeamPicker
             teams={teams}
@@ -215,6 +206,7 @@ export default function App() {
         </div>
         <div className="freshness">
           <span>
+            <b>{teams.length}</b> teams · <b>{data?.games.filter((g) => g.type === 2).length ?? "—"}</b> regular-season games ·{" "}
             {data
               ? `Snapshot ${new Date(data.updatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })}`
               : "Loading NHL snapshot…"}
@@ -260,7 +252,7 @@ export default function App() {
               </p>
             )}
             {scoreboard && view === "games" && (
-              <section className="live-strip" aria-label="Live NHL scoreboard">
+              <section className={`live-strip${scoreboard.games.some(isLive) ? "" : " is-quiet"}`} aria-label="Live NHL scoreboard">
                 <div>
                   <b>LIVE AROUND THE LEAGUE</b>
                   <small>

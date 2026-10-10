@@ -63,7 +63,6 @@ export const GameCard = memo(function GameCard({
               : day.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" })}
         </span>
         <div className="card-top-actions">
-          <span className="tv-network"><NetworkLogos broadcasts={broadcasts} game={game} /></span>
           <button type="button" className="gc-icon" onClick={openGameCenter} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>
         </div>
       </div>
@@ -96,7 +95,7 @@ export const GameCard = memo(function GameCard({
             <small className="importance-components">Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}</small>
           </div>
         </div>
-        <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span>{broadcasts.length ? broadcasts.join(" · ") : "Broadcast TBA"}</span></div>
+        <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span className="tv-network"><NetworkLogos broadcasts={broadcasts} game={game} /></span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
       {live && <CompactGameFlow game={game} home={home} away={away} />}

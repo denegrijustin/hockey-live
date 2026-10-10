@@ -2,6 +2,16 @@ import { test, expect } from "@playwright/test";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 import edgeFixture from "../../public/data/edge/20252026/EDM.json" with { type: "json" };
+import type { Page } from "@playwright/test";
+// The live game leads the list once every team and any date window is shown (this used to be a click in the live strip).
+async function showLiveGame(page: Page) {
+  const g = scoreboardFixture.games.find((x) => x.id === fixture.id)!;
+  await page.getByRole("button", { name: "All 32", exact: true }).click();
+  const filters = page.getByRole("button", { name: /^Filters/ });
+  if (await filters.isVisible()) await filters.click(); // folded behind a button on phones
+  await page.getByLabel("Competition").selectOption(String(g.type));
+  await page.getByLabel("Window").selectOption("all");
+}
 test("live data updates without collapsing open cards; failure retains last score", async ({
   page,
 }) => {
@@ -31,8 +41,8 @@ test("live data updates without collapsing open cards; failure retains last scor
     return route.fulfill({ json: { ...fixture, state: "LIVE", homeScore: Math.min(calls - 1, 1), plays: [{id:9001,order:1,period:1,time:"19:00",type:"goal",team:fixture.home,player:"Test Scorer",penalty:null}] } });
   });
   await page.goto("/");
-  await expect(page.locator(".live-strip")).toContainText("FLA");
-  await page.locator(".live-strip button").first().click();
+  await expect(page.locator(".ticker")).toContainText("FLA"); // the strip at the top carries the live game
+  await showLiveGame(page);
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
   const compactFlow = card.getByTestId("compact-game-flow");
@@ -81,7 +91,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await expect(why).toHaveAttribute("open", "");
   await expect(dialog.locator(".projection .prediction-labels")).not.toHaveText(previousEstimate);
   await page.clock.fastForward(31000);
-  await expect(page.locator(".live-strip")).toContainText("Update unavailable");
+  await expect(page.locator(".freshness")).toContainText("Update unavailable");
   await expect(card.locator(".matchup-team").last().locator("b")).toHaveText(
     "1",
   );
@@ -155,8 +165,8 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   };
   await page.route("**/api/boxscore/**", (route) => route.fulfill({ json: boxscore }));
   await page.goto("/");
-  await expect(page.locator(".live-strip")).toContainText("FLA");
-  await page.locator(".live-strip button").first().click();
+  await expect(page.locator(".ticker")).toContainText("FLA"); // the strip at the top carries the live game
+  await showLiveGame(page);
   const card = page.locator(".live-card").first();
   await card.locator(".game-card-summary").click();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));

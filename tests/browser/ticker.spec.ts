@@ -95,3 +95,12 @@ test("with reduced motion the strip doesn't scroll by itself", async ({ page }) 
   await expect(ticker.locator(".ticker-dup").first()).toBeHidden();
   await expect(ticker.getByRole("button", { name: "Pause" })).toBeHidden();
 });
+
+test("every logo in the strip loads up front, including the ones still off to the right", async ({ page }) => {
+  await open(page);
+  const ticker = page.getByRole("region", { name: "Today's games" });
+  await expect
+    .poll(() => ticker.locator("img").evaluateAll((imgs) => imgs.filter((i) => !(i as HTMLImageElement).complete || (i as HTMLImageElement).naturalWidth === 0).length), { timeout: 10_000 })
+    .toBe(0);
+  expect(await ticker.locator("img").evaluateAll((imgs) => imgs.every((i) => (i as HTMLImageElement).loading === "eager"))).toBe(true);
+});

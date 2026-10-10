@@ -3107,3 +3107,54 @@ select,
     display: none;
   }
 }
+
+/* Channel logos sit in the card's meta line, small and without a pill around them */
+.compact-meta .tv-network {
+  min-height: 0;
+  max-width: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  flex: none;
+}
+.compact-meta .network-logos {
+  gap: 4px;
+}
+.compact-meta .network-logo {
+  width: 22px;
+  height: 18px;
+  border-radius: 4px;
+}
+.compact-meta .network-logo img {
+  width: 18px;
+  height: 14px;
+}
+.compact-meta .network-logo-fallback {
+  min-width: 22px;
+  max-width: 40px;
+  padding: 0 3px;
+  font-size: 6px;
+}
+.compact-meta .network-more,
+.compact-meta .tv-tbd {
+  font-size: 8px;
+}
+.compact-meta {
+  align-items: center;
+}
+@media (max-width: 760px) {
+  .gc-icon {
+    width: 30px;
+    height: 28px;
+    min-width: 30px;
+    border-radius: 8px;
+  }
+  .compact-meta .network-logo {
+    width: 20px;
+    height: 16px;
+  }
+  .compact-meta .network-logo img {
+    width: 16px;
+    height: 12px;
+  }
+}

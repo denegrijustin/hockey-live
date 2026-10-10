@@ -210,6 +210,7 @@ export default function App() {
             {data
               ? `Snapshot ${new Date(data.updatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })}`
               : "Loading NHL snapshot…"}
+            {liveError ? ` · ${liveError}` : ""}
             {hasLive
               ? " · Live game in progress — auto-updating every 30s"
               : staleness > 86400000
@@ -250,44 +251,6 @@ export default function App() {
               <p className="sr-only" role="status" aria-live="polite">
                 {scoreboard.games.filter(isLive).length} games in progress around the league
               </p>
-            )}
-            {scoreboard && view === "games" && (
-              <section className={`live-strip${scoreboard.games.some(isLive) ? "" : " is-quiet"}`} aria-label="Live NHL scoreboard">
-                <div>
-                  <b>LIVE AROUND THE LEAGUE</b>
-                  <small>
-                    {liveError ||
-                      `Checked ${new Date(scoreboard.updatedAt).toLocaleTimeString()} · every 30s`}
-                  </small>
-                </div>
-                {scoreboard.games.filter(isLive).length ? (
-                  <div className="live-games">
-                  {scoreboard.games.filter(isLive).map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => {
-                        changeTeams([g.away, g.home]);
-                        setPeriod("future");
-                        setType(g.type);
-                        setRange("all");
-                        setSort("date");
-                        setQuery("");
-                      }}
-                    >
-                      <i />
-                      {g.away} {g.awayScore} — {g.homeScore} {g.home}
-                      <small>
-                        {g.intermission
-                          ? "Intermission"
-                          : `P${g.period} ${g.clock ?? ""}`}
-                      </small>
-                    </button>
-                  ))}
-                  </div>
-                ) : (
-                  <span>No games live in the latest feed.</span>
-                )}
-              </section>
             )}
             {view === "edge" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL EDGE…</div>}>

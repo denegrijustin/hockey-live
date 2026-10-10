@@ -2674,3 +2674,310 @@ select,
     padding: 0 8px;
   }
 }
+
+/* ---------- Compact top of the page: less dead space, same content ---------- */
+.site-header {
+  height: 64px;
+}
+.view-tabs button {
+  min-height: 44px;
+}
+.view-tabs {
+  gap: 22px;
+}
+.team-picker {
+  padding: 10px 0;
+}
+.freshness {
+  padding: 6px 0 10px;
+}
+.freshness b {
+  color: #b9cbd6;
+  font-weight: 700;
+}
+.section-heading {
+  margin: 16px 0 12px;
+}
+.live-strip {
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+.live-strip button {
+  padding: 8px 12px;
+}
+.live-strip small {
+  margin-top: 3px;
+}
+@media (max-width: 760px) {
+  .site-header {
+    height: 52px;
+    padding: 0 12px;
+  }
+  .brand {
+    font-size: 15px;
+    letter-spacing: 1.6px;
+  }
+  .brand small {
+    display: none;
+  }
+  .brand-symbol {
+    width: 28px;
+    height: 29px;
+    font-size: 19px;
+  }
+  .brand-symbol span {
+    font-size: 12px;
+  }
+  .season-label select {
+    min-height: 34px;
+  }
+  .page {
+    padding: 0 12px;
+  }
+  .control-dock {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+  /* One row: the quick picks scroll sideways, Choose teams stays put beside them */
+  .team-picker {
+    flex-wrap: nowrap;
+    padding: 6px 0 4px;
+    gap: 6px;
+  }
+  .quick-teams {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .quick-teams::-webkit-scrollbar {
+    display: none;
+  }
+  .team-pill,
+  .quick-teams .text-button,
+  .team-menu > summary {
+    min-height: 38px;
+    flex: none;
+  }
+  .team-menu {
+    margin-left: 0;
+    flex: none;
+  }
+  .view-tabs {
+    gap: 18px;
+  }
+  .view-tabs button {
+    min-height: 38px;
+  }
+  .freshness {
+    padding: 2px 0 6px;
+    line-height: 1.4;
+  }
+  .freshness button {
+    min-height: 30px;
+  }
+  /* The heading and the Upcoming/Past switch share a row */
+  .section-heading {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin: 8px 0 8px;
+  }
+  .section-heading .eyebrow {
+    display: none;
+  }
+  .section-heading h2,
+  .panel-heading h2 {
+    font-size: 20px;
+    letter-spacing: -0.4px;
+  }
+  .segmented {
+    width: auto;
+    flex: 1;
+    min-width: 200px;
+    padding: 3px;
+  }
+  .segmented button {
+    min-height: 32px;
+    padding: 0 8px;
+  }
+  /* A single slim line for the live games, scrolling sideways */
+  .live-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 6px 10px;
+    margin: 6px 0;
+    scrollbar-width: none;
+  }
+  .live-strip::-webkit-scrollbar {
+    display: none;
+  }
+  .live-strip > div {
+    flex: none;
+    margin-right: 0;
+  }
+  .live-strip small {
+    display: none;
+  }
+  .live-strip .live-games {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .live-strip button {
+    flex: none;
+    padding: 5px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .game-filters {
+    padding: 10px;
+    gap: 8px;
+  }
+  .filters-toggle {
+    margin: 4px 0;
+  }
+}
+
+/* Tighter cards, and only the tabs stay pinned (the team picker scrolls away) */
+.game-card {
+  padding: 13px;
+}
+.game-card-top {
+  margin-bottom: 12px;
+}
+.matchup-teams {
+  gap: 9px;
+}
+.card-stage-hint {
+  margin: 12px -13px -13px;
+  padding: 8px 13px;
+}
+.game-grid {
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  .control-dock {
+    display: contents;
+  }
+  .view-tabs {
+    position: sticky;
+    top: var(--ticker-h, 0px);
+    z-index: 12;
+    margin: 0 -12px;
+    padding: 0 12px;
+    background: #0a141cfa;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 4px 15px #071118aa;
+  }
+  .team-picker {
+    border-top: 0;
+  }
+  .game-card {
+    padding: 11px 12px;
+  }
+  .game-card-top {
+    margin-bottom: 8px;
+  }
+  .tv-network {
+    min-height: 32px;
+    padding: 3px 5px;
+  }
+  .network-logo {
+    width: 26px;
+    height: 26px;
+  }
+  .network-logo img {
+    width: 22px;
+    height: 22px;
+  }
+  .gc-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+  .matchup-teams {
+    gap: 6px;
+  }
+  .importance-score {
+    width: 70px;
+    height: 58px;
+  }
+  .importance-score strong {
+    font-size: 22px;
+  }
+  .compact-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    margin-top: 8px;
+    padding-top: 7px;
+  }
+  .card-stage-hint {
+    margin: 8px -12px -11px;
+    padding: 6px 12px;
+  }
+  .game-grid {
+    gap: 10px;
+  }
+  .results-line {
+    margin: 4px 0 8px;
+  }
+  .results-line span:last-child {
+    display: none;
+  }
+  .live-strip {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  /* With nothing live the phone skips the strip: the ticker above already shows the day's games */
+  .live-strip.is-quiet {
+    display: none;
+  }
+  .filters-toggle {
+    min-height: 38px;
+    margin: 2px 0 4px;
+  }
+}
+
+/* On the narrowest phones the quick picks and Choose teams can't share a row: back to two compact rows */
+@media (max-width: 380px) {
+  .team-picker {
+    flex-wrap: wrap;
+  }
+  .quick-teams {
+    flex: 1 1 100%;
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+  .team-menu {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+}
+
+/* A quiet live strip (nothing live) is one slim line */
+.live-strip.is-quiet {
+  padding: 8px 14px;
+  margin: 8px 0;
+}
+.live-strip.is-quiet > div {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.live-strip.is-quiet small {
+  margin-top: 0;
+}
+.section-heading .eyebrow {
+  margin-bottom: 3px;
+}
+.section-heading h2 {
+  font-size: 22px;
+}
+.freshness {
+  padding-bottom: 4px;
+}

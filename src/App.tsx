@@ -2,6 +2,7 @@ import { isLive } from "./lib/game-data.mjs";
 import { useSeason } from "./hooks/useSeason";
 import { useGameLists } from "./hooks/useGameLists";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ScoreTicker } from "./components/ScoreTicker";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
@@ -130,6 +131,16 @@ export default function App() {
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
+      {data && analysis && (
+        <ScoreTicker
+          games={data.games}
+          teams={teams}
+          day={scoreboard?.date}
+          analysis={analysis}
+          baselineFor={(g) => (baseline && baseline.season < g.season ? baselineAnalysis?.table : undefined)}
+          sourceSeason={sourceSeason}
+        />
+      )}
       <header className="site-header">
         <a className="brand" href="/" aria-label="Iceboard home">
           <span className="brand-symbol">

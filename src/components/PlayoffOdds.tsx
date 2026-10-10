@@ -107,7 +107,7 @@ export function PlayoffOdds({
                           <td className="po-team">
                             <div className="po-team-cell">
                               <i className="po-accent" style={{ background: t.cardColor ?? t.color }} />
-                              <img src={`/logos/${t.id}.svg`} alt="" loading="lazy" width={22} height={22} />
+                              <img src={`/logos/${t.id}.svg`} alt="" loading="lazy" decoding="async" width={22} height={22} />
                               <span>{t.short}<br /><small className="po-sub">{t.division}</small></span>
                             </div>
                           </td>

@@ -13,5 +13,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm build
+      - run: node scripts/check-data.mjs
+      - run: node scripts/check-budget.mjs
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:browser

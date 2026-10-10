@@ -107,7 +107,7 @@ function GoalieCard({ team, goalie, status }: { team: Team; goalie: MatchupGoali
     <article className="goalie-card">
       <div className="goalie-heading"><img src={`/logos/${team.id}.svg`} alt="" /><span>{team.short}</span><em>{status}</em></div>
       {goalie ? <>
-        <div className="goalie-person"><img src={goalie.headshot} alt="" loading="lazy" /><div><strong>{goalie.name}</strong><small>{goalie.gamesStarted} starts · {goalie.wins}–{goalie.losses}</small></div></div>
+        <div className="goalie-person"><img src={goalie.headshot} alt="" loading="lazy" decoding="async" /><div><strong>{goalie.name}</strong><small>{goalie.gamesStarted} starts · {goalie.wins}–{goalie.losses}</small></div></div>
         <div className="goalie-numbers"><span><b>{goalie.savePct == null ? "—" : goalie.savePct.toFixed(3).replace(/^0/, "")}</b>SV%</span><span><b>{goalie.gaa == null ? "—" : goalie.gaa.toFixed(2)}</b>GAA</span></div>
       </> : <p className="cmp-note">Starter and goalie statistics unavailable.</p>}
     </article>

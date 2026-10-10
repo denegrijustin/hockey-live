@@ -89,7 +89,7 @@ function TeamTracker({
   return (
     <div className="tracker-team">
       <div className="tracker-team-head">
-        <img src={`/logos/${team.id}.svg`} alt="" width={26} height={26} loading="lazy" />
+        <img src={`/logos/${team.id}.svg`} alt="" width={26} height={26} loading="lazy" decoding="async" />
         <h4>{team.name}</h4>
       </div>
       {!live.length ? (

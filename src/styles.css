@@ -2442,3 +2442,12 @@ a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-
 .importance-score strong{order:1;display:flex;align-items:baseline;gap:2px;font-size:31px}
 .importance-score strong small{margin:0;font-size:8px;letter-spacing:0;opacity:.72}
 @media(max-width:620px){.importance-wrap{flex-basis:78px}.importance-score{width:76px;height:68px}.importance-score strong{font-size:25px}.importance-score span{font-size:5px;letter-spacing:.55px}.importance-components{font-size:5.5px}}
+
+/* Off-screen cards skip layout and paint until they scroll near the viewport. */
+.game-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 150px;
+}
+.retry {
+  margin-left: 8px;
+}

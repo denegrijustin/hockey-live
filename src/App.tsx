@@ -206,14 +206,14 @@ export default function App() {
         </div>
         <div className="freshness">
           <span>
-            <b>{teams.length}</b> teams · <b>{data?.games.filter((g) => g.type === 2).length ?? "—"}</b> regular-season games ·{" "}
+            <span className="fresh-counts"><b>{teams.length}</b> teams · <b>{data?.games.filter((g) => g.type === 2).length ?? "—"}</b> regular-season games · </span>
             {data
               ? `Snapshot ${new Date(data.updatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })}`
               : "Loading NHL snapshot…"}
             {hasLive
               ? " · Live game in progress — auto-updating every 30s"
               : staleness > 86400000
-                ? " · Saved fallback; refresh may be pending"
+                ? " · Saved copy; refresh pending"
                 : ""}
           </span>
           <button onClick={() => {
@@ -332,16 +332,16 @@ export default function App() {
                       </span>
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    className="filters-toggle"
+                    aria-expanded={filtersOpen}
+                    aria-controls="game-filters"
+                    onClick={() => setFiltersOpen((v) => !v)}
+                  >
+                    Filters <b>{games.length}</b> <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="filters-toggle"
-                  aria-expanded={filtersOpen}
-                  aria-controls="game-filters"
-                  onClick={() => setFiltersOpen((v) => !v)}
-                >
-                  Filters <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
-                </button>
                 <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>
                   <label>
                     Competition

@@ -2981,3 +2981,129 @@ select,
 .freshness {
   padding-bottom: 4px;
 }
+
+/* ---------- Compact, round two (phones) ---------- */
+@media (max-width: 760px) {
+  :root {
+    --ticker-h: 32px;
+  }
+  .ticker {
+    font-size: 12px;
+  }
+  .ticker-title {
+    font-size: 10px;
+  }
+  .site-header {
+    height: 44px;
+  }
+  .brand-symbol {
+    width: 26px;
+    height: 27px;
+    font-size: 17px;
+  }
+  .season-label select {
+    min-height: 30px;
+  }
+  .team-pill,
+  .quick-teams .text-button,
+  .team-menu > summary {
+    min-height: 34px;
+  }
+  .view-tabs button {
+    min-height: 34px;
+  }
+  .team-picker {
+    padding: 4px 0 2px;
+  }
+  /* the tab already says "Game center", so the heading is for screen readers only; the switch and Filters share the row */
+  .section-heading > div:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .section-heading {
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin: 6px 0;
+  }
+  .section-heading .segmented {
+    min-width: 0;
+  }
+  .section-heading .segmented button {
+    min-height: 30px;
+    font-size: 11px;
+  }
+  .filters-toggle {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    min-height: 38px;
+    margin: 0;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  .filters-toggle b {
+    color: var(--mint);
+  }
+  .results-line {
+    display: none;
+  }
+  .fresh-counts {
+    display: none;
+  }
+  .freshness {
+    font-size: 9px;
+    padding: 0 0 4px;
+  }
+  .freshness button {
+    min-height: 26px;
+  }
+  /* "Vancouver Canucks" on one line */
+  .matchup-team > div > span {
+    display: inline;
+    margin-right: 4px;
+    font-size: 11px;
+  }
+  .matchup-team > div > h3 {
+    display: inline;
+    font-size: 17px;
+  }
+  .matchup-team img {
+    width: 30px;
+    height: 30px;
+  }
+  .matchup-teams {
+    gap: 4px;
+  }
+  /* a slim chevron instead of an "Expand" bar */
+  .card-stage-hint {
+    font-size: 0;
+    margin: 4px -12px -11px;
+    padding: 2px 12px;
+  }
+  .card-stage-hint b {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .compact-meta {
+    margin-top: 6px;
+    padding-top: 5px;
+  }
+  .game-card {
+    padding: 9px 12px 11px;
+  }
+  .game-card-top {
+    margin-bottom: 4px;
+  }
+  .game-grid {
+    gap: 8px;
+  }
+  .importance-components {
+    display: none;
+  }
+}

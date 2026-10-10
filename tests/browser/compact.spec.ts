@@ -9,12 +9,13 @@ test("on a phone the first game card starts high on the screen", async ({ page }
   const card = page.locator(".game-card").first();
   await expect(card).toBeVisible();
   const top = await card.evaluate((e) => Math.round(e.getBoundingClientRect().top));
-  expect(top, "the first card should begin within the top half of the screen").toBeLessThan(430);
-  expect(await page.locator(".site-header").evaluate((e) => e.getBoundingClientRect().height)).toBeLessThanOrEqual(56);
+  expect(top, "the first card should begin within the top half of the screen").toBeLessThan(290);
+  expect(await page.locator(".site-header").evaluate((e) => e.getBoundingClientRect().height)).toBeLessThanOrEqual(48);
   // The team picker is one row, and the heading and Upcoming/Past switch share one.
   expect(await page.locator(".team-picker").evaluate((e) => e.getBoundingClientRect().height)).toBeLessThan(60);
-  const [h, s] = await Promise.all([page.locator(".section-heading h2").boundingBox(), page.locator(".section-heading .segmented").boundingBox()]);
-  expect(Math.abs(h!.y + h!.height / 2 - (s!.y + s!.height / 2))).toBeLessThan(12);
+  const [sw, ft] = await Promise.all([page.locator(".section-heading .segmented").boundingBox(), page.locator(".filters-toggle").boundingBox()]);
+  expect(Math.abs(sw!.y + sw!.height / 2 - (ft!.y + ft!.height / 2)), "Upcoming/Past and Filters share a row").toBeLessThan(10);
+  expect(await page.locator(".game-card").first().evaluate((e) => e.getBoundingClientRect().height), "a compact card").toBeLessThan(200);
   // Nothing spills sideways.
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
 });

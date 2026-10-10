@@ -65,26 +65,31 @@ test("default teams, league selection, graphs and season navigation", async ({
     ),
   ).toBe(true);
 });
-test("Game Center defaults to team + league importance; All 32 narrows only the window", async ({
+test("Game Center lists games chronologically by default; All 32 narrows only the window; importance is one choice away", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
+  await expect(page.getByLabel("Sort by")).toHaveValue("date");
   await expect(page.getByLabel("Window")).toHaveValue("30");
-  await expect(page.locator(".game-day-heading")).toHaveCount(0);
-  await expect(page.locator(".results-line")).toContainText(
-    "Rank = combined team + league importance",
-  );
+  await expect(page.locator(".results-line")).toContainText("then the rest of the week in order");
+  // Under day headings, earliest day first, and start times never go backwards within the upcoming list.
+  const days = await page.locator(".game-day-heading").count();
+  expect(days).toBeGreaterThan(0);
+  const starts = await page.locator(".game-card").evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.start ?? ""));
+  expect(starts.length).toBeGreaterThan(1);
+  expect(starts, "start times never go backwards").toEqual([...starts].sort());
   await page.getByRole("button", { name: "All 32", exact: true }).click();
-  await expect(page.getByLabel("Sort by")).toHaveValue("importance");
+  await expect(page.getByLabel("Sort by")).toHaveValue("date");
   await expect(page.getByLabel("Window")).toHaveValue("7");
-  await expect(page.locator(".game-day-heading")).toHaveCount(0);
-  await expect(page.locator(".results-line")).toContainText(
-    "Rank = combined team + league importance",
-  );
   await page.getByRole("button", { name: "My three", exact: true }).click();
   await expect(page.getByLabel("Window")).toHaveValue("30");
+  // Importance ranking is still available.
+  const filters = page.getByRole("button", { name: /^Filters/ });
+  if (await filters.isVisible()) await filters.click(); // folded behind a button on phones
+  await page.getByLabel("Sort by").selectOption("importance");
+  await expect(page.locator(".game-day-heading")).toHaveCount(0);
+  await expect(page.locator(".results-line")).toContainText("Rank = combined team + league importance");
 });
 test("featured team shortcuts filter to exactly one team", async ({ page }) => {
   await page.goto("/");

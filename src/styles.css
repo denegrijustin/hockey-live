@@ -3158,3 +3158,32 @@ select,
     height: 12px;
   }
 }
+
+/* The Game Center button is a small tag, not a tile */
+.gc-icon {
+  width: 28px;
+  height: 22px;
+  min-height: 22px;
+  min-width: 28px;
+  border-radius: 6px;
+  font-size: 8px;
+  letter-spacing: 0.3px;
+}
+@media (max-width: 760px) {
+  .gc-icon {
+    width: 26px;
+    height: 20px;
+    min-height: 20px;
+    min-width: 26px;
+    font-size: 7.5px;
+  }
+}
+/* Small to look at, still easy to tap: the hit area extends past the visible tag */
+.gc-icon {
+  position: relative;
+}
+.gc-icon::after {
+  content: "";
+  position: absolute;
+  inset: -12px -9px;
+}

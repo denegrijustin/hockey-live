@@ -70,7 +70,7 @@ export default function App() {
   const [view, setView] = useState("games"),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
-    [sort, setSort] = useState("importance"),
+    [sort, setSort] = useState("date"),
     [range, setRange] = useState("30"),
     [query, setQuery] = useState(""),
     [limit, setLimit] = useState(18),
@@ -114,9 +114,9 @@ export default function App() {
       localStorage.setItem("iceboard-teams", JSON.stringify(ids));
     } catch {}
   };
-  // Game Center defaults to the combined team + league importance ranking.
-  // Live games still lead regardless of score, and completed games move to the
-  // finished section. A 30-day window suits a handful of followed teams, but
+  // Game Center lists games in chronological order by default (live games first, then by start time under day
+  // headings); "Importance to teams + league" is one choice away in Sort by, and every card still shows its
+  // importance. Completed games move to the finished section. A 30-day window suits a handful of followed teams, but
   // across all 32 it's a wall of games, so narrow the window there.
   const isAllTeams = selected.length === teams.length;
   useEffect(() => {
@@ -270,7 +270,7 @@ export default function App() {
                         setPeriod("future");
                         setType(g.type);
                         setRange("all");
-                        setSort("importance");
+                        setSort("date");
                         setQuery("");
                       }}
                     >
@@ -371,8 +371,8 @@ export default function App() {
                       value={sort}
                       onChange={(e) => setSort(e.target.value)}
                     >
+                      <option value="date">Game date (chronological)</option>
                       <option value="importance">Importance to teams + league</option>
-                      <option value="date">Game date</option>
                     </select>
                   </label>
                   <label className="game-search">

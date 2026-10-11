@@ -82,7 +82,7 @@ export const GameCard = memo(function GameCard({
                   <span>{team.city}</span><h3>{team.short}</h3>
                   <small className="team-record">
                     {records[team.id].w}–{records[team.id].l}–{records[team.id].ot}
-                    <em>{Math.round(playoff[team.id]?.chance ?? 50)}% playoffs</em>
+                    <em>{Math.round(playoff[team.id]?.chance ?? 50)}%<span className="po-word"> playoffs</span></em>
                   </small>
                   {ranks?.[team.id] && <small className="team-rank" title={rankTitle(ranks[team.id])}>{rankLine(ranks[team.id])} <em>by points %</em></small>}
                 </div>

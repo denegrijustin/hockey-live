@@ -204,7 +204,7 @@ export default function App() {
             ))}
           </nav>
         </div>
-        <div className="freshness">
+        <div className={`freshness${liveError || hasLive || staleness > 86400000 ? " note" : ""}`}>
           <span>
             <span className="fresh-counts"><b>{teams.length}</b> teams · <b>{data?.games.filter((g) => g.type === 2).length ?? "—"}</b> regular-season games · </span>
             {data
@@ -295,6 +295,19 @@ export default function App() {
                       </span>
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    className="refresh-mini"
+                    aria-label="Refresh the NHL data"
+                    title="Refresh"
+                    disabled={loading}
+                    onClick={() => {
+                      retry();
+                      window.dispatchEvent(new Event("iceboard:refresh"));
+                    }}
+                  >
+                    ↻
+                  </button>
                   <button
                     type="button"
                     className="filters-toggle"

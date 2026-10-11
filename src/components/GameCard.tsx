@@ -5,6 +5,7 @@ import { isLive } from "../lib/game-data.mjs";
 import { CompactGameFlow, CompactGameProjection } from "./GameData";
 import { NetworkLogos } from "./NetworkLogos";
 import { GoalieComparison } from "./TeamComparison";
+import { IntermissionRink } from "./IntermissionRink";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -98,6 +99,7 @@ export const GameCard = memo(function GameCard({
         <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span className="tv-network"><NetworkLogos broadcasts={broadcasts} game={game} /></span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
+      {live && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
       {live && <CompactGameFlow game={game} home={home} away={away} />}
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">

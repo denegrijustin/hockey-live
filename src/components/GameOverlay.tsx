@@ -5,6 +5,7 @@ import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
 import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
+import { IntermissionRink } from "./IntermissionRink";
 const PlayerTracker = lazy(() =>
   import("./PlayerTracker").then((m) => ({ default: m.PlayerTracker })),
 );
@@ -123,6 +124,7 @@ export function GameOverlay({
         {" · "}
         {analysis.kind} · {analysis.score}/100 overall importance · Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}
       </p>
+      {live && game.intermission && <IntermissionRink game={game} home={home} away={away} />}
       <div className="game-center-actions">
         <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
         <span>{game.venue || "Venue unavailable"}</span>

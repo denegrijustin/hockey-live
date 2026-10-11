@@ -67,3 +67,22 @@ test("on a computer the heading and filters still show as before", async ({ page
   await expect(page.locator(".results-line")).toBeVisible();
   await expect(page.locator(".refresh-mini")).toBeHidden();
 });
+
+test("on a phone the GC tag is a square in line with the channel logos, the same size as each", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
+  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
+  await page.goto("/");
+  const card = page.locator(".game-card").filter({ has: page.locator(".network-logo") }).first();
+  await expect(card).toBeVisible();
+  const gc = await card.locator(".gc-icon").boundingBox();
+  const logos = await card.locator(".network-logo").evaluateAll((els) => els.map((e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height }; }));
+  expect(logos.length).toBeGreaterThan(0);
+  expect(Math.abs(gc!.width - gc!.height), "GC is square").toBeLessThan(1);
+  for (const l of logos) {
+    expect(Math.abs(l.w - gc!.width), "same width as the GC tag").toBeLessThan(1);
+    expect(Math.abs(l.h - gc!.height), "same height as the GC tag").toBeLessThan(1);
+    expect(Math.abs(l.y + l.h / 2 - (gc!.y + gc!.height / 2)), "on the same line").toBeLessThan(1.5);
+    expect(l.x + l.w, "the GC tag is last on the row, beside the logos").toBeLessThanOrEqual(gc!.x + 1);
+  }
+});

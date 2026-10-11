@@ -1,8 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
+import teams from "../../src/data/teams.json" with { type: "json" };
+import { zamboniColors } from "../../src/lib/intermission.mjs";
 
 const base = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
+const homeTeam = (teams as { id: string; color: string; cardColor?: string }[]).find((t) => t.id === base.home)!;
 async function open(page: Page, extra: Record<string, unknown>) {
   const game = { ...base, state: "LIVE", period: 1, periodType: "REG", ...extra };
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] } }));
@@ -27,12 +30,11 @@ test("a game in intermission shows the feed's countdown and the Zamboni on its c
   await expect(int.locator(".int-zamboni")).toBeVisible();
   await expect(int.locator(".int-sign")).toBeVisible();
   await expect(int.locator("image")).toHaveAttribute("href", `/logos/${base.home}.svg`);
-  // It drives along its route, laying fresh ice behind it.
-  const pose = () => int.locator(".int-zamboni").getAttribute("transform");
-  const first = await pose();
-  await expect.poll(pose, { timeout: 8000 }).not.toBe(first);
-  const early = Number(await int.locator(".int-fresh").evaluate((e) => (e as SVGElement).style.strokeDashoffset));
-  await expect.poll(async () => Number(await int.locator(".int-fresh").evaluate((e) => (e as SVGElement).style.strokeDashoffset)), { timeout: 8000 }).toBeLessThan(early);
+  // It is in the home team's colors.
+  const hex = (await int.locator(".int-zamboni").evaluate((e) => getComputedStyle(e).getPropertyValue("--z-body"))).trim();
+  expect(hex).toBe(zamboniColors(homeTeam.cardColor ?? homeTeam.color).body);
+  const n = parseInt(hex.slice(1), 16);
+  expect(await int.locator(".int-zbody").evaluate((e) => getComputedStyle(e).fill)).toBe(`rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`);
   // The card header says so too.
   await expect(card.locator(".game-date")).toContainText("Intermission");
 });
@@ -69,4 +71,22 @@ test("the Game Center carries it too, and reduced motion keeps the ice fresh and
   await card.locator(".gc-icon").click();
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog.getByTestId("intermission")).toContainText(/until period 2/);
+});
+
+test("the Zamboni does laps all through the intermission and has the ice done with 10 seconds to go", async ({ page }) => {
+  await page.clock.install();
+  const card = await open(page, { intermission: true, clock: "13:48" });
+  const int = card.getByTestId("intermission");
+  const fresh = async () => Number(await int.locator(".int-fresh").evaluate((e) => (e as SVGElement).style.strokeDashoffset));
+  const pose = () => int.locator(".int-zamboni").getAttribute("transform");
+  await expect.poll(fresh).toBeGreaterThan(0);
+  const early = await fresh();
+  const first = await pose();
+  await page.clock.fastForward(120_000); // two minutes on: more of the ice is done and the machine has moved on
+  await expect.poll(fresh).toBeLessThan(early);
+  expect(await pose()).not.toBe(first);
+  await page.clock.fastForward(13 * 60_000 + 30_000); // 10 seconds left on the clock
+  await expect(int.locator(".int-t")).toHaveText(/^0:(0\d|10)$/);
+  await expect.poll(fresh).toBe(0); // the whole sheet is fresh
+  await expect(int).toContainText("fresh ice for the next period");
 });

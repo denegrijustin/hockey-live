@@ -3557,7 +3557,7 @@ select,
 .int-fresh {
   fill: none;
   stroke: #f4fcff;
-  stroke-width: 16;
+  stroke-width: 14;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 100 100;
@@ -3574,14 +3574,14 @@ select,
 .int-crease { fill: rgb(120 180 220 / 60%); stroke: #cf5a66; stroke-width: 0.5; }
 .int-net { fill: rgb(255 255 255 / 80%); stroke: #cf5a66; stroke-width: 0.7; }
 .int-zshadow { fill: rgb(20 40 60 / 28%); }
-.int-zbody { fill: #e6ae2f; stroke: #7a5410; stroke-width: 0.5; }
+.int-zbody { fill: var(--z-body, #e6ae2f); stroke: var(--z-edge, #7a5410); stroke-width: 0.5; }
 .int-tire { fill: #1b1f24; }
-.int-cab { fill: #c98f1c; stroke: #7a5410; stroke-width: 0.4; }
+.int-cab { fill: var(--z-cab, #c98f1c); stroke: var(--z-edge, #7a5410); stroke-width: 0.4; }
 .int-driver { fill: #f1c9a5; stroke: rgb(0 0 0 / 40%); stroke-width: 0.3; }
 .int-cond { fill: #8a97a1; stroke: #4a555e; stroke-width: 0.4; }
-.int-sign { fill: #14243a; stroke: #e6ae2f; stroke-width: 0.4; }
+.int-sign { fill: var(--z-sign, #14243a); stroke: var(--z-accent, #e6ae2f); stroke-width: 0.4; }
 .int-sign-t { font: 800 2.5px system-ui, sans-serif; fill: #fff; }
-.int-sign-t.gold { fill: #f2c94c; }
+.int-sign-t.gold { fill: var(--z-accent, #f2c94c); }
 .int-cap {
   margin: 6px 0 0;
   font-size: 0.78rem;

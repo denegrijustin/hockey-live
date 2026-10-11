@@ -3352,7 +3352,7 @@ select,
     align-items: center;
     padding: 6px 10px 0;
     min-height: 0;
-    height: 26px;
+    height: 30px;
     margin-bottom: 0;
   }
   .card-top-actions {
@@ -3366,13 +3366,56 @@ select,
   .game-date {
     font-size: 11px;
   }
+  /* the channel logos and the GC tag are one row of equal squares */
   .gc-icon {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
     min-height: 0;
-    height: 22px;
     margin: 0;
-    padding: 0 8px;
-    font-size: 10px;
+    padding: 0;
+    border-radius: 7px;
+    font-size: 9px;
     line-height: 1;
+  }
+  .tv-network {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .network-logos {
+    gap: 4px;
+  }
+  .network-logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+  .network-logo img {
+    width: 22px;
+    height: 22px;
+  }
+  .network-logo-fallback,
+  .compact-meta .network-logo-fallback {
+    width: 26px;
+    min-width: 26px;
+    max-width: 26px;
+    padding: 0;
+    font-size: 6.5px;
+    letter-spacing: 0;
+  }
+  .compact-meta .network-logos {
+    gap: 4px;
+  }
+  .compact-meta .network-logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+  .compact-meta .network-logo img {
+    width: 22px;
+    height: 22px;
   }
   .game-card-summary {
     margin: 0;
@@ -3445,8 +3488,8 @@ select,
   }
   .compact-meta {
     position: absolute;
-    top: 5px;
-    right: 46px;
+    top: 7px;
+    right: 52px;
     margin: 0;
     padding: 0;
     width: auto;

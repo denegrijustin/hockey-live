@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Game, Team } from "../types";
-import { clockText, intermissionLeft, parseClock, resurfacePath, ROUTE_MS, zamboniPose } from "../lib/intermission.mjs";
+import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, resurfaceProgress, zamboniColors, zamboniPose, FINISH_S } from "../lib/intermission.mjs";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
 /** When this intermission was first seen, kept so a reload doesn't restart the fallback clock. */
@@ -28,11 +28,13 @@ export function useIntermissionLeft(game: Game) {
     setNow(Date.now());
     return () => clearInterval(t);
   }, []);
-  return intermissionLeft({ base: reading.current.base, at: reading.current.at, seenAt, now });
+  const deadline = useRef(0);
+  deadline.current = reading.current.base != null ? reading.current.at + reading.current.base * 1000 : seenAt + INTERMISSION_MS;
+  return { left: intermissionLeft({ base: reading.current.base, at: reading.current.at, seenAt, now }), deadline };
 }
 
 /** Drives the Zamboni along its route and lays the fresh ice down behind it, together, from one clock. */
-function useResurfacing(still: boolean) {
+function useResurfacing(still: boolean, deadline: { current: number }) {
   const path = useRef<SVGPathElement>(null);
   const machine = useRef<SVGGElement>(null);
   const root = useRef<SVGSVGElement>(null);
@@ -41,11 +43,11 @@ function useResurfacing(still: boolean) {
     if (still || !route || !z || !svg) return;
     const len = route.getTotalLength();
     let raf = 0, visible = true;
-    const t0 = performance.now();
-    const frame = (now: number) => {
+    const frame = () => {
       raf = requestAnimationFrame(frame);
       if (!visible || document.hidden) return;
-      const p = ((now - t0) % ROUTE_MS) / ROUTE_MS;
+      // The job is paced to the clock: it starts with the intermission and is done when 10 seconds are left.
+      const p = resurfaceProgress((deadline.current - Date.now()) / 1000);
       const a = route.getPointAtLength(p * len), b = route.getPointAtLength(Math.min(len, p * len + 0.8));
       const pose = zamboniPose(a, b, p);
       z.setAttribute("transform", `translate(${pose.x.toFixed(2)} ${pose.y.toFixed(2)}) rotate(${pose.deg.toFixed(1)})`);
@@ -75,11 +77,12 @@ const SCUFFS = Array.from({ length: 46 }, (_, i) => {
  * leaving a fresh, glossy strip behind it. It repeats until the intermission ends. Still (no moving Zamboni) for reduced motion.
  */
 export function IntermissionRink({ game, home, away, compact = false }: { game: Game; home: Team; away: Team; compact?: boolean }) {
-  const left = useIntermissionLeft(game);
+  const { left, deadline } = useIntermissionLeft(game);
+  const colors = useMemo(() => zamboniColors(home.cardColor ?? home.color), [home.cardColor, home.color]);
   const route = useMemo(() => resurfacePath(), []);
   const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const next = game.period ? (game.period >= 3 ? "overtime" : `period ${game.period + 1}`) : "the next period";
-  const { path, machine, root } = useResurfacing(still);
+  const { path, machine, root } = useResurfacing(still, deadline);
   const id = `rink-${game.id}${compact ? "-c" : ""}`;
   return (
     <section className={`intermission${compact ? " compact" : ""}`} data-testid="intermission" aria-label={`Intermission after period ${game.period ?? ""}. ${left > 0 ? `${clockText(left)} until ${next}` : `${next} about to start`}. The Zamboni is resurfacing the ice.`}>
@@ -118,7 +121,7 @@ export function IntermissionRink({ game, home, away, compact = false }: { game: 
         </g>
         {!still && (
           <g>
-            <g ref={machine} className="int-zamboni">
+            <g ref={machine} className="int-zamboni" style={{ "--z-body": colors.body, "--z-cab": colors.cab, "--z-edge": colors.edge, "--z-sign": colors.sign, "--z-accent": colors.accent } as React.CSSProperties}>
               <ellipse cx="0" cy="0.8" rx="15" ry="7.6" className="int-zshadow" />
               <rect x="-15" y="-4.6" width="3" height="9.2" rx="0.8" className="int-cond" />
               <rect x="-12" y="-6" width="25" height="12" rx="2.2" className="int-zbody" />
@@ -133,7 +136,7 @@ export function IntermissionRink({ game, home, away, compact = false }: { game: 
           </g>
         )}
       </svg>
-      <p className="int-cap"><span aria-hidden="true">🧊</span> {away.short} at {home.short} · the Zamboni is resurfacing the ice</p>
+      <p className="int-cap"><span aria-hidden="true">🧊</span> {away.short} at {home.short} · {left > FINISH_S ? "the Zamboni is resurfacing the ice" : "fresh ice for the next period"}</p>
     </section>
   );
 }

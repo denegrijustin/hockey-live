@@ -3187,3 +3187,281 @@ select,
   position: absolute;
   inset: -12px -9px;
 }
+
+/* ---------- Phones, round three: the board starts with four games showing ----------
+   One row each for the header, the teams and tabs, and the game controls; no stats line, headings or hints; and a game card
+   that is two team rows, the importance tile and one meta line. */
+.refresh-mini {
+  display: none;
+}
+@media (max-width: 600px) {
+  .site-header {
+    padding: 6px 12px;
+    min-height: 0;
+  }
+  .site-header .brand small,
+  .feed-status,
+  .season-label > :not(select) {
+    display: none;
+  }
+  .brand-symbol {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+  }
+  .season-label select {
+    min-height: 30px;
+    padding-block: 2px;
+    font-size: 13px;
+  }
+  .page {
+    padding-top: 4px;
+  }
+  /* teams and tabs */
+  .control-dock {
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+  }
+  .team-picker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    margin: 0;
+    padding: 0;
+  }
+  .quick-teams {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+  }
+  /* the three team pills are logos only (the abbreviation stays for screen readers), so My three and All 32 fit on the same row */
+  .team-pill {
+    min-height: 32px;
+    min-width: 36px;
+    padding: 0 6px;
+    font-size: 0;
+    gap: 0;
+    justify-content: center;
+  }
+  .team-pill img {
+    width: 22px;
+    height: 22px;
+  }
+  .quick-teams .text-button {
+    min-height: 32px;
+    padding: 0 6px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .team-menu summary {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .view-tabs {
+    margin: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .view-tabs button {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex: none;
+  }
+  /* the snapshot line only speaks when there is something to say */
+  .freshness:not(.note) {
+    display: none;
+  }
+  .freshness .fresh-counts,
+  .freshness button {
+    display: none;
+  }
+  .freshness {
+    margin: 2px 0;
+    padding: 0;
+    font-size: 11px;
+  }
+  /* period, filters and refresh on one row; no heading */
+  .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+    padding: 0;
+  }
+  .section-heading > div:first-child,
+  .section-heading .eyebrow,
+  .section-heading h2 {
+    display: none;
+  }
+  .segmented {
+    flex: 1;
+    min-width: 0;
+  }
+  .segmented button {
+    min-height: 34px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+  .filters-toggle,
+  .refresh-mini {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 13px;
+    flex: none;
+  }
+  .refresh-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    border: 1px solid var(--line, #22404f);
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    font-size: 16px;
+  }
+  .results-line {
+    display: none;
+  }
+  .game-grid {
+    gap: 8px;
+  }
+  .game-day-heading {
+    margin: 4px 0 -2px;
+    padding: 0;
+    font-size: 11px;
+    min-height: 0;
+  }
+  /* the card */
+  .game-card {
+    border-radius: 14px;
+    padding-top: 3px;
+    padding-bottom: 2px;
+  }
+  .game-card-top {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px 0;
+    min-height: 0;
+    height: 26px;
+    margin-bottom: 0;
+  }
+  .card-top-actions {
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+  .matchup-team .team-record .po-word {
+    display: none;
+  }
+  .game-date {
+    font-size: 11px;
+  }
+  .gc-icon {
+    min-height: 0;
+    height: 22px;
+    margin: 0;
+    padding: 0 8px;
+    font-size: 10px;
+    line-height: 1;
+  }
+  .game-card-summary {
+    margin: 0;
+    padding: 0 10px 4px;
+  }
+  .matchup {
+    gap: 8px;
+    align-items: center;
+  }
+  .matchup-teams {
+    gap: 4px;
+  }
+  .matchup-team {
+    gap: 8px;
+    min-height: 0;
+    align-items: center;
+  }
+  .matchup-team img {
+    width: 28px;
+    height: 28px;
+  }
+  .matchup-team > div {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: nowrap;
+    column-gap: 7px;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .matchup-team > div > span {
+    display: none; /* the city: the team name says it */
+  }
+  .matchup-team h3 {
+    font-size: 15px;
+    line-height: 1.1;
+  }
+  .matchup-team .team-record {
+    font-size: 9px;
+    margin: 0;
+  }
+  .matchup-team .team-record em {
+    margin-left: 4px;
+  }
+  .matchup-team .team-rank,
+  .matchup-team > small:not(.team-record),
+  .importance-components,
+  .card-stage-hint {
+    display: none;
+  }
+  .importance-wrap {
+    flex: 0 0 52px;
+  }
+  .importance-score {
+    width: 52px;
+    height: 48px;
+    border-radius: 10px;
+  }
+  .importance-score span {
+    display: none;
+  }
+  .importance-score strong {
+    font-size: 21px;
+  }
+  .importance-score strong small {
+    font-size: 7px;
+  }
+  /* the venue is for the expanded card; the channel logos ride in the card's top row beside the GC tag */
+  .game-card {
+    position: relative;
+  }
+  .compact-meta {
+    position: absolute;
+    top: 5px;
+    right: 46px;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    max-width: 45%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .compact-meta > span:first-child {
+    display: none;
+  }
+  .compact-meta .tv-network {
+    max-width: 100%;
+  }
+  .tv-network img {
+    height: 15px;
+  }
+}

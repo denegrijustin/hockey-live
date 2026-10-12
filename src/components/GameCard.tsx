@@ -2,7 +2,9 @@ import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "reac
 import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
-import { CompactGameFlow, CompactGameProjection } from "./GameData";
+import { CompactGameFlow, CompactGameProjection, useCardFeed } from "./GameData";
+import { IceView } from "./IceView";
+import { GoalFlash, useGoalFlash } from "./GoalFlash";
 import { NetworkLogos } from "./NetworkLogos";
 import { GoalieComparison } from "./TeamComparison";
 import { IntermissionRink } from "./IntermissionRink";
@@ -25,6 +27,8 @@ export const GameCard = memo(function GameCard({
   const past = finished(game), live = isLive(game);
   const [expanded, setExpanded] = useState(false), [gameCenterOpen, setGameCenterOpen] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
+  const { ref: feedRef, data: feed } = useCardFeed(game);
+  const goal = useGoalFlash(game);
   const home = teams.find((team) => team.id === game.home)!;
   const away = teams.find((team) => team.id === game.away)!;
   const ranks = useMemo(() => teamRanks(before, teams), [before, teams]);
@@ -52,8 +56,8 @@ export const GameCard = memo(function GameCard({
     <article
       ref={cardRef}
       data-start={game.start}
-      style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, #09141d), #0e1b25)` }}
-      className={`game-card ${scoreClass} ${live ? "live-card" : ""} ${expanded ? "is-expanded" : "is-compact"}`}
+      className={`game-card ${scoreClass} ${live ? "live-card" : ""} ${expanded ? "is-expanded" : "is-compact"}${goal ? " goal-glow" : ""}`}
+      style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, #09141d), #0e1b25)`, ...(goal ? ({ "--gf": (goal.side === "home" ? home : away).cardColor ?? (goal.side === "home" ? home : away).color } as object) : {}) }}
     >
       <div className="game-card-top">
         <span className="game-date">
@@ -100,7 +104,11 @@ export const GameCard = memo(function GameCard({
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
       {live && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
-      {live && <CompactGameFlow game={game} home={home} away={away} />}
+      <div ref={feedRef} className="card-ice">
+        {(live || past) && <IceView data={feed} home={home} away={away} />}
+        {live && <CompactGameFlow data={feed} home={home} away={away} />}
+      </div>
+      <GoalFlash flash={goal} game={game} away={away} home={home} feed={feed} />
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">
         <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>

@@ -69,7 +69,7 @@ test("a finished game keeps its ice view, and a game that has not started has no
   await expect(page.getByTestId("ice-view")).toHaveCount(0);
 });
 
-test("a goal flashes on the card with the team and scorer, then clears; the first sight of a game does not", async ({ page }) => {
+test("a goal runs five seconds on the card: puck in the net, then the red light with GOAL circling, then it clears; the first sight of a game does not", async ({ page }) => {
   await page.clock.install();
   let calls = 0;
   const game = (home: number) => ({ ...base, state: "LIVE", period: 2, periodType: "REG", clock: "12:00", intermission: false, homeScore: home, awayScore: 0, homeShots: 3, awayShots: 2 });
@@ -92,9 +92,16 @@ test("a goal flashes on the card with the team and scorer, then clears; the firs
   await expect(flash).toContainText(HOME);
   await expect(flash).toContainText("H Scorer"); // from the game feed
   await expect(flash).toContainText(`${AWAY} 0 – 1 ${HOME}`);
+  // The puck goes into the net, then the red goal light comes on with GOAL going round it.
   await expect(flash.locator(".gf-puck")).toHaveCount(1);
+  await expect(flash.locator(".gf-lamp")).toHaveCount(1);
+  await expect(flash.locator(".gf-word")).toHaveCount(3);
+  expect(await flash.locator(".gf-word").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("gf-orbit");
+  expect(await flash.locator(".gf-beams").evaluate((e) => getComputedStyle(e).animationName)).toBe("gf-spin");
   await expect(card).toHaveClass(/goal-glow/);
-  await page.clock.fastForward(8_000);
+  await page.clock.fastForward(4_000); // still up at four seconds
+  await expect(card.getByTestId("goal-flash")).toHaveCount(1);
+  await page.clock.fastForward(2_000); // gone after five
   await expect(card.getByTestId("goal-flash")).toHaveCount(0);
   await expect(card).not.toHaveClass(/goal-glow/);
 });
@@ -115,5 +122,9 @@ test("with reduced motion the goal banner is the same, held still", async ({ pag
   const flash = page.locator(".live-card").first().getByTestId("goal-flash");
   await expect(flash).toContainText("GOAL!");
   await expect(flash).toHaveAttribute("data-side", "away");
-  expect(await flash.locator(".gf-puck").evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
+  // Held still: no net, no circling; the light is on with GOAL in front of it.
+  expect(await flash.locator(".gf-word").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
+  expect(await flash.locator(".gf-beams").evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
+  expect(await flash.locator(".gf-net").evaluate((e) => getComputedStyle(e).display)).toBe("none");
+  await expect(flash.locator(".gf-lamp")).toBeVisible();
 });

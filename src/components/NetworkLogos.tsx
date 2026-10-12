@@ -1,7 +1,6 @@
 import type { Ref } from "react";
 import { useVisible } from "./GameData";
 import { useEspnLink } from "./useEspnGame";
-import { isEspnFamily } from "../lib/espn-links.mjs";
 type NetworkBrand = {
   key: string;
   label: string;
@@ -54,7 +53,8 @@ export function NetworkLogos({
   game?: { date: string; away: string; home: string };
 }) {
   const { ref, visible: inView } = useVisible();
-  const hasEspn = !!game && broadcasts.some(isEspnFamily);
+  // Whatever channel the game is on, its logo opens the game on ESPN: the ESPN app on a phone that has it, espn.com otherwise.
+  const hasEspn = !!game && broadcasts.length > 0;
   const espnHref = useEspnLink(
     game ?? { date: "", away: "", home: "" },
     hasEspn && inView,
@@ -83,37 +83,29 @@ export function NetworkLogos({
       title={unique.join(" · ")}
     >
       {visible.map(({ network, brand }) => {
-        const img = brand && (
-          <img
-            src={`/network-logos/${brand.key}.png`}
-            alt={brand.label}
-            width="28"
-            height="28"
-            loading="lazy"
-          />
-        );
-        return brand ? (
-          game && isEspnFamily(network) ? (
-            <a
-              className="network-logo network-logo-link"
-              key={network}
-              href={espnHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Open this game in the ESPN app"
-              aria-label={`${brand.label}: Open this game in the ESPN app`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {img}
-            </a>
-          ) : (
-            <span className="network-logo" key={network} title={network}>
-              {img}
-            </span>
-          )
+        const label = brand?.label ?? network.replace(/\s*\([^)]*\)\s*$/, "");
+        const inner = brand ? (
+          <img src={`/network-logos/${brand.key}.png`} alt={brand.label} width="28" height="28" loading="lazy" />
         ) : (
-          <span className="network-logo network-logo-fallback" key={network} title={network}>
-            {network.replace(/\s*\([^)]*\)\s*$/, "").slice(0, 5)}
+          network.replace(/\s*\([^)]*\)\s*$/, "").slice(0, 5)
+        );
+        const cls = `network-logo${brand ? "" : " network-logo-fallback"}`;
+        return game ? (
+          <a
+            className={`${cls} network-logo-link`}
+            key={network}
+            href={espnHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`${network}: open this game in the ESPN app (or espn.com)`}
+            aria-label={`${label}: open this game in the ESPN app`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {inner}
+          </a>
+        ) : (
+          <span className={cls} key={network} title={network}>
+            {inner}
           </span>
         );
       })}

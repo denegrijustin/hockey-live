@@ -73,7 +73,7 @@ test("the Game Center carries it too, and reduced motion keeps the ice fresh and
   await expect(dialog.getByTestId("intermission")).toContainText(/until period 2/);
 });
 
-test("the Zamboni does laps all through the intermission and has the ice done with 10 seconds to go", async ({ page }) => {
+test("the Zamboni does laps all through the intermission and leaves the ice with 10 seconds to go", async ({ page }) => {
   await page.clock.install();
   const card = await open(page, { intermission: true, clock: "13:48" });
   const int = card.getByTestId("intermission");
@@ -85,8 +85,13 @@ test("the Zamboni does laps all through the intermission and has the ice done wi
   await page.clock.fastForward(120_000); // two minutes on: more of the ice is done and the machine has moved on
   await expect.poll(fresh).toBeLessThan(early);
   expect(await pose()).not.toBe(first);
-  await page.clock.fastForward(13 * 60_000 + 30_000); // 10 seconds left on the clock
-  await expect(int.locator(".int-t")).toHaveText(/^0:(0\d|10)$/);
+  await page.clock.fastForward(11 * 60_000 + 30_000); // 18 seconds left: the last lap is done, and it heads for the gate
+  await expect(int.locator(".int-t")).toHaveText(/^0:(1[5-9])$/);
   await expect.poll(fresh).toBe(0); // the whole sheet is fresh
+  const x = async () => Number(/translate\(([-\d.]+)/.exec((await pose()) ?? "")?.[1]);
+  await expect.poll(x).toBeLessThan(46); // on its way to the gate in the left boards
+  await page.clock.fastForward(9_000); // 10 seconds left
+  await expect(int.locator(".int-t")).toHaveText(/^0:(0\d|10)$/);
+  await expect.poll(x).toBeLessThan(-15); // off the ice
   await expect(int).toContainText("fresh ice for the next period");
 });

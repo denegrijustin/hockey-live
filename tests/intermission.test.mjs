@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { FINISH_S, INTERMISSION_MS, resurfaceProgress, zamboniColors, zamboniPose, clockText, intermissionLeft, parseClock, resurfacePath } from "../src/lib/intermission.mjs";
+import { EXIT_PATH, EXIT_S, FINISH_S, INTERMISSION_MS, exitProgress, resurfaceProgress, zamboniColors, zamboniPose, clockText, intermissionLeft, parseClock, resurfacePath } from "../src/lib/intermission.mjs";
 
 test("an intermission is 17 minutes", () => assert.equal(INTERMISSION_MS, 17 * 60_000));
 test("the feed's clock is read as minutes and seconds", () => {
@@ -31,20 +31,27 @@ test("the Zamboni's route stays on the ice: four laps, each inside the last", ()
   assert.equal((d.match(/H/g) ?? []).length, 8); // two straights per lap
   assert.ok(d.includes("L")); // joined lap to lap
 });
-test("the Zamboni is paced to the clock: it starts with the intermission and finishes with 10 seconds left", () => {
+test("the Zamboni is paced to the clock: laps from the start, off the ice with 10 seconds left", () => {
   assert.equal(FINISH_S, 10);
+  assert.equal(EXIT_S, 8);
   assert.equal(resurfaceProgress(1020), 0);
-  assert.equal(resurfaceProgress(10), 1);
+  assert.equal(resurfaceProgress(18), 1); // the last lap is done as it heads for the gate
   assert.equal(resurfaceProgress(0), 1);
-  assert.ok(Math.abs(resurfaceProgress(515) - 0.5) < 0.001);
   assert.equal(resurfaceProgress(2000), 0);
-  // Always moving forward as the clock runs down.
-  let last = -1;
-  for (let left = 1020; left >= 0; left -= 15) {
-    const p = resurfaceProgress(left);
-    assert.ok(p >= last);
-    last = p;
+  assert.equal(exitProgress(40), 0); // still lapping
+  assert.equal(exitProgress(18), 0);
+  assert.equal(exitProgress(14), 0.5);
+  assert.equal(exitProgress(10), 1); // gone
+  assert.equal(exitProgress(0), 1);
+  let last = -1, lastExit = -1;
+  for (let left = 1020; left >= 0; left -= 3) {
+    const p = resurfaceProgress(left), q = exitProgress(left);
+    assert.ok(p >= last && q >= lastExit);
+    [last, lastExit] = [p, q];
   }
+  // The exit runs off the left edge of the rink.
+  const xs = EXIT_PATH.match(/-?\d+(\.\d+)?/g).map(Number);
+  assert.ok(Math.min(...xs) < -15);
 });
 test("the Zamboni wears the home team's colors, lifted when the color is too dark to show on ice", () => {
   assert.equal(zamboniColors("#c8102e").body, "#c8102e");

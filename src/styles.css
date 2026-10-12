@@ -3552,6 +3552,7 @@ select,
 .int-boards { fill: #ecf4f7; stroke: #53697a; stroke-width: 1.2; }
 .int-kick { fill: none; stroke: #e8c35a; stroke-width: 1.6; }
 .int-ice { fill: #b8cad3; }
+.int-gate { fill: #1a2a33; stroke: #53697a; stroke-width: 0.5; }
 .int-scuffs path { fill: none; stroke: #e6f0f4; stroke-width: 0.5; stroke-linecap: round; opacity: 0.8; }
 /* the fresh, glossy ice, laid down along the Zamboni's route as it goes */
 .int-fresh {

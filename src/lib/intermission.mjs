@@ -34,15 +34,22 @@ export function resurfacePath(width = 10, W = 200, H = 85) {
   return parts.join("");
 }
 
-/** The Zamboni finishes this many seconds before the intermission ends. */
+/** The Zamboni is off the ice, with the whole sheet fresh, when this many seconds are left. */
 export const FINISH_S = 10;
+/** It spends this long driving off through the gate, so the laps are done with FINISH_S + EXIT_S left. */
+export const EXIT_S = 8;
 /**
- * How far along its route the Zamboni is (0 to 1) with `left` seconds of the intermission to go: it starts when the intermission does and
- * is done, with the whole sheet fresh, when 10 seconds are left.
+ * How far along its laps the Zamboni is (0 to 1) with `left` seconds of the intermission to go: it starts when the intermission does and
+ * has finished the last lap with 18 seconds left.
  */
 export function resurfaceProgress(left, total = INTERMISSION_MS / 1000) {
-  return Math.min(1, Math.max(0, 1 - (left - FINISH_S) / (total - FINISH_S)));
+  const end = FINISH_S + EXIT_S;
+  return Math.min(1, Math.max(0, 1 - (left - end) / (total - end)));
 }
+/** How far through its drive off the ice (0 to 1): it leaves after the laps and is gone with 10 seconds left. */
+export const exitProgress = (left) => Math.min(1, Math.max(0, (FINISH_S + EXIT_S - left) / EXIT_S));
+/** The way off the ice: from the last lap's end to the gate in the left boards. */
+export const EXIT_PATH = "M45 36L22 42.5H-18";
 /** Where the Zamboni is, which way it faces and how much fresh ice lies behind it, `p` (0..1) of the way along its route between points `a` and `b`. */
 export function zamboniPose(a, b, p) {
   const deg = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;

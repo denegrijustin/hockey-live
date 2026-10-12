@@ -226,13 +226,19 @@ export function CompactGameProjection({ game, before, baseline }: { game: Game; 
   return <div ref={ref} className="compact-projection"><Projection game={game} before={before} baseline={baseline} feed={data} error={error} /></div>;
 }
 
-export function CompactGameFlow({ game, home, away }: { game: Game; home: Team; away: Team }) {
+/** One fetch of the game feed for a small card, shared by everything on the card that draws from it (the flow chart, the ice view, the goal flash). */
+export function useCardFeed(game: Game) {
   const { ref, visible } = useVisible();
+  const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
   const { data } = useFeed<GameFeed>(
-    visible && isLive(game) ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
-    30000,
+    visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
+    isLive(game) ? 30000 : 3600000,
   );
-  return <div ref={ref}>{data?.plays?.length ? <GameFlowChart data={data} home={home} away={away} compact /> : null}</div>;
+  return { ref, data };
+}
+
+export function CompactGameFlow({ data, home, away }: { data: GameFeed | null; home: Team; away: Team }) {
+  return data?.plays?.length ? <GameFlowChart data={data} home={home} away={away} compact /> : null;
 }
 
 function flowTimeLabel(minute: number, gameType: number) {

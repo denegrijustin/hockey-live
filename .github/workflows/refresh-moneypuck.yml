@@ -1,0 +1,54 @@
+name: Refresh saved MoneyPuck data
+# NHL+ reads MoneyPuck data from the Worker (KV) and falls back to this saved copy in public/data/moneypuck. MoneyPuck
+# publishes overnight Eastern time (season files ~06:30 ET); this runs after that, once a day, and only downloads when
+# MoneyPuck's update stamps have changed. Data: MoneyPuck.com (non-commercial use with credit; see README).
+on:
+  schedule:
+    - cron: "40 12 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Download even if MoneyPuck's update stamps have not changed"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: refresh-moneypuck
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download and validate the MoneyPuck files
+        run: node scripts/refresh-moneypuck.mjs ${{ inputs.force && '--force' || '' }}
+      - name: Check the saved data
+        run: node scripts/check-data.mjs
+      - name: Commit the refreshed snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add public/data/moneypuck
+          git diff --cached --quiet && { echo "Nothing new"; exit 0; }
+          git commit -q -m "Refresh MoneyPuck data $(date -u +%F)"
+          git pull --rebase -q origin main
+          git push origin HEAD:main
+      - name: Open an issue when it fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="MoneyPuck data refresh failed"
+          body="Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          n=$(gh issue list --repo "${{ github.repository }}" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$n" ]; then gh issue comment "$n" --repo "${{ github.repository }}" --body "$body"
+          else gh issue create --repo "${{ github.repository }}" --title "$title" --body "$body"; fi

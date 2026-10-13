@@ -22,7 +22,8 @@ export type TeamSit = {
   penF: number | null; penA: number | null; pimF: number | null; pimA: number | null;
   src: { xGoalsPercentage: number | null; corsiPercentage: number | null; fenwickPercentage: number | null };
 };
-export type DangerBlock = { SOG: number | null; xGA: number | null; GA: number | null };
+/** att = unblocked shot attempts faced in that danger band (misses included, as MoneyPuck counts them). */
+export type DangerBlock = { att: number | null; xGA: number | null; GA: number | null };
 export type GoalieSit = {
   gp: number | null; toi: number | null; xGA: number | null; GA: number | null; SOG: number | null;
   xRebounds: number | null; rebounds: number | null; ld: DangerBlock; md: DangerBlock; hd: DangerBlock;

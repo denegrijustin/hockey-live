@@ -8,8 +8,8 @@
 //    never sees a part that is missing. A failed refresh writes only a failure note and the last good snapshot stays.
 //  - Gentle: MoneyPuck's two tiny update-time files are checked first; unchanged data is not downloaded again.
 import {
-  MONEYPUCK, SITUATIONS, buildGames, nhlGameId, normalizeGoalies, normalizeLines, normalizeSkaters, normalizeTeams,
-  parseCsv, parseUpdateStamp, seasonIdOf, sourceUrls, unzipFirst, withMeta, SourceError,
+  MONEYPUCK, SITUATIONS, SHOT_COLUMNS, createGameBuilder, forEachCsvRow, nhlGameId, normalizeGoalies, normalizeLines, normalizeSkaters, normalizeTeams,
+  openZipFirst, parseCsv, parseUpdateStamp, seasonIdOf, sourceUrls, withMeta, SourceError,
 } from "./moneypuck.mjs";
 
 const UA = "Iceboard/1.0 (+https://nhl.elskatemm.com; non-commercial; data credited to MoneyPuck.com)";
@@ -84,7 +84,11 @@ export async function refreshMoneyPuck({ year, teamIds, store, lock, fetchFn = f
     const goalies = normalizeGoalies(parseCsv(goaliesCsv), year, ids);
     const skaters = normalizeSkaters(parseCsv(skatersCsv), year, ids);
     const lines = normalizeLines(parseCsv(linesCsv), year, ids);
-    const { log, shots } = buildGames(parseCsv(await unzipFirst(shotsZip)), year, ids);
+    // The shot file is 124 columns by tens of thousands of rows: stream it and keep only what the game logs need.
+    const builder = createGameBuilder(year, ids, { keepShots: keepShotGames });
+    const { missing } = await forEachCsvRow(openZipFirst(shotsZip), SHOT_COLUMNS, builder.add);
+    if (missing.length) throw new SourceError(`shots.csv: missing columns ${missing.slice(0, 5).join(", ")}`);
+    const { log, shots } = builder.finish();
     const fetchedAt = now().toISOString();
     const meta = { year, fetchedAt, updated, files: { teams: urls.teams, goalies: urls.goalies, skaters: urls.skaters, lines: urls.lines, shots: urls.shots } };
 

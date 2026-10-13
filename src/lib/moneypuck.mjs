@@ -80,8 +80,8 @@ const r = (v, d = 2) => (v == null ? null : Math.round(v * 10 ** d) / 10 ** d);
 
 // ---------- Zip (the shot file is one CSV inside a zip) ----------
 
-/** Reads the first file out of a zip held in memory (deflate or stored). */
-export async function unzipFirst(buffer) {
+/** Opens the first file in a zip held in memory as a stream of bytes (deflate or stored). */
+export function openZipFirst(buffer) {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let eocd = -1;
@@ -91,7 +91,7 @@ export async function unzipFirst(buffer) {
   if (eocd < 0) throw Error("Not a zip file");
   const entries = view.getUint16(eocd + 10, true);
   if (!entries) throw Error("Empty zip file");
-  let p = view.getUint32(eocd + 16, true);
+  const p = view.getUint32(eocd + 16, true);
   if (view.getUint32(p, true) !== 0x02014b50) throw Error("Bad zip directory");
   const method = view.getUint16(p + 10, true);
   const compressed = view.getUint32(p + 20, true);
@@ -99,10 +99,81 @@ export async function unzipFirst(buffer) {
   if (view.getUint32(local, true) !== 0x04034b50) throw Error("Bad zip entry");
   const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
   const data = bytes.subarray(start, start + compressed);
-  if (method === 0) return new TextDecoder().decode(data);
+  const source = new Blob([data]).stream();
+  if (method === 0) return source;
   if (method !== 8) throw Error(`Unsupported zip method ${method}`);
-  const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
-  return new TextDecoder().decode(await new Response(stream).arrayBuffer());
+  return source.pipeThrough(new DecompressionStream("deflate-raw"));
+}
+
+/** Reads the first file out of a zip held in memory, as text. Fine for small files; use forEachCsvRow for big ones. */
+export async function unzipFirst(buffer) {
+  return new TextDecoder().decode(await new Response(openZipFirst(buffer)).arrayBuffer());
+}
+
+/**
+ * Reads a CSV from a byte stream one row at a time, keeping only the wanted columns, so a season's shot file (tens of
+ * megabytes unzipped) never has to be held in memory whole. onRow gets { column: text } for the wanted columns.
+ */
+export async function forEachCsvRow(stream, columns, onRow) {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let carry = "", index = null, header = null;
+  const emit = (line) => {
+    if (line === "") return;
+    const cells = line.includes('"') ? parseCsvLine(line) : line.split(",");
+    if (!header) {
+      header = cells.map((h) => h.trim());
+      index = columns.map((c) => header.indexOf(c));
+      return;
+    }
+    const row = {};
+    for (let k = 0; k < columns.length; k++) row[columns[k]] = index[k] < 0 ? "" : (cells[index[k]] ?? "");
+    onRow(row);
+  };
+  const quotesOdd = (line) => { let n = 0; for (let i = line.indexOf('"'); i >= 0; i = line.indexOf('"', i + 1)) n++; return n % 2 === 1; };
+  const flush = (text, final) => {
+    let start = 0;
+    for (;;) {
+      let nl = text.indexOf("\n", start);
+      if (nl < 0) break;
+      let line = text.slice(start, nl);
+      // A quoted field can contain a line break: keep reading until the quotes balance.
+      while (quotesOdd(line)) {
+        const next = text.indexOf("\n", nl + 1);
+        if (next < 0) return text.slice(start);
+        nl = next; line = text.slice(start, nl);
+      }
+      emit(line.endsWith("\r") ? line.slice(0, -1) : line);
+      start = nl + 1;
+    }
+    const rest = text.slice(start);
+    if (final && rest) { emit(rest.endsWith("\r") ? rest.slice(0, -1) : rest); return ""; }
+    return rest;
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    carry = flush(carry + decoder.decode(value, { stream: true }), false);
+  }
+  flush(carry + decoder.decode(), true);
+  if (!header) throw new SourceError("CSV has no header row");
+  const missing = columns.filter((c, k) => index[k] < 0);
+  return { missing };
+}
+
+function parseCsvLine(line) {
+  const out = [];
+  let field = "", quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quoted) {
+      if (c === '"') { if (line[i + 1] === '"') { field += '"'; i++; } else quoted = false; } else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { out.push(field); field = ""; }
+    else field += c;
+  }
+  out.push(field);
+  return out;
 }
 
 // ---------- Validation ----------
@@ -132,7 +203,7 @@ function requireKnownTeams(rows, teamIds, label, key = "team") {
  * Team season summary: one row per team and situation. Keeps the counts and the times they are measured over so that
  * rates can be built with the right denominator later. toi is seconds, as published.
  */
-export function normalizeTeams(rows, year, teamIds) {
+export function normalizeTeams(rows, year, teamIds, { minTeams = 30 } = {}) {
   requireColumns(rows, ["team", "season", "situation", "games_played", "iceTime", "xGoalsFor", "xGoalsAgainst", "goalsFor", "goalsAgainst", "shotsOnGoalFor", "shotsOnGoalAgainst", "shotAttemptsFor", "shotAttemptsAgainst"], "teams.csv");
   requireSeason(rows, year, "teams.csv");
   requireKnownTeams(rows, teamIds, "teams.csv");
@@ -150,12 +221,13 @@ export function normalizeTeams(rows, year, teamIds) {
     };
   }
   const complete = Object.values(teams).filter((t) => SITUATIONS.every((s) => t[s]));
-  if (complete.length < 30) throw new SourceError(`teams.csv: only ${complete.length} complete teams`);
+  if (complete.length < minTeams) throw new SourceError(`teams.csv: only ${complete.length} complete teams`);
   return teams;
 }
 
 const dangerBlock = (row, prefix) => ({
-  SOG: num(row[`${prefix}DangerShots`]), xGA: num(row[`${prefix}DangerxGoals`]), GA: num(row[`${prefix}DangerGoals`]),
+  // MoneyPuck's danger shot counts are unblocked shot attempts (misses included), not shots on goal.
+  att: num(row[`${prefix}DangerShots`]), xGA: num(row[`${prefix}DangerxGoals`]), GA: num(row[`${prefix}DangerGoals`]),
 });
 
 /** Goalie season summary: one row per goalie and situation, against the shots they faced. */
@@ -185,7 +257,7 @@ export function normalizeGoalies(rows, year, teamIds) {
  * Skater season summary. Three kinds of numbers are kept apart: individual (the player's own shots and points),
  * on-ice (everything that happened for and against the team while the player was out there), and off-ice.
  */
-export function normalizeSkaters(rows, year, teamIds) {
+export function normalizeSkaters(rows, year, teamIds, { minSkaters = 200 } = {}) {
   requireColumns(rows, ["playerId", "name", "team", "season", "position", "situation", "games_played", "icetime", "I_F_goals", "I_F_xGoals", "OnIce_F_xGoals", "OnIce_A_xGoals"], "skaters.csv");
   requireSeason(rows, year, "skaters.csv");
   requireKnownTeams(rows, teamIds, "skaters.csv");
@@ -211,7 +283,7 @@ export function normalizeSkaters(rows, year, teamIds) {
     byKey.set(key, p);
   }
   const skaters = [...byKey.values()].filter((p) => p.sit.all);
-  if (skaters.length < 200) throw new SourceError(`skaters.csv: only ${skaters.length} skaters`);
+  if (skaters.length < minSkaters) throw new SourceError(`skaters.csv: only ${skaters.length} skaters`);
   return skaters.sort((a, b) => (b.sit.all.toi ?? 0) - (a.sit.all.toi ?? 0));
 }
 
@@ -249,21 +321,37 @@ const flip = { all: "all", "5on5": "5on5", "5on4": "4on5", "4on5": "5on4", other
 /** MoneyPuck's game id has no season prefix; the NHL's is the season year in front of it. */
 export const nhlGameId = (year, mpGameId) => Number(year) * 1000000 + Number(mpGameId);
 
+/** The shot-file columns the game logs and chance-flow chart use; everything else in the 124-column file is skipped. */
+export const SHOT_COLUMNS = [
+  "game_id", "season", "isPlayoffGame", "teamCode", "homeTeamCode", "awayTeamCode", "isHomeTeam", "period", "time", "event", "xGoal", "goal",
+  "shotWasOnGoal", "homeSkatersOnIce", "awaySkatersOnIce", "goalieIdForShot", "goalieNameForShot", "shooterPlayerId", "shooterName", "shotType",
+  "xCordAdjusted", "yCordAdjusted", "shotOnEmptyNet",
+];
+
 /**
  * Turns the season's shot file into (a) one compact record per completed game: team and goalie expected goals by
  * situation, and (b) the shots themselves per game for the chance-flow chart. Shootout attempts are not in the file.
  * These are sums of the shot-level xGoal, so they can differ slightly from the season summary files.
+ * Feed rows one at a time with add(); finish() returns { log, shots }.
  */
-export function buildGames(rows, year, teamIds) {
-  requireColumns(rows, ["game_id", "season", "teamCode", "homeTeamCode", "awayTeamCode", "isHomeTeam", "period", "time", "event", "xGoal", "goal", "homeSkatersOnIce", "awaySkatersOnIce"], "shots.csv");
-  requireSeason(rows, year, "shots.csv");
-  requireKnownTeams(rows, teamIds, "shots.csv", "teamCode");
+export function createGameBuilder(year, teamIds, { keepShots = Infinity } = {}) {
   const games = new Map();
-  for (const row of rows) {
+  const kept = new Set(); // games whose individual shots are retained: the newest `keepShots` by game id
+  let seen = 0;
+  const add = (row) => {
+    seen++;
+    if (String(row.season) !== String(year)) throw new SourceError(`shots.csv: season ${row.season} in a ${year} file`);
+    if (!teamIds.has(row.teamCode)) throw new SourceError(`shots.csv: unknown team code ${row.teamCode}`);
     const id = nhlGameId(year, row.game_id);
     let g = games.get(id);
     if (!g) {
-      g = { id, home: row.homeTeamCode, away: row.awayTeamCode, playoff: row.isPlayoffGame === "1" || row.isPlayoffGame === "1.0", periods: 3, teams: {}, goalies: new Map(), shots: [] };
+      g = { id, home: row.homeTeamCode, away: row.awayTeamCode, playoff: row.isPlayoffGame === "1" || row.isPlayoffGame === "1.0", periods: 3, teams: {}, goalies: new Map(), shots: [], count: 0 };
+      kept.add(id);
+      if (kept.size > keepShots) {
+        const oldest = Math.min(...kept);
+        kept.delete(oldest);
+        (oldest === id ? g : games.get(oldest)).shots = null; // memory: only the newest games need their shot lists
+      }
       for (const t of [g.home, g.away]) g.teams[t] = Object.fromEntries(SITUATIONS.map((s) => [s, { xGF: 0, xGA: 0, GF: 0, GA: 0, SOGF: 0, SOGA: 0 }]));
       games.set(id, g);
     }
@@ -291,31 +379,43 @@ export function buildGames(rows, year, teamIds) {
       if (onGoal) gk.SOG++;
       g.goalies.set(goalieId, gk);
     }
-    g.shots.push({
+    g.count++;
+    if (g.shots) g.shots.push({
       t, p: period, team, xg: r(xg, 4), g: goal ? 1 : 0, sog: onGoal ? 1 : 0, sit,
       type: row.shotType || null, x: num(row.xCordAdjusted), y: num(row.yCordAdjusted),
       by: num(row.shooterPlayerId) ? { id: num(row.shooterPlayerId), name: row.shooterName } : null,
       gk: goalieId ? { id: goalieId, name: row.goalieNameForShot } : null,
       en: Number(row.shotOnEmptyNet) === 1 ? 1 : 0,
     });
-  }
-  const log = {}, shots = {};
-  for (const [id, g] of games) {
-    g.shots.sort((a, b) => a.t - b.t);
-    const teams = {};
-    for (const [t, sits] of Object.entries(g.teams)) {
-      teams[t] = Object.fromEntries(Object.entries(sits).map(([s, v]) => [s, { ...v, xGF: r(v.xGF, 3), xGA: r(v.xGA, 3) }]));
+  };
+  const finish = () => {
+    const log = {}, shots = {};
+    for (const [id, g] of games) {
+      g.shots?.sort((a, b) => a.t - b.t);
+      const teams = {};
+      for (const [t, sits] of Object.entries(g.teams)) {
+        teams[t] = Object.fromEntries(Object.entries(sits).map(([s, v]) => [s, { ...v, xGF: r(v.xGF, 3), xGA: r(v.xGA, 3) }]));
+      }
+      log[id] = {
+        id, home: g.home, away: g.away, periods: g.periods, overtime: g.periods > 3,
+        goals: { home: teams[g.home].all.GF, away: teams[g.away].all.GF },
+        shots: g.count, teams,
+        goalies: [...g.goalies.values()].map((k) => ({ ...k, xGA: r(k.xGA, 3) })),
+      };
+      if (g.shots) shots[id] = g.shots;
     }
-    log[id] = {
-      id, home: g.home, away: g.away, periods: g.periods, overtime: g.periods > 3,
-      goals: { home: teams[g.home].all.GF, away: teams[g.away].all.GF },
-      shots: g.shots.length, teams,
-      goalies: [...g.goalies.values()].map((k) => ({ ...k, xGA: r(k.xGA, 3) })),
-    };
-    shots[id] = g.shots;
-  }
-  if (!Object.keys(log).length) throw new SourceError("shots.csv: no games");
-  return { log, shots };
+    if (!Object.keys(log).length) throw new SourceError("shots.csv: no games");
+    return { log, shots, rows: seen };
+  };
+  return { add, finish };
+}
+
+/** Same as the builder, for rows already in memory (tests and small files). */
+export function buildGames(rows, year, teamIds) {
+  requireColumns(rows, ["game_id", "season", "teamCode", "homeTeamCode", "awayTeamCode", "isHomeTeam", "period", "time", "event", "xGoal", "goal", "homeSkatersOnIce", "awaySkatersOnIce"], "shots.csv");
+  const builder = createGameBuilder(year, teamIds);
+  for (const row of rows) builder.add(row);
+  return builder.finish();
 }
 
 /** The timestamp MoneyPuck publishes next to a download, e.g. "2026-10-13 06:31:35.562837-04:00", as ISO UTC. */

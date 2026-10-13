@@ -32,6 +32,28 @@ const teams = read("teams.json");
 if (teams && !(Array.isArray(teams) ? teams.length : Object.keys(teams.teams ?? teams).length)) problems.push("teams.json is empty");
 for (const f of ["imperialism/cells.json", "imperialism/land.json"]) read(f);
 
+// MoneyPuck (NHL+): the saved snapshot for the current season must be whole and attributed. Missing is only a warning
+// (the Worker serves live data); a present-but-broken snapshot is an error because the app falls back to it.
+if (manifest?.current) {
+  const base = `moneypuck/${manifest.current}`;
+  if (!existsSync(new URL(`${base}/status.json`, dir))) warn(`no saved MoneyPuck snapshot for ${manifest.current}`);
+  else {
+    const parts = { summary: read(`${base}/summary.json`), skaters: read(`${base}/skaters.json`), lines: read(`${base}/lines.json`), games: read(`${base}/games.json`) };
+    for (const [name, part] of Object.entries(parts)) {
+      if (!part) continue;
+      if (part.source !== "MoneyPuck.com" || part.seasonId !== manifest.current) problems.push(`${base}/${name}.json is not a ${manifest.current} MoneyPuck snapshot`);
+      if (!part.sourceUpdated?.summary && !part.sourceUpdated?.shots) problems.push(`${base}/${name}.json has no MoneyPuck update stamp`);
+    }
+    if (parts.summary && Object.keys(parts.summary.teams ?? {}).length < 30) problems.push(`${base}/summary.json has fewer than 30 teams`);
+    if (parts.summary && !(parts.summary.goalies?.length)) problems.push(`${base}/summary.json has no goalies`);
+    if (parts.skaters && !(parts.skaters.skaters?.length)) problems.push(`${base}/skaters.json has no skaters`);
+    if (parts.games && !Object.keys(parts.games.games ?? {}).length) warn(`${base}/games.json has no games yet`);
+    const stamp = parts.summary?.sourceUpdated?.summary;
+    const days = stamp ? (Date.now() - Date.parse(stamp)) / 864e5 : null;
+    if (days != null && days > 3) warn(`the saved MoneyPuck snapshot is ${Math.round(days)} days old`);
+  }
+}
+
 if (problems.length) {
   for (const p of problems) console.log(`::error title=Data check::${p}`);
   process.exit(1);

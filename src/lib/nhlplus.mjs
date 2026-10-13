@@ -73,8 +73,9 @@ export function goalieMetrics(row) {
     svPct: svPct(row.GA, row.SOG),
     xSvPct: svPct(row.xGA, row.SOG),
     xGAPer60: per60(row.xGA, row.toi), GAPer60: per60(row.GA, row.toi), SOGPer60: per60(row.SOG, row.toi),
-    hdSvPct: row.hd ? svPct(row.hd.GA, row.hd.SOG) : null,
-    hdSOG: row.hd ? fin(row.hd.SOG) : null,
+    // High-danger band (unblocked attempts worth >= 20% each): attempts faced, expected goals, goals allowed, saved above expected.
+    hdAtt: row.hd ? fin(row.hd.att) : null, hdxGA: row.hd ? fin(row.hd.xGA) : null, hdGA: row.hd ? fin(row.hd.GA) : null,
+    hdGsax: row.hd ? gsax(row.hd.xGA, row.hd.GA) : null,
   };
 }
 

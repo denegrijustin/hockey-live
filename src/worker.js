@@ -13,6 +13,8 @@ import {
   value,
 } from "./lib/normalize.mjs";
 import { normalizeLeagueMatchups } from "./lib/matchup-data.mjs";
+import { refreshMoneyPuck, keyOf as mpKey } from "./lib/moneypuck-refresh.mjs";
+import { seasonYear } from "./lib/moneypuck.mjs";
 const API = "https://api-web.nhle.com/v1";
 const STATS_API = "https://api.nhle.com/stats/rest/en";
 const ids = new Set(teams.map((t) => t.id));
@@ -85,6 +87,55 @@ async function refreshSeason(season, env) {
   if (data.games.length < 100) throw Error("Incomplete NHL season");
   await env.TEAM_STATS.put(`dashboard-season-${season}`, JSON.stringify(data));
   return data;
+}
+// ---- MoneyPuck (NHL+) ----
+// One KV key per published part (mp1:<year>:<part>). Reads fall back to the saved copy in /data/moneypuck/. Refreshes are
+// bounded and validated in moneypuck-refresh.mjs; the last good snapshot survives any failed refresh.
+const MP_PARTS = new Set(["summary", "skaters", "lines", "games", "status"]);
+const MP_LOCK = "mp1:lock";
+const MP_LOCK_SECONDS = 120;
+const MP_MANUAL_MIN_GAP_MS = 60000;
+const mpStore = (env) => ({
+  get: (key) => env.TEAM_STATS.get(key, { type: "json" }),
+  put: (key, value) =>
+    env.TEAM_STATS.put(key, JSON.stringify(value), /:shots:/.test(key) ? { expirationTtl: 60 * 86400 } : undefined),
+});
+// KV has no compare-and-set, so this is a best-effort lock: this isolate's task map plus a short-lived KV marker.
+const mpLock = (env) => ({
+  async acquire() {
+    const held = await env.TEAM_STATS.get(MP_LOCK);
+    if (held && Date.now() - Number(held) < MP_LOCK_SECONDS * 1000) return false;
+    await env.TEAM_STATS.put(MP_LOCK, String(Date.now()), { expirationTtl: MP_LOCK_SECONDS });
+    return true;
+  },
+  async release() {
+    await env.TEAM_STATS.delete(MP_LOCK);
+  },
+});
+let mpRunning = null;
+function runMoneyPuck(env, seasonId, { force = false } = {}) {
+  // Overlapping calls in this isolate share the refresh that is already running; the KV lock covers other isolates.
+  if (mpRunning) return mpRunning.then(() => ({ ok: true, skipped: "A refresh is already running" }));
+  mpRunning = refreshMoneyPuck({
+    year: seasonYear(seasonId),
+    teamIds: teams.map((t) => t.id),
+    store: mpStore(env),
+    lock: mpLock(env),
+    force,
+  }).finally(() => {
+    mpRunning = null;
+  });
+  return mpRunning;
+}
+async function moneyPuckPart(env, request, seasonId, part) {
+  const key = mpKey(seasonYear(seasonId), part);
+  const stored = await env.TEAM_STATS.get(key, { type: "json" });
+  if (stored) return { data: stored, from: "kv" };
+  const path = part.startsWith("shots:")
+    ? `/data/moneypuck/${seasonId}/shots/${part.slice(6)}.json`
+    : `/data/moneypuck/${seasonId}/${part}.json`;
+  const data = await staticData(env, request, path);
+  return data ? { data, from: "saved" } : null;
 }
 function background(key, fn, ctx) {
   if (!tasks.has(key)) {
@@ -177,6 +228,31 @@ export default {
           if (fallback) return json({ ...fallback, stale: true }, 200, 60);
           throw error;
         }
+      }
+
+      if ((match = url.pathname.match(/^\/api\/moneypuck\/(20\d{6})\/(summary|skaters|lines|games|status|shots\/\d{10})$/))) {
+        const seasonId = Number(match[1]),
+          part = match[2].replace("/", ":"),
+          manifest = await staticData(env, request, "/data/manifest.json");
+        if (!manifest?.seasons.includes(seasonId)) return json({ error: "Season not supported" }, 400);
+        if (part === "status" && url.searchParams.get("refresh") === "1" && seasonId === manifest.current) {
+          // Manual refresh: bounded to one per minute, skipped while another refresh runs, and cheap when MoneyPuck has not
+          // published anything new (it checks the two update-time files first).
+          const status = await env.TEAM_STATS.get(mpKey(seasonYear(seasonId), "status"), { type: "json" });
+          if (status?.lastCheckedAt && Date.now() - Date.parse(status.lastCheckedAt) < MP_MANUAL_MIN_GAP_MS)
+            return json({ ...status, refresh: "recent" }, 200, 0);
+          const result = await runMoneyPuck(env, seasonId);
+          return json({ ...(result.status ?? {}), refresh: result.skipped ? "running" : result.ok ? (result.changed ? "updated" : "unchanged") : "failed", error: result.ok ? null : result.error }, 200, 0);
+        }
+        const found = await moneyPuckPart(env, request, seasonId, part);
+        if (!found) return json({ error: "MoneyPuck data has not been published for this season yet" }, 404, 30);
+        // Quietly keep the current season fresh: if the last check is more than six hours old, check again in the background.
+        if (seasonId === manifest.current && part === "summary") {
+          const status = await env.TEAM_STATS.get(mpKey(seasonYear(seasonId), "status"), { type: "json" });
+          if (!status?.lastCheckedAt || Date.now() - Date.parse(status.lastCheckedAt) > 6 * 3600000)
+            background("moneypuck", () => runMoneyPuck(env, seasonId), ctx);
+        }
+        return Response.json(found.data, { headers: { "Cache-Control": "public, max-age=300", "X-Snapshot-Source": found.from, "X-Content-Type-Options": "nosniff" } });
       }
 
       if ((match = url.pathname.match(/^\/api\/espn\/(20\d{6})$/))) {
@@ -318,6 +394,11 @@ export default {
       new Request("https://assets.local/data/manifest.json"),
     );
     const manifest = await r.json();
+    // MoneyPuck publishes overnight (US Eastern): check late morning and again mid-afternoon UTC; unchanged data costs two tiny requests.
+    if (event.cron === "30 11 * * *" || event.cron === "30 15 * * *") {
+      ctx.waitUntil(runMoneyPuck(env, manifest.current).then((result) => { if (!result.ok) console.error("MoneyPuck refresh failed", result.error); }));
+      return;
+    }
     ctx.waitUntil(
       Promise.allSettled([
         refreshSeason(manifest.current, env),

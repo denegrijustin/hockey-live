@@ -37,6 +37,8 @@ test("a game in intermission shows the feed's countdown and the Zamboni on its c
   expect(await int.locator(".int-zbody").evaluate((e) => getComputedStyle(e).fill)).toBe(`rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`);
   // The card header says so too.
   await expect(card.locator(".game-date")).toContainText("Intermission");
+  // The Zamboni rink is the only rink on the card: no second shot-map rink while the ice is being resurfaced.
+  await expect(card.locator(".ice-view")).toHaveCount(0);
 });
 
 test("the countdown runs down between polls", async ({ page }) => {

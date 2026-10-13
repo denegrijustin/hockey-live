@@ -68,3 +68,18 @@ test("live games lead the board and completed-today games sit below unfinished g
     return Boolean(grid && finished && (grid.compareDocumentPosition(finished) & Node.DOCUMENT_POSITION_FOLLOWING));
   })).toBe(true);
 });
+
+test("desktop board puts four cards across, so eight games show at once", async ({ page, isMobile }) => {
+  test.skip(!!isMobile, "desktop layout");
+  const today = new Date().toLocaleDateString("en-CA");
+  const teams = ["EDM", "CHI", "MIN", "BOS", "SJS", "LAK", "NJD", "DET", "FLA", "CBJ", "BUF", "MTL"];
+  const games = Array.from({ length: 8 }, (_, i) => ({ season: 20262027, type: 2, date: today, scheduleState: "OK", venue: "Test Arena", broadcasts: ["ESPN (US)"], round: null, end: "REG", id: 2026020700 + i, start: `${today}T${String(17 + (i % 4)).padStart(2, "0")}:00:00Z`, state: "FUT", home: "EDM", away: teams[i + 1], homeScore: null, awayScore: null }));
+  await page.route("**/api/season/20262027", route => route.fulfill({ json: { season: 20262027, updatedAt: new Date().toISOString(), source: "test", games } }));
+  await page.route("**/api/live", route => route.fulfill({ json: { date: today, updatedAt: new Date().toISOString(), games: [] } }));
+  await page.goto("/");
+  const cards = page.locator(".results-line + .game-grid > .game-card");
+  await expect(cards).toHaveCount(8);
+  const tops = await cards.evaluateAll(nodes => nodes.map(n => Math.round(n.getBoundingClientRect().top)));
+  const rows = new Set(tops);
+  expect(rows.size, "two rows of four").toBe(2);
+});

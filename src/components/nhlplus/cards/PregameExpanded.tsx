@@ -21,7 +21,7 @@ export function PregameExpanded({ game, away, home, summary, games, hideButton =
   return (
     <section className="nhlp-expanded" aria-label="Season profile detail" data-testid="nhlp-expanded">
       <header>
-        <span className="nhlp-title">Season profile<em> · {seasonLabel(game.season)}, before this game</em></span>
+        <span className="nhlp-title">Season profile<em> · {seasonLabel(game.season)} season</em></span>
         {!hideButton && <NhlPlusButton game={game} away={away} home={home} before={beforeOpen} className="nhlp-btn-lg" />}
       </header>
       {!data || !p ? <DataStatus state={summary.state} updated={null} what="Season profile" onRetry={summary.retry} /> : <>

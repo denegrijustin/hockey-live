@@ -18,8 +18,8 @@ export function PregameStrip({ game, away, home, summary }: { game: Game; away: 
   const row = (key: string, label: string, a: string, b: string, win: "a" | "b" | null, subA?: string, subB?: string, title?: string) => (
     <div className="nhlp-row" key={key} data-row={key} title={title}>
       <span className="nhlp-label">{label}</span>
-      <span className="nhlp-val" data-lead={win === "a"}><b>{a}</b>{subA && <small>{subA}</small>}</span>
-      <span className="nhlp-val" data-lead={win === "b"}><b>{b}</b>{subB && <small>{subB}</small>}</span>
+      <span className="nhlp-val" data-team={away.id} data-lead={win === "a"}><b>{a}</b>{subA && <small>{subA}</small>}</span>
+      <span className="nhlp-val" data-team={home.id} data-lead={win === "b"}><b>{b}</b>{subB && <small>{subB}</small>}</span>
     </div>
   );
   return (

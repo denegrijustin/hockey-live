@@ -14,6 +14,8 @@ export function ShotMap({ shots, away, home, playoff }: { shots: Shot[]; away: T
   const mapped = useMemo(() => shots.filter((s) => s.x != null && s.y != null && s.x >= 0 && (only === "both" || s.team === only)), [shots, only]);
   const hidden = shots.filter((s) => s.x == null || s.y == null || s.x < 0).length;
   const tips = useMarkerTips(mapped.length);
+  // big chances first, small ones on top, goals last: every dot stays reachable
+  const order = useMemo(() => mapped.map((_, i) => i).sort((a, b) => (mapped[a].g - mapped[b].g) || (mapped[b].xg - mapped[a].xg)), [mapped]);
   const shot = tips.shown != null ? mapped[tips.shown] : null;
   const colorOf = (id: string) => (id === home.id ? colors.home : colors.away);
   const radius = (xg: number) => 1.3 + 6 * Math.sqrt(Math.max(0, xg));
@@ -38,12 +40,12 @@ export function ShotMap({ shots, away, home, playoff }: { shots: Shot[]; away: T
             <text x="3" y="-36" className="rink-note">Center ice</text>
             <text x="97" y="40" textAnchor="end" className="rink-note">Net</text>
           </g>
-          {mapped.map((s, i) => (
+          {order.map((i) => { const s = mapped[i]; return (
             <g key={i} role="button" aria-label={label(s)} className={`map-shot${s.g ? " goal" : ""}${tips.shown === i ? " is-on" : ""}`} data-goal={s.g} data-team={s.team} data-testid="map-shot" {...tips.props(i)}>
-              <circle className="hit" cx={s.x!} cy={-s.y!} r={Math.max(4, radius(s.xg))} />
+              <circle className="hit" cx={s.x!} cy={-s.y!} r={radius(s.xg) + 0.8} />
               <circle className="dot" cx={s.x!} cy={-s.y!} r={radius(s.xg)} fill={colorOf(s.team)} stroke={s.g ? "#fff" : "none"} strokeWidth={s.g ? 1.2 : 0} fillOpacity={s.g ? 1 : 0.55} />
             </g>
-          ))}
+          ); })}
         </svg>
         {shot && <div className="nhlp-pop" role="tooltip" style={{ left: `${((shot.x! + 2) / 104) * 100}%`, top: `${((-shot.y! + 46) / 92) * 100}%`, transform: `translate(${shot.x! > 50 ? "-100%" : "0"}, ${-shot.y! > 0 ? "-110%" : "10px"})` }}>
           <b>{shot.g ? "Goal" : shot.sog ? "Shot on goal" : "Unblocked miss"} · {shot.team} · {clockLabel(shot.t, playoff)}</b>

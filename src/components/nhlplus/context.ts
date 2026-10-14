@@ -1,5 +1,5 @@
 import type { Game } from "../../types";
-import type { MpResult } from "../../lib/moneypuck-client";
+import type { MpResult, useMoneyPuckRefresh } from "../../lib/moneypuck-client";
 import type { GamesPart, LinesPart, SkatersPart, SummaryPart } from "../../lib/moneypuck-types";
 import type { NpState, SetState } from "./state";
 
@@ -9,4 +9,5 @@ export type Ctx = {
   summary: MpResult<SummaryPart>; skaters: MpResult<SkatersPart>; lines: MpResult<LinesPart>; games: MpResult<GamesPart>;
   appGames: Game[];
   toggleTeam: (team: string) => void;
+  refresh: ReturnType<typeof useMoneyPuckRefresh>;
 };

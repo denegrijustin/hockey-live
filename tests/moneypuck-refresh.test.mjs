@@ -137,3 +137,13 @@ test("only the newest games keep their shot files", async () => {
   assert.equal(store.m.get("mp1:2026:games").through, 2026020005);
   assert.equal(Object.keys(store.m.get("mp1:2026:games").games).length, 5);
 });
+
+test("if the update-time files cannot be read, it still refreshes and leaves the stamps empty", async () => {
+  const store = memoryStore();
+  const src = fakeSource({ fail: { [u.summaryUpdated]: 404, [u.shotsUpdated]: 404 } });
+  const r = await run({ store, fetchFn: src.fetchFn });
+  assert.equal(r.ok, true);
+  assert.deepEqual(store.m.get("mp1:2026:summary").sourceUpdated, { summary: null, shots: null });
+  const again = await run({ store, fetchFn: src.fetchFn });
+  assert.equal(again.changed, true, "without stamps there is no way to know nothing changed");
+});

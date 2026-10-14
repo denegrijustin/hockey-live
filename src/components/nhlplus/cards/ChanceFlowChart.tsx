@@ -32,8 +32,8 @@ export function ChanceFlowChart({ shots, away, home, playoff, periods = 3, throu
   const filled = useMemo(() => chanceFlow(shots, home.id, away.id, { sit, through: upTo }), [shots, home.id, away.id, sit, upTo]);
   const maxFull = Math.max(...full.map((p) => Math.max(p.home, p.away)), 0);
   const top = niceMax(maxFull);
-  const H = compact ? 150 : 190;
-  const x0 = 30, x1 = W - 8, yTop = 18, yBottom = H - (compact ? 30 : 46), lane = yBottom + 12;
+  const H = compact ? 170 : 205;
+  const x0 = 30, x1 = W - 8, yTop = 18, yBottom = H - 50, lane = yBottom + 9;
   const X = (t: number) => x0 + (t / end) * (x1 - x0);
   const Y = (v: number) => yBottom - (v / top) * (yBottom - yTop);
   const path = (key: "home" | "away") => {
@@ -46,13 +46,15 @@ export function ChanceFlowChart({ shots, away, home, playoff, periods = 3, throu
   const items: Item[] = useMemo(() => {
     const out: Item[] = [];
     for (const p of filled.slice(1)) {
-      const s = p.shot as Shot;
+      const s = (p as unknown as { shot: Shot }).shot;
       out.push({ kind: s.g ? "goal" : "shot", t: s.t, team: s.team, y: s.team === home.id ? p.home : p.away, shot: s });
     }
     for (const p of penalties) out.push({ kind: "penalty", t: p.t, team: p.team!, player: p.player, text: p.text, minutes: p.minutes });
     return out.sort((a, b) => a.t - b.t);
   }, [filled, penalties, home.id]);
   const tips = useMarkerTips(items.length);
+  // paint plain shots first so goals and penalties sit on top and stay reachable
+  const order = useMemo(() => items.map((_, i) => i).sort((a, b) => (items[a].kind === "shot" ? 0 : 1) - (items[b].kind === "shot" ? 0 : 1) || a - b), [items]);
   const name = (id: string) => (id === home.id ? home : away);
   const colorOf = (id: string) => (id === home.id ? colors.home : colors.away);
   const describe = (it: Item) => {
@@ -90,15 +92,16 @@ export function ChanceFlowChart({ shots, away, home, playoff, periods = 3, throu
           {[0, top / 2, top].map((v) => <g key={v} className="flow-grid"><line x1={x0} x2={x1} y1={Y(v)} y2={Y(v)} /><text x={x0 - 4} y={Y(v) + 3} textAnchor="end">{Number.isInteger(v) ? v : v.toFixed(1)}</text></g>)}
           {layout.spans.map((s) => <text key={s.period} className="flow-period" x={(X(s.start) + X(s.end)) / 2} y={11} textAnchor="middle" data-period={s.label}>{s.label}</text>)}
           {layout.boundaries.map((t) => <line key={t} className="flow-boundary" x1={X(t)} x2={X(t)} y1={yTop - 4} y2={yBottom} data-t={t} data-testid="flow-boundary" />)}
-          {layout.ticks.map((tk) => <g key={tk.t} className="flow-tick" data-t={tk.t} data-testid="flow-tick"><line x1={X(tk.t)} x2={X(tk.t)} y1={yBottom} y2={yBottom + 3} /><text x={X(tk.t)} y={yBottom + (compact ? 13 : 13)} textAnchor="middle">{tk.label}</text></g>)}
-          <text className="flow-axis-label" x={(x0 + x1) / 2} y={yBottom + 25} textAnchor="middle">Game minute</text>
+          {layout.ticks.map((tk) => <g key={tk.t} className="flow-tick" data-t={tk.t} data-testid="flow-tick"><line x1={X(tk.t)} x2={X(tk.t)} y1={yBottom} y2={yBottom + 16} /><text x={X(tk.t)} y={yBottom + 22} textAnchor="middle">{tk.label}</text></g>)}
+          <text className="flow-axis-label" x={(x0 + x1) / 2} y={yBottom + 34} textAnchor="middle">Game minute</text>
           <path className="flow-line" d={path("away")} stroke={colors.away} data-team={away.id} data-xg={finalAway} data-testid="flow-line-away" />
           <path className="flow-line dashed" d={path("home")} stroke={colors.home} data-team={home.id} data-xg={finalHome} data-testid="flow-line-home" />
-          {items.map((it, i) => {
+          {order.map((i) => {
+            const it = items[i];
             const cx = X(it.t), cy = it.kind === "penalty" ? lane : Y(it.y), col = colorOf(it.team);
             return (
               <g key={i} role="button" aria-label={aria(it)} className={`flow-marker ${it.kind}${tips.shown === i ? " is-on" : ""}`} data-kind={it.kind} data-team={it.team} data-t={it.t} data-testid={`marker-${it.kind}`} {...tips.props(i)}>
-                <circle className="hit" cx={cx} cy={cy} r={8} />
+                <circle className="hit" cx={cx} cy={cy} r={it.kind === "shot" ? 4.5 : 7} />
                 {it.kind === "penalty"
                   ? <polygon points={`${cx},${cy - 4.5} ${cx + 4.5},${cy + 3.5} ${cx - 4.5},${cy + 3.5}`} fill={col} />
                   : <circle className="dot" cx={cx} cy={cy} r={it.kind === "goal" ? 4.6 : 2.2} fill={col} />}

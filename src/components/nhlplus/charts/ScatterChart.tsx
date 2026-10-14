@@ -9,7 +9,7 @@ export type ScatterPoint = { key: string; x: number | null; y: number | null; im
  * Hover, tap, or keyboard (focus the plot, arrow keys step through points, Enter toggles the highlight) opens a panel
  * with the exact values. Highlighted points stay full colour and the rest dim.
  */
-export function ScatterChart({ points, xLabel, yLabel, xFmt, yFmt, invertY = false, avgX, avgY, avgXText, avgYText, highlight, onToggle, ariaLabel, xBetterNote, yBetterNote }: {
+export function ScatterChart({ points, xLabel, yLabel, xFmt, yFmt, invertY = false, avgX, avgY, avgXText, avgYText, highlight, onToggle, ariaLabel, xBetterNote, yBetterNote, dimOthers = true }: { dimOthers?: boolean;
   points: ScatterPoint[]; xLabel: string; yLabel: string; xFmt: (v: number) => string; yFmt: (v: number) => string; invertY?: boolean;
   avgX?: number | null; avgY?: number | null; avgXText?: string; avgYText?: string; highlight: string[]; onToggle: (key: string) => void; ariaLabel: string; xBetterNote?: string; yBetterNote?: string;
 }) {
@@ -19,14 +19,14 @@ export function ScatterChart({ points, xLabel, yLabel, xFmt, yFmt, invertY = fal
   const order = useMemo(() => [...shown].sort((a, b) => a.x! - b.x! || a.y! - b.y!), [shown]);
   const small = width < 520;
   const m = { l: small ? 44 : 56, r: 12, t: 12, b: 46 };
-  const height = Math.round(Math.max(300, Math.min(520, width * (small ? 1.05 : 0.62))));
+  const height = Math.round(Math.max(300, Math.min(640, width * (small ? 1.05 : 0.95))));
   const xe = paddedExtent([...shown.map((p) => p.x), avgX ?? null], 0.1), ye = paddedExtent([...shown.map((p) => p.y), avgY ?? null], 0.1);
   if (!xe || !ye) return <div className="np-empty" role="status">No teams meet the current filters.</div>;
   const xs = linearScale(xe[0], xe[1], m.l, width - m.r);
   const ys = invertY ? linearScale(ye[0], ye[1], m.t, height - m.b) : linearScale(ye[0], ye[1], height - m.b, m.t);
   const xt = niceTicks(xe[0], xe[1], small ? 4 : 6), yt = niceTicks(ye[0], ye[1], small ? 5 : 7);
   const size = small ? 20 : 26;
-  const dim = highlight.length > 0;
+  const dim = dimOthers && highlight.length > 0;
   const cur = shown.find((p) => p.key === active) ?? null;
   const step = (d: number) => {
     if (!order.length) return;

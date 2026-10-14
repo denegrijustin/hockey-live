@@ -65,12 +65,12 @@ export async function refreshMoneyPuck({ year, teamIds, store, lock, fetchFn = f
   const previous = (await store.get(statusKey)) ?? {};
   if (lock && !(await lock.acquire())) return { ok: true, skipped: "A refresh is already running", status: previous };
   try {
-    const [summaryStamp, shotsStamp] = await Promise.all([
-      download(urls.summaryUpdated, { fetchFn, attempts: 2, timeoutMs: 8000 }).then(parseUpdateStamp),
-      download(urls.shotsUpdated, { fetchFn, attempts: 2, timeoutMs: 8000 }).then(parseUpdateStamp),
-    ]);
+    // The two update-time files are the ones MoneyPuck's own download page reads. If they cannot be read, carry on without
+    // change detection and leave the stamps empty (the app then shows "update time unknown", never an invented one).
+    const stamp = (url) => download(url, { fetchFn, attempts: 2, timeoutMs: 8000 }).then(parseUpdateStamp).catch(() => null);
+    const [summaryStamp, shotsStamp] = await Promise.all([stamp(urls.summaryUpdated), stamp(urls.shotsUpdated)]);
     const updated = { summary: summaryStamp, shots: shotsStamp };
-    if (onlyIfChanged && !force && previous.ok && previous.sourceUpdated?.summary === summaryStamp && previous.sourceUpdated?.shots === shotsStamp) {
+    if (onlyIfChanged && !force && previous.ok && summaryStamp && shotsStamp && previous.sourceUpdated?.summary === summaryStamp && previous.sourceUpdated?.shots === shotsStamp) {
       const status = { ...previous, lastCheckedAt: startedAt, lastError: null };
       await store.put(statusKey, status);
       return { ok: true, changed: false, status };

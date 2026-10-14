@@ -61,10 +61,10 @@ export function TeamSelect({ value, onChange, label, all = false, allLabel = "Al
 }
 
 /** A sortable column header: the whole label is one button, and aria-sort tells assistive tech the state. */
-export function SortTh({ col, label, tip, sort, onSort, className = "", title, firstDir = "desc" }: { col: string; label: string; tip?: string; sort: Sort; onSort: (key: string, firstDir: "asc" | "desc") => void; className?: string; title?: string; firstDir?: "asc" | "desc" }) {
+export function SortTh({ col, label, tip, sort, onSort, className = "", title, firstDir = "desc", rowSpan }: { rowSpan?: number; col: string; label: string; tip?: string; sort: Sort; onSort: (key: string, firstDir: "asc" | "desc") => void; className?: string; title?: string; firstDir?: "asc" | "desc" }) {
   const active = sort.key === col;
   return (
-    <th scope="col" className={`np-th ${className}`.trim()} aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"} title={title}>
+    <th scope="col" rowSpan={rowSpan} className={`np-th ${className}`.trim()} aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"} title={title}>
       <span className="np-th-in">
         <button type="button" className="np-sortbtn" onClick={() => onSort(col, firstDir)}>{label}<i aria-hidden="true">{active ? (sort.dir === "asc" ? "▲" : "▼") : ""}</i></button>
         {tip && <MetricTip id={tip} />}

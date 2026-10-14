@@ -4,6 +4,7 @@ import { useGameLists } from "./hooks/useGameLists";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { NHLPLUS_EVENT } from "./lib/nhlplus-nav";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
@@ -31,6 +32,9 @@ const PlayoffOdds = lazy(() =>
 );
 const ImperialismMap = lazy(() =>
   import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
+);
+const NhlPlus = lazy(() =>
+  import("./components/nhlplus/NhlPlus").then((m) => ({ default: m.NhlPlus })),
 );
 const teams: Team[] = rawTeams;
 const defaults = ["EDM", "CHI", "MIN"];
@@ -108,6 +112,11 @@ export default function App() {
     () => setLimit(18),
     [season, selected, type, period, range, query, sort],
   );
+  useEffect(() => {
+    const open = () => setView("nhlplus");
+    window.addEventListener(NHLPLUS_EVENT, open);
+    return () => window.removeEventListener(NHLPLUS_EVENT, open);
+  }, []);
   const changeTeams = (ids: string[]) => {
     setSelected(ids);
     try {
@@ -187,6 +196,7 @@ export default function App() {
           <nav className="view-tabs" aria-label="Dashboard views">
             {[
               ["games", "Game center"],
+              ["nhlplus", "NHL+"],
               ["trends", "Team trends"],
               ["edge", "NHL EDGE"],
               ["players", "Players"],
@@ -251,6 +261,11 @@ export default function App() {
               <p className="sr-only" role="status" aria-live="polite">
                 {scoreboard.games.filter(isLive).length} games in progress around the league
               </p>
+            )}
+            {view === "nhlplus" && (
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL+…</div>}>
+                <NhlPlus games={data.games} season={season} teams={teams} />
+              </Suspense></ErrorBoundary>
             )}
             {view === "edge" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL EDGE…</div>}>

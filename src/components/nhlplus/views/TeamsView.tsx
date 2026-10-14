@@ -38,7 +38,7 @@ export function TeamsView({ ctx }: { ctx: Ctx }) {
   const avg = useMemo(() => ({ xGF60: leagueAverage(all, "xGF60"), xGA60: leagueAverage(all, "xGA60") }), [all]);
   const def = metricDef(s.teamMetric);
   const metricAvg = useMemo(() => leagueAverage(all, def.key), [all, def.key]);
-  const ranks = useMemo(() => rankBy(all, "xGPct"), [all]);
+  const ranks = useMemo(() => rankBy(all, "xGPct") as Record<string, number | null>, [all]);
   const sorted = useMemo(
     () => sortRows(rows, s.teamSort.key, s.teamSort.dir, (r: Row, k) => (k === "team" ? teamName(r.team) : r[k])),
     [rows, s.teamSort],

@@ -55,7 +55,12 @@ export function playSeconds(play, playoff = false) {
   return start + m * 60 + s;
 }
 
-/** Penalty markers from the NHL feed: [{ t, team, player, text, minutes }]. */
+/**
+ * Penalty markers from the NHL feed.
+ * @param {any[] | undefined} plays
+ * @param {boolean} [playoff]
+ * @returns {{ t: number, team: string, player: string | null, text: string, minutes: number | null }[]}
+ */
 export function penaltyMarkers(plays, playoff = false) {
   return (plays ?? []).filter((p) => p.type === "penalty").map((p) => ({
     t: playSeconds(p, playoff), team: p.team, player: p.player ?? null, text: p.penalty ?? "Penalty", minutes: p.duration ?? null,
@@ -123,7 +128,12 @@ export function gameSummary(gameLog, away, home) {
 }
 
 // ---------- Lines ----------
-/** Top 5-on-5 lines/pairings for a team with a minimum time on ice (seconds), names from the skaters part. */
+/**
+ * Top 5-on-5 lines/pairings for a team with a minimum time on ice (seconds), names from the skaters part.
+ * @param {any} linesPart @param {any} skatersPart @param {string} team @param {{ minToi?: number, limit?: number }} [opts]
+ * @returns {{ lines: LineRow[], pairings: LineRow[] }}
+ * @typedef {{ id: string, type: string, label: string, players: { id: number, name: string | null }[], metrics: { toi: number | null, xGPct: number | null } }} LineRow
+ */
 export function topLines(linesPart, skatersPart, team, { minToi = 300, limit = 3 } = {}) {
   const names = new Map((skatersPart?.skaters ?? []).map((s) => [s.id, s.name]));
   const rows = (linesPart?.lines ?? []).filter((l) => l.team === team && isNum(l.toi) && l.toi >= minToi);

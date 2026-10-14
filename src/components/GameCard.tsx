@@ -8,6 +8,7 @@ import { GoalFlash, useGoalFlash } from "./GoalFlash";
 import { NetworkLogos } from "./NetworkLogos";
 import { GoalieComparison } from "./TeamComparison";
 import { IntermissionRink } from "./IntermissionRink";
+import { CardExpanded, CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -29,6 +30,7 @@ export const GameCard = memo(function GameCard({
   const cardRef = useRef<HTMLElement>(null);
   const { ref: feedRef, data: feed } = useCardFeed(game);
   const goal = useGoalFlash(game);
+  const nhl = useCardNhlPlus(game, cardRef, expanded);
   const home = teams.find((team) => team.id === game.home)!;
   const away = teams.find((team) => team.id === game.away)!;
   const ranks = useMemo(() => teamRanks(before, teams), [before, teams]);
@@ -108,10 +110,12 @@ export const GameCard = memo(function GameCard({
         {(live || past) && <IceView data={feed} home={home} away={away} />}
         {live && <CompactGameFlow data={feed} home={home} away={away} />}
       </div>
+      <CardStrip game={game} away={away} home={home} nhl={nhl} expanded={expanded} />
       <GoalFlash flash={goal} game={game} away={away} home={home} feed={feed} />
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">
         <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>
+        <CardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} />
         <div className="why-watch"><span>WHY IT MATTERS</span><p>{importanceSummary}</p></div>
         <CompactGameProjection game={game} before={before} baseline={baseline} />
         <GoalieComparison game={game} away={away} home={home} compact />

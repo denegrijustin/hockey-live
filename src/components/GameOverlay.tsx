@@ -5,6 +5,7 @@ import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
 import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
+import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IntermissionRink } from "./IntermissionRink";
 const PlayerTracker = lazy(() =>
   import("./PlayerTracker").then((m) => ({ default: m.PlayerTracker })),
@@ -143,6 +144,7 @@ export function GameOverlay({
         <summary>Starting goalies <span>+</span></summary>
         <GoalieComparison game={game} away={away} home={home} />
       </details>
+      <GameCenterAnalytics game={game} away={away} home={home} onClose={onClose} />
       <details className="game-center-section">
         <summary>Player leaders and trends <span>+</span></summary>
         <Suspense fallback={<p className="loading" role="status">Loading player tracker…</p>}>

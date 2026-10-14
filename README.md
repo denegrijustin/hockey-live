@@ -50,6 +50,22 @@ The scenario controls have been removed from cards in favor of recent form and g
 
 Skater impact = goals + 0.7×assists + 0.1×shots + 0.25×plus/minus − 0.1×penalty minutes. Goalies use saves minus 90% of shots faced, a fixed .900 benchmark. These are box-score indexes, not WAR, expected goals, causal impact or a reproduction of HockeyStats' proprietary model. Upcoming players show historical season context, not projected lineups. Player context always uses the selected season; unpublished stats remain empty. Traded players may appear for multiple team stints.
 
+## NHL+ (MoneyPuck data)
+
+The NHL+ tab, the comparison strip on game cards and the Game Center analytics read one shared MoneyPuck snapshot. Credit: **Data: MoneyPuck.com** (https://moneypuck.com/), shown wherever the data appears.
+
+**Permission.** MoneyPuck's download page (https://moneypuck.com/data.htm) says the data is free for non-commercial use and for journalists' ad-hoc use, with clear credit to MoneyPuck.com; other uses need permission (moneypuck.com@gmail.com). Keep the site non-commercial (no ads, sponsorship or paid tier), or get permission before publishing. Only the downloads listed on that page are used: the 2026-27 `teams`, `skaters`, `goalies` and `lines` season summaries, the season shot file (`shots_2026.zip`), and the two small update-time files the page itself reads. Nothing else on moneypuck.com is scraped; MoneyPuck's team ratings, power rankings and pregame win probabilities are not in the downloads and are not shown.
+
+**What each file is.** Everything is nightly: MoneyPuck refreshes the season summaries around 06:30 ET and the shot file around 03:40 ET, so none of it is live, and each part carries MoneyPuck's own update stamp. Season aggregates (`summary`, `skaters`, `lines`) come straight from the summary files. Completed-game data (`games`, `shots/<gameId>`) is derived by summing the shot file's expected-goal values per game, team, situation and goalie; it can differ slightly from the season summaries and says so. Shootout attempts are not in the shot file and are never added to expected goals. The 2026-27 expected-goals model was rebuilt, so it is not directly comparable with earlier seasons.
+
+**Code.** `src/lib/moneypuck.mjs` (parsers, validation, joins, game builder), `moneypuck-refresh.mjs` (download, validate, publish), `nhlplus.mjs` (every derived number: per-60 on the situation's own time, shares, goals saved above expected, rolling windows, chance flow), `moneypuck-client.ts` (shared cache and states), `nhlplus-glossary.mjs` (definitions). The UI lives in `src/components/nhlplus/`.
+
+**Refresh.** The Worker checks MoneyPuck at 11:30 and 15:30 UTC and, if a snapshot is more than six hours old when the app asks, in the background. It reads MoneyPuck's two update stamps first and downloads nothing when they have not changed. `GET /api/moneypuck/<seasonId>/status?refresh=1` is the manual refresh (one per minute; a second request while one runs is skipped). Requests have timeouts and three bounded attempts, one refresh runs at a time (in-isolate guard plus a short KV lock, which is best-effort because KV has no compare-and-set), every file is parsed and validated before anything is written, and the status record is written last. A failed refresh leaves the last good snapshot untouched and records the error. Each successful refresh also keeps a dated team snapshot (`history:<date>`) for future trends; nothing is back-filled.
+
+**Saved copy.** `pnpm refresh:moneypuck` (the daily `refresh-moneypuck.yml` workflow) writes the same parts to `public/data/moneypuck/<seasonId>/`, which the app falls back to and local development reads. `node scripts/check-data.mjs` validates it.
+
+Endpoints: `GET /api/moneypuck/<seasonId>/{summary|skaters|lines|games|status}` and `/shots/<gameId>` (the newest 40 completed games).
+
 ## Deployment
 
 Cloudflare Workers Builds already connects `denegrijustin/hockey-live`, branch `main`. Build command: `npm run build`. Deploy command: `npx wrangler deploy`. The checked-in pnpm lockfile determines dependency installation; npm can invoke the same build script. `wrangler.toml` preserves the existing Worker name, TEAM_STATS KV binding and daily cron, and serves `dist` with SPA fallback. `/api/*` runs the Worker first. No credentials are committed.

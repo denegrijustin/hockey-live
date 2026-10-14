@@ -2,8 +2,16 @@
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 
-/** Sort rows by a key. Missing values always go last, whichever way the column is sorted. Ties keep their order. */
-export function sortRows(rows, key, dir = "desc", get = (r, k) => r[k]) {
+/**
+ * Sort rows by a key. Missing values always go last, whichever way the column is sorted. Ties keep their order.
+ * @template T
+ * @param {T[]} rows
+ * @param {string} key
+ * @param {"asc" | "desc"} [dir]
+ * @param {(row: T, key: string) => any} [get]
+ * @returns {T[]}
+ */
+export function sortRows(rows, key, dir = "desc", get = (/** @type {any} */ r, /** @type {string} */ k) => r[k]) {
   const sign = dir === "asc" ? 1 : -1;
   return rows
     .map((r, i) => [r, i])
@@ -17,14 +25,27 @@ export function sortRows(rows, key, dir = "desc", get = (r, k) => r[k]) {
     .map(([r]) => r);
 }
 
-/** Next sort state when a column header is pressed: same column flips, a new column starts in its natural direction. */
+/**
+ * Next sort state when a column header is pressed: same column flips, a new column starts in its natural direction.
+ * @param {{ key: string, dir: "asc" | "desc" } | null | undefined} current
+ * @param {string} key
+ * @param {"asc" | "desc"} [firstDir]
+ * @returns {{ key: string, dir: "asc" | "desc" }}
+ */
 export function nextSort(current, key, firstDir = "desc") {
   if (current?.key === key) return { key, dir: current.dir === "desc" ? "asc" : "desc" };
   return { key, dir: firstDir };
 }
 
-/** Keep rows with at least `minSeconds` of time on ice. Rows with no time recorded are dropped once a minimum is set. */
-export function filterMinToi(rows, minSeconds, get = (r) => r.toi) {
+/**
+ * Keep rows with at least `minSeconds` of time on ice. Rows with no time recorded are dropped once a minimum is set.
+ * @template T
+ * @param {T[]} rows
+ * @param {number} minSeconds
+ * @param {(row: T) => any} [get]
+ * @returns {T[]}
+ */
+export function filterMinToi(rows, minSeconds, get = (/** @type {any} */ r) => r.toi) {
   if (!minSeconds) return rows;
   return rows.filter((r) => { const t = get(r); return isNum(t) && t >= minSeconds; });
 }
@@ -91,7 +112,13 @@ export function callouts(w) {
   return [forText, againstText];
 }
 
-/** Next upcoming games (not final, not live, not preseason) in start order. `isOver` tells which games are done/live. */
+/**
+ * Next upcoming games (not final, not live, not preseason) in start order. `isOver` tells which games are done/live.
+ * @param {any[]} games
+ * @param {(g: any) => boolean} isOver
+ * @param {number} [limit]
+ * @returns {any[]}
+ */
 export function upcomingGames(games, isOver, limit = 8) {
   return games.filter((g) => g.type !== 1 && !isOver(g)).sort((a, b) => String(a.start).localeCompare(String(b.start)) || a.id - b.id).slice(0, limit);
 }

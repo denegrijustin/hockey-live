@@ -107,8 +107,9 @@ export const GameCard = memo(function GameCard({
       </button>
       {live && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
       <div ref={feedRef} className="card-ice">
-        {(live || past) && <IceView data={feed} home={home} away={away} />}
-        {live && <CompactGameFlow data={feed} home={home} away={away} />}
+        {/* At intermission the animated Zamboni rink is the only rink on the card; the shot-map ice view returns when play does. */}
+        {(live || past) && !(live && game.intermission) && <IceView data={feed} home={home} away={away} />}
+        {live && !game.intermission && <CompactGameFlow data={feed} home={home} away={away} />}
       </div>
       <CardStrip game={game} away={away} home={home} nhl={nhl} expanded={expanded} />
       <GoalFlash flash={goal} game={game} away={away} home={home} feed={feed} />

@@ -14,7 +14,8 @@
     "dev:worker": "wrangler dev --port 8788",
     "deploy": "pnpm build && wrangler deploy",
     "refresh:edge": "node scripts/refresh-edge.mjs",
-    "refresh:matchups": "node scripts/refresh-matchups.mjs"
+    "refresh:matchups": "node scripts/refresh-matchups.mjs",
+    "refresh:moneypuck": "node scripts/refresh-moneypuck.mjs"
   },
   "dependencies": {
     "d3-delaunay": "^6.0.4",

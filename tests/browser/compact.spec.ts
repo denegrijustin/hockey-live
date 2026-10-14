@@ -35,7 +35,7 @@ test("the tabs stay pinned under the ticker while the picker scrolls away", asyn
 });
 
 // The board should open with games, not furniture: four cards visible on a phone without scrolling.
-test("on a phone the board opens with at least four game cards showing", async ({ page }) => {
+test("on a phone the board opens with game cards showing (three above the fold, with the NHL+ line)", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 700 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
@@ -43,7 +43,8 @@ test("on a phone the board opens with at least four game cards showing", async (
   await expect(page.locator(".game-card").first()).toBeVisible();
   const cards = await page.locator(".game-card").evaluateAll((els) => els.slice(0, 5).map((e) => { const b = e.getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom) }; }));
   expect(cards.length).toBeGreaterThanOrEqual(4);
-  for (const c of cards.slice(0, 4)) expect(c.bottom, "the first four cards fit above the fold").toBeLessThanOrEqual(700);
+  // The NHL+ season-profile line (one row on a phone) takes the room the fourth card had: three cards fit above the fold.
+  for (const c of cards.slice(0, 3)) expect(c.bottom, "the first three cards fit above the fold").toBeLessThanOrEqual(700);
   // The furniture that used to sit above them is gone on a phone.
   for (const hidden of [".section-heading h2", ".section-heading .eyebrow", ".results-line", ".fresh-counts", ".card-stage-hint", ".compact-meta > span:first-child"])
     await expect(page.locator(hidden).first(), hidden).toBeHidden();

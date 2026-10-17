@@ -1,1 +1,13 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#0a141c"/><meta name="description" content="NHL team trends, game stakes, win-loss scenarios and player contributions for every team."/><link rel="icon" href="/favicon.svg"/><title>Iceboard · NHL game intelligence</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#0a141c"/><meta name="description" content="NHL team trends, game stakes, win-loss scenarios and player contributions for every team."/><link rel="icon" href="/favicon.svg"/><link rel="apple-touch-icon" href="/apple-touch-icon.png"/><link rel="manifest" href="/manifest.webmanifest"/><link rel="preconnect" href="https://assets.nhle.com"/><title>Iceboard · NHL game intelligence</title>
+<style>
+/* Shown until the app mounts; React replaces everything inside #root. */
+body{margin:0;background:#0a131b}
+.boot{max-width:1500px;margin:0 auto;padding:16px}
+.boot i{display:block;border-radius:12px;background:#13222e;border:1px solid #293944}
+.boot .bar{height:44px;margin-bottom:12px}
+.boot .tabs{height:36px;margin-bottom:16px}
+.boot .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.boot .card{height:170px;animation:boot 1.4s ease-in-out infinite}
+@keyframes boot{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.boot .card{animation:none}}
+</style></head><body><div id="root"><div class="boot" aria-hidden="true"><i class="bar"></i><i class="tabs"></i><div class="grid"><i class="card"></i><i class="card"></i><i class="card"></i><i class="card"></i></div></div></div><script type="module" src="/src/main.tsx"></script></body></html>

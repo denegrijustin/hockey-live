@@ -162,7 +162,7 @@ p {
 }
 .brand small {
   display: block;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 1.65px;
   margin-top: 5px;
   color: #97b0ba;
@@ -174,7 +174,7 @@ p {
   align-items: center;
 }
 .feed-status {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 750;
   letter-spacing: 1.6px;
   display: flex;
@@ -210,7 +210,7 @@ p {
   padding: 24px 0;
 }
 .eyebrow {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1.8px;
   font-weight: 750;
   color: var(--mint);
@@ -305,7 +305,7 @@ p {
   color: #b6d4d9;
   border-radius: 4px;
   padding: 2px 5px;
-  font-size: 9px;
+  font-size: 10px;
 }
 .team-menu summary b {
   font-weight: 400;
@@ -415,7 +415,7 @@ p {
   gap: 15px;
 }
 .section-heading .eyebrow {
-  font-size: 8px;
+  font-size: 10px;
   color: #789ca9;
   margin-bottom: 8px;
 }
@@ -448,7 +448,7 @@ p {
   border-color: #41645f;
 }
 .segmented button span {
-  font-size: 9px;
+  font-size: 10px;
   margin-left: 5px;
   opacity: 0.7;
 }
@@ -474,7 +474,7 @@ p {
 .results-line {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.5;
   color: #91a8b8;
   gap: 20px;
@@ -535,7 +535,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 10px;
   gap: 10px;
   margin-bottom: 22px;
 }
@@ -544,7 +544,7 @@ p {
   line-height: 1.6;
 }
 .game-date > span {
-  font-size: 8px;
+  font-size: 10px;
   color: #8da8b8;
 }
 .tv-network {
@@ -587,14 +587,14 @@ p {
   padding: 0 5px;
   background: #0c1c25;
   color: #c4d9e2;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.2px;
 }
 .network-more,
 .tv-tbd {
   color: #b7d2df;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -607,7 +607,7 @@ p {
   padding: 10px 16px;
   border-top: 1px solid rgba(151, 183, 196, 0.18);
   color: #91a8b8;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.55px;
   text-transform: uppercase;
@@ -624,7 +624,7 @@ p {
   color: #d9e5e9;
   padding: 10px 12px;
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -669,7 +669,7 @@ p {
   flex: 1;
 }
 .matchup-team span {
-  font-size: 9px;
+  font-size: 10px;
   color: #94abba;
   display: block;
   margin-bottom: 3px;
@@ -687,13 +687,13 @@ p {
   gap: 5px;
   margin-top: 4px;
   color: #c0d2da;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 750;
   letter-spacing: 0.3px;
 }
 .matchup-team .team-record em {
   color: var(--mint);
-  font-size: 7px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 650;
   letter-spacing: 0.45px;
@@ -701,7 +701,7 @@ p {
   white-space: nowrap;
 }
 .matchup-team > small {
-  font-size: 7px;
+  font-size: 10px;
   color: #7294a5;
 }
 .matchup-team > b {
@@ -721,12 +721,12 @@ p {
   padding-top: 11px;
   border-top: 1px solid rgba(151, 183, 196, 0.16);
   color: #819ba9;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.6px;
 }
 .season-series strong {
   color: #c7d8de;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.2px;
 }
 .importance-score {
@@ -743,7 +743,7 @@ p {
   color: var(--rating);
 }
 .importance-wrap{display:flex;flex:0 0 86px;flex-direction:column;align-items:center;gap:6px;text-align:center}
-.importance-components{color:#9bb2bd;font-size:6.5px;font-weight:700;line-height:1.35;letter-spacing:.2px;white-space:nowrap}
+.importance-components{color:#9bb2bd;font-size:10px;font-weight:700;line-height:1.35;letter-spacing:.2px;white-space:nowrap}
 .importance-score strong {
   font-size: 30px;
   letter-spacing: -1px;
@@ -751,13 +751,13 @@ p {
   font-weight: 650;
 }
 .importance-score span {
-  font-size: 6px;
+  font-size: 10px;
   letter-spacing: 0.7px;
   margin-top: 4px;
   font-weight: 600;
 }
 .importance-score small {
-  font-size: 7px;
+  font-size: 10px;
   opacity: 0.7;
   margin-top: 3px;
 }
@@ -766,7 +766,7 @@ p {
   align-items: center;
   gap: 6px;
   color: var(--rating);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.5;
   margin: 18px 0;
   padding-bottom: 15px;
@@ -786,12 +786,12 @@ p {
   margin-bottom: 10px;
 }
 .perspective > span {
-  font-size: 9px;
+  font-size: 10px;
   color: #8da5b5;
   margin-right: 4px;
 }
 .perspective button {
-  font-size: 9px;
+  font-size: 10px;
   min-height: 30px;
   padding: 0 9px;
   min-width: 45px;
@@ -804,7 +804,7 @@ p {
   color: #c3f0dd;
 }
 .perspective > small {
-  font-size: 8px;
+  font-size: 10px;
   color: #8ba1b0;
   margin-left: auto;
 }
@@ -822,7 +822,7 @@ p {
   min-width: 0;
 }
 .scenario > span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.7px;
   color: #8fa7b5;
   font-weight: 700;
@@ -841,18 +841,18 @@ p {
   color: var(--negative);
 }
 .scenario strong > small {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 400;
   letter-spacing: 0;
 }
 .scenario > p {
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.4;
   color: #b0c6d2;
   margin: 7px 0 5px;
 }
 .scenario > small {
-  font-size: 8px;
+  font-size: 10px;
   color: #849eac;
 }
 .expand-game {
@@ -872,7 +872,7 @@ p {
   background: linear-gradient(120deg, #24404f, #1d3c46);
 }
 .expand-game span {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.4px;
   color: #91b3bc;
@@ -943,7 +943,7 @@ p {
   margin-left: 8px;
 }
 .dialog-team > small {
-  font-size: 9px;
+  font-size: 10px;
   color: #7294a5;
   margin-left: 8px;
 }
@@ -986,7 +986,7 @@ p {
   font-weight: 600;
 }
 .tracker-label {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
   color: #8fa7b5;
@@ -1207,7 +1207,7 @@ summary {
 }
 .impact-row small {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   color: #90a8b8;
   margin-top: 4px;
 }
@@ -1216,7 +1216,7 @@ summary {
   text-align: right;
 }
 .impact-avatar {
-  font-size: 9px;
+  font-size: 10px;
   color: #9db9c9;
   background: #1d3341;
   padding: 6px;
@@ -1232,7 +1232,7 @@ summary {
   color: var(--negative) !important;
 }
 .detail-body h5 {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.7px;
   color: #a5bdca;
   margin: 19px 0 4px;
@@ -1285,7 +1285,7 @@ summary {
   margin-bottom: 20px;
 }
 .panel-heading .eyebrow {
-  font-size: 8px;
+  font-size: 10px;
   color: #87a8b5;
   margin-bottom: 9px;
 }
@@ -1372,7 +1372,7 @@ table {
   font-size: 11px;
 }
 th {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.8px;
   font-weight: 650;
   text-transform: uppercase;
@@ -1419,7 +1419,7 @@ td b {
   justify-content: center;
   background: #233a49;
   color: #c0d8e1;
-  font-size: 8px;
+  font-size: 10px;
   border-radius: 3px;
 }
 .form-row .W {
@@ -1518,7 +1518,7 @@ td b {
 footer {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.7;
   color: #7694a6;
   gap: 20px;
@@ -1567,7 +1567,7 @@ footer b {
   }
   .scenario > p,
   .scenario > small {
-    font-size: 9px;
+    font-size: 10px;
   }
 }
 @media (max-width: 760px) {
@@ -1581,7 +1581,7 @@ footer b {
     gap: 9px;
   }
   .brand small {
-    font-size: 6px;
+    font-size: 10px;
     letter-spacing: 1.1px;
   }
   .brand-symbol {
@@ -1622,7 +1622,6 @@ footer b {
     margin: 0 -16px;
     padding: 0 16px;
     background: #0a141cfa;
-    backdrop-filter: blur(14px);
     box-shadow: 0 4px 15px #071118aa;
   }
   .team-picker {
@@ -1646,7 +1645,7 @@ footer b {
     height: 22px;
   }
   .quick-teams .text-button {
-    font-size: 9px;
+    font-size: 10px;
     padding: 0 5px;
     min-height: 44px;
   }
@@ -1655,7 +1654,7 @@ footer b {
   }
   .team-menu > summary {
     padding: 0 8px;
-    font-size: 9px;
+    font-size: 10px;
     min-height: 44px;
     gap: 6px;
   }
@@ -1679,7 +1678,7 @@ footer b {
     min-height: 44px;
   }
   .freshness {
-    font-size: 8px;
+    font-size: 10px;
     align-items: center;
     padding: 7px 0 10px;
     line-height: 1.5;
@@ -1713,7 +1712,7 @@ footer b {
     padding: 13px;
   }
   .game-filters label {
-    font-size: 9px;
+    font-size: 10px;
   }
   .game-filters select,
   .game-filters input {
@@ -1723,7 +1722,7 @@ footer b {
     padding-right: 15px;
   }
   .results-line {
-    font-size: 8px;
+    font-size: 10px;
     gap: 14px;
     line-height: 1.7;
     margin: 13px 0;
@@ -1761,7 +1760,7 @@ footer b {
     height: 24px;
   }
   .game-date > span {
-    font-size: 9px;
+    font-size: 10px;
   }
   .matchup {
     gap: 10px;
@@ -1818,22 +1817,22 @@ footer b {
     font-size: 10px;
   }
   .perspective > small {
-    font-size: 9px;
+    font-size: 10px;
   }
   .scenario {
     padding: 11px 4px;
   }
   .scenario > span {
-    font-size: 8px;
+    font-size: 10px;
   }
   .scenario > strong {
     font-size: 21px;
   }
   .scenario > p {
-    font-size: 9px;
+    font-size: 10px;
   }
   .scenario > small {
-    font-size: 8px;
+    font-size: 10px;
   }
   .card-details > summary {
     min-height: 52px;
@@ -1849,7 +1848,7 @@ footer b {
     font-size: 12px;
   }
   .impact-row small {
-    font-size: 9px;
+    font-size: 10px;
   }
   .panel {
     padding: 17px;
@@ -1902,14 +1901,14 @@ footer b {
   footer {
     flex-direction: column;
     gap: 10px;
-    font-size: 9px;
+    font-size: 10px;
     padding: 22px 0;
   }
   .inner-details > summary {
     min-height: 48px;
   }
   .muted-label {
-    font-size: 9px;
+    font-size: 10px;
   }
   .empty {
     padding: 30px 16px;
@@ -1941,7 +1940,7 @@ footer b {
     right: auto;
   }
   .scenario > p {
-    font-size: 8px;
+    font-size: 10px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2029,7 +2028,7 @@ footer b {
   width: 30px;
 }
 .form-team > small {
-  font-size: 9px;
+  font-size: 10px;
   color: #94aab7;
   max-width: 52px;
 }
@@ -2048,7 +2047,7 @@ footer b {
 }
 .form-results small {
   display: block;
-  font-size: 9px;
+  font-size: 10px;
   margin-top: 5px;
   opacity: 0.8;
 }
@@ -2080,7 +2079,7 @@ footer b {
 .chart-key small {
   margin-left: auto;
   color: #92a8b5;
-  font-size: 9px;
+  font-size: 10px;
 }
 .shot-chart {
   width: 100%;
@@ -2094,7 +2093,7 @@ footer b {
 }
 .shot-chart text {
   fill: #91aab8;
-  font-size: 9px;
+  font-size: 10px;
 }
 .comparison-row {
   margin: 12px 0;
@@ -2118,7 +2117,7 @@ footer b {
   overflow: hidden;
 }
 .feed-time {
-  font-size: 9px;
+  font-size: 10px;
   color: #93adb9;
   margin-top: 15px;
 }
@@ -2176,7 +2175,7 @@ footer b {
 }
 .edge-heading .eyebrow {
   margin: 0;
-  font-size: 9px;
+  font-size: 10px;
 }
 .edge-metrics {
   display: grid;
@@ -2195,7 +2194,7 @@ footer b {
   font-size: 21px;
 }
 .edge-metric small {
-  font-size: 9px;
+  font-size: 10px;
   color: #92aebb;
 }
 .edge-metric b {
@@ -2236,7 +2235,7 @@ footer b {
   display: flex;
   justify-content: space-between;
   margin-top: 9px;
-  font-size: 9px;
+  font-size: 10px;
   color: #a7bec9;
 }
 .zone-labels b,
@@ -2249,7 +2248,7 @@ footer b {
   color: #dceaf0;
 }
 .zone-labels small {
-  font-size: 9px;
+  font-size: 10px;
 }
 .location-row {
   display: flex;
@@ -2334,7 +2333,7 @@ footer b {
     padding-right: 11px;
   }
   .mini-heading {
-    font-size: 9px;
+    font-size: 10px;
   }
   .form-results {
     gap: 3px;
@@ -2369,7 +2368,7 @@ footer b {
     min-width: 26px;
     max-width: 40px;
     padding: 0 3px;
-    font-size: 6px;
+    font-size: 10px;
   }
   .matchup {
     gap: 8px;
@@ -2383,7 +2382,7 @@ footer b {
     height: 30px;
   }
   .matchup-team span {
-    font-size: 9px;
+    font-size: 10px;
   }
   .matchup-team h3 {
     font-size: 16px;
@@ -2399,7 +2398,7 @@ footer b {
     font-size: 24px;
   }
   .importance-score span {
-    font-size: 5px;
+    font-size: 10px;
     letter-spacing: 0.5px;
   }
   .card-stage-hint {
@@ -2421,21 +2420,21 @@ footer b {
 
 /* ===== Ranks, ESPN links, comparison hooks (GameCard/NetworkLogos/TeamComparison) ===== */
 .team-rank{display:block;margin-top:2px;color:#b8d0da;font-size:10px;line-height:1.35;overflow-wrap:anywhere;cursor:help}
-.team-rank em{font-style:normal;color:#8da8b8;font-size:9px;white-space:nowrap}
+.team-rank em{font-style:normal;color:#8da8b8;font-size:10px;white-space:nowrap}
 a.network-logo-link{text-decoration:none;cursor:pointer}
 a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-offset:2px}
 .game-card-top{cursor:default}
 .dialog-comparison{margin:16px 0}
 /* Two-level card and Game Center */
-.card-top-actions{display:flex;align-items:center;gap:7px;min-width:0}.gc-icon{display:inline-grid;place-items:center;width:38px;height:38px;min-width:38px;padding:0;border-radius:9px;border:1px solid color-mix(in srgb,var(--mint) 50%,#31505f);background:#0d252e;color:var(--mint);font-size:9px;font-weight:850;letter-spacing:.5px}.gc-icon:hover,.gc-icon:focus-visible{background:#183944;border-color:var(--mint)}.compact-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding-top:10px;border-top:1px solid rgba(151,183,196,.16);font-size:7px;line-height:1.45;color:#8da7b4}.compact-meta span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-expanded{margin-top:15px;padding-top:2px;animation:card-reveal 220ms ease-out both}.primary-game-center{margin-top:0;color:#e6f6f2;border-color:#5e9b8c;background:linear-gradient(120deg,#244a49,#183741)}.why-watch{margin:13px 0;padding:12px;border:1px solid #2d4954;border-radius:9px;background:rgba(8,25,33,.55)}.why-watch>span{display:block;margin-bottom:6px;color:var(--rating);font-size:7px;font-weight:800;letter-spacing:.75px}.why-watch p{margin:0;color:#d2dfe4;font-size:10px;line-height:1.55}.compact-projection .projection{margin-bottom:12px}.compact-projection .inner-details{display:none}.game-center-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 16px;padding:10px 12px;border:1px solid #2d4651;border-radius:9px;background:#0c1b24;font-size:9px}.game-center-actions a{color:var(--mint);font-weight:750}.game-center-actions span{color:#8fa7b3;text-align:right}.game-center-section{border-top:1px solid #2b444f}.game-center-section>summary{display:flex;align-items:center;justify-content:space-between;min-height:54px;list-style:none;color:#d7e4e8;font-size:11px;font-weight:750;letter-spacing:.2px;cursor:pointer}.game-center-section>summary span{font-size:20px;color:#7f9aa7;transition:transform 160ms ease}.game-center-section[open]>summary span{transform:rotate(45deg)}.game-center-section>.game-data,.game-center-section>.dialog-comparison,.game-center-section>.goalie-comparison,.game-center-section>.player-tracker,.game-center-section>.matchup-context,.game-center-section>.model-reasons{margin:0 0 20px}.rest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.rest-grid span{padding:12px;border:1px solid #29434e;border-radius:8px;background:#0c1b24;color:#b9cdd5;font-size:9px}.rest-grid b{display:block;margin-bottom:4px;color:#eef4f5;font-size:12px}.matchup-context ul,.model-reasons{padding-left:18px;color:#b8ccd4;font-size:9px;line-height:1.7}.availability-note{padding:10px;border-left:3px solid #7f98a3;background:#132630;color:#a9bec7;font-size:9px;line-height:1.55}.importance-score span{font-size:5.5px}.game-card.is-expanded{border-color:color-mix(in srgb,var(--rating) 48%,#304653)}
+.card-top-actions{display:flex;align-items:center;gap:7px;min-width:0}.gc-icon{display:inline-grid;place-items:center;width:38px;height:38px;min-width:38px;padding:0;border-radius:9px;border:1px solid color-mix(in srgb,var(--mint) 50%,#31505f);background:#0d252e;color:var(--mint);font-size:10px;font-weight:850;letter-spacing:.5px}.gc-icon:hover,.gc-icon:focus-visible{background:#183944;border-color:var(--mint)}.compact-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding-top:10px;border-top:1px solid rgba(151,183,196,.16);font-size:10px;line-height:1.45;color:#8da7b4}.compact-meta span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-expanded{margin-top:15px;padding-top:2px;animation:card-reveal 220ms ease-out both}.primary-game-center{margin-top:0;color:#e6f6f2;border-color:#5e9b8c;background:linear-gradient(120deg,#244a49,#183741)}.why-watch{margin:13px 0;padding:12px;border:1px solid #2d4954;border-radius:9px;background:rgba(8,25,33,.55)}.why-watch>span{display:block;margin-bottom:6px;color:var(--rating);font-size:10px;font-weight:800;letter-spacing:.75px}.why-watch p{margin:0;color:#d2dfe4;font-size:10px;line-height:1.55}.compact-projection .projection{margin-bottom:12px}.compact-projection .inner-details{display:none}.game-center-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 16px;padding:10px 12px;border:1px solid #2d4651;border-radius:9px;background:#0c1b24;font-size:10px}.game-center-actions a{color:var(--mint);font-weight:750}.game-center-actions span{color:#8fa7b3;text-align:right}.game-center-section{border-top:1px solid #2b444f}.game-center-section>summary{display:flex;align-items:center;justify-content:space-between;min-height:54px;list-style:none;color:#d7e4e8;font-size:11px;font-weight:750;letter-spacing:.2px;cursor:pointer}.game-center-section>summary span{font-size:20px;color:#7f9aa7;transition:transform 160ms ease}.game-center-section[open]>summary span{transform:rotate(45deg)}.game-center-section>.game-data,.game-center-section>.dialog-comparison,.game-center-section>.goalie-comparison,.game-center-section>.player-tracker,.game-center-section>.matchup-context,.game-center-section>.model-reasons{margin:0 0 20px}.rest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.rest-grid span{padding:12px;border:1px solid #29434e;border-radius:8px;background:#0c1b24;color:#b9cdd5;font-size:10px}.rest-grid b{display:block;margin-bottom:4px;color:#eef4f5;font-size:12px}.matchup-context ul,.model-reasons{padding-left:18px;color:#b8ccd4;font-size:10px;line-height:1.7}.availability-note{padding:10px;border-left:3px solid #7f98a3;background:#132630;color:#a9bec7;font-size:10px;line-height:1.55}.importance-score span{font-size:10px}.game-card.is-expanded{border-color:color-mix(in srgb,var(--rating) 48%,#304653)}
 @keyframes card-reveal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:620px){.game-card-top{align-items:flex-start}.card-top-actions{max-width:58%}.tv-network{max-width:calc(100% - 45px)}.compact-meta{align-items:flex-start;flex-direction:column}.compact-meta span:last-child{text-align:left;white-space:normal}.game-center-actions{align-items:flex-start;flex-direction:column}.game-center-actions span{text-align:left}.rest-grid{grid-template-columns:1fr}.importance-wrap{flex-basis:66px}.importance-components{font-size:5.5px}}
+@media(max-width:620px){.game-card-top{align-items:flex-start}.card-top-actions{max-width:58%}.tv-network{max-width:calc(100% - 45px)}.compact-meta{align-items:flex-start;flex-direction:column}.compact-meta span:last-child{text-align:left;white-space:normal}.game-center-actions{align-items:flex-start;flex-direction:column}.game-center-actions span{text-align:left}.rest-grid{grid-template-columns:1fr}.importance-wrap{flex-basis:66px}.importance-components{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.card-expanded{animation:none}.game-center-section>summary span{transition:none}}
 
 /* Live game flow: a five-minute rolling momentum signal. */
 .compact-game-flow{margin:22px 16px 12px;padding:8px 10px 5px;border:1px solid rgba(115,217,193,.22);border-radius:8px;background:rgba(5,17,24,.48)}
-.flow-readout{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#8faab6;font-size:8px;font-weight:750;letter-spacing:.65px}
-.flow-readout strong{display:flex;align-items:center;gap:5px;color:#dce9ed;font-size:9px;letter-spacing:.2px}
+.flow-readout{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#8faab6;font-size:10px;font-weight:750;letter-spacing:.65px}
+.flow-readout strong{display:flex;align-items:center;gap:5px;color:#dce9ed;font-size:10px;letter-spacing:.2px}
 .flow-readout img{width:18px;height:18px;object-fit:contain}
 .game-flow{margin:2px 0 22px;padding:12px;border:1px solid #294550;border-radius:10px;background:#0a1b24}
 .game-flow .flow-readout{font-size:10px;letter-spacing:0}
@@ -2444,20 +2443,20 @@ a.network-logo-link:focus-visible{outline:2px solid var(--mint,#73d9c1);outline-
 .flow-zero{stroke:#526d78;stroke-width:1;stroke-dasharray:3 4}
 .flow-cursor{stroke:#dce9ed;stroke-width:1;stroke-dasharray:2 3}
 .flow-time-mark line{stroke:#29434e;stroke-width:.7;stroke-dasharray:2 5}
-.flow-time-mark text{fill:#7894a1;font-size:7px;font-weight:700;letter-spacing:.25px}
+.flow-time-mark text{fill:#7894a1;font-size:10px;font-weight:700;letter-spacing:.25px}
 .flow-progress{stroke:#e4eff2;stroke-width:1;stroke-dasharray:2 3;opacity:.75}
 .flow-progress-dot{fill:#e4eff2;stroke:#0a1b24;stroke-width:1.5}
 .game-flow .detail-note{margin:4px 0 0;line-height:1.55}
 .finished-today-bottom{margin-top:24px}
-@media(max-width:620px){.compact-game-flow{margin-inline:12px}.game-flow{padding:9px}.flow-readout{align-items:flex-start}.game-flow .flow-readout{font-size:9px}}
+@media(max-width:620px){.compact-game-flow{margin-inline:12px}.game-flow{padding:9px}.flow-readout{align-items:flex-start}.game-flow .flow-readout{font-size:10px}}
 
 /* Importance is a stakes panel, deliberately distinct from the retired circular rating badge. */
 .importance-wrap{flex-basis:100px;gap:5px}
 .importance-score{width:98px;height:76px;border-radius:10px;background:linear-gradient(145deg,#102832,#0b1922);border-color:color-mix(in srgb,var(--rating) 58%,#294653)}
-.importance-score span{order:0;margin:0 0 5px;font-size:6px;letter-spacing:.8px}
+.importance-score span{order:0;margin:0 0 5px;font-size:10px;letter-spacing:.8px}
 .importance-score strong{order:1;display:flex;align-items:baseline;gap:2px;font-size:31px}
-.importance-score strong small{margin:0;font-size:8px;letter-spacing:0;opacity:.72}
-@media(max-width:620px){.importance-wrap{flex-basis:78px}.importance-score{width:76px;height:68px}.importance-score strong{font-size:25px}.importance-score span{font-size:5px;letter-spacing:.55px}.importance-components{font-size:5.5px}}
+.importance-score strong small{margin:0;font-size:10px;letter-spacing:0;opacity:.72}
+@media(max-width:620px){.importance-wrap{flex-basis:78px}.importance-score{width:76px;height:68px}.importance-score strong{font-size:25px}.importance-score span{font-size:10px;letter-spacing:.55px}.importance-components{font-size:10px}}
 
 /* Off-screen cards skip layout and paint until they scroll near the viewport. */
 .game-card {
@@ -2884,7 +2883,6 @@ select,
     margin: 0 -12px;
     padding: 0 12px;
     background: #0a141cfa;
-    backdrop-filter: blur(14px);
     box-shadow: 0 4px 15px #071118aa;
   }
   .team-picker {
@@ -3073,7 +3071,7 @@ select,
     display: none;
   }
   .freshness {
-    font-size: 9px;
+    font-size: 10px;
     padding: 0 0 4px;
   }
   .freshness button {
@@ -3149,11 +3147,11 @@ select,
   min-width: 22px;
   max-width: 40px;
   padding: 0 3px;
-  font-size: 6px;
+  font-size: 10px;
 }
 .compact-meta .network-more,
 .compact-meta .tv-tbd {
-  font-size: 8px;
+  font-size: 10px;
 }
 .compact-meta {
   align-items: center;
@@ -3182,7 +3180,7 @@ select,
   min-height: 22px;
   min-width: 28px;
   border-radius: 6px;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.3px;
 }
 @media (max-width: 760px) {
@@ -3191,7 +3189,7 @@ select,
     height: 20px;
     min-height: 20px;
     min-width: 26px;
-    font-size: 7.5px;
+    font-size: 10px;
   }
 }
 /* Small to look at, still easy to tap: the hit area extends past the visible tag */
@@ -3391,7 +3389,7 @@ select,
     margin: 0;
     padding: 0;
     border-radius: 7px;
-    font-size: 9px;
+    font-size: 10px;
     line-height: 1;
   }
   .tv-network {
@@ -3418,7 +3416,7 @@ select,
     min-width: 26px;
     max-width: 26px;
     padding: 0;
-    font-size: 6.5px;
+    font-size: 10px;
     letter-spacing: 0;
   }
   .compact-meta .network-logos {
@@ -3469,7 +3467,7 @@ select,
     line-height: 1.1;
   }
   .matchup-team .team-record {
-    font-size: 9px;
+    font-size: 10px;
     margin: 0;
   }
   .matchup-team .team-record em {
@@ -3496,7 +3494,7 @@ select,
     font-size: 21px;
   }
   .importance-score strong small {
-    font-size: 7px;
+    font-size: 10px;
   }
   /* the venue is for the expanded card; the channel logos ride in the card's top row beside the GC tag */
   .game-card {

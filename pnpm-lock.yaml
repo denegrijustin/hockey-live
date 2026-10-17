@@ -23,18 +23,6 @@ importers:
       topojson-client:
         specifier: ^3.1.0
         version: 3.1.0
-      topojson-server:
-        specifier: ^3.0.1
-        version: 3.0.1
-      topojson-simplify:
-        specifier: ^3.0.3
-        version: 3.0.3
-      us-atlas:
-        specifier: ^3.0.1
-        version: 3.0.1
-      world-atlas:
-        specifier: ^2.0.2
-        version: 2.0.2
     devDependencies:
       '@playwright/test':
         specifier: 1.63.0
@@ -66,12 +54,24 @@ importers:
       '@vitejs/plugin-react':
         specifier: 6.1.1
         version: 6.1.1(vite@8.3.1(esbuild@0.28.1))
+      topojson-server:
+        specifier: ^3.0.1
+        version: 3.0.1
+      topojson-simplify:
+        specifier: ^3.0.3
+        version: 3.0.3
       typescript:
         specifier: 7.0.2
         version: 7.0.2
+      us-atlas:
+        specifier: ^3.0.1
+        version: 3.0.1
       vite:
         specifier: 8.3.1
         version: 8.3.1(esbuild@0.28.1)
+      world-atlas:
+        specifier: ^2.0.2
+        version: 2.0.2
       wrangler:
         specifier: ^4.141.0
         version: 4.141.0

@@ -151,8 +151,9 @@ async function staticData(env, request, path) {
   if (!r.ok || !r.headers.get("content-type")?.includes("json")) return null;
   return r.json();
 }
-export default {
-  async fetch(request, env, ctx) {
+// Routes that read KV on every request; their responses carry a 60 s max-age, so the edge cache can serve repeats.
+const EDGE_CACHED = /^\/api\/(edge|league-matchups)\//;
+async function handle(request, env, ctx) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
     if (request.method !== "GET")
@@ -388,6 +389,18 @@ export default {
         502,
       );
     }
+}
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const cacheable = request.method === "GET" && EDGE_CACHED.test(url.pathname) && !url.searchParams.has("refresh");
+    if (!cacheable) return handle(request, env, ctx);
+    const cacheKey = new Request(url.origin + url.pathname);
+    const hit = await caches.default.match(cacheKey);
+    if (hit) return hit;
+    const response = await handle(request, env, ctx);
+    if (response.status === 200) ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+    return response;
   },
   async scheduled(event, env, ctx) {
     const r = await env.ASSETS.fetch(

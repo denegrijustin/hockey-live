@@ -10,3 +10,11 @@
   Cache-Control: public, max-age=0, must-revalidate
 /logos/*
   Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+/data/games/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/data/moneypuck/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=3600
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: public, max-age=86400

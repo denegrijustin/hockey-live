@@ -1,3 +1,4 @@
+import { useChartUnit } from "../lib/chartUnit";
 import { gameFlow, iceTilt, playMinute, pulseMinute } from "../lib/pulse.mjs";
 import { useEffect, useRef, useState } from "react";
 import type { Game, GameFeed, Team } from "../types";
@@ -275,6 +276,7 @@ function fullGameMinutes(data: GameFeed, elapsed: number) {
 function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; home: Team; away: Team; compact?: boolean }) {
   const flow = gameFlow(data);
   const [inspect, setInspect] = useState<number | null>(null);
+  const chartRef = useChartUnit<SVGSVGElement>(360);
   if (!flow?.points.length) return null;
   const width = 360, height = compact ? 64 : 142, left = compact ? 8 : 28, right = compact ? 352 : 350;
   const center = compact ? 25 : 65;
@@ -312,7 +314,7 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
       <span>{compact ? "MOMENTUM" : `${flowTimeLabel(selected.minute, data.type)} · ${inspect == null ? "Latest" : "Selected point"}`}</span>
       <strong>{leader ? <><img src={`/logos/${leader.id}.svg`} alt="" /> {leader.id} +{Math.abs(selected.value).toFixed(1)}</> : "EVEN"}</strong>
     </div>
-    <svg className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" data-elapsed={elapsed.toFixed(2)} data-duration={end} data-progress={(elapsed / end).toFixed(3)} aria-label={`Full-game momentum through ${flowTimeLabel(elapsed, data.type)}: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
+    <svg ref={chartRef} className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" data-elapsed={elapsed.toFixed(2)} data-duration={end} data-progress={(elapsed / end).toFixed(3)} aria-label={`Full-game momentum through ${flowTimeLabel(elapsed, data.type)}: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
       <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="#9bb0ba"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
       {ticks.map((minute) => <g key={minute} className="flow-time-mark"><line x1={x(minute)} x2={x(minute)} y1="7" y2={height - 19}/><text x={x(minute)} y={height - 5} textAnchor={minute === 0 ? "start" : minute === end ? "end" : "middle"}>{minute === 0 ? "START" : minute === end ? `END · ${minute}m` : `${minute}m`}</text></g>)}
       <line x1={left} x2={right} y1={center} y2={center} className="flow-zero" />
@@ -336,6 +338,7 @@ function ShotChart({
   away: Team;
 }) {
   const [inspectTime, setInspectTime] = useState<number | null>(null);
+  const chartRef = useChartUnit<SVGSVGElement>(360);
   const events = metric === "shots" ? data.shots : (data.plays ?? []).filter(p=>p.type === 'hit');
   const minutes = (s: any) => playMinute(s,data.type) ?? 0;
   const elapsed = pulseMinute(data) ?? Math.max(0,...events.map(minutes));
@@ -362,6 +365,7 @@ function ShotChart({
       <div>{[away,home].map((team,i)=><span key={team.id}><img src={`/logos/${team.id}.svg`} alt={team.name} width="26" height="26"/><b>{team.id}</b><svg width="22" height="8" aria-hidden="true"><line x1="0" x2="22" y1="4" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray={i?'4 3':undefined}/></svg><strong>{totalAt(team.id)} {metric === 'hits'?'hits':'SOG'}</strong></span>)}</div>
     </div>
     <svg
+      ref={chartRef}
       onPointerMove={inspect}
       onPointerDown={inspect}
       onPointerLeave={event=>{if(event.pointerType==='mouse') setInspectTime(null);}}

@@ -2,8 +2,8 @@ import { useId } from "react";
 import type { GameFeed, Team } from "../types";
 import { HIGH_DANGER_FT, NET_X, iceSummary } from "../lib/ice-view.mjs";
 
-const AWAY = "#73d9c1";
-const HOME = "#f2bc67";
+const AWAY = "var(--series-away)";
+const HOME = "var(--series-home)";
 
 /**
  * The ice on a small card: where each team's shots came from, at the net they attacked, with the high-danger area shaded, and what it adds up to:

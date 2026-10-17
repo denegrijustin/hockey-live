@@ -20,7 +20,7 @@ test("on a phone the first game card starts high on the screen", async ({ page }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
 });
 
-test("the tabs stay pinned under the ticker while the picker scrolls away", async ({ page }) => {
+test("on a phone the tab bar stays at the bottom while the page scrolls, and the picker scrolls away", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
@@ -28,9 +28,10 @@ test("the tabs stay pinned under the ticker while the picker scrolls away", asyn
   await expect(page.locator(".game-card").first()).toBeVisible();
   await page.mouse.wheel(0, 1800);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400);
-  const ticker = await page.locator(".ticker").boundingBox();
-  const tabs = await page.locator(".view-tabs").boundingBox();
-  expect(Math.round(tabs!.y)).toBe(Math.round(ticker!.height)); // directly beneath the ticker
+  const bar = await page.locator(".tab-bar").boundingBox();
+  expect(Math.round(bar!.y + bar!.height), "pinned to the bottom edge").toBe(844);
+  expect(bar!.height, "a standard 49pt tab bar").toBeGreaterThanOrEqual(49);
+  await expect(page.locator(".tab-bar .tab-item")).toHaveCount(5);
   expect(await page.locator(".team-picker").evaluate((e) => e.getBoundingClientRect().bottom)).toBeLessThan(0); // scrolled out of view
 });
 

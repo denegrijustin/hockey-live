@@ -10,7 +10,7 @@ import { LineChart } from "../charts/LineChart";
 import { fmt, fmtPct, fmtSigned } from "../shared/format";
 import { MetricTip } from "../shared/MetricTip";
 
-const MINT = "#7be1c6", AMBER = "#e9c67d", BLUE = "#8fb8e8";
+const MINT = "var(--series-away)", AMBER = "var(--series-home)", BLUE = "var(--series-blue)";
 
 export function TrendsView({ ctx }: { ctx: Ctx }) {
   const { s, set, games, season } = ctx;

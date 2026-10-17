@@ -43,7 +43,7 @@ export function ShotMap({ shots, away, home, playoff }: { shots: Shot[]; away: T
           {order.map((i) => { const s = mapped[i]; return (
             <g key={i} role="button" aria-label={label(s)} className={`map-shot${s.g ? " goal" : ""}${tips.shown === i ? " is-on" : ""}`} data-goal={s.g} data-team={s.team} data-testid="map-shot" {...tips.props(i)}>
               <circle className="hit" cx={s.x!} cy={-s.y!} r={radius(s.xg) + 0.8} />
-              <circle className="dot" cx={s.x!} cy={-s.y!} r={radius(s.xg)} fill={colorOf(s.team)} stroke={s.g ? "#fff" : "none"} strokeWidth={s.g ? 1.2 : 0} fillOpacity={s.g ? 1 : 0.55} />
+              <circle className="dot" cx={s.x!} cy={-s.y!} r={radius(s.xg)} fill={colorOf(s.team)} stroke={s.g ? "var(--text-6)" : "none"} strokeWidth={s.g ? 1.2 : 0} fillOpacity={s.g ? 1 : 0.55} />
             </g>
           ); })}
         </svg>

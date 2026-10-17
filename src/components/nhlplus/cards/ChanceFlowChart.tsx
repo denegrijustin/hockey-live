@@ -1,3 +1,4 @@
+import { useChartUnit } from "../../../lib/chartUnit";
 import { useMemo } from "react";
 import type { Shot } from "../../../lib/moneypuck-types";
 import type { GameFeed, Team } from "../../../types";
@@ -25,6 +26,7 @@ export function ChanceFlowChart({ shots, away, home, playoff, periods = 3, throu
   plays?: GameFeed["plays"]; playsState?: "idle" | "loading" | "ready" | "unavailable"; compact?: boolean;
 }) {
   const layout = useMemo(() => timelineLayout(shots, { playoff, periods }), [shots, playoff, periods]);
+  const chartRef = useChartUnit<SVGSVGElement>(W);
   const end = layout.end;
   const upTo = clampThrough(through, end);
   const colors = flowColors(away, home);
@@ -86,7 +88,7 @@ export function ChanceFlowChart({ shots, away, home, playoff, periods = 3, throu
         <li><i className="dash" style={{ background: colors.home }} />{home.id} <b>{fmt(finalHome)}</b> xG</li>
       </ul>
       <div className="nhlp-chart-wrap">
-        <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`Chance flow, cumulative expected goals: ${away.id} ${fmt(finalAway)}, ${home.id} ${fmt(finalHome)}. Markers are focusable; use the arrow keys.`}
+        <svg ref={chartRef} viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`Chance flow, cumulative expected goals: ${away.id} ${fmt(finalAway)}, ${home.id} ${fmt(finalHome)}. Markers are focusable; use the arrow keys.`}
           data-end={end} data-through={upTo} data-final-away={finalAway} data-final-home={finalHome} data-top={top}>
           {upTo < end && <rect className="flow-future" x={X(upTo)} y={yTop} width={X(end) - X(upTo)} height={yBottom - yTop} data-testid="flow-future" />}
           {[0, top / 2, top].map((v) => <g key={v} className="flow-grid"><line x1={x0} x2={x1} y1={Y(v)} y2={Y(v)} /><text x={x0 - 4} y={Y(v) + 3} textAnchor="end">{Number.isInteger(v) ? v : v.toFixed(1)}</text></g>)}

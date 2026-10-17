@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { goTo } from "./nav";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -25,7 +26,7 @@ async function mock(page: Page, o: Opts = {}) {
 }
 async function openPlus(page: Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: "NHL+", exact: true }).click();
+  await goTo(page, "NHL+");
   await expect(page.locator(".nhlplus")).toBeVisible();
 }
 const sub = (page: Page, name: string) => page.getByRole("navigation", { name: "NHL+ views" }).getByRole("button", { name, exact: true });

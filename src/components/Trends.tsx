@@ -1,6 +1,10 @@
+import { useChartUnit } from "../lib/chartUnit";
 import { useEffect, useMemo, useState } from "react";
 import { playoffTrend, rollingSeries } from "../lib/model.mjs";
 import type { Game, Team } from "../types";
+// Plot area inside the 1000-wide viewBox. The side margins hold axis labels that are drawn at a real 11px (see chartUnit).
+const PLOT_L = 125, PLOT_W = 805;
+
 export function Trends({
   teams,
   table,
@@ -20,7 +24,8 @@ export function Trends({
 }) {
   const [metric, setMetric] = useState("playoffs"),
     [window, setWindow] = useState(5),
-    [hover, setHover] = useState<number | null>(null);
+    [hover, setHover] = useState<number | null>(null),
+    chartRef = useChartUnit<SVGSVGElement>(1000);
   const current = season === currentSeason;
   useEffect(() => {
     if (!current && metric === "playoffs") setMetric("difference");
@@ -45,7 +50,12 @@ export function Trends({
     maximum = metric === "playoffs" ? 100 : Math.max(metric === "points" ? 1 : 2, ...values);
   const range = maximum - minimum || 1;
   const maxGames = Math.max(1, ...series.map((s) => s.data.length));
-  const x = (i: number) => 55 + (i / Math.max(1, maxGames - 1)) * 900,
+  // Pointer events cover mouse, touch and pen; the chart keeps vertical swipes for scrolling (see .chart-wrap svg).
+  const inspectChart = (e: React.PointerEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHover(Math.max(0, Math.min(maxGames - 1, Math.round(((((e.clientX - rect.left) / rect.width) * 1000 - PLOT_L) / PLOT_W) * (maxGames - 1)))));
+  };
+  const x = (i: number) => PLOT_L + (i / Math.max(1, maxGames - 1)) * PLOT_W,
     y = (v: number) => 245 - ((v - minimum) / range) * 205;
   const tickIndexes = [
     ...new Set(
@@ -119,6 +129,7 @@ export function Trends({
           </div>
           <div className="chart-wrap" onMouseLeave={() => setHover(null)}>
             <svg
+              ref={chartRef}
               viewBox="0 0 1000 290"
               role="img"
               aria-label={
@@ -126,36 +137,22 @@ export function Trends({
                   ? "Estimated playoff chance by game number"
                   : `${window}-game ${metric} averages by game number`
               }
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                setHover(
-                  Math.max(
-                    0,
-                    Math.min(
-                      maxGames - 1,
-                      Math.round(
-                        ((((e.clientX - rect.left) / rect.width) * 1000 - 55) /
-                          900) *
-                          (maxGames - 1),
-                      ),
-                    ),
-                  ),
-                );
-              }}
+              onPointerDown={inspectChart}
+              onPointerMove={inspectChart}
             >
               {Array.from({ length: 5 }, (_, i) => {
                 const v = minimum + (range * i) / 4;
                 return (
                   <g key={i}>
                     <line
-                      x1="55"
-                      x2="955"
+                      x1={PLOT_L}
+                      x2={PLOT_L + PLOT_W}
                       y1={y(v)}
                       y2={y(v)}
-                      stroke="#243641"
+                      stroke="var(--line-1)"
                       strokeDasharray="3 5"
                     />
-                    <text x="40" y={y(v) + 4} textAnchor="end">
+                    <text x={PLOT_L - 10} y={y(v) + 4} textAnchor="end">
                       {metric === "playoffs"
                         ? Math.round(v) + "%"
                         : metric === "points"
@@ -191,7 +188,7 @@ export function Trends({
                         cx={x(index)}
                         cy={y(point.value)}
                         r={point.live ? 14 : 13}
-                        fill="#10212c"
+                        fill="var(--surface-5)"
                         stroke={s.team.color}
                         strokeWidth="3"
                       />
@@ -213,7 +210,7 @@ export function Trends({
                   x2={x(hover)}
                   y1="25"
                   y2="245"
-                  stroke="#91a8b4"
+                  stroke="var(--text-1)"
                   strokeDasharray="4 4"
                 />
               )}
@@ -224,15 +221,16 @@ export function Trends({
                   textAnchor="middle"
                   key={index}
                 >
-                  Game {metric === "playoffs" ? index : index + 1}
+                  {metric === "playoffs" ? index : index + 1}
                 </text>
               ))}
+              <text x={PLOT_L - 24} y="275" textAnchor="end">Game</text>
             </svg>
           </div>
           <p className="detail-note">
             Aligned by team game number, not calendar date. {metric === "playoffs"
               ? "The final point moves during live games as the score and live win estimate change."
-              : "Early windows use available games only."} Hover to inspect;
+              : "Early windows use available games only."} Hover or tap to inspect;
             exact values are in the table below.
           </p>
           <details className="inner-details">

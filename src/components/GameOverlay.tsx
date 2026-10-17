@@ -7,6 +7,7 @@ import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
 import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IntermissionRink } from "./IntermissionRink";
+import { useSheetDrag } from "../hooks/useSheetDrag";
 const PlayerTracker = lazy(() =>
   import("./PlayerTracker").then((m) => ({ default: m.PlayerTracker })),
 );
@@ -67,6 +68,7 @@ export function GameOverlay({
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+  const drag = useSheetDrag(dialog, () => closeOverlay());
   const closeOverlay = () => {
     const returnTo = pageScroll.current;
     onClose();
@@ -85,9 +87,11 @@ export function GameOverlay({
       }}
       aria-label={`${away.name} at ${home.name} full game view`}
     >
-      <div className="dialog-toolbar">
+      <div className="dialog-toolbar" {...drag}>
+        <span className="sheet-grabber" aria-hidden="true" />
         <button ref={closeButton} className="dialog-close" onClick={closeOverlay} aria-label="Close full game view">
-          <span>Close</span> ×
+          <span className="close-full"><span>Close</span> ×</span>
+          <span className="close-done">Done</span>
         </button>
       </div>
       <div className="dialog-matchup">

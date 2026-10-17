@@ -31,7 +31,7 @@ export function GameChart({ games, mode, fmtValue, yLabel, color, ariaLabel, exp
     <div className="np-chart" ref={ref}>
       <ul className="np-legend" aria-label="Legend">
         {mode === "expected-actual"
-          ? <><li><i className="np-sw" style={{ background: "#4d7f93" }} />{expectedLabel}</li><li><i className="np-sw np-diamond" style={{ background: color }} />{actualLabel}</li></>
+          ? <><li><i className="np-sw" style={{ background: "var(--line-4)" }} />{expectedLabel}</li><li><i className="np-sw np-diamond" style={{ background: color }} />{actualLabel}</li></>
           : <><li><i className="np-sw np-good" />Above zero</li><li><i className="np-sw np-bad" />Below zero</li></>}
       </ul>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`${ariaLabel}. Use left and right arrow keys to read each game.`} {...keys} onPointerLeave={() => setActive(null)}
@@ -45,7 +45,7 @@ export function GameChart({ games, mode, fmtValue, yLabel, color, ariaLabel, exp
             <g key={g.id} data-game={g.id}>
               {hot && <rect x={cx(i) - slot / 2} y={m.t} width={slot} height={height - m.t - m.b} className="np-cursor-band" />}
               {mode === "expected-actual" && g.expected != null && <rect x={cx(i) - bw / 2} y={Math.min(ys(g.expected), zero)} width={bw} height={Math.abs(zero - ys(g.expected))} fill="#4d7f93" opacity={hot ? 1 : 0.8} rx="2" />}
-              {mode === "expected-actual" && g.actual != null && <path d={`M${cx(i)},${ys(g.actual) - 6}l6,6l-6,6l-6,-6z`} fill={color} stroke="#0a131b" strokeWidth="1" />}
+              {mode === "expected-actual" && g.actual != null && <path d={`M${cx(i)},${ys(g.actual) - 6}l6,6l-6,6l-6,-6z`} fill={color} stroke="var(--surface-3)" strokeWidth="1" />}
               {mode === "single" && g.actual != null && <rect x={cx(i) - bw / 2} y={Math.min(ys(g.actual), zero)} width={bw} height={Math.max(1, Math.abs(zero - ys(g.actual)))} className={g.actual >= 0 ? "np-good" : "np-bad"} rx="2" />}
               {(i % every === 0 || i === n - 1) && <text className="np-tick" x={cx(i)} y={height - m.b + 14} textAnchor="middle">{g.label}</text>}
             </g>

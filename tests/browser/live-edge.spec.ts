@@ -22,6 +22,7 @@ test("live data updates without collapsing open cards; failure retains last scor
     ...scoreboardFixture.games.find((g) => g.id === fixture.id)!,
     state: "LIVE",
     homeScore: 0,
+    intermission: false, // the fixture game is in an intermission, which shows the Zamboni rink instead of the momentum chart
   };
   await page.route("**/api/live", async (route) => {
     calls++;

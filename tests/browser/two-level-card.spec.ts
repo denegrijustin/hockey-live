@@ -43,7 +43,8 @@ test("game cards and Game Center do not overflow a narrow mobile viewport", asyn
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((node) => node.getBoundingClientRect().width / innerWidth)).toBeGreaterThanOrEqual(0.95);
-  expect(await dialog.evaluate((node) => node.getBoundingClientRect().height / innerHeight)).toBeGreaterThanOrEqual(0.95);
+  // On phones the Game Center is a bottom sheet (94% tall) so the page shows above it.
+  expect(await dialog.evaluate((node) => node.getBoundingClientRect().height / innerHeight)).toBeGreaterThanOrEqual(0.9);
   expect(await dialog.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
 });
@@ -69,8 +70,9 @@ test("live games lead the board and completed-today games sit below unfinished g
   })).toBe(true);
 });
 
-test("desktop board puts four cards across, so eight games show at once", async ({ page, isMobile }) => {
+for (const [width, perRow] of [[1800, 4], [1440, 3]] as const) test(`desktop board at ${width}px puts ${perRow} cards across`, async ({ page, isMobile }) => {
   test.skip(!!isMobile, "desktop layout");
+  await page.setViewportSize({ width, height: 1000 });
   const today = new Date().toLocaleDateString("en-CA");
   const teams = ["EDM", "CHI", "MIN", "BOS", "SJS", "LAK", "NJD", "DET", "FLA", "CBJ", "BUF", "MTL"];
   const games = Array.from({ length: 8 }, (_, i) => ({ season: 20262027, type: 2, date: today, scheduleState: "OK", venue: "Test Arena", broadcasts: ["ESPN (US)"], round: null, end: "REG", id: 2026020700 + i, start: `${today}T${String(17 + (i % 4)).padStart(2, "0")}:00:00Z`, state: "FUT", home: "EDM", away: teams[i + 1], homeScore: null, awayScore: null }));
@@ -81,5 +83,5 @@ test("desktop board puts four cards across, so eight games show at once", async 
   await expect(cards).toHaveCount(8);
   const tops = await cards.evaluateAll(nodes => nodes.map(n => Math.round(n.getBoundingClientRect().top)));
   const rows = new Set(tops);
-  expect(rows.size, "two rows of four").toBe(2);
+  expect(rows.size, `${perRow} across`).toBe(Math.ceil(8 / perRow));
 });

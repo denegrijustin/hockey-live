@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { goTo } from "./nav";
 import { readFileSync } from "node:fs";
 
 // A finished season, so the map has a whole year of results to replay (the live season may have just started).
@@ -6,7 +7,7 @@ const season = JSON.parse(readFileSync("public/data/seasons/20252026.json", "utf
 
 test("Playoff odds tab shows a grid per conference, 16 teams each, with no sideways page scroll", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Playoff odds", exact: true }).click();
+  await goTo(page, "Playoff odds");
   for (const conf of ["E", "W"]) {
     const grid = page.getByTestId(`po-grid-${conf}`);
     await expect(grid).toBeVisible({ timeout: 30000 });
@@ -22,7 +23,7 @@ test("Imperialism map renders, time-travels and opens a region card", async ({ p
   await page.route("**/data/manifest.json", (r) => r.fulfill({ json: { updatedAt: season.updatedAt, current: 20252026, seasons: [20252026], defaultTeams: ["EDM", "CHI", "MIN"] } }));
   await page.route(/\/(api\/season|data\/seasons)\/\d+(\.json)?$/, (r) => r.fulfill({ json: season }));
   await page.goto("/");
-  await page.getByRole("button", { name: "Imperialism map", exact: true }).click();
+  await goTo(page, "Imperialism map");
   const map = page.getByTestId("imp-map");
   await expect(map).toBeVisible({ timeout: 30000 });
   const cells = page.locator('[data-testid^="imp-cell-"]');

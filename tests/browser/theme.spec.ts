@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { goTo } from "./nav";
 
 // The app follows the system appearance and contrast setting.
 const lum = (rgb: string) => {
@@ -24,7 +25,7 @@ for (const scheme of ["light", "dark"] as const) {
     else { expect(lum(colors.page)).toBeLessThan(0.05); expect(lum(colors.text)).toBeGreaterThan(0.5); }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
     for (const view of ["Team trends", "NHL+", "Standings"]) {
-      await page.getByRole("button", { name: new RegExp(`^${view.replace("+", "\\+")}`) }).first().click();
+      await goTo(page, view);
       await expect(page.locator("main")).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth), view).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
     }

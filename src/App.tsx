@@ -10,6 +10,7 @@ import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
 import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
+import { MainNav } from "./components/MainNav";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs
@@ -187,32 +188,13 @@ export default function App() {
         </div>
       </header>
       <main id="main" className="page">
+        <MainNav view={view} setView={setView} />
         <div className="control-dock">
           <TeamPicker
             teams={teams}
             selected={activeSelection}
             onChange={view === "players" ? setPlayerTeams : changeTeams}
           />
-          <nav className="view-tabs" aria-label="Dashboard views">
-            {[
-              ["games", "Game center"],
-              ["nhlplus", "NHL+"],
-              ["trends", "Team trends"],
-              ["edge", "NHL EDGE"],
-              ["players", "Players"],
-              ["standings", "Standings"],
-              ["odds", "Playoff odds"],
-              ["map", "Imperialism map"],
-            ].map(([id, label]) => (
-              <button
-                aria-pressed={view === id}
-                key={id}
-                onClick={() => setView(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
         </div>
         <div className={`freshness${liveError || hasLive || staleness > 86400000 ? " note" : ""}`}>
           <span>

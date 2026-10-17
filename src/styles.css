@@ -360,38 +360,6 @@ p {
   min-height: 32px;
   font-size: 0.6875rem;
 }
-.view-tabs {
-  display: flex;
-  gap: 26px;
-  border-bottom: 1px solid var(--line);
-  overflow: auto;
-}
-.view-tabs button {
-  border: 0;
-  border-radius: 0;
-  padding: 0 2px;
-  min-height: 53px;
-  color: var(--muted);
-  background: transparent;
-  white-space: nowrap;
-  font-size: 0.75rem;
-  font-weight: 550;
-  position: relative;
-}
-.view-tabs button[aria-pressed="true"] {
-  color: var(--mint);
-  background: transparent;
-}
-.view-tabs button[aria-pressed="true"]:after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  height: 3px;
-  left: 0;
-  right: 0;
-  background: var(--mint);
-  border-radius: 3px;
-}
 .freshness {
   display: flex;
   justify-content: space-between;
@@ -1539,8 +1507,9 @@ footer b {
     padding: 0 max(32px, calc((100vw - 1666px) / 2));
   }
 }
-/* Desktop: four cards across, so eight games sit open on the screen at once (two rows of four). */
-@media (min-width: 1280px) {
+/* Wide desktop: four cards across, so eight games sit open on the screen at once (two rows of four). Below this the
+   sidebar leaves room for three (two on narrower windows). */
+@media (min-width: 1700px) {
   .game-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
@@ -1670,13 +1639,6 @@ footer b {
     max-height: 55vh;
   }
   .team-options label {
-    min-height: 44px;
-  }
-  .view-tabs {
-    gap: 20px;
-  }
-  .view-tabs button {
-    font-size: 0.6875rem;
     min-height: 44px;
   }
   .freshness {
@@ -2287,13 +2249,6 @@ footer b {
   margin: 10px 0;
   padding: 12px;
 }
-.view-tabs {
-  overflow-x: auto;
-  white-space: nowrap;
-}
-.view-tabs button {
-  flex-shrink: 0;
-}
 @media (max-width: 1200px) {
   .edge-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2329,10 +2284,6 @@ footer b {
     flex: 0 0 150px;
     min-width: 150px;
     scroll-snap-align: start;
-  }
-  .view-tabs button {
-    padding-left: 11px;
-    padding-right: 11px;
   }
   .mini-heading {
     font-size: 0.6875rem;
@@ -2696,12 +2647,6 @@ select,
 .site-header {
   height: 64px;
 }
-.view-tabs button {
-  min-height: 44px;
-}
-.view-tabs {
-  gap: 22px;
-}
 .team-picker {
   padding: 10px 0;
 }
@@ -2779,12 +2724,6 @@ select,
   .team-menu {
     margin-left: 0;
     flex: none;
-  }
-  .view-tabs {
-    gap: 18px;
-  }
-  .view-tabs button {
-    min-height: 38px;
   }
   .freshness {
     padding: 2px 0 6px;
@@ -2877,15 +2816,6 @@ select,
 @media (max-width: 760px) {
   .control-dock {
     display: contents;
-  }
-  .view-tabs {
-    position: sticky;
-    top: var(--ticker-h, 0px);
-    z-index: 12;
-    margin: 0 -12px;
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--surface-3) 98%, transparent);
-    box-shadow: 0 4px 15px color-mix(in srgb, var(--surface-2) 66.7%, transparent);
   }
   .team-picker {
     border-top: 0;
@@ -3023,9 +2953,6 @@ select,
   .team-pill,
   .quick-teams .text-button,
   .team-menu > summary {
-    min-height: 34px;
-  }
-  .view-tabs button {
     min-height: 34px;
   }
   .team-picker {
@@ -3278,19 +3205,6 @@ select,
     padding: 0 10px;
     font-size: 0.75rem;
     white-space: nowrap;
-  }
-  .view-tabs {
-    margin: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    flex-wrap: nowrap;
-  }
-  .view-tabs button {
-    min-height: 34px;
-    padding: 0 10px;
-    font-size: 0.8125rem;
-    white-space: nowrap;
-    flex: none;
   }
   /* the snapshot line only speaks when there is something to say */
   .freshness:not(.note) {
@@ -3779,7 +3693,6 @@ body {
       .mp-tip,
       .ticker-item,
       .ticker-pause,
-      .view-tabs button,
       .team-options-heading button,
       .refresh-mini,
       .filters-toggle,
@@ -3812,7 +3725,6 @@ body {
       .mp-tip,
       .ticker-item,
       .ticker-pause,
-      .view-tabs button,
       .team-options-heading button,
       .refresh-mini,
       .filters-toggle,

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { goTo } from "./nav";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 import edgeFixture from "../../public/data/edge/20252026/EDM.json" with { type: "json" };
@@ -108,7 +109,7 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
     route.fulfill({ json: {...edgeFixture,season:20262027,requestedSeason:20262027} }),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "NHL EDGE", exact: true }).click();
+  await goTo(page, "NHL EDGE");
   const card = page.locator(".edge-grid .edge-card").first();
   await card.scrollIntoViewIfNeeded();
   await expect(card).toContainText("Top skating speed");
@@ -227,7 +228,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
 });
 test('current EDGE labels a prior-season fallback',async({page})=>{
  await page.route('**/api/edge/**',r=>r.fulfill({json:edgeFixture}));
- await page.goto('/'); await page.getByRole('button',{name:'NHL EDGE',exact:true}).click();
+ await page.goto('/'); await goTo(page, 'NHL EDGE');
  await expect(page.locator('.edge-grid .edge-card').first()).toContainText('Previous-season totals');
  await expect(page.locator('.edge-grid .edge-card').first().locator('.edge-metric')).toHaveCount(4);
 });

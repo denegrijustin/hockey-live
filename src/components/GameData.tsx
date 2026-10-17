@@ -43,10 +43,10 @@ export function ComparisonBar({
         <i
           style={{
             width: `${sum ? (away / sum) * 100 : 50}%`,
-            background: sum ? awayColor : "#344954",
+            background: sum ? awayColor : "var(--line-2)",
           }}
         />
-        <i style={{ flex: 1, background: sum ? homeColor : "#344954" }} />
+        <i style={{ flex: 1, background: sum ? homeColor : "var(--line-2)" }} />
       </div>
     </div>
   );
@@ -145,8 +145,8 @@ export function GameData({
             label="Shots on goal"
             away={data.awayShots ?? 0}
             home={data.homeShots ?? 0}
-            awayColor={"#73d9c1"}
-            homeColor={"#f2bc67"}
+            awayColor={"var(--series-away)"}
+            homeColor={"var(--series-home)"}
           />
           {data.stats
             .filter((s) => ["hit", "blocked-shot"].includes(s.label))
@@ -156,8 +156,8 @@ export function GameData({
                 label={s.label === "hit" ? "Hits" : "Blocks"}
                 away={s.away}
                 home={s.home}
-                awayColor={"#73d9c1"}
-                homeColor={"#f2bc67"}
+                awayColor={"var(--series-away)"}
+                homeColor={"var(--series-home)"}
               />
             ))}
           <p className="feed-time">
@@ -183,7 +183,7 @@ export function GameData({
                     cx={s.x!}
                     cy={-s.y!}
                     r={s.type === "goal" ? 3 : 1.5}
-                    fill={s.team === home.id ? "#f2bc67" : "#73d9c1"}
+                    fill={s.team === home.id ? "var(--series-home)" : "var(--series-away)"}
                     stroke={s.type === "goal" ? "white" : "none"}
                   >
                     <title>
@@ -315,7 +315,7 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
       <strong>{leader ? <><img src={`/logos/${leader.id}.svg`} alt="" /> {leader.id} +{Math.abs(selected.value).toFixed(1)}</> : "EVEN"}</strong>
     </div>
     <svg ref={chartRef} className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" data-elapsed={elapsed.toFixed(2)} data-duration={end} data-progress={(elapsed / end).toFixed(3)} aria-label={`Full-game momentum through ${flowTimeLabel(elapsed, data.type)}: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
-      <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="#9bb0ba"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
+      <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="var(--text-2)"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
       {ticks.map((minute) => <g key={minute} className="flow-time-mark"><line x1={x(minute)} x2={x(minute)} y1="7" y2={height - 19}/><text x={x(minute)} y={height - 5} textAnchor={minute === 0 ? "start" : minute === end ? "end" : "middle"}>{minute === 0 ? "START" : minute === end ? `END · ${minute}m` : `${minute}m`}</text></g>)}
       <line x1={left} x2={right} y1={center} y2={center} className="flow-zero" />
       <path d={curve} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
@@ -406,14 +406,14 @@ function ShotChart({
           <polyline
             key={t.id}
             points={points.join(" ")}
-            stroke={t.id === away.id ? "#73d9c1" : "#f2bc67"}
+            stroke={t.id === away.id ? "var(--series-away)" : "var(--series-home)"}
             fill="none"
             strokeWidth="2.5"
             strokeDasharray={t.id === home.id ? "5 3" : undefined}
           />
         );
       })}
-      <line x1={24+at/end*326} x2={24+at/end*326} y1="10" y2="92" stroke="#d7e5ed" strokeDasharray="2 3" />
+      <line x1={24+at/end*326} x2={24+at/end*326} y1="10" y2="92" stroke="var(--text-4)" strokeDasharray="2 3" />
     </svg>
     <input className="pulse-scrubber" type="range" min="0" max={Math.max(1,Math.round(elapsed*60))} value={seconds} step="1" aria-label={`${metric === 'hits' ? 'Hits' : 'Shots'} timeline time`} aria-valuetext={`${timeLabel}; ${away.id} ${totalAt(away.id)}, ${home.id} ${totalAt(home.id)}`} onChange={e=>setInspectTime(Number(e.target.value)/60)} />
     <small className="detail-note">Hover, tap or use the slider to inspect totals.</small>
@@ -427,6 +427,6 @@ function IceTilt({data}:{data:GameFeed}) {
  const h=tilt.homeShare==null?null:Math.round(tilt.homeShare*100);
  return <div className="ice-tilt"><div className="mini-heading">ICE TILT <span>Shot-pressure proxy · all strengths</span></div>
  <div className="prediction-labels"><span>{data.away} {h==null?'—':`${100-h}%`}</span><span>{data.home} {h==null?'—':`${h}%`}</span></div>
- <ComparisonBar label="Unblocked attempts" away={tilt.away} home={tilt.home} awayColor="#73d9c1" homeColor="#f2bc67" />
+ <ComparisonBar label="Unblocked attempts" away={tilt.away} home={tilt.home} awayColor="var(--series-away)" homeColor="var(--series-home)" />
  <p className="detail-note">{h==null?'No unblocked attempts in this window.':`${h===50?'Even pressure':`${h>50?data.home:data.away} has more shot pressure`}.`} Last {tilt.minutes.toFixed(1)} playing minutes: shots on goal + missed shots (goals counted once). Includes power plays. This estimates pressure, not measured offensive-zone possession or live NHL EDGE zone time.</p></div>;
 }

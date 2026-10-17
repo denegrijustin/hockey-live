@@ -149,7 +149,7 @@ export function Trends({
                       x2={PLOT_L + PLOT_W}
                       y1={y(v)}
                       y2={y(v)}
-                      stroke="#243641"
+                      stroke="var(--line-1)"
                       strokeDasharray="3 5"
                     />
                     <text x={PLOT_L - 10} y={y(v) + 4} textAnchor="end">
@@ -188,7 +188,7 @@ export function Trends({
                         cx={x(index)}
                         cy={y(point.value)}
                         r={point.live ? 14 : 13}
-                        fill="#10212c"
+                        fill="var(--surface-5)"
                         stroke={s.team.color}
                         strokeWidth="3"
                       />
@@ -210,7 +210,7 @@ export function Trends({
                   x2={x(hover)}
                   y1="25"
                   y2="245"
-                  stroke="#91a8b4"
+                  stroke="var(--text-1)"
                   strokeDasharray="4 4"
                 />
               )}

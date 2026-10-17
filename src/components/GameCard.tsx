@@ -59,7 +59,7 @@ export const GameCard = memo(function GameCard({
       ref={cardRef}
       data-start={game.start}
       className={`game-card ${scoreClass} ${live ? "live-card" : ""} ${expanded ? "is-expanded" : "is-compact"}${goal ? " goal-glow" : ""}`}
-      style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, #09141d), #0e1b25)`, ...(goal ? ({ "--gf": (goal.side === "home" ? home : away).cardColor ?? (goal.side === "home" ? home : away).color } as object) : {}) }}
+      style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, var(--surface-3)), var(--surface-4))`, ...(goal ? ({ "--gf": (goal.side === "home" ? home : away).cardColor ?? (goal.side === "home" ? home : away).color } as object) : {}) }}
     >
       <div className="game-card-top">
         <span className="game-date">

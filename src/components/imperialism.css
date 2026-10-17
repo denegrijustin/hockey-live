@@ -1,15 +1,15 @@
-.imp-root { --imp-line: #2c424f; --imp-bg: #10212c; --imp-mint: #7be1c6; --imp-muted: #97aab8;
+.imp-root { --imp-line: var(--line-1); --imp-bg: var(--surface-5); --imp-mint: var(--mint-5); --imp-muted: var(--text-1);
   border: 1px solid var(--imp-line); border-radius: 12px; background: var(--imp-bg); padding: 16px; margin-top: 16px;
-  min-width: 0; max-width: 100%; overflow: hidden; color: #e7eef2; }
+  min-width: 0; max-width: 100%; overflow: hidden; color: var(--text-5); }
 .imp-eyebrow { font-size: 0.6875rem; letter-spacing: 1.8px; font-weight: 750; color: var(--imp-mint); margin: 0 0 8px; }
 .imp-head h2 { font-size: 1.375rem; letter-spacing: -0.6px; margin: 0 0 6px; font-weight: 600; }
-.imp-rules, .imp-note { font-size: 0.6875rem; line-height: 1.6; color: #93aab9; margin: 0 0 12px; }
+.imp-rules, .imp-note { font-size: 0.6875rem; line-height: 1.6; color: var(--text-1); margin: 0 0 12px; }
 .imp-note { margin: 8px 0 14px; }
 .imp-empty { color: var(--imp-mint); font-size: 0.75rem; }
 .imp-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 12px; }
-.imp-seg { display: flex; padding: 4px; background: #101f29; border: 1px solid #2c414e; border-radius: 9px; gap: 3px; max-width: 100%; }
+.imp-seg { display: flex; padding: 4px; background: var(--surface-5); border: 1px solid var(--line-1); border-radius: 9px; gap: 3px; max-width: 100%; }
 .imp-seg button { min-height: 40px; background: transparent; border-color: transparent; font-size: 0.75rem; padding: 0 12px; }
-.imp-seg button[aria-pressed="true"] { background: #2b4549; color: #c6f7e8; border-color: #41645f; }
+.imp-seg button[aria-pressed="true"] { background: var(--surface-8); color: var(--mint-6); border-color: var(--line-2); }
 .imp-check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; font-size: 0.75rem; cursor: pointer; }
 .imp-check input { width: 20px; height: 20px; accent-color: var(--imp-mint); margin: 0; }
 .imp-zoom { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; }
@@ -24,7 +24,7 @@
 .imp-weeklabel em { font-style: normal; font-size: 0.6875rem; color: var(--imp-mint); }
 /* The map fits the screen at 1x (never taller than 70% of the viewport) and does not trap the page's scrolling; only when
    zoomed does it scroll inside its own box. */
-.imp-mapwrap { overflow: hidden; max-width: 100%; border: 1px solid var(--imp-line); border-radius: 10px; background: #0a1822; }
+.imp-mapwrap { overflow: hidden; max-width: 100%; border: 1px solid var(--imp-line); border-radius: 10px; background: var(--surface-3); }
 .imp-mapwrap.imp-zoomed { overflow: auto; overscroll-behavior: contain; max-height: 78dvh; }
 .imp-svg { display: block; height: auto; max-width: none; }
 .imp-mapwrap:not(.imp-zoomed) .imp-svg { max-height: 70dvh; margin: 0 auto; }
@@ -34,14 +34,14 @@
   .imp-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
   .imp-layout .imp-standings { border-top: 0; padding-top: 0; position: sticky; top: 12px; max-height: calc(100dvh - 24px); overflow: auto; }
 }
-.imp-sea { fill: #0a1822; }
+.imp-sea { fill: var(--surface-3); }
 .imp-cell { cursor: pointer; outline: none; }
-.imp-cell:focus-visible { stroke: #fff; stroke-width: 2.2; }
-.imp-owner-border { fill: none; stroke: rgba(6, 14, 20, 0.6); stroke-width: 1; stroke-linejoin: round; pointer-events: none; }
-.imp-lines { fill: none; stroke: rgba(255, 255, 255, 0.28); stroke-width: 0.5; pointer-events: none; }
-.imp-outline { fill: none; stroke: rgba(235, 245, 250, 0.7); stroke-width: 0.9; pointer-events: none; }
-.imp-selected { fill: none; stroke: #fff; stroke-width: 2; pointer-events: none; }
-.imp-logo circle { fill: rgba(8, 16, 22, 0.55); }
+.imp-cell:focus-visible { stroke: var(--text-6); stroke-width: 2.2; }
+.imp-owner-border { fill: none; stroke: color-mix(in srgb, var(--surface-2) 60%, transparent); stroke-width: 1; stroke-linejoin: round; pointer-events: none; }
+.imp-lines { fill: none; stroke: color-mix(in srgb, var(--overlay) 28%, transparent); stroke-width: 0.5; pointer-events: none; }
+.imp-outline { fill: none; stroke: color-mix(in srgb, var(--text-6) 70%, transparent); stroke-width: 0.9; pointer-events: none; }
+.imp-selected { fill: none; stroke: var(--text-6); stroke-width: 2; pointer-events: none; }
+.imp-logo circle { fill: color-mix(in srgb, var(--surface-2) 55%, transparent); }
 .imp-standings { border-top: 1px solid var(--imp-line); padding-top: 12px; }
 .imp-standings h3 { font-size: 0.875rem; margin: 0 0 8px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .imp-standings h3 span { font-size: 0.6875rem; font-weight: 400; color: var(--imp-muted); }
@@ -50,19 +50,19 @@
 .imp-rank { color: var(--imp-muted); text-align: right; }
 .imp-swatch { width: 10px; height: 10px; border-radius: 3px; display: block; }
 .imp-chip-logo { width: 20px; height: 20px; object-fit: contain; }
-.imp-bar { height: 6px; background: #1b2b37; border-radius: 3px; overflow: hidden; }
+.imp-bar { height: 6px; background: var(--surface-7); border-radius: 3px; overflow: hidden; }
 .imp-bar i { display: block; height: 100%; }
 .imp-count { text-align: right; font-variant-numeric: tabular-nums; }
 .imp-count small { color: var(--imp-muted); font-size: 0.6875rem; }
 .imp-standings em { font-style: normal; font-size: 0.6875rem; text-align: right; }
-.imp-up { color: var(--positive, #85dbb0); }
-.imp-down { color: var(--negative, #f1a19e); }
+.imp-up { color: var(--positive, var(--mint-5)); }
+.imp-down { color: var(--negative, var(--red-4)); }
 .imp-more { margin-top: 8px; min-height: 40px; }
-.imp-landless { font-size: 0.6875rem; line-height: 1.6; color: #93aab9; margin: 10px 0 0; overflow-wrap: anywhere; }
+.imp-landless { font-size: 0.6875rem; line-height: 1.6; color: var(--text-1); margin: 10px 0 0; overflow-wrap: anywhere; }
 .imp-loading { font-size: 0.75rem; color: var(--imp-muted); }
-.imp-error { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0.75rem; color: var(--negative, #f1a19e); padding: 10px 0; }
-.imp-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(4, 10, 14, 0.62); display: flex; align-items: flex-end; justify-content: center; }
-.imp-card { position: relative; width: min(100%, 460px); max-height: 82vh; overflow: auto; background: #13222e; border: 1px solid #344958; border-radius: 14px 14px 0 0; padding: 18px 16px 20px; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.45); }
+.imp-error { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0.75rem; color: var(--negative, var(--red-4)); padding: 10px 0; }
+.imp-backdrop { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--surface-1) 62%, transparent); display: flex; align-items: flex-end; justify-content: center; }
+.imp-card { position: relative; width: min(100%, 460px); max-height: 82vh; overflow: auto; background: var(--surface-5); border: 1px solid var(--line-1); border-radius: 14px 14px 0 0; padding: 18px 16px 20px; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.45); }
 .imp-card h3 { margin: 0; font-size: 1.125rem; }
 .imp-card h4 { margin: 14px 0 6px; font-size: 0.75rem; color: var(--imp-mint); letter-spacing: 0.6px; text-transform: uppercase; }
 .imp-coords { margin: 2px 0 10px; font-size: 0.6875rem; color: var(--imp-muted); }
@@ -70,7 +70,7 @@
 .imp-card dt { font-size: 0.6875rem; color: var(--imp-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 8px; }
 .imp-card dd { margin: 0; font-size: 0.875rem; display: flex; gap: 8px; align-items: center; }
 .imp-close { position: absolute; top: 8px; right: 8px; width: 40px; padding: 0; font-size: 1.375rem; }
-.imp-path { margin: 0; padding-left: 0; list-style: none; max-height: 34vh; overflow: auto; font-size: 0.75rem; line-height: 1.7; border-left: 2px solid #344958; }
+.imp-path { margin: 0; padding-left: 0; list-style: none; max-height: 34vh; overflow: auto; font-size: 0.75rem; line-height: 1.7; border-left: 2px solid var(--line-1); }
 .imp-path li { padding-left: 10px; }
 .imp-path small { color: var(--imp-muted); }
 @media (min-width: 700px) {

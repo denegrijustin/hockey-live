@@ -556,7 +556,7 @@ export default function App() {
         <Methodology />
         <footer>
           <span>
-            ICEBOARD <b> / </b> Built for the games that matter.
+            ICEBOARD <b aria-hidden="true"> / </b> Built for the games that matter.
           </span>
           <span>
             Independent NHL dashboard · Data:{" "}

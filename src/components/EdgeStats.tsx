@@ -129,7 +129,7 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
                 key={z.label}
                 style={{
                   width: `${z.value * 100}%`,
-                  background: ["#69cbb6", "#677f8d", "#cc8794"][i],
+                  background: ["var(--mint-4)", "var(--line-4)", "var(--red-4)"][i],
                 }}
                 title={`${z.label}: ${(z.value * 100).toFixed(1)}%`}
               />

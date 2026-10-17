@@ -1,10 +1,12 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const dir = "public/data/moneypuck/20262027";
 const read = (f: string) => JSON.parse(readFileSync(`${dir}/${f}`, "utf8"));
 const games = read("games.json"), summary = read("summary.json");
-const OT = read("shots/2026020063.json"), SO = read("shots/2026020068.json");
+// Saved shots are a rolling window that the daily refresh prunes, so the tests keep their own copies of the games they use.
+const fixture = (id: string) => JSON.parse(readFileSync(`tests/fixtures/shots/${id}.json`, "utf8"));
+const OT = fixture("2026020063"), SO = fixture("2026020068");
 const today = new Date().toLocaleDateString("en-CA");
 const base = { season: 20262027, type: 2, date: today, scheduleState: "OK", venue: "Test Arena", broadcasts: ["ESPN (US)"], round: null, end: "REG" };
 const at = (h: number) => `${today}T${String(h).padStart(2, "0")}:00:00Z`;
@@ -22,6 +24,11 @@ const pen = (period: number, time: string, team: string) => ({ id: period * 100,
 
 async function mount(page: Page, keys: K[], opts: { summary?: (j: any) => any; failSummary?: boolean } = {}) {
   const list = keys.map((k) => G[k]);
+  // The three games' shots come from the test's own copies; the saved shots on disk are pruned by the daily refresh.
+  await page.route(/\/moneypuck\/20262027\/shots\/(\d{10})(\.json)?$/, (r) => {
+    const id = /(\d{10})(\.json)?$/.exec(new URL(r.request().url()).pathname)![1];
+    return existsSync(`tests/fixtures/shots/${id}.json`) ? r.fulfill({ json: fixture(id) }) : r.fallback();
+  });
   await page.route("**/api/season/20262027", (r) => r.fulfill({ json: { season: 20262027, updatedAt: new Date().toISOString(), source: "test", games: list } }));
   await page.route("**/api/live", (r) => r.fulfill({ json: { date: today, updatedAt: new Date().toISOString(), games: list.filter((g) => g.state === "LIVE") } }));
   await page.route("**/api/game/*", (r) => {

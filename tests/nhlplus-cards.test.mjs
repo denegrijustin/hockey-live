@@ -6,6 +6,8 @@ import { cardMode, hasGameAnalytics, isShootout, modeNote, timelineLayout, playS
 
 const dir = "public/data/moneypuck/20262027";
 const read = (f) => JSON.parse(readFileSync(`${dir}/${f}`, "utf8"));
+// Saved shots are a rolling window that the daily refresh prunes, so the tests keep their own copies of the games they use.
+const fixture = (id) => JSON.parse(readFileSync(`tests/fixtures/shots/${id}.json`, "utf8"));
 const games = read("games.json"), summary = read("summary.json");
 
 test("card mode: pregame, live, intermission, final available / pending", () => {
@@ -54,14 +56,14 @@ test("timeline: regular-season OT is 5 minutes, playoff OT 20, extra OTs are lab
 });
 
 test("real OT game from the saved shots fits its timeline", () => {
-  const f = read("shots/2026020063.json");
+  const f = fixture("2026020063");
   const l = timelineLayout(f.shots, { playoff: false, periods: games.games[f.gameId]?.periods ?? 3 });
   assert.equal(l.end, 3900);
   assert.ok(f.shots.every((s) => s.t <= l.end));
 });
 
 test("chance flow ends at the sum of xG; partial fill stops at `through`", () => {
-  const f = read("shots/2026020050.json");
+  const f = fixture("2026020050");
   const full = chanceFlow(f.shots, f.home, f.away, {});
   const sum = (team) => f.shots.filter((s) => s.team === team).reduce((t, s) => t + s.xg, 0);
   assert.ok(Math.abs(full.at(-1).home - sum(f.home)) < 1e-9);

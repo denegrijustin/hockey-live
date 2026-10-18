@@ -48,8 +48,10 @@ button {
   font-size: 0.75rem;
   font-weight: 600;
 }
-button:hover {
-  background: var(--line-1);
+@media (hover: hover) {
+  button:hover {
+    background: var(--line-1);
+  }
 }
 button:disabled {
   cursor: wait;

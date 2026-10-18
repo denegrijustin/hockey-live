@@ -22,6 +22,7 @@ export function GameOverlay({
   ranks,
   allGames,
   series,
+  returnTo,
   onClose,
 }: {
   game: Game;
@@ -34,6 +35,8 @@ export function GameOverlay({
   ranks?: any;
   allGames: Game[];
   series: { away: number; home: number; played: number };
+  /** Where the page was scrolled when the Game Center was opened; the page returns there on close. */
+  returnTo?: number;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -55,7 +58,8 @@ export function GameOverlay({
   useLayoutEffect(() => {
     const element = dialog.current;
     if (!element) return;
-    pageScroll.current = window.scrollY;
+    // The position recorded at the tap wins: the page can move between the tap and this mount.
+    pageScroll.current = returnTo ?? window.scrollY;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;

@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { selectAllTeams } from "./controls";
 test("rank line, crossover comparison at 320px, team swapping and ESPN link", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.route("**/api/espn/*", (route) =>
     route.fulfill({ json: { date: "x", games: {} } }),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
+  await selectAllTeams(page);
   // The current season may still be preseason (no standings yet, so no ranks).
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
   const card = page.locator(".game-card").first();

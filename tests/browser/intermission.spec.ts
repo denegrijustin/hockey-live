@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { filterGames, selectAllTeams } from "./controls";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 import teams from "../../src/data/teams.json" with { type: "json" };
@@ -11,12 +12,8 @@ async function open(page: Page, extra: Record<string, unknown>) {
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] } }));
   await page.route("**/api/game/*", (route) => route.fulfill({ json: { ...fixture, state: "LIVE", plays: [] } }));
   await page.goto("/");
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
-  const filters = page.getByRole("button", { name: /^Filters/ });
-  await filters.or(page.getByLabel("Competition")).first().waitFor();
-  if (await filters.isVisible()) await filters.click();
-  await page.getByLabel("Competition").selectOption(String(game.type));
-  await page.getByLabel("Window").selectOption("all");
+  await selectAllTeams(page);
+  await filterGames(page, { competition: String(game.type), window: "all" });
   return page.locator(".live-card").first();
 }
 

@@ -3,7 +3,7 @@ import { useSeason } from "./hooks/useSeason";
 import { useGameLists } from "./hooks/useGameLists";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { NHLPLUS_EVENT } from "./lib/nhlplus-nav";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
@@ -11,6 +11,13 @@ import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
 import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
 import { MainNav } from "./components/MainNav";
+import { Sheet } from "./components/Sheet";
+import { GameFilterFields, PeriodSwitch } from "./components/GameFilters";
+import { TeamsSheet } from "./components/TeamsSheet";
+import { StatusPill } from "./components/StatusPill";
+import { Icon } from "./components/icons";
+import { useMedia } from "./hooks/useMedia";
+import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs
@@ -79,7 +86,9 @@ export default function App() {
     [range, setRange] = useState("30"),
     [query, setQuery] = useState(""),
     [limit, setLimit] = useState(18),
-    [filtersOpen, setFiltersOpen] = useState(false);
+    [filtersOpen, setFiltersOpen] = useState(false),
+    [teamsOpen, setTeamsOpen] = useState(false);
+  const phone = useMedia("(max-width: 720px)");
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
     [data],
@@ -136,6 +145,21 @@ export default function App() {
   const activeTeams = activeSelection.map(id => teams.find(t => t.id === id)!).filter(Boolean);
   const sourceSeason = season;
   const staleness = data ? Date.now() - Date.parse(data.updatedAt) : 0;
+  const refresh = useCallback(() => {
+    retry();
+    window.dispatchEvent(new Event("iceboard:refresh"));
+  }, [retry]);
+  const { pull, busy: refreshing } = usePullToRefresh(refresh, phone);
+  const liveCount = scoreboard ? scoreboard.games.filter(isLive).length : 0;
+  const defaultRange = isAllTeams ? "7" : "30";
+  // How many filters differ from the defaults: shown on the phone Filters button.
+  const activeFilters = [period !== "future", type !== 2, range !== defaultRange, sort !== "date"].filter(Boolean).length;
+  const resetFilters = () => {
+    setPeriod("future");
+    setType(2);
+    setRange(defaultRange);
+    setSort("date");
+  };
   return (
     <>
       <a href="#main" className="skip-link">
@@ -161,10 +185,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
-          <span className="feed-status">
-            <i />
-            NHL DATA
-          </span>
+          <StatusPill live={hasLive} offline={!!liveError} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
             Season
             <select
@@ -188,14 +209,47 @@ export default function App() {
         </div>
       </header>
       <main id="main" className="page">
-        <MainNav view={view} setView={setView} />
+        <MainNav view={view} setView={setView} liveCount={liveCount} onRefresh={refresh} />
+        {(pull > 0 || refreshing) && (
+          <div className="ptr" role="status" style={{ opacity: refreshing ? 1 : Math.min(1, pull) }} data-ready={pull >= 1}>
+            <Icon name="refresh" size={20} />
+            <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
+          </div>
+        )}
         <div className="control-dock">
-          <TeamPicker
-            teams={teams}
-            selected={activeSelection}
-            onChange={view === "players" ? setPlayerTeams : changeTeams}
-          />
+          {phone ? (
+            <div className="phone-controls">
+              <button className="pc-button" aria-label="Choose teams" aria-haspopup="dialog" onClick={() => setTeamsOpen(true)}>
+                Teams <b>{activeSelection.length}</b>
+              </button>
+              {view === "games" && (
+                <>
+                  <button className="pc-button" aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}>
+                    Filters {activeFilters > 0 && <b>{activeFilters}</b>}
+                  </button>
+                  <label className="phone-search">
+                    <Icon name="search" size={18} />
+                    <input type="search" aria-label="Find a matchup" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} />
+                  </label>
+                </>
+              )}
+            </div>
+          ) : (
+            <TeamPicker
+              teams={teams}
+              selected={activeSelection}
+              onChange={view === "players" ? setPlayerTeams : changeTeams}
+            />
+          )}
         </div>
+        {phone ? (
+          (liveError || staleness > 86400000) && (
+            <div className="status-banner" role="status">
+              <span>{liveError ? "Live scores unavailable. Showing saved data." : "Showing a saved copy. Refresh pending."}</span>
+              <button onClick={refresh} disabled={loading}>Retry</button>
+            </div>
+          )
+        ) : (
         <div className={`freshness${liveError || hasLive || staleness > 86400000 ? " note" : ""}`}>
           <span>
             <span className="fresh-counts"><b>{teams.length}</b> teams · <b>{data?.games.filter((g) => g.type === 2).length ?? "—"}</b> regular-season games · </span>
@@ -209,13 +263,11 @@ export default function App() {
                 ? " · Saved copy; refresh pending"
                 : ""}
           </span>
-          <button onClick={() => {
-            retry();
-            window.dispatchEvent(new Event("iceboard:refresh"));
-          }} disabled={loading}>
+          <button onClick={refresh} disabled={loading}>
             ↻ Refresh
           </button>
         </div>
+        )}
         {error ? (
           <div className="empty error">
             <h2>Unable to load data</h2>
@@ -256,108 +308,39 @@ export default function App() {
             )}
             {view === "games" && (
               <>
-                <div className="section-heading">
-                  <div>
-                    <p className="eyebrow">CIRCLE THESE ON THE CALENDAR</p>
-                    <h2>Game center</h2>
-                  </div>
-                  <div
-                    className="segmented"
-                    role="group"
-                    aria-label="Game period"
-                  >
-                    <button
-                      aria-pressed={period === "future"}
-                      onClick={() => setPeriod("future")}
-                    >
-                      Upcoming{" "}
-                      <span>
-                        {
-                          relevant.filter(
-                            (g) => g.type === type && !finished(g),
-                          ).length
-                        }
-                      </span>
-                    </button>
-                    <button
-                      aria-pressed={period === "past"}
-                      onClick={() => setPeriod("past")}
-                    >
-                      Past games{" "}
-                      <span>
-                        {
-                          relevant.filter((g) => g.type === type && finished(g))
-                            .length
-                        }
-                      </span>
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="refresh-mini"
-                    aria-label="Refresh the NHL data"
-                    title="Refresh"
-                    disabled={loading}
-                    onClick={() => {
-                      retry();
-                      window.dispatchEvent(new Event("iceboard:refresh"));
-                    }}
-                  >
-                    ↻
-                  </button>
-                  <button
-                    type="button"
-                    className="filters-toggle"
-                    aria-expanded={filtersOpen}
-                    aria-controls="game-filters"
-                    onClick={() => setFiltersOpen((v) => !v)}
-                  >
-                    Filters <b>{games.length}</b> <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
-                  </button>
-                </div>
-                <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>
-                  <label>
-                    Competition
-                    <select
-                      value={type}
-                      onChange={(e) => setType(+e.target.value)}
-                    >
-                      <option value={2}>Regular season</option>
-                      <option value={1}>Preseason</option>
-                      <option value={3}>Playoffs</option>
-                    </select>
-                  </label>
-                  <label>
-                    Window
-                    <select
-                      value={range}
-                      onChange={(e) => setRange(e.target.value)}
-                    >
-                      <option value="7">Within 7 days of today</option>
-                      <option value="30">Within 30 days of today</option>
-                      <option value="all">Entire season</option>
-                    </select>
-                  </label>
-                  <label>
-                    Sort by
-                    <select
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value)}
-                    >
-                      <option value="date">Game date (chronological)</option>
-                      <option value="importance">Importance to teams + league</option>
-                    </select>
-                  </label>
-                  <label className="game-search">
-                    Find a matchup
-                    <input
-                      type="search"
-                      placeholder="Team or opponent…"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                    />
-                  </label>
-                </div>
+                {!phone && (
+                  <>
+                    <div className="section-heading">
+                      <div>
+                        <p className="eyebrow">CIRCLE THESE ON THE CALENDAR</p>
+                        <h2>Game center</h2>
+                      </div>
+                      <PeriodSwitch period={period} setPeriod={setPeriod} relevant={relevant} type={type} />
+                      <button
+                        type="button"
+                        className="refresh-mini"
+                        aria-label="Refresh the NHL data"
+                        title="Refresh"
+                        disabled={loading}
+                        onClick={refresh}
+                      >
+                        ↻
+                      </button>
+                      <button
+                        type="button"
+                        className="filters-toggle"
+                        aria-expanded={filtersOpen}
+                        aria-controls="game-filters"
+                        onClick={() => setFiltersOpen((v) => !v)}
+                      >
+                        Filters <b>{games.length}</b> <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
+                      </button>
+                    </div>
+                    <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>
+                      <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} />
+                    </div>
+                  </>
+                )}
                 <div className="results-line">
                   <span role="status">
                     {games.length} games · {selected.length} selected teams
@@ -548,6 +531,23 @@ export default function App() {
           </span>
         </footer>
       </main>
+      {phone && filtersOpen && (
+        <Sheet title="Filters" onClose={() => setFiltersOpen(false)} left={<button className="sheet-reset" onClick={resetFilters}>Reset</button>}>
+          <div className="sheet-status">
+            <span>Status</span>
+            <PeriodSwitch period={period} setPeriod={setPeriod} relevant={relevant} type={type} />
+          </div>
+          <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} showSearch={false} />
+        </Sheet>
+      )}
+      {phone && teamsOpen && (
+        <TeamsSheet
+          teams={teams}
+          selected={activeSelection}
+          onChange={view === "players" ? setPlayerTeams : changeTeams}
+          onClose={() => setTeamsOpen(false)}
+        />
+      )}
     </>
   );
 }

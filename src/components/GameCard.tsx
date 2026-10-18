@@ -53,7 +53,11 @@ export const GameCard = memo(function GameCard({
     return () => document.removeEventListener("pointerdown", outside);
   }, [expanded, gameCenterOpen]);
 
-  const openGameCenter = () => setGameCenterOpen(true);
+  const scrollAtOpen = useRef(0);
+  const openGameCenter = () => {
+    scrollAtOpen.current = window.scrollY;
+    setGameCenterOpen(true);
+  };
   return (
     <article
       ref={cardRef}
@@ -135,6 +139,7 @@ export const GameCard = memo(function GameCard({
           analysis={analysis}
           allGames={allGames}
           series={series}
+          returnTo={scrollAtOpen.current}
           onClose={() => setGameCenterOpen(false)}
         />
       </Suspense>}

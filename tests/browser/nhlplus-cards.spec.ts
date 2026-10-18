@@ -1,4 +1,5 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
+import { selectAllTeams, showPeriod } from "./controls";
 import { existsSync, readFileSync } from "node:fs";
 
 const dir = "public/data/moneypuck/20262027";
@@ -46,13 +47,12 @@ async function mount(page: Page, keys: K[], opts: { summary?: (j: any) => any; f
     await page.route("**/data/moneypuck/20262027/summary.json", async (r) => { const j = JSON.parse(readFileSync(`${dir}/summary.json`, "utf8")); r.fulfill({ json: opts.summary!(j) }); });
   }
   await page.goto("/");
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
+  await selectAllTeams(page);
 }
 const card = (page: Page, k: K) => page.locator(".game-card").filter({ has: page.locator(`.matchup-team img[src="/logos/${G[k].away}.svg"]`) }).filter({ has: page.locator(`.matchup-team img[src="/logos/${G[k].home}.svg"]`) }).first();
 async function show(page: Page, k: K): Promise<Locator> {
   const past = G[k].state === "FINAL";
-  const tab = page.getByRole("button", { name: past ? /^Past games/ : /^Upcoming/ });
-  if ((await tab.getAttribute("aria-pressed")) !== "true") await tab.click();
+  await showPeriod(page, past ? "past" : "future");
   const c = card(page, k);
   await c.scrollIntoViewIfNeeded();
   await expect(c).toBeVisible();

@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import { closeTeams, openTeams, teamCount } from "./controls";
 test('standings groups and projected totals work on all screen sizes',async({page},info)=>{
  await page.goto('/'); await page.getByRole('button',{name:'Standings',exact:true}).click();
  await page.getByLabel('Group standings').selectOption('conference');
@@ -29,18 +30,19 @@ test('Players defaults to My three independently and supports custom teams or Al
  await page.addInitScript(()=>localStorage.setItem('iceboard-teams',JSON.stringify(['FLA','CAR'])));
  await page.route('**/api/players/**',r=>r.fulfill({json:{season:20262027,skaters:[],goalies:[]}}));
  await page.goto('/'); await page.getByRole('button',{name:'Players',exact:true}).click();
- await expect(page.locator('.team-menu summary span')).toHaveText('3');
- await expect(page.getByRole('button',{name:'EDM',exact:true})).toHaveAttribute('aria-pressed','true');
- await page.getByText('Choose teams',{exact:false}).click();
+ await expect(await teamCount(page)).toHaveText('3');
+ await openTeams(page);
+ // The picks are checkboxes in both layouts; My three and All 32 are buttons next to them (pills on desktop, in the sheet on phones).
+ await expect(page.getByRole('button',{name:'My three',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('checkbox',{name:'Florida Panthers',exact:true}).check();
- await expect(page.locator('.team-menu summary span')).toHaveText('4');
- await page.getByText('Choose teams',{exact:false}).click();
+ await expect(await teamCount(page)).toHaveText('4');
  await page.getByRole('button',{name:'All 32',exact:true}).click();
  await expect(page.getByRole('button',{name:'All 32',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('button',{name:'My three',exact:true}).click();
- await expect(page.locator('.team-menu summary span')).toHaveText('3');
+ await expect(await teamCount(page)).toHaveText('3');
+ await closeTeams(page);
  await page.getByRole('button',{name:'Game center',exact:true}).click();
- await expect(page.locator('.team-menu summary span')).toHaveText('2');
- await page.getByText('Choose teams',{exact:false}).click();
+ await expect(await teamCount(page)).toHaveText('2');
+ await openTeams(page);
  await expect(page.getByRole('checkbox',{name:'Florida Panthers',exact:true})).toBeChecked();
 });

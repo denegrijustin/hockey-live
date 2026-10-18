@@ -242,7 +242,8 @@ test.describe("NHL+ Goalies, Players, Trends, Data", () => {
   });
 
   test("trends: game charts, keyboard tooltip, goalies apart from defense", async ({ page }, info) => {
-    await mock(page);
+    // The saved data now holds several daily snapshots; this test is about the first day, when there is exactly one.
+    await mock(page, { edit: (part, json) => { if (part === "status") json.historyDates = ["2026-10-13"]; } });
     await openPlus(page);
     await sub(page, "Trends").click();
     await expect(page.getByRole("heading", { name: /Goals scored vs\. expected goals/ })).toBeVisible();

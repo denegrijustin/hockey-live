@@ -1,9 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const DAY = "2026-10-10";
+// The saved season moves on every day (this day's games now have final scores), so the tests serve their own copy in
+// which the pinned day is still ahead: every game that day is scheduled, with no score.
+async function seasonOnDay(page: Page) {
+  const season = await (await page.request.get("/data/seasons/20262027.json")).json();
+  season.games = season.games.map((g: { date: string }) => (g.date === DAY ? { ...g, state: "FUT", homeScore: null, awayScore: null, end: undefined } : g));
+  return season;
+}
 // The clock is pinned so "today" is a day with games whatever day the suite runs.
 async function open(page: Page, live: unknown = null) {
   await page.clock.setFixedTime(new Date(`${DAY}T12:00:00-05:00`));
+  const season = await seasonOnDay(page);
+  await page.route("**/data/seasons/20262027.json", (route) => route.fulfill({ json: season }));
   if (live) await page.route("**/api/live", (route) => route.fulfill({ json: live }));
   else await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/");
@@ -11,7 +20,7 @@ async function open(page: Page, live: unknown = null) {
 }
 const real = (page: Page) => page.locator(".ticker-track > li:not(.ticker-dup) .ticker-item");
 
-test("the strip sits at the very top, says TODAY, and lists every game on the day", async ({ page, request }) => {
+test("the strip sits at the very top, says TODAY, and lists every game on the day", async ({ page }) => {
   await open(page);
   const ticker = page.getByRole("region", { name: "Today's games" });
   await expect(ticker.locator(".ticker-title")).toHaveText("TODAY");
@@ -21,15 +30,15 @@ test("the strip sits at the very top, says TODAY, and lists every game on the da
   expect(await ticker.evaluate((e) => Math.round(e.getBoundingClientRect().top))).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual((page.viewportSize()?.width ?? 0) + 1);
   // One entry per game scheduled that day, each with a start time.
-  const season = await (await request.get("/data/seasons/20262027.json")).json();
+  const season = await seasonOnDay(page);
   const expected = season.games.filter((g: { date: string }) => g.date === DAY).length;
   expect(expected).toBeGreaterThan(0);
   await expect(real(page)).toHaveCount(expected);
   for (const label of await real(page).evaluateAll((els) => els.map((e) => e.querySelector(".ticker-final")?.textContent ?? ""))) expect(label).toMatch(/^\d{1,2}:\d{2}\s?(AM|PM)$/);
 });
 
-test("live games lead with the score and period, finished ones show FINAL, the rest keep their start time", async ({ page, request }) => {
-  const season = await (await request.get("/data/seasons/20262027.json")).json();
+test("live games lead with the score and period, finished ones show FINAL, the rest keep their start time", async ({ page }) => {
+  const season = await seasonOnDay(page);
   const day = season.games.filter((g: { date: string }) => g.date === DAY);
   const [a, b, c] = day;
   const live = {

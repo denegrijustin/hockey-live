@@ -34,7 +34,7 @@ export function GameFilterFields({ type, setType, range, setRange, sort, setSort
   return (
     <>
       <label>
-        Competition
+        <span className="field-label">Competition</span>
         <select value={type} onChange={(e) => setType(+e.target.value)}>
           <option value={2}>Regular season</option>
           <option value={1}>Preseason</option>
@@ -42,7 +42,7 @@ export function GameFilterFields({ type, setType, range, setRange, sort, setSort
         </select>
       </label>
       <label>
-        Window
+        <span className="field-label">Window</span>
         <select value={range} onChange={(e) => setRange(e.target.value)}>
           <option value="7">Within 7 days of today</option>
           <option value="30">Within 30 days of today</option>
@@ -50,7 +50,7 @@ export function GameFilterFields({ type, setType, range, setRange, sort, setSort
         </select>
       </label>
       <label>
-        Sort by
+        <span className="field-label">Sort by</span>
         <select value={sort} onChange={(e) => setSort(e.target.value)}>
           <option value="date">Game date (chronological)</option>
           <option value="importance">Importance to teams + league</option>
@@ -58,7 +58,7 @@ export function GameFilterFields({ type, setType, range, setRange, sort, setSort
       </label>
       {showSearch && (
         <label className="game-search">
-          Find a matchup
+          <span className="field-label">Find a matchup</span>
           <input type="search" placeholder="Team or opponent…" value={query} onChange={(e) => setQuery(e.target.value)} />
         </label>
       )}

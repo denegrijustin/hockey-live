@@ -1,4 +1,5 @@
 import { Suspense, lazy, useLayoutEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
@@ -8,6 +9,11 @@ import { GoalieComparison } from "./TeamComparison";
 import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IntermissionRink } from "./IntermissionRink";
 import { useSheetDrag } from "../hooks/useSheetDrag";
+import { useMedia } from "../hooks/useMedia";
+
+/** On wide screens the Game Center docks at the side and the list stays usable; opening another game swaps it in. */
+export const PANEL_QUERY = "(min-width: 1500px)";
+const PANEL_EVENT = "iceboard:game-panel";
 const PlayerTracker = lazy(() =>
   import("./PlayerTracker").then((m) => ({ default: m.PlayerTracker })),
 );
@@ -55,9 +61,35 @@ export function GameOverlay({
     const days = Math.max(0, Math.round((Date.parse(game.start) - Date.parse(previous.start)) / 86400000) - 1);
     return days === 0 ? "Back-to-back" : `${days} day${days === 1 ? "" : "s"} rest`;
   };
+  const panel = useMedia(PANEL_QUERY);
+  const openedAsPanel = useRef(panel);
   useLayoutEffect(() => {
     const element = dialog.current;
     if (!element) return;
+    // Crossing the width threshold while open would need the other kind of dialog: close instead.
+    if (openedAsPanel.current !== panel) {
+      onClose();
+      return;
+    }
+    if (panel) {
+      // A docked, non-modal panel: the page behind it keeps its scroll position and stays interactive.
+      element.show();
+      document.body.dataset.gcPanel = String(game.id);
+      closeButton.current?.focus({ preventScroll: true });
+      const swap = (e: Event) => {
+        if ((e as CustomEvent).detail !== game.id) onClose();
+      };
+      const escape = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+      window.addEventListener(PANEL_EVENT, swap);
+      element.addEventListener("keydown", escape);
+      window.dispatchEvent(new CustomEvent(PANEL_EVENT, { detail: game.id }));
+      return () => {
+        window.removeEventListener(PANEL_EVENT, swap);
+        element.removeEventListener("keydown", escape);
+        // Only the panel that is still current clears the marker (a swap sets the new one first).
+        if (document.body.dataset.gcPanel === String(game.id)) delete document.body.dataset.gcPanel;
+      };
+    }
     // The position recorded at the tap wins: the page can move between the tap and this mount.
     pageScroll.current = returnTo ?? window.scrollY;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -71,19 +103,21 @@ export function GameOverlay({
       closeButton.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panel]);
   const drag = useSheetDrag(dialog, () => closeOverlay());
   const closeOverlay = () => {
+    if (panel) return onClose(); // nothing moved the page, so there is nothing to restore
     const returnTo = pageScroll.current;
     onClose();
     requestAnimationFrame(() =>
       window.scrollTo({ top: returnTo, left: 0, behavior: "instant" }),
     );
   };
-  return (
+  const node = (
     <dialog
       ref={dialog}
-      className="game-dialog"
+      className={`game-dialog${panel ? " is-panel" : ""}`}
       onClose={closeOverlay}
       onCancel={(event) => {
         event.preventDefault();
@@ -175,4 +209,6 @@ export function GameOverlay({
       </details>
     </dialog>
   );
+  // Docked, the panel renders at the page root: inside a card it would be clipped and positioned relative to the card.
+  return panel ? createPortal(node, document.body) : node;
 }

@@ -610,3 +610,69 @@
   border-color: var(--mint);
   color: var(--mint);
 }
+
+/* ---------- Desktop: filters as one toolbar row ---------- */
+/* The four labelled fields become a single compact row; the labels stay for screen readers and in the phone sheet. */
+@media (min-width: 721px) {
+  .game-filters {
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+  }
+  .game-filters label {
+    min-width: 0;
+  }
+  .game-filters .field-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .game-filters select,
+  .game-filters input {
+    min-height: 40px;
+  }
+  .game-search {
+    flex: 1.4 !important;
+  }
+}
+
+/* ---------- Game Center as a docked side panel on wide screens ---------- */
+@media (min-width: 1500px) {
+  .game-dialog.is-panel {
+    position: fixed;
+    inset: var(--ticker-h, 0px) 0 0 auto;
+    margin: 0;
+    width: 520px;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    padding: 16px 20px 24px;
+    border: 0;
+    border-left: 1px solid var(--line-1);
+    border-radius: 0;
+    box-shadow: -8px 0 24px rgb(0 0 0 / 22%);
+    animation: panel-in 220ms ease-out;
+  }
+  /* The list makes room for it and stays clickable. */
+  body[data-gc-panel] main.page {
+    margin-left: 0;
+    margin-right: 520px;
+  }
+  body[data-gc-panel] .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  }
+}
+@keyframes panel-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-dialog.is-panel {
+    animation: none;
+  }
+}

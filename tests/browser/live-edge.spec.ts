@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { filterGames, selectAllTeams } from "./controls";
 import { goTo } from "./nav";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
@@ -7,11 +8,8 @@ import type { Page } from "@playwright/test";
 // The live game leads the list once every team and any date window is shown (this used to be a click in the live strip).
 async function showLiveGame(page: Page) {
   const g = scoreboardFixture.games.find((x) => x.id === fixture.id)!;
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
-  const filters = page.getByRole("button", { name: /^Filters/ });
-  if (await filters.isVisible()) await filters.click(); // folded behind a button on phones
-  await page.getByLabel("Competition").selectOption(String(g.type));
-  await page.getByLabel("Window").selectOption("all");
+  await selectAllTeams(page);
+  await filterGames(page, { competition: String(g.type), window: "all" });
 }
 test("live data updates without collapsing open cards; failure retains last score", async ({
   page,
@@ -93,7 +91,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await expect(why).toHaveAttribute("open", "");
   await expect(dialog.locator(".projection .prediction-labels")).not.toHaveText(previousEstimate);
   await page.clock.fastForward(31000);
-  await expect(page.locator(".freshness")).toContainText("Update unavailable");
+  await expect(page.locator(".freshness, .status-banner").first()).toContainText(/unavailable/i); // a line on desktop, a banner on phones
   await expect(card.locator(".matchup-team").last().locator("b")).toHaveText(
     "1",
   );
@@ -171,8 +169,10 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await showLiveGame(page);
   const card = page.locator(".live-card").first();
   await card.locator(".game-card-summary").click();
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  await card.locator(".primary-game-center").click();
+  // Make sure there is something to scroll, so the test can check the position comes back after the dialog closes.
+  await page.evaluate(() => { document.body.style.minHeight = "3000px"; window.scrollTo(0, 120); });
+  // Opened without Playwright's own scroll-into-view, so the test checks the app: the page returns to where it was.
+  await card.locator(".primary-game-center").dispatchEvent("click");
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("open", "");

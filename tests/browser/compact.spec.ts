@@ -9,12 +9,13 @@ test("on a phone the first game card starts high on the screen", async ({ page }
   const card = page.locator(".game-card").first();
   await expect(card).toBeVisible();
   const top = await card.evaluate((e) => Math.round(e.getBoundingClientRect().top));
-  expect(top, "the first card should begin within the top half of the screen").toBeLessThan(290);
-  expect(await page.locator(".site-header").evaluate((e) => e.getBoundingClientRect().height)).toBeLessThanOrEqual(48);
-  // The team picker is one row, and the heading and Upcoming/Past switch share one.
-  expect(await page.locator(".team-picker").evaluate((e) => e.getBoundingClientRect().height)).toBeLessThan(60);
-  const [sw, ft] = await Promise.all([page.locator(".section-heading .segmented").boundingBox(), page.locator(".filters-toggle").boundingBox()]);
-  expect(Math.abs(sw!.y + sw!.height / 2 - (ft!.y + ft!.height / 2)), "Upcoming/Past and Filters share a row").toBeLessThan(10);
+  expect(top, "the first card should begin within the top quarter of the screen").toBeLessThan(230);
+  expect(await page.locator(".site-header").evaluate((e) => e.getBoundingClientRect().height)).toBeLessThanOrEqual(56);
+  // Teams, Filters and Search are one row.
+  const row = page.locator(".phone-controls");
+  expect((await row.boundingBox())!.height).toBeLessThan(72);
+  const parts = await Promise.all([row.getByRole("button", { name: "Choose teams" }).boundingBox(), row.getByRole("button", { name: /^Filters/ }).boundingBox(), row.getByLabel("Find a matchup").boundingBox()]);
+  for (const b of parts) expect(Math.abs(b!.y + b!.height / 2 - (parts[0]!.y + parts[0]!.height / 2)), "Teams, Filters and Search share a row").toBeLessThan(6);
   expect(await page.locator(".game-card").first().evaluate((e) => e.getBoundingClientRect().height), "a compact card").toBeLessThan(200);
   // Nothing spills sideways.
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
@@ -32,7 +33,7 @@ test("on a phone the tab bar stays at the bottom while the page scrolls, and the
   expect(Math.round(bar!.y + bar!.height), "pinned to the bottom edge").toBe(844);
   expect(bar!.height, "a standard 49pt tab bar").toBeGreaterThanOrEqual(49);
   await expect(page.locator(".tab-bar .tab-item")).toHaveCount(5);
-  expect(await page.locator(".team-picker").evaluate((e) => e.getBoundingClientRect().bottom)).toBeLessThan(0); // scrolled out of view
+  expect(await page.locator(".phone-controls").evaluate((e) => e.getBoundingClientRect().bottom)).toBeLessThan(0); // scrolled out of view
 });
 
 // The board should open with games, not furniture: four cards visible on a phone without scrolling.
@@ -56,8 +57,8 @@ test("on a phone the board opens with game cards showing (three above the fold, 
   await expect(first.locator(".matchup-team h3")).toHaveCount(2);
   await expect(first.locator(".importance-score strong")).toBeVisible();
   await expect(first.locator(".gc-icon")).toBeVisible();
-  // The refresh button lives in the toolbar row now.
-  await expect(page.locator(".refresh-mini")).toBeVisible();
+  // Refreshing is a pull-down, or Refresh data under More; there is no toolbar button.
+  await expect(page.locator(".refresh-mini")).toHaveCount(0);
   // Nothing spills sideways.
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
 });

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { filterGames, selectAllTeams } from "./controls";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 
@@ -10,12 +11,8 @@ test("every channel logo on a card links to the game on ESPN", async ({ page }) 
   await page.route("**/api/game/*", (route) => route.fulfill({ json: { ...fixture, state: "LIVE", plays: [] } }));
   await page.route("**/api/espn/*", (route) => route.fulfill({ json: { games: { [`${game.away}-${game.home}`]: "401999999" } } }));
   await page.goto("/");
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
-  const filters = page.getByRole("button", { name: /^Filters/ });
-  await filters.or(page.getByLabel("Competition")).first().waitFor();
-  if (await filters.isVisible()) await filters.click();
-  await page.getByLabel("Competition").selectOption(String(game.type));
-  await page.getByLabel("Window").selectOption("all");
+  await selectAllTeams(page);
+  await filterGames(page, { competition: String(game.type), window: "all" });
   const card = page.locator(".live-card").first();
   const links = card.locator("a.network-logo-link");
   await expect(links).toHaveCount(3); // TNT, Sportsnet and NHL Network: none of them ESPN's own

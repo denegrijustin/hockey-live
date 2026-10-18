@@ -31,6 +31,7 @@ export function TeamPicker({
         ))}
         <button
           className="text-button"
+          aria-pressed={selected.length === 3 && ["EDM", "CHI", "MIN"].every((id) => selected.includes(id))}
           onClick={() => onChange(["EDM", "CHI", "MIN"])}
         >
           My three

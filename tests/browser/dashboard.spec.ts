@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { closeTeams, filterGames, isPhone, openTeams, filterValue, pickOnlyTeam, selectAllTeams, selectMyThree, teamCount } from "./controls";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
 test("default teams, league selection, graphs and season navigation", async ({
   page,
@@ -7,19 +8,15 @@ test("default teams, league selection, graphs and season navigation", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await expect(page.locator(".team-menu summary span")).toHaveText("3");
-  await expect(page.getByRole("button", { name: "EDM", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(page.getByRole("button", { name: "CHI", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(page.getByRole("button", { name: "MIN", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(await teamCount(page)).toHaveText("3");
+  if (await isPhone(page)) {
+    // The team shortcuts live in the Teams sheet on phones; the default is My three.
+    await openTeams(page);
+    await expect(page.getByRole("button", { name: "My three", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await closeTeams(page);
+  } else {
+    for (const id of ["EDM", "CHI", "MIN"]) await expect(page.getByRole("button", { name: id, exact: true })).toHaveAttribute("aria-pressed", "true");
+  }
   const card = page.locator(".game-card").first();
   await expect(card.locator(".tv-network")).toBeVisible();
   await expect(card.locator(".team-record")).toHaveCount(2);
@@ -37,11 +34,11 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(card.locator(".lineup-brief")).toBeVisible();
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
   await expect(card.locator(".card-details")).toHaveCount(0);
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
+  await selectAllTeams(page);
   await expect(page.locator(".results-line")).toContainText(
     "32 selected teams",
   );
-  await page.getByRole("button", { name: "My three", exact: true }).click();
+  await selectMyThree(page);
   await page.getByRole("button", { name: "Team trends", exact: true }).click();
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
   await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
@@ -70,8 +67,8 @@ test("Game Center lists games chronologically by default; All 32 narrows only th
 }) => {
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await expect(page.getByLabel("Sort by")).toHaveValue("date");
-  await expect(page.getByLabel("Window")).toHaveValue("30");
+  expect(await filterValue(page, "Sort by")).toBe("date");
+  expect(await filterValue(page, "Window")).toBe("30");
   await expect(page.locator(".results-line")).toContainText("then the rest of the week in order");
   // Under day headings, earliest day first, and start times never go backwards within the upcoming list.
   const days = await page.locator(".game-day-heading").count();
@@ -79,15 +76,13 @@ test("Game Center lists games chronologically by default; All 32 narrows only th
   const starts = await page.locator(".game-card").evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.start ?? ""));
   expect(starts.length).toBeGreaterThan(1);
   expect(starts, "start times never go backwards").toEqual([...starts].sort());
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
-  await expect(page.getByLabel("Sort by")).toHaveValue("date");
-  await expect(page.getByLabel("Window")).toHaveValue("7");
-  await page.getByRole("button", { name: "My three", exact: true }).click();
-  await expect(page.getByLabel("Window")).toHaveValue("30");
+  await selectAllTeams(page);
+  expect(await filterValue(page, "Sort by")).toBe("date");
+  expect(await filterValue(page, "Window")).toBe("7");
+  await selectMyThree(page);
+  expect(await filterValue(page, "Window")).toBe("30");
   // Importance ranking is still available.
-  const filters = page.getByRole("button", { name: /^Filters/ });
-  if (await filters.isVisible()) await filters.click(); // folded behind a button on phones
-  await page.getByLabel("Sort by").selectOption("importance");
+  await filterGames(page, { sort: "importance" });
   await expect(page.locator(".game-day-heading")).toHaveCount(0);
   await expect(page.locator(".results-line")).toContainText("Rank = combined team + league importance");
 });
@@ -96,8 +91,8 @@ test("featured team shortcuts filter to exactly one team", async ({ page }) => {
   await expect(page.locator(".game-card").first()).toBeVisible();
 
   for (const id of ["EDM", "CHI", "MIN"] as const) {
-    await page.getByRole("button", { name: id, exact: true }).click();
-    await expect(page.locator(".team-menu summary span")).toHaveText("1");
+    await pickOnlyTeam(page, id);
+    await expect(await teamCount(page)).toHaveText("1");
     await expect(page.locator(".results-line")).toContainText("1 selected team");
     await expect(page.locator(".game-card").first()).toBeVisible();
     expect(
@@ -189,11 +184,7 @@ test("recent actual game contribution and mobile card layout", async ({
 }, info) => {
   await page.goto("/");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await page.getByRole("button", { name: /Past games/ }).click();
-  const filters = page.getByRole("button", { name: /^Filters/ });
-  if (await filters.isVisible()) await filters.click(); // folded behind a button on phones
-  await page.getByLabel("Competition").selectOption("1");
-  await page.getByLabel("Sort by").selectOption("date");
+  await filterGames(page, { period: "past", competition: "1", sort: "date" });
   const card = page.locator(".game-card").first();
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");

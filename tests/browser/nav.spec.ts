@@ -39,7 +39,7 @@ test.describe("wide screens", () => {
 test.describe("phones", () => {
   test.beforeEach(({ isMobile }) => test.skip(!isMobile, "phone layout"));
 
-  test("a tab bar holds four views and More; More opens a sheet with the rest", async ({ page }) => {
+  test("a tab bar holds four views and More; More opens a menu with the rest", async ({ page }) => {
     await open(page, 390, 844);
     const bar = page.getByRole("navigation", { name: "Dashboard views" });
     await expect(bar.getByRole("button")).toHaveCount(5);
@@ -49,7 +49,7 @@ test.describe("phones", () => {
     await expect(bar.getByRole("button", { name: "Team trends" })).toHaveAttribute("aria-current", "page");
     await bar.getByRole("button", { name: "More" }).click();
     const sheet = page.getByRole("dialog", { name: "More" });
-    await expect(sheet.getByRole("button")).toHaveCount(5); // Done + four views
+    await expect(sheet.getByRole("button")).toHaveCount(5); // four views + Refresh data
     for (const name of ["NHL+", "NHL EDGE", "Playoff odds", "Imperialism map"]) await expect(sheet.getByRole("button", { name, exact: true })).toBeVisible();
     await sheet.getByRole("button", { name: "NHL+", exact: true }).click();
     await expect(sheet).toBeHidden();
@@ -58,35 +58,27 @@ test.describe("phones", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
   });
 
-  test("the More sheet closes with Done and with a swipe down", async ({ page }) => {
+  test("the More menu closes with Escape, a tap outside, or tapping More again, and can refresh the data", async ({ page }) => {
     await open(page, 390, 844);
-    await page.getByRole("button", { name: "More", exact: true }).click();
-    const sheet = page.getByRole("dialog", { name: "More" });
-    await expect(sheet).toBeVisible();
-    await sheet.getByRole("button", { name: "Done" }).click();
-    await expect(sheet).toBeHidden();
-    await page.getByRole("button", { name: "More", exact: true }).click();
-    await expect(sheet).toBeVisible();
-    const bar = sheet.locator(".sheet-bar");
-    const touch = (type: string, y: number) => bar.dispatchEvent(type, { pointerType: "touch", pointerId: 7, clientY: y, bubbles: true });
-    await touch("pointerdown", 600);
-    await touch("pointermove", 700);
-    await touch("pointermove", 800);
-    await touch("pointerup", 800);
-    await expect(sheet).toBeHidden();
-  });
-
-  test("a short drag springs back instead of closing", async ({ page }) => {
-    await open(page, 390, 844);
-    await page.getByRole("button", { name: "More", exact: true }).click();
-    const sheet = page.getByRole("dialog", { name: "More" });
-    const bar = sheet.locator(".sheet-bar");
-    const touch = (type: string, y: number) => bar.dispatchEvent(type, { pointerType: "touch", pointerId: 8, clientY: y, bubbles: true });
-    await touch("pointerdown", 600);
-    await touch("pointermove", 640);
-    await touch("pointerup", 640);
-    await page.waitForTimeout(300);
-    await expect(sheet).toBeVisible();
+    const more = page.getByRole("button", { name: "More", exact: true });
+    const menu = page.getByRole("dialog", { name: "More" });
+    await more.click();
+    await expect(menu).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await more.click();
+    await page.mouse.click(195, 120); // outside the menu, above the tab bar
+    await expect(menu).toBeHidden();
+    await more.click();
+    await more.click();
+    await expect(menu).toBeHidden();
+    let refreshed = false;
+    await page.evaluate(() => window.addEventListener("iceboard:refresh", () => ((window as any).__refreshed = true)));
+    await more.click();
+    await menu.getByRole("button", { name: "Refresh data" }).click();
+    refreshed = await page.evaluate(() => !!(window as any).__refreshed);
+    expect(refreshed).toBe(true);
+    await expect(menu).toBeHidden();
   });
 
   test("the Game Center is a bottom sheet with a grabber and a Done button", async ({ page }) => {

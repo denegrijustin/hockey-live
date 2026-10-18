@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { filterGames, selectAllTeams, showPeriod } from "./controls";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 
@@ -18,12 +19,8 @@ const feed = (extra: Record<string, unknown> = {}) => {
   return { ...fixture, state: "LIVE", period: 2, periodType: "REG", clock: "12:00", intermission: false, homeShots: 3, awayShots: 2, plays, shots: plays.filter((p) => ["goal", "shot-on-goal"].includes(p.type)), goals, ...extra };
 };
 async function show(page: Page, game: Record<string, unknown>) {
-  await page.getByRole("button", { name: "All 32", exact: true }).click();
-  const filters = page.getByRole("button", { name: /^Filters/ });
-  await filters.or(page.getByLabel("Competition")).first().waitFor();
-  if (await filters.isVisible()) await filters.click();
-  await page.getByLabel("Competition").selectOption(String(game.type));
-  await page.getByLabel("Window").selectOption("all");
+  await selectAllTeams(page);
+  await filterGames(page, { competition: String(game.type), window: "all" });
 }
 
 test("a live card shows the ice: shots at each net, the high-danger chances, attempts and the pressure", async ({ page }) => {
@@ -56,13 +53,13 @@ test("a finished game keeps its ice view, and a game that has not started has no
   await page.route("**/api/game/*", (route) => route.fulfill({ json: feed({ state: "FINAL", period: 3, clock: "00:00" }) }));
   await page.goto("/");
   await show(page, done);
-  await page.getByRole("button", { name: /^Past games/ }).click();
+  await showPeriod(page, "past");
   const card = page.locator(".game-card").first();
   await card.scrollIntoViewIfNeeded(); // the feed is fetched only for a card that is on screen
   await expect(card).toContainText("FINAL");
   await expect(card.getByTestId("ice-view")).toContainText("Shot map · final");
   // A game that has not started has no ice view, and so adds nothing to the small card.
-  await page.getByRole("button", { name: /^Upcoming/ }).click();
+  await showPeriod(page, "future");
   const upcoming = page.locator(".game-card").first();
   await upcoming.scrollIntoViewIfNeeded();
   await expect(upcoming).not.toContainText("FINAL");

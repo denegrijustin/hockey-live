@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useMedia } from "../hooks/useMedia";
-import { useSheetDrag } from "../hooks/useSheetDrag";
 import { Icon, type IconName } from "./icons";
 
 interface ViewDef {
@@ -31,7 +30,7 @@ const GROUPS: [string, ViewDef[]][] = [
   ["Explore", [MAP]],
 ];
 
-export function MainNav({ view, setView }: { view: string; setView: (id: string) => void }) {
+export function MainNav({ view, setView, liveCount = 0, onRefresh }: { view: string; setView: (id: string) => void; liveCount?: number; onRefresh?: () => void }) {
   const wide = useMedia("(min-width: 1100px)");
   const [more, setMore] = useState(false);
   if (wide) {
@@ -56,51 +55,48 @@ export function MainNav({ view, setView }: { view: string; setView: (id: string)
     <>
       <nav className="tab-bar" aria-label="Dashboard views">
         {PRIMARY.map((v) => (
-          <button key={v.id} className="tab-item" aria-label={v.label} aria-current={view === v.id ? "page" : undefined} onClick={() => setView(v.id)}>
+          <button key={v.id} className="tab-item" aria-label={v.label} aria-current={view === v.id ? "page" : undefined} onClick={() => { setMore(false); setView(v.id); }}>
             <Icon name={v.icon} />
+            {v.id === "games" && liveCount > 0 && <i className="tab-dot" data-testid="live-dot" aria-hidden="true" />}
             <span aria-hidden="true">{v.short}</span>
           </button>
         ))}
-        <button className="tab-item" aria-label="More" aria-haspopup="dialog" aria-current={inMore ? "page" : undefined} onClick={() => setMore(true)}>
+        <button className="tab-item" aria-label="More" aria-haspopup="dialog" aria-expanded={more} aria-current={inMore ? "page" : undefined} onClick={() => setMore((open) => !open)}>
           <Icon name="more" />
           <span aria-hidden="true">More</span>
         </button>
       </nav>
-      {more && <MoreSheet view={view} onPick={(id) => { setView(id); setMore(false); }} onClose={() => setMore(false)} />}
+      {more && <MoreMenu view={view} onPick={(id) => { setView(id); setMore(false); }} onRefresh={onRefresh} onClose={() => setMore(false)} />}
     </>
   );
 }
 
-function MoreSheet({ view, onPick, onClose }: { view: string; onPick: (id: string) => void; onClose: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const drag = useSheetDrag(dialog, onClose);
+/** The More menu: a two-column icon menu that floats above the tab bar. Tapping outside or pressing Escape closes it. */
+function MoreMenu({ view, onPick, onRefresh, onClose }: { view: string; onPick: (id: string) => void; onRefresh?: () => void; onClose: () => void }) {
+  const menu = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    dialog.current?.showModal();
-  }, []);
+    menu.current?.querySelector("button")?.focus({ preventScroll: true });
+    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", key);
+    return () => document.removeEventListener("keydown", key);
+  }, [onClose]);
   return (
-    <dialog
-      ref={dialog}
-      className="sheet more-sheet"
-      aria-label="More"
-      onClose={onClose}
-      onClick={(e) => { if (e.target === dialog.current) onClose(); }}
-    >
-      <div className="sheet-bar" {...drag}>
-        <span className="sheet-grabber" aria-hidden="true" />
-        <h2>More</h2>
-        <button className="sheet-done" onClick={onClose}>Done</button>
-      </div>
-      <ul className="sheet-list">
+    <>
+      <div className="menu-scrim" onClick={onClose} aria-hidden="true" />
+      <div ref={menu} className="more-menu" role="dialog" aria-label="More">
         {MORE.map((v) => (
-          <li key={v.id}>
-            <button className="sheet-row" aria-current={view === v.id ? "page" : undefined} onClick={() => onPick(v.id)}>
-              <Icon name={v.icon} size={22} />
-              <span>{v.label}</span>
-              <Icon name="chevron" size={18} />
-            </button>
-          </li>
+          <button key={v.id} className="menu-item" aria-current={view === v.id ? "page" : undefined} onClick={() => onPick(v.id)}>
+            <Icon name={v.icon} size={22} />
+            {v.label}
+          </button>
         ))}
-      </ul>
-    </dialog>
+        {onRefresh && (
+          <button className="menu-item" onClick={() => { onRefresh(); onClose(); }}>
+            <Icon name="refresh" size={22} />
+            Refresh data
+          </button>
+        )}
+      </div>
+    </>
   );
 }

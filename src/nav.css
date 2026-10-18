@@ -239,3 +239,55 @@
     display: inline;
   }
 }
+
+/* ---------- Game cards that are narrow because of the sidebar ---------- */
+/* A card measures itself, not the window: when it is narrow the importance badge drops below the teams as a compact
+   row, so the team names and records keep the full width instead of breaking mid-word. */
+.game-card {
+  container: card / inline-size;
+}
+@media (min-width: 721px) {
+  @container card (max-width: 440px) {
+    .matchup {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .importance-wrap {
+      flex: none;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 12px;
+      align-items: center;
+      justify-items: start;
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid color-mix(in srgb, var(--rating) 38%, transparent);
+      border-radius: 12px;
+      background: var(--surface-4);
+    }
+    .importance-score {
+      display: contents;
+    }
+    .importance-score strong {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      margin: 0;
+      font-size: 1.75rem;
+      line-height: 1;
+      color: var(--rating);
+    }
+    .importance-score span {
+      grid-column: 2;
+      grid-row: 1;
+      margin: 0;
+      letter-spacing: 0.06em;
+      color: var(--rating);
+    }
+    .importance-components {
+      grid-column: 2;
+      grid-row: 2;
+      white-space: normal;
+    }
+  }
+}

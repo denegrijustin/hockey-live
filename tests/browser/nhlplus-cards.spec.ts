@@ -49,6 +49,14 @@ async function mount(page: Page, keys: K[], opts: { summary?: (j: any) => any; f
   await page.goto("/");
   await selectAllTeams(page);
 }
+/** Picks a situation radio and waits until it is selected: a click that lands while the card is still re-rendering from newly loaded data is lost, so retry it. */
+async function pickSituation(flow: Locator, name: string) {
+  const radio = flow.getByRole("radio", { name });
+  await expect(async () => {
+    await radio.click();
+    await expect(radio).toBeChecked({ timeout: 1000 });
+  }).toPass();
+}
 const card = (page: Page, k: K) => page.locator(".game-card").filter({ has: page.locator(`.matchup-team img[src="/logos/${G[k].away}.svg"]`) }).filter({ has: page.locator(`.matchup-team img[src="/logos/${G[k].home}.svg"]`) }).first();
 async function show(page: Page, k: K): Promise<Locator> {
   const past = G[k].state === "FINAL";
@@ -113,7 +121,8 @@ test("expanded card: aligned comparisons with exact values, definitions, NHL+ bu
   const ex = c.getByTestId("nhlp-expanded");
   await expect(ex).toBeVisible();
   for (const h of ["Chance creation", "Defensive suppression", "Special teams", "Goaltending"]) await expect(ex).toContainText(h);
-  expect(await ex.locator(".mp-cmp").count()).toBeGreaterThanOrEqual(7);
+  // The last row (recent trend) comes from a second request that finishes after the season profile, so wait for it.
+  await expect.poll(() => ex.locator(".mp-cmp").count()).toBeGreaterThanOrEqual(7);
   await expect(ex).toContainText(/\d+ GP · [\d.]+ min/);
   await expect(ex.getByText("Recent trend")).toBeVisible();
   await expect(ex).toContainText(/derived from shot-level data|Recent games are not available/);
@@ -254,13 +263,13 @@ test("Game Center: sections, situation comparison, shot map, goalies, lines, NHL
   const log = games.games["2026020063"];
   const sitCmp = flow.getByTestId("situation-compare");
   await expect(sitCmp).toContainText(log.teams.SJS.all.xGF.toFixed(2));
-  await flow.getByRole("radio", { name: "5v5" }).click();
+  await pickSituation(flow, "5v5");
   await expect(sitCmp).toContainText(log.teams.SJS["5on5"].xGF.toFixed(2));
   const lineAway = flow.getByTestId("flow-line-away");
   expect(Number(await lineAway.getAttribute("data-xg"))).toBeCloseTo(OT.shots.filter((s: any) => s.team === "SJS" && s.sit === "5on5").reduce((t: number, s: any) => t + s.xg, 0), 6);
-  await flow.getByRole("radio", { name: "PP" }).click();
+  await pickSituation(flow, "PP");
   await expect(sitCmp).toContainText("power play");
-  await flow.getByRole("radio", { name: "All" }).click();
+  await pickSituation(flow, "All");
   // shot map: goals are the ringed dots
   const dots = flow.getByTestId("map-shot");
   expect(await dots.count()).toBeGreaterThan(20);

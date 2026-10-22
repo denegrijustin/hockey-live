@@ -316,7 +316,7 @@ export default function App() {
               </p>
             )}
             {view === "scoreboard" && (
-              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} today={scoreboard?.date} loading={loading} />
+              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} />
             )}
             {view === "nhlplus" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL+…</div>}>

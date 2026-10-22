@@ -46,6 +46,7 @@
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
+    --logo-bg: #17243a;
     --overlay: #000;
     --amber-1: #fefefe;
     --amber-2: #ba9341;
@@ -171,3 +172,6 @@
     --series-blue: #123a68;
   }
 }
+
+/* Team logos are drawn with white parts for dark surfaces; on the light theme they sit on a dark tile so Tampa, Toronto, Boston and others stay visible. */
+img[src^="/logos/"] { background: var(--logo-bg, transparent); border-radius: 6px; box-sizing: border-box; padding: 1px; }

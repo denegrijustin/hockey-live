@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
 
 const season = manifest.current;
-const day = (offset: number) => new Date(Date.now() + offset * 86400000).toLocaleDateString("en-CA");
+let base = Date.now();
+const day = (offset: number) => new Date(base + offset * 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 const game = (id: number, offset: number, away: string, home: string, state = "FUT", score: [number, number] | [null, null] = [null, null]) => ({
   id, season, type: 2, date: day(offset), start: `${day(offset)}T23:00:00Z`, state, scheduleState: "OK", venue: "Test Arena",
   home, away, homeScore: score[1], awayScore: score[0], end: state === "FINAL" ? "REG" : "", broadcasts: [], round: null,
@@ -51,5 +52,27 @@ test.describe("scoreboard home", () => {
     await open(page, "/?view=games");
     await expect(page.locator(".game-card").first()).toBeVisible();
     await expect(page.locator(".sb-row")).toHaveCount(0);
+  });
+
+  test("a page left open rolls over to the new day, and uses the feed-independent Eastern date", async ({ page }) => {
+    const start = new Date("2026-10-10T23:59:00-04:00");
+    base = start.getTime();
+    await page.clock.install({ time: start });
+    await open(page);
+    const heading = page.locator(".sb-day h1");
+    const date = page.locator(".sb-day span");
+    await expect(heading).toHaveText("Today");
+    await expect(date).toHaveText("Saturday, October 10");
+    await page.clock.fastForward(120_000);
+    await expect(date).toHaveText("Sunday, October 11"); // midnight Eastern passed
+    await expect(heading).toHaveText("Today");
+    base = Date.now();
+  });
+
+  test("white team logos sit on a dark tile in the light theme", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await open(page);
+    const bg = await page.locator('.sb-row img[src="/logos/TOR.svg"], .sb-row img[src="/logos/BOS.svg"]').first().evaluate((e) => getComputedStyle(e).backgroundColor);
+    expect(bg).not.toBe("rgba(0, 0, 0, 0)");
   });
 });

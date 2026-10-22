@@ -2,7 +2,7 @@
 import { useSyncExternalStore } from "react";
 import type { Sit } from "./moneypuck-types";
 
-export type NhlPlusView = "teams" | "matchups" | "goalies" | "players" | "trends" | "data";
+export type NhlPlusView = "teams" | "matchups" | "goalies" | "players" | "trends" | "matrix" | "data";
 export type NhlPlusTarget = {
   view: NhlPlusView;
   away?: string;        // matchup: first team (id)

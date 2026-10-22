@@ -175,3 +175,30 @@
     min-height: 44px;
   }
 }
+
+/* Play vs results matrix */
+.nhlplus .pm { display: grid; grid-template-columns: 5.5rem repeat(3, minmax(0, 1fr)); gap: 8px; }
+.nhlplus .pm-rowgroup { display: contents; }
+.nhlplus .pm-colhead, .nhlplus .pm-rowhead { display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding-bottom: 4px; }
+.nhlplus .pm-rowhead { justify-content: center; padding: 0; }
+.nhlplus .pm-colhead { border-bottom: 2px solid var(--line-2, var(--line-1)); text-align: center; }
+.nhlplus .pm-colhead b, .nhlplus .pm-rowhead b { font-size: .8125rem; text-transform: uppercase; letter-spacing: .02em; color: var(--text); }
+.nhlplus .pm-colhead span, .nhlplus .pm-rowhead span { font-size: .6875rem; color: var(--text-1); }
+.nhlplus .pm-cell { border: 1px solid var(--line-1); border-radius: 10px; padding: 8px; min-height: 5.5rem; background: var(--surface-6, var(--surface-5)); min-width: 0; }
+.nhlplus .pm-cell.good { background: color-mix(in srgb, var(--mint-5, #3ddc97) 14%, var(--surface-5)); }
+.nhlplus .pm-cell.warn { background: color-mix(in srgb, var(--amber-5, #f2b84b) 14%, var(--surface-5)); }
+.nhlplus .pm-cell.bad { background: color-mix(in srgb, var(--red-5, #ef5b5b) 14%, var(--surface-5)); }
+.nhlplus .pm-cell h4 { margin: 0 0 6px; font-size: .75rem; text-transform: uppercase; letter-spacing: .02em; }
+.nhlplus .pm-cell ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 4px; }
+.nhlplus .pm-cell li { display: grid; justify-items: center; gap: 1px; width: 3.25rem; }
+.nhlplus .pm-name { font-size: .6875rem; font-weight: 650; }
+.nhlplus .pm-stat { font-size: .6875rem; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.nhlplus .pm-res { display: none; font-size: .6875rem; color: var(--text-1); margin-left: 6px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.nhlplus .pm-foot { margin-top: 12px; }
+@media (max-width: 640px) {
+  .nhlplus .pm { grid-template-columns: 1fr; }
+  .nhlplus .pm-corner, .nhlplus .pm-colhead { display: none; }
+  .nhlplus .pm-rowgroup { display: grid; gap: 8px; }
+  .nhlplus .pm-rowhead { flex-direction: row; justify-content: flex-start; align-items: baseline; gap: 8px; margin-top: 8px; }
+  .nhlplus .pm-res { display: inline; }
+}

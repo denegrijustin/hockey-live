@@ -15,9 +15,10 @@ import { MatchupsView } from "./views/MatchupsView";
 import { GoalieView } from "./views/GoalieView";
 import { PlayersView } from "./views/PlayersView";
 import { TrendsView } from "./views/TrendsView";
+import { MatrixView } from "./views/MatrixView";
 import { DataView } from "./views/DataView";
 
-const VIEWS: [NhlPlusView, string][] = [["teams", "Teams"], ["matchups", "Matchups"], ["goalies", "Goalies"], ["players", "Players"], ["trends", "Trends"], ["data", "Data"]];
+const VIEWS: [NhlPlusView, string][] = [["teams", "Teams"], ["matchups", "Matchups"], ["goalies", "Goalies"], ["players", "Players"], ["trends", "Trends"], ["matrix", "Play vs results"], ["data", "Data"]];
 
 // Filters live here, outside React, so they survive switching between NHL+ views and between dashboard tabs.
 let saved: NpState = INITIAL;
@@ -75,6 +76,7 @@ export function NhlPlus({ games, season }: { games: Game[]; season: number; team
         {v === "goalies" && <GoalieView ctx={ctx} />}
         {v === "players" && <PlayersView ctx={ctx} />}
         {v === "trends" && <TrendsView ctx={ctx} />}
+        {v === "matrix" && <MatrixView ctx={ctx} />}
         {v === "data" && <DataView ctx={ctx} />}
       </div>
     </section>

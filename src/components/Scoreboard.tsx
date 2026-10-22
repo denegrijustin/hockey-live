@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
@@ -33,8 +33,6 @@ interface Props {
   baseline: any;
   baselineTable?: any;
   sourceSeason: number;
-  /** The scoreboard's own date (the league's "today"), when the live feed has one. */
-  today?: string;
   loading?: boolean;
 }
 
@@ -42,8 +40,19 @@ interface Props {
  * The home screen: the league's games for a day with win probability and nothing else. Tap a game for a few key stats;
  * from there, "Full game center" opens everything.
  */
-export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, today: feedToday, loading }: Props) {
-  const today = feedToday ?? new Date().toLocaleDateString("en-CA");
+/** The NHL's calendar day (Eastern time), re-read every minute so a page left open rolls over at midnight. */
+function useEtToday() {
+  const read = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const [today, setToday] = useState(read);
+  useEffect(() => {
+    const id = setInterval(() => setToday(read()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return today;
+}
+
+export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading }: Props) {
+  const today = useEtToday();
   const days = useMemo(() => [...new Set(games.filter((g) => g.type !== 0).map((g) => g.date))].sort(), [games]);
   // Open on today; on an off day, the next day with games (or the last one, at the end of the season).
   const auto = days.includes(today) ? today : (days.find((d) => d > today) ?? days.at(-1) ?? today);

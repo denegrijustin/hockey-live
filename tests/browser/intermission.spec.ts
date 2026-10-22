@@ -11,7 +11,7 @@ async function open(page: Page, extra: Record<string, unknown>) {
   const game = { ...base, state: "LIVE", period: 1, periodType: "REG", ...extra };
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] } }));
   await page.route("**/api/game/*", (route) => route.fulfill({ json: { ...fixture, state: "LIVE", plays: [] } }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await selectAllTeams(page);
   await filterGames(page, { competition: String(game.type), window: "all" });
   return page.locator(".live-card").first();

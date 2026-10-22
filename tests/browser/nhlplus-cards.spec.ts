@@ -46,7 +46,7 @@ async function mount(page: Page, keys: K[], opts: { summary?: (j: any) => any; f
   } else if (opts.summary) {
     await page.route("**/data/moneypuck/20262027/summary.json", async (r) => { const j = JSON.parse(readFileSync(`${dir}/summary.json`, "utf8")); r.fulfill({ json: opts.summary!(j) }); });
   }
-  await page.goto("/");
+  await page.goto("/?view=games");
   await selectAllTeams(page);
 }
 /** Picks a situation radio and waits until it is selected: a click that lands while the card is still re-rendering from newly loaded data is lost, so retry it. */

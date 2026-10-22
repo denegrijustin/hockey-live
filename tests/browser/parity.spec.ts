@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 const season = JSON.parse(readFileSync("public/data/seasons/20252026.json", "utf8"));
 
 test("Playoff odds tab shows a grid per conference, 16 teams each, with no sideways page scroll", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?view=games");
   await goTo(page, "Playoff odds");
   for (const conf of ["E", "W"]) {
     const grid = page.getByTestId(`po-grid-${conf}`);
@@ -22,7 +22,7 @@ test("Imperialism map renders, time-travels and opens a region card", async ({ p
   page.on("pageerror", (e) => errors.push(e.message));
   await page.route("**/data/manifest.json", (r) => r.fulfill({ json: { updatedAt: season.updatedAt, current: 20252026, seasons: [20252026], defaultTeams: ["EDM", "CHI", "MIN"] } }));
   await page.route(/\/(api\/season|data\/seasons)\/\d+(\.json)?$/, (r) => r.fulfill({ json: season }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await goTo(page, "Imperialism map");
   const map = page.getByTestId("imp-map");
   await expect(map).toBeVisible({ timeout: 30000 });

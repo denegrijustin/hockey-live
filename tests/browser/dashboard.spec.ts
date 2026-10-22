@@ -1,12 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { closeTeams, filterGames, isPhone, openTeams, filterValue, pickOnlyTeam, selectAllTeams, selectMyThree, teamCount } from "./controls";
+import { goTo } from "./nav";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
 test("default teams, league selection, graphs and season navigation", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   await expect(await teamCount(page)).toHaveText("3");
   if (await isPhone(page)) {
@@ -44,7 +45,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
   await expect(page.locator(".trend-panel")).toContainText("Current season only");
   await expect(page.locator(".chart-wrap image")).toHaveCount(3);
-  await page.getByRole("button", { name: "Game center", exact: true }).click();
+  await goTo(page, "Schedule");
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
   await expect(page.locator(".game-card").first()).toContainText("FINAL");
   await page.getByRole("button", { name: "Team trends", exact: true }).click();
@@ -65,7 +66,7 @@ test("default teams, league selection, graphs and season navigation", async ({
 test("Game Center lists games chronologically by default; All 32 narrows only the window; importance is one choice away", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   expect(await filterValue(page, "Sort by")).toBe("date");
   expect(await filterValue(page, "Window")).toBe("30");
@@ -87,7 +88,7 @@ test("Game Center lists games chronologically by default; All 32 narrows only th
   await expect(page.locator(".results-line")).toContainText("Rank = combined team + league importance");
 });
 test("featured team shortcuts filter to exactly one team", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
 
   for (const id of ["EDM", "CHI", "MIN"] as const) {
@@ -159,7 +160,7 @@ test("finished-today games collapse into a compact expandable strip", async ({
   await page.route(`**/data/seasons/${season}.json`, (route) =>
     route.fulfill({ json: snapshot }),
   );
-  await page.goto("/");
+  await page.goto("/?view=games");
   // Unfinished games remain above the collapsed finished-today strip.
   await expect(
     page.locator(".results-line + .game-grid .game-card").first(),
@@ -182,7 +183,7 @@ test("finished-today games collapse into a compact expandable strip", async ({
 test("recent actual game contribution and mobile card layout", async ({
   page,
 }, info) => {
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   await filterGames(page, { period: "past", competition: "1", sort: "date" });
   const card = page.locator(".game-card").first();

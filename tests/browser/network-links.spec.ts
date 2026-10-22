@@ -10,7 +10,7 @@ test("every channel logo on a card links to the game on ESPN", async ({ page }) 
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] } }));
   await page.route("**/api/game/*", (route) => route.fulfill({ json: { ...fixture, state: "LIVE", plays: [] } }));
   await page.route("**/api/espn/*", (route) => route.fulfill({ json: { games: { [`${game.away}-${game.home}`]: "401999999" } } }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await selectAllTeams(page);
   await filterGames(page, { competition: String(game.type), window: "all" });
   const card = page.locator(".live-card").first();

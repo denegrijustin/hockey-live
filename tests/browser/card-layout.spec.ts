@@ -9,7 +9,7 @@ for (const width of [1100, 1280, 1440, 1700, 1920]) {
     await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
     const games = scoreboardFixture.games.map((g, i) => ({ ...g, state: "LIVE", intermission: false, period: 2, periodType: "REG", clock: "15:27", awayScore: i, homeScore: i + 1 }));
     await page.route("**/api/live", (route) => route.fulfill({ json: { ...scoreboardFixture, games } }));
-    await page.goto("/");
+    await page.goto("/?view=games");
     await page.getByRole("button", { name: "All 32", exact: true }).click();
     await page.getByLabel("Competition").selectOption(String(games[0].type));
     await page.getByLabel("Window").selectOption("all");

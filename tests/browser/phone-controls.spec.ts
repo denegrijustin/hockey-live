@@ -7,7 +7,7 @@ async function open(page: Page, live: unknown = null) {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => (live ? route.fulfill({ json: live }) : route.fulfill({ status: 503, body: "{}" })));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
 }
 const touch = (page: Page, el: ReturnType<Page["locator"]>, type: string, y: number, id = 11) => el.dispatchEvent(type, { pointerType: "touch", pointerId: id, clientY: y, bubbles: true });
@@ -115,6 +115,6 @@ test("pulling down from the top refreshes the data; a short pull does not", asyn
 test("hover styling does not stick to the tab bar after a tap", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Standings", exact: true }).tap();
-  const bg = await page.getByRole("button", { name: "Game center", exact: true }).evaluate((e) => getComputedStyle(e).backgroundColor);
+  const bg = await page.getByRole("button", { name: "Scoreboard", exact: true }).evaluate((e) => getComputedStyle(e).backgroundColor);
   expect(bg).toBe("rgba(0, 0, 0, 0)");
 });

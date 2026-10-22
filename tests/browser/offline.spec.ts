@@ -6,7 +6,7 @@ test.use({ serviceWorkers: "allow" });
 test("the app opens offline after one visit", async ({ page, context }) => {
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload(); // this load is controlled by the worker, which caches what it fetches

@@ -12,7 +12,7 @@ for (const scheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: scheme });
     await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
     await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
-    await page.goto("/");
+    await page.goto("/?view=games");
     const card = page.locator(".game-card").first();
     await expect(card).toBeVisible();
     const colors = await page.evaluate(() => ({
@@ -35,7 +35,7 @@ for (const scheme of ["light", "dark"] as const) {
 test("increased contrast makes secondary text stronger", async ({ page }) => {
   const readMuted = async (contrast: "no-preference" | "more") => {
     await page.emulateMedia({ colorScheme: "dark", contrast });
-    await page.goto("/");
+    await page.goto("/?view=games");
     await expect(page.locator(".game-card").first()).toBeVisible();
     return page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--text-1").trim());
   };

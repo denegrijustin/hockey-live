@@ -40,7 +40,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await page.route("**/api/game/*", (route) => {
     return route.fulfill({ json: { ...fixture, state: "LIVE", homeScore: Math.min(calls - 1, 1), plays: [{id:9001,order:1,period:1,time:"19:00",type:"goal",team:fixture.home,player:"Test Scorer",penalty:null}] } });
   });
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".ticker")).toContainText("FLA"); // the strip at the top carries the live game
   await showLiveGame(page);
   const card = page.locator(".live-card").first();
@@ -107,7 +107,7 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
   await page.route("**/api/edge/**", (route) =>
     route.fulfill({ json: {...edgeFixture,season:20262027,requestedSeason:20262027} }),
   );
-  await page.goto("/");
+  await page.goto("/?view=games");
   await goTo(page, "NHL EDGE");
   const card = page.locator(".edge-grid .edge-card").first();
   await card.scrollIntoViewIfNeeded();
@@ -164,7 +164,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
     ],
   };
   await page.route("**/api/boxscore/**", (route) => route.fulfill({ json: boxscore }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".ticker")).toContainText("FLA"); // the strip at the top carries the live game
   await showLiveGame(page);
   const card = page.locator(".live-card").first();
@@ -229,7 +229,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
 });
 test('current EDGE labels a prior-season fallback',async({page})=>{
  await page.route('**/api/edge/**',r=>r.fulfill({json:edgeFixture}));
- await page.goto('/'); await goTo(page, 'NHL EDGE');
+ await page.goto('/?view=games'); await goTo(page, 'NHL EDGE');
  await expect(page.locator('.edge-grid .edge-card').first()).toContainText('Previous-season totals');
  await expect(page.locator('.edge-grid .edge-card').first().locator('.edge-metric')).toHaveCount(4);
 });

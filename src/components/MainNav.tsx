@@ -11,7 +11,8 @@ interface ViewDef {
 }
 
 const V = (id: string, label: string, icon: IconName, short = label): ViewDef => ({ id, label, short, icon });
-const GAMES = V("games", "Game center", "games", "Games");
+const SCORES = V("scoreboard", "Scoreboard", "games", "Scores");
+const SCHEDULE = V("games", "Schedule", "calendar");
 const STANDINGS = V("standings", "Standings", "standings");
 const TRENDS = V("trends", "Team trends", "trends", "Trends");
 const PLAYERS = V("players", "Players", "players");
@@ -21,11 +22,12 @@ const ODDS = V("odds", "Playoff odds", "odds");
 const MAP = V("map", "Imperialism map", "map");
 
 /** Phones: four views in the tab bar, the rest behind More (the HIG caps a tab bar at five). */
-const PRIMARY = [GAMES, STANDINGS, TRENDS, PLAYERS];
-const MORE = [NHLPLUS, EDGE, ODDS, MAP];
+const PRIMARY = [SCORES, STANDINGS, TRENDS, PLAYERS];
+const MORE = [SCHEDULE, NHLPLUS, EDGE, ODDS, MAP];
+export const VIEW_IDS = [...PRIMARY, ...MORE].map((v) => v.id);
 /** Desktop: every view, grouped, in a sidebar. */
 const GROUPS: [string, ViewDef[]][] = [
-  ["Dashboard", [GAMES, STANDINGS, ODDS]],
+  ["Dashboard", [SCORES, SCHEDULE, STANDINGS, ODDS]],
   ["Analytics", [NHLPLUS, TRENDS, EDGE, PLAYERS]],
   ["Explore", [MAP]],
 ];
@@ -57,7 +59,7 @@ export function MainNav({ view, setView, liveCount = 0, onRefresh }: { view: str
         {PRIMARY.map((v) => (
           <button key={v.id} className="tab-item" aria-label={v.label} aria-current={view === v.id ? "page" : undefined} onClick={() => { setMore(false); setView(v.id); }}>
             <Icon name={v.icon} />
-            {v.id === "games" && liveCount > 0 && <i className="tab-dot" data-testid="live-dot" aria-hidden="true" />}
+            {v.id === "scoreboard" && liveCount > 0 && <i className="tab-dot" data-testid="live-dot" aria-hidden="true" />}
             <span aria-hidden="true">{v.short}</span>
           </button>
         ))}

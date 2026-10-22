@@ -15,7 +15,7 @@ async function open(page: Page, live: unknown = null) {
   await page.route("**/data/seasons/20262027.json", (route) => route.fulfill({ json: season }));
   if (live) await page.route("**/api/live", (route) => route.fulfill({ json: live }));
   else await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".ticker-item").first()).toBeAttached();
 }
 const real = (page: Page) => page.locator(".ticker-track > li:not(.ticker-dup) .ticker-item");

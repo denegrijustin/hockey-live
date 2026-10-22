@@ -25,7 +25,7 @@ async function mock(page: Page, o: Opts = {}) {
   if (o.fail) await page.route("**/data/moneypuck/**", (r) => r.fulfill({ status: 500, body: "nope" }));
 }
 async function openPlus(page: Page) {
-  await page.goto("/");
+  await page.goto("/?view=games");
   await goTo(page, "NHL+");
   await expect(page.locator(".nhlplus")).toBeVisible();
 }

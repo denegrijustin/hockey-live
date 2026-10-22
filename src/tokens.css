@@ -4,6 +4,7 @@
 :root {
     color-scheme: dark;
     --overlay: #fff;
+    --logo-bg: #0000;
     --amber-1: #453e2b;
     --amber-2: #6a5220;
     --amber-3: #c98f1c;
@@ -128,6 +129,7 @@
     --series-away: #9ff0d9;
     --series-home: #ffd78f;
     --series-blue: #b8d4f5;
+    --logo-bg: #0000;
   }
 }
 @media (prefers-color-scheme: light) and (prefers-contrast: more) {
@@ -170,6 +172,7 @@
     --series-away: #07443a;
     --series-home: #5f3600;
     --series-blue: #123a68;
+    --logo-bg: #17243a;
   }
 }
 

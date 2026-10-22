@@ -4,6 +4,7 @@ import App from "./App";
 import "./tokens.css";
 import "./styles.css";
 import "./nav.css";
+import "./scoreboard.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

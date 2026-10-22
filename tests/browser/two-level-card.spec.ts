@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("compact card, concise expansion, outside collapse and direct Game Center", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?view=games");
   const card = page.locator(".game-card").first();
   await expect(card).toBeVisible();
   await expect(card.locator(".compact-meta")).toBeVisible();
@@ -37,7 +37,7 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
 
 test("game cards and Game Center do not overflow a narrow mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 760 });
-  await page.goto("/");
+  await page.goto("/?view=games");
   const card = page.locator(".game-card").first();
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");
@@ -59,7 +59,7 @@ test("live games lead the board and completed-today games sit below unfinished g
   await page.route("**/api/season/20262027", route => route.fulfill({ json: { season: 20262027, updatedAt: new Date().toISOString(), source: "test", games: [final, future, live] } }));
   await page.route("**/api/live", route => route.fulfill({ json: { date: today, updatedAt: new Date().toISOString(), games: [live] } }));
   await page.route("**/api/game/*", route => route.fulfill({ json: { ...live, updatedAt: new Date().toISOString(), shots: [], goals: [], stats: [], plays: [] } }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   const cards = page.locator(".game-grid > .game-card");
   await expect(cards.first()).toHaveClass(/live-card/);
   await expect(page.locator(".finished-today-bottom")).toContainText("Finished today");
@@ -78,7 +78,7 @@ for (const [width, perRow] of [[1800, 4], [1440, 3]] as const) test(`desktop boa
   const games = Array.from({ length: 8 }, (_, i) => ({ season: 20262027, type: 2, date: today, scheduleState: "OK", venue: "Test Arena", broadcasts: ["ESPN (US)"], round: null, end: "REG", id: 2026020700 + i, start: `${today}T${String(17 + (i % 4)).padStart(2, "0")}:00:00Z`, state: "FUT", home: "EDM", away: teams[i + 1], homeScore: null, awayScore: null }));
   await page.route("**/api/season/20262027", route => route.fulfill({ json: { season: 20262027, updatedAt: new Date().toISOString(), source: "test", games } }));
   await page.route("**/api/live", route => route.fulfill({ json: { date: today, updatedAt: new Date().toISOString(), games: [] } }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   const cards = page.locator(".results-line + .game-grid > .game-card");
   await expect(cards).toHaveCount(8);
   const tops = await cards.evaluateAll(nodes => nodes.map(n => Math.round(n.getBoundingClientRect().top)));

@@ -5,7 +5,7 @@ test("on a phone the first game card starts high on the screen", async ({ page }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   const card = page.locator(".game-card").first();
   await expect(card).toBeVisible();
   const top = await card.evaluate((e) => Math.round(e.getBoundingClientRect().top));
@@ -25,7 +25,7 @@ test("on a phone the tab bar stays at the bottom while the page scrolls, and the
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   await page.mouse.wheel(0, 1800);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400);
@@ -41,7 +41,7 @@ test("on a phone the board opens with game cards showing (three above the fold, 
   await page.setViewportSize({ width: 390, height: 700 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   const cards = await page.locator(".game-card").evaluateAll((els) => els.slice(0, 5).map((e) => { const b = e.getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom) }; }));
   expect(cards.length).toBeGreaterThanOrEqual(4);
@@ -66,7 +66,7 @@ test("on a phone the board opens with game cards showing (three above the fold, 
 test("on a computer the heading and filters still show as before", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   await expect(page.locator(".section-heading h2")).toBeVisible();
   await expect(page.locator(".results-line")).toBeVisible();
@@ -77,7 +77,7 @@ test("on a phone the GC tag is a square in line with the channel logos, the same
   await page.setViewportSize({ width: 390, height: 700 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   const card = page.locator(".game-card").filter({ has: page.locator(".network-logo") }).first();
   await expect(card).toBeVisible();
   const gc = await card.locator(".gc-icon").boundingBox();

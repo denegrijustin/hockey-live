@@ -5,7 +5,7 @@ test("rank line, crossover comparison at 320px, team swapping and ESPN link", as
   await page.route("**/api/espn/*", (route) =>
     route.fulfill({ json: { date: "x", games: {} } }),
   );
-  await page.goto("/");
+  await page.goto("/?view=games");
   await selectAllTeams(page);
   // The current season may still be preseason (no standings yet, so no ranks).
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");

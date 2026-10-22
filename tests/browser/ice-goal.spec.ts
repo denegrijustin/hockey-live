@@ -27,7 +27,7 @@ test("a live card shows the ice: shots at each net, the high-danger chances, att
   const game = { ...base, state: "LIVE", period: 2, periodType: "REG", clock: "12:00", intermission: false, homeShots: 3, awayShots: 2 };
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] } }));
   await page.route("**/api/game/*", (route) => route.fulfill({ json: feed() }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await show(page, game);
   const ice = page.locator(".live-card").first().getByTestId("ice-view");
   await expect(ice).toBeVisible();
@@ -51,7 +51,7 @@ test("a finished game keeps its ice view, and a game that has not started has no
   const done = { ...base, state: "FINAL", period: 3, periodType: "REG", clock: "00:00", homeScore: 2, awayScore: 1, intermission: false };
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: done.date, games: [done] } }));
   await page.route("**/api/game/*", (route) => route.fulfill({ json: feed({ state: "FINAL", period: 3, clock: "00:00" }) }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await show(page, done);
   await showPeriod(page, "past");
   const card = page.locator(".game-card").first();
@@ -76,7 +76,7 @@ test("a goal runs five seconds on the card: puck in the net, then the red light 
     return route.fulfill({ json: { updatedAt: new Date().toISOString(), date: g.date, games: [g] } });
   });
   await page.route("**/api/game/*", (route) => route.fulfill({ json: feed() }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await show(page, game(0));
   const card = page.locator(".live-card").first();
   await expect(card.getByTestId("ice-view")).toBeVisible();
@@ -113,7 +113,7 @@ test("with reduced motion the goal banner is the same, held still", async ({ pag
     return route.fulfill({ json: { updatedAt: new Date().toISOString(), date: g.date, games: [g] } });
   });
   await page.route("**/api/game/*", (route) => route.fulfill({ json: feed({ goals: [{ id: 9, period: 2, periodType: "REG", time: "09:00", type: "goal", team: AWAY, x: 80, y: 0, player: "A Scorer" }] }) }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await show(page, { ...base, state: "LIVE" });
   await page.clock.fastForward(31_000);
   const flash = page.locator(".live-card").first().getByTestId("goal-flash");

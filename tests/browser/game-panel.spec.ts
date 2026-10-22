@@ -6,7 +6,7 @@ async function open(page: Page, width: number) {
   await page.setViewportSize({ width, height: 950 });
   await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
+  await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
 }
 

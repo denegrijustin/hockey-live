@@ -10,7 +10,8 @@ import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
 import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
-import { MainNav } from "./components/MainNav";
+import { MainNav, VIEW_IDS } from "./components/MainNav";
+import { Scoreboard as ScoreboardView } from "./components/Scoreboard";
 import { Sheet } from "./components/Sheet";
 import { GameFilterFields, PeriodSwitch } from "./components/GameFilters";
 import { TeamsSheet } from "./components/TeamsSheet";
@@ -75,11 +76,19 @@ function dayHeading(dateStr: string) {
     day: "numeric",
   });
 }
+const initialView = () => {
+  try {
+    const v = new URLSearchParams(location.search).get("view");
+    return v && VIEW_IDS.includes(v) ? v : "scoreboard";
+  } catch {
+    return "scoreboard";
+  }
+};
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry } = useSeason();
   const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
-  const [view, setView] = useState("games"),
+  const [view, setView] = useState(initialView),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
     [sort, setSort] = useState("date"),
@@ -89,6 +98,14 @@ export default function App() {
     [filtersOpen, setFiltersOpen] = useState(false),
     [teamsOpen, setTeamsOpen] = useState(false);
   const phone = useMedia("(max-width: 720px)");
+  const home = view === "scoreboard";
+  // The view is kept in the address (?view=…) so a link opens the same screen; the scoreboard is the plain address.
+  useEffect(() => {
+    try {
+      history.replaceState(null, "", home ? location.pathname : `?view=${view}`);
+    } catch {}
+    document.documentElement.toggleAttribute("data-home", home);
+  }, [view, home]);
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
     [data],
@@ -165,7 +182,7 @@ export default function App() {
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
-      {data && analysis && (
+      {data && analysis && !home && (
         <ScoreTicker
           games={data.games}
           teams={teams}
@@ -216,33 +233,35 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        <div className="control-dock">
-          {phone ? (
-            <div className="phone-controls">
-              <button className="pc-button" aria-label="Choose teams" aria-haspopup="dialog" onClick={() => setTeamsOpen(true)}>
-                Teams <b>{activeSelection.length}</b>
-              </button>
-              {view === "games" && (
-                <>
-                  <button className="pc-button" aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}>
-                    Filters {activeFilters > 0 && <b>{activeFilters}</b>}
-                  </button>
-                  <label className="phone-search">
-                    <Icon name="search" size={18} />
-                    <input type="search" aria-label="Find a matchup" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} />
-                  </label>
-                </>
-              )}
-            </div>
-          ) : (
-            <TeamPicker
-              teams={teams}
-              selected={activeSelection}
-              onChange={view === "players" ? setPlayerTeams : changeTeams}
-            />
-          )}
-        </div>
-        {phone ? (
+        {!home && (
+          <div className="control-dock">
+            {phone ? (
+              <div className="phone-controls">
+                <button className="pc-button" aria-label="Choose teams" aria-haspopup="dialog" onClick={() => setTeamsOpen(true)}>
+                  Teams <b>{activeSelection.length}</b>
+                </button>
+                {view === "games" && (
+                  <>
+                    <button className="pc-button" aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}>
+                      Filters {activeFilters > 0 && <b>{activeFilters}</b>}
+                    </button>
+                    <label className="phone-search">
+                      <Icon name="search" size={18} />
+                      <input type="search" aria-label="Find a matchup" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} />
+                    </label>
+                  </>
+                )}
+              </div>
+            ) : (
+              <TeamPicker
+                teams={teams}
+                selected={activeSelection}
+                onChange={view === "players" ? setPlayerTeams : changeTeams}
+              />
+            )}
+          </div>
+        )}
+        {phone || home ? (
           (liveError || staleness > 86400000) && (
             <div className="status-banner" role="status">
               <span>{liveError ? "Live scores unavailable. Showing saved data." : "Showing a saved copy. Refresh pending."}</span>
@@ -295,6 +314,9 @@ export default function App() {
               <p className="sr-only" role="status" aria-live="polite">
                 {scoreboard.games.filter(isLive).length} games in progress around the league
               </p>
+            )}
+            {view === "scoreboard" && (
+              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} today={scoreboard?.date} loading={loading} />
             )}
             {view === "nhlplus" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL+…</div>}>
@@ -518,7 +540,7 @@ export default function App() {
             <ImperialismMap teams={teams} games={data.games} season={season} />
           </Suspense></ErrorBoundary>
         )}
-        <Methodology />
+        {!home && <Methodology />}
         <footer>
           <span>
             ICEBOARD <b aria-hidden="true"> / </b> Built for the games that matter.

@@ -14,6 +14,9 @@ import {
 } from "./lib/normalize.mjs";
 import { normalizeLeagueMatchups } from "./lib/matchup-data.mjs";
 import { refreshMoneyPuck, keyOf as mpKey } from "./lib/moneypuck-refresh.mjs";
+import { emptyPicks, picksKey, refreshPicks } from "./lib/picks-refresh.mjs";
+import { isCurrentSnapshot } from "./lib/picks.mjs";
+import { analyzeSeason } from "./lib/model.mjs";
 import { seasonYear } from "./lib/moneypuck.mjs";
 const API = "https://api-web.nhle.com/v1";
 const STATS_API = "https://api.nhle.com/stats/rest/en";
@@ -87,6 +90,27 @@ async function refreshSeason(season, env) {
   if (data.games.length < 100) throw Error("Incomplete NHL season");
   await env.TEAM_STATS.put(`dashboard-season-${season}`, JSON.stringify(data));
   return data;
+}
+// ---- Picks (moneyline and puck line) ----
+// Picks are logged once, before the puck drops, from the NHL's partner odds feed and the model, then graded after the game (see lib/picks.mjs).
+const ODDS_URL = `${API}/partner-game/US/now`;
+function runPicks(env, season) {
+  const store = { get: (key) => env.TEAM_STATS.get(key, { type: "json" }), put: (key, value) => env.TEAM_STATS.put(key, JSON.stringify(value)) };
+  return refreshPicks({
+    season,
+    store,
+    teams,
+    loadOdds: async () => {
+      const r = await fetch(ODDS_URL, { signal: AbortSignal.timeout(15000) });
+      return r.ok ? r.json() : null;
+    },
+    loadGames: async () => ((await env.TEAM_STATS.get(`dashboard-season-${season}`, { type: "json" })) ?? (await refreshSeason(season, env))).games,
+    loadBaseline: async () => {
+      const previous = season - 10001; // 20262027 -> 20252026
+      const r = await env.ASSETS.fetch(new Request(`https://assets.local/data/seasons/${previous}.json`));
+      return r.ok ? analyzeSeason((await r.json()).games, teams).table : null;
+    },
+  });
 }
 // ---- MoneyPuck (NHL+) ----
 // One KV key per published part (mp1:<year>:<part>). Reads fall back to the saved copy in /data/moneypuck/. Refreshes are
@@ -277,6 +301,11 @@ async function handle(request, env, ctx) {
           return json({ date, games: {} }, 200, 60);
         }
       }
+      if ((match = url.pathname.match(/^\/api\/picks\/(20\d{6})$/))) {
+        const season = Number(match[1]);
+        const stored = await env.TEAM_STATS.get(picksKey(season), { type: "json" });
+        return json(isCurrentSnapshot(stored, season) ? stored : emptyPicks(season), 200, 60);
+      }
       if ((match = url.pathname.match(/^\/api\/season\/(20\d{6})$/))) {
         const season = Number(match[1]),
           manifest = await staticData(env, request, "/data/manifest.json");
@@ -407,6 +436,8 @@ export default {
       new Request("https://assets.local/data/manifest.json"),
     );
     const manifest = await r.json();
+    // Picks: logged from the midday run (odds are up by then) and the daily run, and graded on every run that follows a finished game.
+    ctx.waitUntil(runPicks(env, manifest.current).then((r) => { if (r.added || r.graded || r.rebuilt) console.log("Picks", JSON.stringify(r)); }).catch((e) => console.error("Picks refresh failed", e?.message)));
     // MoneyPuck publishes overnight (US Eastern): check late morning and again mid-afternoon UTC; unchanged data costs two tiny requests.
     if (event.cron === "30 11 * * *" || event.cron === "30 15 * * *") {
       ctx.waitUntil(runMoneyPuck(env, manifest.current).then((result) => { if (!result.ok) console.error("MoneyPuck refresh failed", result.error); }));

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMedia } from "../hooks/useMedia";
+import { useSlidingUnderline } from "../hooks/useSlidingUnderline";
 import { Icon, type IconName } from "./icons";
 
 interface ViewDef {
@@ -13,6 +14,7 @@ interface ViewDef {
 const V = (id: string, label: string, icon: IconName, short = label): ViewDef => ({ id, label, short, icon });
 const SCORES = V("scoreboard", "Scoreboard", "games", "Scores");
 const SCHEDULE = V("games", "Schedule", "calendar");
+const PICKS = V("picks", "Picks", "picks");
 const STANDINGS = V("standings", "Standings", "standings");
 const TRENDS = V("trends", "Team trends", "trends", "Trends");
 const PLAYERS = V("players", "Players", "players");
@@ -23,11 +25,11 @@ const MAP = V("map", "Imperialism map", "map");
 
 /** Phones: four views in the tab bar, the rest behind More (the HIG caps a tab bar at five). */
 const PRIMARY = [SCORES, STANDINGS, TRENDS, PLAYERS];
-const MORE = [SCHEDULE, NHLPLUS, EDGE, ODDS, MAP];
+const MORE = [SCHEDULE, PICKS, NHLPLUS, EDGE, ODDS, MAP];
 export const VIEW_IDS = [...PRIMARY, ...MORE].map((v) => v.id);
 /** Desktop: every view, grouped, in a sidebar. */
 const GROUPS: [string, ViewDef[]][] = [
-  ["Dashboard", [SCORES, SCHEDULE, STANDINGS, ODDS]],
+  ["Dashboard", [SCORES, SCHEDULE, PICKS, STANDINGS, ODDS]],
   ["Analytics", [NHLPLUS, TRENDS, EDGE, PLAYERS]],
   ["Explore", [MAP]],
 ];
@@ -35,6 +37,8 @@ const GROUPS: [string, ViewDef[]][] = [
 export function MainNav({ view, setView, liveCount = 0, onRefresh }: { view: string; setView: (id: string) => void; liveCount?: number; onRefresh?: () => void }) {
   const wide = useMedia("(min-width: 1100px)");
   const [more, setMore] = useState(false);
+  const bar = useRef<HTMLElement>(null);
+  useSlidingUnderline(bar, MORE.some((v) => v.id === view) ? "more" : view);
   if (wide) {
     return (
       <nav className="side-nav" aria-label="Dashboard views">
@@ -55,7 +59,7 @@ export function MainNav({ view, setView, liveCount = 0, onRefresh }: { view: str
   const inMore = MORE.some((v) => v.id === view);
   return (
     <>
-      <nav className="tab-bar" aria-label="Dashboard views">
+      <nav ref={bar} className="tab-bar" aria-label="Dashboard views">
         {PRIMARY.map((v) => (
           <button key={v.id} className="tab-item" aria-label={v.label} aria-current={view === v.id ? "page" : undefined} onClick={() => { setMore(false); setView(v.id); }}>
             <Icon name={v.icon} />

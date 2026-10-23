@@ -13,7 +13,8 @@ import { ScoreRing } from "./ScoreRing";
 import { WatchNow } from "./WatchNow";
 import { CompactGameFlow, useCardFeed } from "./GameData";
 import { useMedia } from "../hooks/useMedia";
-import { usePauseOffscreen } from "../motion";
+import { haptic, useChanged, useFlip, usePauseOffscreen } from "../motion";
+import { Skeleton } from "./Skeleton";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -78,6 +79,13 @@ function useEtToday() {
   return today;
 }
 
+/** A list of games whose members slide to their new places when the order changes (a game getting hotter, a filter applied). */
+function FlipList({ games, children }: { games: Game[]; children: React.ReactNode }) {
+  const ref = useRef<HTMLUListElement>(null);
+  useFlip(ref, games.map((g) => g.id).join("|"));
+  return <ul ref={ref} className="sb-list">{children}</ul>;
+}
+
 /** The current time, refreshed every `ms`, so "starts in 20 min" and the Watch-now strip stay current. */
 function useTick(ms: number) {
   const [now, setNow] = useState(() => Date.now());
@@ -109,6 +117,14 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   }, [analysis, baseline, baselineTable]);
   const rated = useMemo(() => new Map(dayGames.map((g) => [g.id, rate(g)] as const)), [dayGames, rate]);
   const phone = useMedia("(max-width: 720px)");
+  // A short buzz when a game that had not started goes live (never on first load, and only for movement the page has seen).
+  const liveSeen = useRef<Map<number, boolean> | null>(null);
+  useEffect(() => {
+    const now = new Map(games.map((g) => [g.id, isLive(g)] as const));
+    const before = liveSeen.current;
+    liveSeen.current = now;
+    if (before && [...now].some(([id, live]) => live && before.get(id) === false)) haptic();
+  }, [games]);
   const now = useTick(30_000);
   const counts = useMemo(() => ({
     live: dayGames.filter(isLive).length,
@@ -156,7 +172,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
           </button>
         ))}
       </div>
-      {loading && !games.length && <p className="sb-empty" role="status">Loading the scoreboard…</p>}
+      {loading && !games.length && <Skeleton rows={4} label="Loading the scoreboard" />}
       {!loading && !sections.length && <p className="sb-empty">{status === "all" ? "No games on this day." : "Nothing here on this day."}</p>}
       {sections.map((section) => (
         <div className={`sb-group ${section.key}`} key={section.key} aria-label={section.title} role="region">
@@ -164,9 +180,9 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
           {(section.slots ? slotsOf(section.games, rated) : [{ key: "all", label: "", games: section.games }]).map((slot) => (
             <div className="sb-slot" key={slot.key} data-slot={slot.key}>
               {slot.label && <h3 className="sb-slot-h">{slot.label}</h3>}
-              <ul className="sb-list">
+              <FlipList games={slot.games}>
                 {slot.games.map((g) => (
-                  <li key={g.id}>
+                  <li key={g.id} data-game-id={g.id}>
                     <ScoreRow
                       game={g}
                       away={teamOf(g.away)}
@@ -182,7 +198,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
                     />
                   </li>
                 ))}
-              </ul>
+              </FlipList>
             </div>
           ))}
         </div>
@@ -221,6 +237,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, analys
   const awayPct = homePct != null ? 100 - homePct : null;
   const winner = status.kind === "final" && showScore ? (game.homeScore! > game.awayScore! ? "home" : "away") : null;
   const cl = closeAndLate(game);
+  const awayScored = useChanged(game.awayScore ?? undefined), homeScored = useChanged(game.homeScore ?? undefined);
   const label = `${away.name} at ${home.name}, ${status.text}${showScore ? `, ${game.awayScore} to ${game.homeScore}` : ""}${homePct != null ? `, win probability ${away.id} ${awayPct} percent, ${home.id} ${homePct} percent` : ""}`;
   // The feed (for the momentum chart) is fetched while a live game is on screen, and for a finished one only once it is opened.
   const { ref: feedRef, data: feed } = useCardFeed(game, status.kind === "live" || open);
@@ -231,6 +248,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, analys
   const flowShown = (status.kind === "live" && !game.intermission) || (open && status.kind !== "soon");
   return (
     <article ref={ref} className={`sb-row ${status.kind}${open ? " open" : ""}${cl.both ? " hot" : ""} tier-${tier.key}`} data-game={game.id}>
+      {(awayScored || homeScored) && <span className="pulse-ring" aria-hidden="true" />}
       <div className="sb-top">
         <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}{cl.both && <span className="late-flag" title={cl.label}><i aria-hidden="true" />Close &amp; late</span>}</span>
         <span className="sb-actions">
@@ -244,7 +262,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, analys
             <span className={`sb-team${winner && winner !== side ? " lost" : ""}`} key={team.id}>
               <TeamLogo id={team.id} size={32} />
               <span className="sb-name">{team.name.endsWith(team.short) ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}</span>
-              <span className="sb-score">{showScore ? score : ""}</span>
+              <span className={`sb-score${(side === "away" ? awayScored : homeScored) ? " scored" : ""}`}><span className="ts-num">{showScore ? score : ""}</span></span>
             </span>
           ))}
           {homePct != null && awayPct != null && (

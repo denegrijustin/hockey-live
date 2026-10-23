@@ -28,11 +28,12 @@
   "ink": "mixed"
  },
  "CAR": {
-  "file": "carolina-hurricanes-1997-hmtieeyhlstetwwn9oknkngfx.png",
-  "name": "Carolina Hurricanes",
-  "era": "1997/98 - 1998/99",
-  "source": "https://www.sportslogos.net/logos/view/hmtieeyhlstetwwn9oknkngfx/Carolina-Hurricanes-Logo/1998/Primary-Logo",
-  "ink": "light"
+  "file": "hartford-whalers-1979-9zt534ipbfprlfs2vsqfugw41.png",
+  "name": "Hartford Whalers",
+  "era": "Hartford Whalers 1979/80 - 1991/92",
+  "source": "https://www.sportslogos.net/logos/view/9zt534ipbfprlfs2vsqfugw41/Hartford-Whalers-Logo/1980/Primary-Logo",
+  "note": "Carolina shows the Hartford Whalers mark",
+  "ink": "mixed"
  },
  "CHI": {
   "file": "chicago-black-hawks-1926-6692.png",
@@ -91,11 +92,12 @@
   "ink": "light"
  },
  "MIN": {
-  "file": "minnesota-wild-2000-0kcehji928suy4ckk1pdo8s7l.png",
-  "name": "Minnesota Wild",
-  "era": "2000/01 - 2012/13",
-  "source": "https://www.sportslogos.net/logos/view/0kcehji928suy4ckk1pdo8s7l/Minnesota-Wild-Logo/2001/Primary-Logo",
-  "ink": "mixed"
+  "file": "minnesota-north-stars-1967-3453531968.png",
+  "name": "Minnesota North Stars",
+  "era": "1967/68 - 1984/85",
+  "source": "https://www.sportslogos.net/logos/view/3453531968/Minnesota-North-Stars-Logo/1968/Primary-Logo",
+  "note": "Minnesota shows the Minnesota North Stars mark",
+  "ink": "light"
  },
  "MTL": {
   "file": "montreal-canadiens-1917-6380.png",

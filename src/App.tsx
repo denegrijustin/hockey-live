@@ -19,6 +19,7 @@ import { StatusPill } from "./components/StatusPill";
 import { Icon } from "./components/icons";
 import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
+import { Skeleton } from "./components/Skeleton";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs
@@ -42,6 +43,7 @@ const PlayoffOdds = lazy(() =>
 const ImperialismMap = lazy(() =>
   import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
 );
+const Picks = lazy(() => import("./components/Picks").then((m) => ({ default: m.Picks })));
 const NhlPlus = lazy(() =>
   import("./components/nhlplus/NhlPlus").then((m) => ({ default: m.NhlPlus })),
 );
@@ -162,10 +164,24 @@ export default function App() {
   const activeTeams = activeSelection.map(id => teams.find(t => t.id === id)!).filter(Boolean);
   const sourceSeason = season;
   const staleness = data ? Date.now() - Date.parse(data.updatedAt) : 0;
+  const [manualRefresh, setManualRefresh] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const refresh = useCallback(() => {
     retry();
     window.dispatchEvent(new Event("iceboard:refresh"));
+    setManualRefresh(true);
   }, [retry]);
+  // "Updated just now" once a refresh the viewer asked for (pull, Retry, Refresh data) has finished.
+  useEffect(() => {
+    if (!manualRefresh || loading) return;
+    const show = setTimeout(() => { setManualRefresh(false); setToast("Updated just now"); }, 700);
+    return () => clearTimeout(show);
+  }, [manualRefresh, loading]);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2400);
+    return () => clearTimeout(t);
+  }, [toast]);
   const { pull, busy: refreshing } = usePullToRefresh(refresh, phone);
   const liveCount = scoreboard ? scoreboard.games.filter(isLive).length : 0;
   const defaultRange = isAllTeams ? "7" : "30";
@@ -182,7 +198,7 @@ export default function App() {
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
-      {data && analysis && !home && (
+      {data && analysis && !home && view !== "picks" && (
         <ScoreTicker
           games={data.games}
           teams={teams}
@@ -233,7 +249,7 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && (
+        {!home && view !== "picks" && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">
@@ -309,7 +325,7 @@ export default function App() {
             </div>
           </div>
         ) : data && analysis ? (
-          <>
+          <div key={view} className="view-in">
             {scoreboard && (
               <p className="sr-only" role="status" aria-live="polite">
                 {scoreboard.games.filter(isLive).length} games in progress around the league
@@ -318,13 +334,18 @@ export default function App() {
             {view === "scoreboard" && (
               <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} />
             )}
+            {view === "picks" && (
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="skel card" role="status" aria-label="Loading picks"><div className="skel-item"><span className="skel-line w60" /><span className="skel-line w90" /></div></div>}>
+                <Picks season={season} games={data.games} teams={teams} />
+              </Suspense></ErrorBoundary>
+            )}
             {view === "nhlplus" && (
-              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL+…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading NHL+" />}>
                 <NhlPlus games={data.games} season={season} teams={teams} />
               </Suspense></ErrorBoundary>
             )}
             {view === "edge" && (
-              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading NHL EDGE…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading NHL EDGE" />}>
                 <EdgePanel teams={selectedTeams} season={season} />
               </Suspense></ErrorBoundary>
             )}
@@ -494,7 +515,7 @@ export default function App() {
               </>
             )}
             {view === "trends" && (
-              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading team trends…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading team trends" />}>
                 <Trends
                   teams={selectedTeams}
                   table={analysis.table}
@@ -507,12 +528,12 @@ export default function App() {
               </Suspense></ErrorBoundary>
             )}{" "}
             {view === "players" && (
-              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading player contributions…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading player contributions" />}>
                 <Players teams={activeTeams} season={sourceSeason} />
               </Suspense></ErrorBoundary>
             )}{" "}
             {view === "standings" && (
-              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading standings…</div>}>
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading standings" />}>
                 <Standings
                   teams={teams}
                   table={analysis.table}
@@ -522,10 +543,10 @@ export default function App() {
                 />
               </Suspense></ErrorBoundary>
             )}
-          </>
+          </div>
         ) : null}
         {view === "odds" && data && analysis && (
-          <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading playoff odds…</div>}>
+          <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading playoff odds" />}>
             <PlayoffOdds
               teams={teams}
               games={data.games}
@@ -536,7 +557,7 @@ export default function App() {
           </Suspense></ErrorBoundary>
         )}
         {view === "map" && data && (
-          <ErrorBoundary resetKey={String(season)}><Suspense fallback={<div className="empty" role="status">Loading the map…</div>}>
+          <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the map" />}>
             <ImperialismMap teams={teams} games={data.games} season={season} />
           </Suspense></ErrorBoundary>
         )}
@@ -553,6 +574,7 @@ export default function App() {
           </span>
         </footer>
       </main>
+      <div className="toast-host" aria-live="polite">{toast && <div className="toast" role="status">{toast}</div>}</div>
       {phone && filtersOpen && (
         <Sheet title="Filters" onClose={() => setFiltersOpen(false)} left={<button className="sheet-reset" onClick={resetFilters}>Reset</button>}>
           <div className="sheet-status">

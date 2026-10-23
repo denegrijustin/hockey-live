@@ -1,0 +1,42 @@
+/* Picks: this week's, the record, graded */
+.picks { width: 100%; max-width: 860px; margin: 0 auto; }
+.pk-head h1 { margin: 4px 0 4px; font-size: 1.5rem; }
+.pk-head p { margin: 0 0 12px; font-size: .8125rem; color: var(--text-1); max-width: 62ch; }
+.pk-honest { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface-5); font-size: .875rem; line-height: 1.5; color: var(--text-4); }
+.pk-h { margin: 22px 0 10px; font-size: .8125rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
+.pk-h .sb-count { margin-left: 6px; padding: 0 8px; border-radius: 999px; background: var(--surface-7); font-size: .6875rem; color: var(--text-3); letter-spacing: 0; }
+.pk-empty { margin: 0; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--line-2); font-size: .8125rem; color: var(--text-1); line-height: 1.5; }
+.pk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.pk-card { display: grid; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--line-1); background: var(--surface-5); min-width: 0; }
+.pk-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .75rem; color: var(--text-1); flex-wrap: wrap; }
+.pk-verdict { padding: 2px 10px; border-radius: 999px; font-size: .6875rem; font-weight: 700; background: var(--surface-7); color: var(--text-3); }
+.pk-verdict.good { color: var(--mint-5); }
+.pk-verdict.thin { color: var(--amber-5); }
+.pk-result { font-size: .75rem; font-weight: 750; }
+.pk-result.win { color: var(--mint-5); }
+.pk-result.loss { color: var(--red-5); }
+.pk-match { display: flex; align-items: center; gap: 10px; font-size: .9375rem; font-weight: 650; }
+.pk-pick { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .9375rem; }
+.pk-pick span { color: var(--text-1); font-size: .75rem; }
+.pk-why { margin: 0; font-size: .8125rem; line-height: 1.5; color: var(--text-3); }
+.pk-scale { padding: 20px 32px 24px; }
+.pk-track { position: relative; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--surface-7), var(--surface-8)); }
+.pk-tick { position: absolute; top: -4px; width: 2px; height: 14px; background: var(--text-1); }
+.pk-tick span { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-style: normal; font-size: .6875rem; color: var(--text-1); }
+.pk-tick.even { background: var(--amber-5); }
+.pk-tick.even span { color: var(--amber-5); top: -20px; }
+.pk-dot { position: absolute; top: -5px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--mint-5); border: 2px solid var(--surface-3); }
+.pk-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.pk-stats div { padding: 10px; border-radius: 12px; background: var(--surface-5); border: 1px solid var(--line-1); text-align: center; }
+.pk-stats dt { font-size: .6875rem; color: var(--text-1); }
+.pk-stats dd { margin: 2px 0 0; font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pk-chart { width: 100%; height: auto; display: block; }
+.pk-chart .pk-zero { stroke: var(--amber-5); stroke-width: 1.2; stroke-dasharray: 4 4; }
+.pk-chart .pk-axis { fill: var(--text-1); font-size: calc(0.6875rem * var(--u, 1)); }
+.pk-chart .pk-axis.even { fill: var(--amber-5); }
+.pk-chart .pr-bar.up { fill: var(--mint-5); opacity: .8; }
+.pk-chart .pr-bar.down { fill: var(--red-5); opacity: .8; }
+.pk-chart .pr-line { fill: none; stroke: var(--text-5); stroke-width: 2; }
+.pk-chart .pr-dot { fill: var(--text-5); }
+.pk-note { margin: 6px 0 0; font-size: .75rem; color: var(--text-1); line-height: 1.5; }
+@media (max-width: 560px) { .pk-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

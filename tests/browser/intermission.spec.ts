@@ -5,6 +5,9 @@ import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "j
 import teams from "../../src/data/teams.json" with { type: "json" };
 import { zamboniColors } from "../../src/lib/intermission.mjs";
 
+// This spec is about animated behaviour; the suite default is reduced motion (see playwright.config.ts).
+test.use({ reducedMotion: "no-preference" });
+
 const base = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
 const homeTeam = (teams as { id: string; color: string; cardColor?: string }[]).find((t) => t.id === base.home)!;
 async function open(page: Page, extra: Record<string, unknown>) {

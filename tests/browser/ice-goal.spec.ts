@@ -3,6 +3,9 @@ import { filterGames, selectAllTeams, showPeriod } from "./controls";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 
+// This spec is about animated behaviour; the suite default is reduced motion (see playwright.config.ts).
+test.use({ reducedMotion: "no-preference" });
+
 const base = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
 const HOME = base.home, AWAY = base.away;
 // Rink coordinates as the feed gives them: the teams switch ends between periods, so the same team's shots come at both signs of x.

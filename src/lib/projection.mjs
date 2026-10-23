@@ -91,5 +91,5 @@ export function projectGame(game, table = {}, baseline = {}, feed = null) {
     } else { if (home > away) homeWin += p; add(home, away, p); }
   }
   const likely = [...scores.entries()].sort((x, y) => y[1] - x[1])[0][0].split(':').map(Number);
-  return { live, homeWin: homeWin / mass, score: { home: likely[0], away: likely[1] }, shotAdjustment, overtime: false, factors };
+  return { live, homeWin: homeWin / mass, score: { home: likely[0], away: likely[1] }, means: { home: homeMean, away: awayMean }, shotAdjustment, overtime: false, factors };
 }

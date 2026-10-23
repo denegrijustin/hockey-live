@@ -9,6 +9,7 @@ const paths: Record<string, ReactNode> = {
   more: (<><circle cx="5.5" cy="12" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="18.5" cy="12" r="1.2" /></>),
   nhlplus: (<><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></>),
   edge: <path d="M13 3L5 14h6l-1 7 8-11h-6z" />,
+  picks: (<><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /></>),
   odds: (<><path d="M19 5L5 19" /><circle cx="7" cy="7" r="2.3" /><circle cx="17" cy="17" r="2.3" /></>),
   map: (<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3.2 3 3.2 15 0 18M12 3c-3.2 3-3.2 15 0 18" /></>),
   chevron: <path d="M9 6l6 6-6 6" />,

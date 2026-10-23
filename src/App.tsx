@@ -198,7 +198,7 @@ export default function App() {
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
-      {data && analysis && !home && (
+      {data && analysis && !home && view !== "picks" && (
         <ScoreTicker
           games={data.games}
           teams={teams}
@@ -249,7 +249,7 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && (
+        {!home && view !== "picks" && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">

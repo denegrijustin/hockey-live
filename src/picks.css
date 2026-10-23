@@ -19,7 +19,7 @@
 .pk-pick { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .9375rem; }
 .pk-pick span { color: var(--text-1); font-size: .75rem; }
 .pk-why { margin: 0; font-size: .8125rem; line-height: 1.5; color: var(--text-3); }
-.pk-scale { padding: 18px 4px 22px; }
+.pk-scale { padding: 20px 32px 24px; }
 .pk-track { position: relative; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--surface-7), var(--surface-8)); }
 .pk-tick { position: absolute; top: -4px; width: 2px; height: 14px; background: var(--text-1); }
 .pk-tick span { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-style: normal; font-size: .6875rem; color: var(--text-1); }

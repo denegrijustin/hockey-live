@@ -15,6 +15,7 @@ import { SituationCompare, SituationPicker, type SitFilter } from "./SituationCo
 import { PregameExpanded } from "./PregameExpanded";
 import { useGameMoneyPuck } from "./useGameMoneyPuck";
 import { isPlayoff, isShootout, modeNote, penaltyMarkers, SHOOTOUT_NOTE, topLines } from "./logic.mjs";
+import { TeamLogo } from "../../TeamLogo";
 
 const face = (season: number, team: string, id: number) => `https://assets.nhle.com/mugs/nhl/${season}/${team}/${id}.png`;
 
@@ -119,7 +120,7 @@ function LinesBlock({ season, away, home, lines, skaters }: { season: number; aw
           const { lines: ls, pairings } = topLines(lines.data, skaters.data, t.id, { minToi: MIN, limit: 3 });
           return (
             <div key={t.id} className="nhlp-team-lines">
-              <h5><img src={`/logos/${t.id}.svg`} alt="" width="18" height="18" />{t.short}</h5>
+              <h5><TeamLogo id={t.id} size={18} />{t.short}</h5>
               {[...ls, ...pairings].length === 0 && <p className="nhlp-note">No combination has {MIN / 60}+ minutes at 5-on-5 yet.</p>}
               {[...ls, ...pairings].map((l) => (
                 <div className="nhlp-line" key={l.id} data-testid="line-row">

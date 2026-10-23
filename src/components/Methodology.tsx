@@ -104,6 +104,13 @@ export function Methodology() {
           >
             NHL playoff format ↗
           </a>
+          <p className="logo-credit" data-testid="logo-credit">
+            Team logos are vintage primary logos from{" "}
+            <a href="https://www.sportslogos.net/teams/list_by_league/1/National-Hockey-League-Logos/NHL-Logos/" target="_blank" rel="noreferrer">
+              Chris Creamer’s SportsLogos.Net ↗
+            </a>
+            , kept here for personal, non-commercial use. The marks belong to the NHL and its clubs. Utah shows the Arizona Coyotes mark.
+          </p>
         </section>
       </div>
     </details>

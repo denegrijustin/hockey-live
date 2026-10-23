@@ -61,7 +61,7 @@ export function TeamsView({ ctx }: { ctx: Ctx }) {
           <ScatterChart
             ariaLabel={`Expected goals created versus allowed per 60, ${sitLabel}, one logo per team`}
             points={rows.map((r) => ({
-              key: r.team, x: r.xGF60, y: r.xGA60, img: `/logos/${r.team}.svg`, label: teamName(r.team),
+              key: r.team, x: r.xGF60, y: r.xGA60, team: r.team, label: teamName(r.team),
               lines: [`${sitLabel}`, `xG for/60: ${fmt(r.xGF60)}`, `xG against/60: ${fmt(r.xGA60)}`, `${fmtInt(r.gp)} GP · ${fmtMin(r.toi)} min`, rankLine(r.team)],
             }))}
             xLabel="xG created per 60 (xG for)" yLabel="xG allowed per 60 (xG against)" xBetterNote="more is better →" yBetterNote="fewer is better ↑"
@@ -81,7 +81,7 @@ export function TeamsView({ ctx }: { ctx: Ctx }) {
           <RankBars
             ariaLabel={`${def.label} by team, ${sitLabel}`} metricLabel={def.label} higherIsBetter={def.higherIsBetter}
             avg={metricAvg} avgText={def.fmt(metricAvg)} highlight={s.highlight} onToggle={toggleTeam}
-            items={rows.map((r) => ({ key: r.team, label: teamName(r.team), img: `/logos/${r.team}.svg`, value: r[def.key] ?? null, text: def.fmt(r[def.key] ?? null), lines: [`${def.label}: ${def.fmt(r[def.key] ?? null)}`, `${fmtInt(r.gp)} GP`, `${fmtMin(r.toi)} min of ${sitLabel}`] }))}
+            items={rows.map((r) => ({ key: r.team, label: teamName(r.team), team: r.team, value: r[def.key] ?? null, text: def.fmt(r[def.key] ?? null), lines: [`${def.label}: ${def.fmt(r[def.key] ?? null)}`, `${fmtInt(r.gp)} GP`, `${fmtMin(r.toi)} min of ${sitLabel}`] }))}
           />
         </Panel>
       </div>

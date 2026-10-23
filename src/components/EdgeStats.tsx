@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useVisibleInterval } from "../lib/polling";
 import type { EdgeData, Team } from "../types";
 import { useVisible } from "./GameData";
+import { TeamLogo } from "./TeamLogo";
 const pending = new Map<string, Promise<EdgeData>>();
 const fetchedAt = new Map<string, number>();
 export function loadEdge(season: number, team: string) {
@@ -59,7 +60,7 @@ export function EdgeStats({ team, season }: { team: Team; season: number }) {
   return (
     <div ref={ref} className="edge-card">
       <div className="edge-heading">
-        <img src={`/logos/${team.id}.svg`} alt="" />
+        <TeamLogo id={team.id} />
         <div>
           <p className="eyebrow">NHL EDGE</p>
           <h3>{team.name}</h3>

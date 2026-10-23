@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Team } from "../types";
 import { Sheet } from "./Sheet";
 import { Icon } from "./icons";
+import { TeamLogo } from "./TeamLogo";
 
 const MY_TEAMS = ["EDM", "CHI", "MIN"];
 
@@ -21,7 +22,7 @@ export function TeamsSheet({ teams, selected, onChange, onClose }: { teams: Team
         <div className="teams-shortcuts teams-only">
           {MY_TEAMS.map((id) => (
             <button key={id} className="team-pill" title={`Show ${teams.find((t) => t.id === id)?.name ?? id} only`} aria-pressed={selected.length === 1 && selected[0] === id} onClick={() => { onChange([id]); onClose(); }}>
-              <img src={`/logos/${id}.svg`} alt="" width="22" height="22" decoding="async" />
+              <TeamLogo id={id} size={22} />
               {id}
             </button>
           ))}
@@ -36,7 +37,7 @@ export function TeamsSheet({ teams, selected, onChange, onClose }: { teams: Team
           <li key={t.id}>
             <label>
               <input type="checkbox" checked={selected.includes(t.id)} onChange={() => toggle(t.id)} />
-              <img src={`/logos/${t.id}.svg`} alt="" width="28" height="28" loading="lazy" decoding="async" />
+              <TeamLogo id={t.id} size={28} />
               <span>{t.name}</span>
             </label>
           </li>

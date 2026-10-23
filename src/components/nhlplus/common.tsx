@@ -6,13 +6,14 @@ import type { Sit } from "../../lib/moneypuck-types";
 import { MetricTip } from "./shared/MetricTip";
 import { DEFAULT_MIN, MIN_CHOICES, effectiveMin } from "./state";
 import type { Sort } from "./state";
+import { TeamLogo } from "../TeamLogo";
 
 export const TEAMS: Team[] = rawTeams;
 export const TEAM_BY_ID: Record<string, Team> = Object.fromEntries(TEAMS.map((t) => [t.id, t]));
 export const teamName = (id: string) => TEAM_BY_ID[id]?.name ?? id;
 
 export function Logo({ team, size = 22 }: { team: string; size?: number }) {
-  return <img className="np-logo" src={`/logos/${team}.svg`} alt="" width={size} height={size} loading="lazy" decoding="async" />;
+  return <TeamLogo id={team} size={size} className="np-logo" />;
 }
 
 const initials = (name: string) => name.split(/[\s-]+/).map((n) => n[0]).filter(Boolean).slice(0, 2).join("");

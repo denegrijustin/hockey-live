@@ -184,4 +184,27 @@ test.describe("scoreboard home", () => {
     // Pointer-sized controls, not 44pt touch targets.
     expect(chip!.height).toBeLessThanOrEqual(36);
   });
+
+  for (const width of [1100, 1280, 1440, 0]) test(`a game on several channels never overlaps the ring, the bar or the Game Center button (${width || "phone"})`, async ({ page, isMobile }) => {
+    test.skip(isMobile ? width !== 0 : width === 0, "each width runs on its own project");
+    if (width) await page.setViewportSize({ width, height: 900 });
+    const many = { ...game(9211, 0, "MTL", "CHI"), broadcasts: ["TSN", "RDS", "TVA Sports", "The Sportsnet", "NHL Network"], start: new Date(Date.now() + 40 * 60000).toISOString() };
+    await open(page, "/", [many]);
+    const row = page.locator('.sb-row[data-game="9211"]');
+    await expect(row).toBeVisible();
+    const box = (l: ReturnType<typeof row.locator>) => l.boundingBox();
+    const tv = (await box(row.locator(".tv-network")))!, gc = (await box(row.getByRole("button", { name: /Open Game Center/ })))!;
+    if (width && width < 1400) expect(tv.y, "on a narrower desktop the channels sit below the Game Center button").toBeGreaterThanOrEqual(gc.y + gc.height - 1);
+    else expect(tv.x + tv.width, "TV pill ends before the GC button").toBeLessThanOrEqual(gc.x + 1);
+    if (!isMobile) {
+      const ring = (await box(row.locator(".score-ring")))!, prob = (await box(row.locator(".sb-prob")))!;
+      expect(prob.x + prob.width, "the probability bar ends before the ring").toBeLessThanOrEqual(ring.x + 1);
+      expect(ring.x + ring.width, "the ring ends before the GC button").toBeLessThanOrEqual(gc.x + 1);
+      if (width >= 1400) expect(ring.x + ring.width, "ring ends before the TV pill").toBeLessThanOrEqual(tv.x + 1);
+    }
+    // The pill holds all its logos inside its own box.
+    const inside = await row.locator(".tv-network").evaluate((e) => [...e.querySelectorAll(".network-logo, .network-more")].every((c) => { const a = c.getBoundingClientRect(), b = e.getBoundingClientRect(); return a.left >= b.left - 1 && a.right <= b.right + 1; }));
+    expect(inside).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual((await page.evaluate(() => innerWidth)) + 1);
+  });
 });

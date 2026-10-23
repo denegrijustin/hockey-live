@@ -344,3 +344,19 @@ html[data-home] {
   .scoreboard .sb-venue { padding: 0 0 2px; grid-row: 2; font-size: .75rem; }
   .scoreboard .sb-row .sb-top .late-flag { margin-left: 0; }
 }
+
+/* Several channels (TSN, RDS, TVA Sports…) widen the TV pill: it must grow with its logos, never spill over the ring or the GC button. */
+.scoreboard .sb-actions .tv-network { max-width: none; flex: none; flex-wrap: nowrap; }
+.scoreboard .sb-actions .network-logos { flex-wrap: nowrap; }
+.scoreboard .sb-actions .network-logo-fallback { white-space: nowrap; }
+@media (min-width: 1100px) {
+  .scoreboard .sb-row { grid-template-columns: 8.5rem minmax(0, 1fr) 4.75rem max-content; }
+  .scoreboard .sb-actions { justify-self: end; min-width: 0; }
+}
+/* On a narrower desktop the channels move down beside the venue, so the probability bar and ring keep their room. */
+@media (min-width: 1100px) and (max-width: 1399px) {
+  .scoreboard .sb-actions { display: contents; }
+  .scoreboard .sb-actions .gc-icon { grid-column: 4; grid-row: 1; justify-self: end; }
+  .scoreboard .sb-actions .tv-network { grid-column: 2 / 5; grid-row: 2; justify-self: end; }
+  .scoreboard .sb-row .sb-venue { grid-column: 1 / 3; }
+}

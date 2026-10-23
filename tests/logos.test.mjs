@@ -11,7 +11,6 @@ test("every NHL team has a vintage logo file and a current-logo fallback file", 
     assert.ok(existsSync(`public/logos/retro/${t.id}.png`), `${t.id} retro file missing`);
     assert.ok(existsSync(`public/logos/${t.id}.svg`), `${t.id} current logo missing`);
     assert.ok(existsSync(`public/logos/vintage/${retro[t.id].file}`), `${t.id} original missing`);
-    assert.ok(["dark", "light", "mixed"].includes(retro[t.id].ink), `${t.id} ink`);
   }
 });
 
@@ -29,4 +28,5 @@ test("the lookup picks the vintage logo and falls back to the current one", asyn
   assert.equal(logoUrl("XXX"), currentLogoUrl("XXX"));
   assert.equal(hasRetro("UTA"), true);
   assert.equal(logoInk("XXX"), "light");
+  assert.equal(logoInk("BOS"), "retro");
 });

@@ -152,6 +152,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
 
   return (
     <section className="scoreboard" aria-label="Scoreboard">
+      <div className="sb-toolbar">
       <div className="sb-days">
         <button className="sb-step" aria-label="Previous day" disabled={index <= 0 && days.length > 0 && day <= days[0]} onClick={() => { setPicked(days[Math.max(0, index - 1)] ?? day); setOpenId(null); }}>
           <span className="sb-flip"><Icon name="chevron" size={20} /></span>
@@ -164,7 +165,6 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
           <Icon name="chevron" size={20} />
         </button>
       </div>
-      <WatchNow games={games} teams={teams} rate={rate} now={now} max={phone ? 3 : 5} onOpen={(g) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }} />
       <div className="sb-filters" role="group" aria-label="Show games by status">
         {([["live", counts.live, "in progress"], ["final", counts.final, "completed"], ["soon", counts.soon, "upcoming"]] as const).map(([key, n, label]) => (
           <button key={key} type="button" className={`sb-chip ${key}`} aria-pressed={status === key} disabled={!n && status !== key} onClick={() => { setStatus(status === key ? "all" : key); setOpenId(null); }}>
@@ -172,6 +172,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
           </button>
         ))}
       </div>
+      </div>
+      <WatchNow games={games} teams={teams} rate={rate} now={now} max={phone ? 3 : 5} onOpen={(g) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }} />
       {loading && !games.length && <Skeleton rows={4} label="Loading the scoreboard" />}
       {!loading && !sections.length && <p className="sb-empty">{status === "all" ? "No games on this day." : "Nothing here on this day."}</p>}
       {sections.map((section) => (

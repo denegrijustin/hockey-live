@@ -34,15 +34,15 @@ test("a logo that fails to load falls back to the current logo", async ({ page }
   await expect(bos).toHaveAttribute("data-ink", "light");
 });
 
-test("a logo that would blend into the page sits on a contrasting chip, in both themes", async ({ page }) => {
+test("every vintage logo sits on the same light chip in both themes, so none disappears and none is half-covered", async ({ page }) => {
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   const chip = (id: string) => page.locator(`img.team-logo[data-team="${id}"]`).first().evaluate((e) => getComputedStyle(e).backgroundColor);
-  await page.emulateMedia({ colorScheme: "dark" });
-  await page.goto("/?view=standings");
-  await page.locator('img.team-logo[data-team="PHI"]').first().evaluate((e) => e.scrollIntoView());
-  expect(await chip("PHI")).not.toBe("rgba(0, 0, 0, 0)"); // dark ink on the dark theme
-  expect(await chip("PIT")).toBe("rgba(0, 0, 0, 0)"); // light ink on the dark theme: no chip needed
-  await page.emulateMedia({ colorScheme: "light" });
-  expect(await chip("PIT")).not.toBe("rgba(0, 0, 0, 0)"); // light ink on the light theme
-  expect(await chip("PHI")).toBe("rgba(0, 0, 0, 0)");
+  for (const scheme of ["dark", "light"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/?view=standings");
+    await page.locator('img.team-logo[data-team="PHI"]').first().evaluate((e) => e.scrollIntoView());
+    const colors = new Set([await chip("PHI"), await chip("PIT"), await chip("BOS"), await chip("TBL")]);
+    expect(colors.size, `${scheme}: one chip colour for all`).toBe(1);
+    expect([...colors][0]).toBe("rgb(247, 249, 251)");
+  }
 });

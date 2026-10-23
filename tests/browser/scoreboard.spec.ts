@@ -165,4 +165,23 @@ test.describe("scoreboard home", () => {
     await expect(recap).toContainText("What happened");
     await expect(recap).toContainText(/beat/);
   });
+
+  test("on a desktop the board is a dense table-like list, not a phone feed", async ({ page, isMobile }) => {
+    test.skip(!!isMobile, "desktop layout");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page);
+    const row = page.locator(".sb-row.soon").first();
+    await expect(row).toBeVisible();
+    const [r, status, main, ring, gc] = await Promise.all([row.boundingBox(), row.locator(".sb-status").boundingBox(), row.locator(".sb-main").boundingBox(), row.locator(".score-ring").boundingBox(), row.getByRole("button", { name: /Open Game Center/ }).boundingBox()]);
+    // One horizontal line of columns: status, teams and probability, ring, actions, left to right.
+    expect(status!.x + status!.width).toBeLessThanOrEqual(main!.x + 1);
+    expect(main!.x + main!.width).toBeLessThanOrEqual(ring!.x + 1);
+    expect(ring!.x + ring!.width).toBeLessThanOrEqual(gc!.x + 1);
+    expect(r!.height).toBeLessThan(110);
+    // The day switcher and the status filters share one toolbar row.
+    const [day, chip] = await Promise.all([page.locator(".sb-days").boundingBox(), page.locator(".sb-chip").first().boundingBox()]);
+    expect(Math.abs(day!.y - chip!.y)).toBeLessThan(40);
+    // Pointer-sized controls, not 44pt touch targets.
+    expect(chip!.height).toBeLessThanOrEqual(36);
+  });
 });

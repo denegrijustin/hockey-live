@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { projectedStandings } from "../lib/standings-projection.mjs";
 import type { Game, Team } from "../types";
 import { signed, entryLine } from "../lib/model.mjs";
+import { TeamLogo } from "./TeamLogo";
 export function Standings({
   teams,
   table,
@@ -73,14 +74,7 @@ export function Standings({
                     </td>
                     <td>
                       <div className="table-team">
-                        <img
-                          src={`/logos/${t.id}.svg`}
-                          alt=""
-                          width="28"
-                          height="28"
-                          loading="lazy"
-                          decoding="async"
-                        />
+                        <TeamLogo id={t.id} size={28} />
                         <b>{t.name}</b>
                       </div>
                     </td>

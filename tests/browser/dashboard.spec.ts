@@ -100,7 +100,7 @@ test("featured team shortcuts filter to exactly one team", async ({ page }) => {
       await page.locator(".game-card").evaluateAll(
         (cards, teamId) =>
           cards.every((card) =>
-            Boolean(card.querySelector(`img[src="/logos/${teamId}.svg"]`)),
+            Boolean(card.querySelector(`img[data-team="${teamId}"]`)),
           ),
         id,
       ),

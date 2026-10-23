@@ -5,6 +5,7 @@ import type { Game, GameFeed, Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { Projection } from "./Projection";
 import { isLive } from "../lib/game-data.mjs";
+import { LogoImage, TeamLogo } from "./TeamLogo";
 export function useVisible() {
   const ref = useRef<HTMLDivElement>(null),
     [visible, setVisible] = useState(false);
@@ -312,7 +313,7 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
   return <div className={compact ? "compact-game-flow" : "game-flow"} data-testid={compact ? "compact-game-flow" : "game-flow"}>
     <div className="flow-readout">
       <span>{compact ? "MOMENTUM" : `${flowTimeLabel(selected.minute, data.type)} · ${inspect == null ? "Latest" : "Selected point"}`}</span>
-      <strong>{leader ? <><img src={`/logos/${leader.id}.svg`} alt="" /> {leader.id} +{Math.abs(selected.value).toFixed(1)}</> : "EVEN"}</strong>
+      <strong>{leader ? <><TeamLogo id={leader.id} /> {leader.id} +{Math.abs(selected.value).toFixed(1)}</> : "EVEN"}</strong>
     </div>
     <svg ref={chartRef} className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" data-elapsed={elapsed.toFixed(2)} data-duration={end} data-progress={(elapsed / end).toFixed(3)} aria-label={`Full-game momentum through ${flowTimeLabel(elapsed, data.type)}: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
       <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="var(--text-2)"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
@@ -321,7 +322,7 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
       <path d={curve} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
       <line x1={x(elapsed)} x2={x(elapsed)} y1="7" y2={height - 19} className="flow-progress" />
       <circle cx={x(elapsed)} cy={y(flow.current)} r={compact ? 3.5 : 4.5} className="flow-progress-dot" />
-      {!compact && <><line x1={x(selected.minute)} x2={x(selected.minute)} y1="10" y2={height - 14} className="flow-cursor"/><image href={`/logos/${home.id}.svg`} x="3" y="4" width="20" height="20"/><image href={`/logos/${away.id}.svg`} x="3" y={height - 27} width="20" height="20"/></>}
+      {!compact && <><line x1={x(selected.minute)} x2={x(selected.minute)} y1="10" y2={height - 14} className="flow-cursor"/><LogoImage id={home.id} x={3} y={4} size={20} /><LogoImage id={away.id} x={3} y={height - 27} size={20} /></>}
     </svg>
     {!compact && <><input className="pulse-scrubber" type="range" min="0" max={Math.max(1, Math.round(elapsed * 60))} value={Math.round(selected.minute * 60)} step="1" aria-label="Game momentum timeline" aria-valuetext={`${flowTimeLabel(selected.minute, data.type)}; ${leader ? `${leader.id} momentum ${Math.abs(selected.value).toFixed(1)}` : "even momentum"}`} onChange={(event) => setInspect(Number(event.target.value) / 60)} /><p className="detail-note">{eventSummary || "No weighted events in this five-minute window."} Momentum weights recent goals, shots, missed shots, hits and penalties; events fade across five minutes. The line fills the full-game timeline as play advances. Hover, tap or use the slider to inspect received data.</p></>}
   </div>;
@@ -362,7 +363,7 @@ function ShotChart({
     <div className="interactive-pulse" data-metric={metric}>
     <div className="pulse-readout" aria-live="off">
       <small>{timeLabel} · {inspectTime == null ? 'Latest' : 'Selected point'}</small>
-      <div>{[away,home].map((team,i)=><span key={team.id}><img src={`/logos/${team.id}.svg`} alt={team.name} width="26" height="26"/><b>{team.id}</b><svg width="22" height="8" aria-hidden="true"><line x1="0" x2="22" y1="4" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray={i?'4 3':undefined}/></svg><strong>{totalAt(team.id)} {metric === 'hits'?'hits':'SOG'}</strong></span>)}</div>
+      <div>{[away,home].map((team,i)=><span key={team.id}><TeamLogo id={team.id} size={26} alt={team.name} /><b>{team.id}</b><svg width="22" height="8" aria-hidden="true"><line x1="0" x2="22" y1="4" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray={i?'4 3':undefined}/></svg><strong>{totalAt(team.id)} {metric === 'hits'?'hits':'SOG'}</strong></span>)}</div>
     </div>
     <svg
       ref={chartRef}

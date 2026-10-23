@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Game, GameFeed, Team } from "../types";
 import { isLive } from "../lib/game-data.mjs";
+import { TeamLogo } from "./TeamLogo";
 
 /** How long the goal celebration stays up. */
 export const GOAL_FLASH_MS = 5000;
@@ -58,7 +59,7 @@ export function GoalFlash({ flash, game, away, home, feed }: { flash: { side: "a
       </div>
       <div className="gf-text">
         <b className="sr-only">GOAL!</b>
-        <span className="gf-team"><img src={`/logos/${team.id}.svg`} alt="" width="22" height="22" /> {team.city} {team.short}{goal?.player ? ` · ${goal.player}` : ""}</span>
+        <span className="gf-team"><TeamLogo id={team.id} size={22} /> {team.city} {team.short}{goal?.player ? ` · ${goal.player}` : ""}</span>
         <em className="gf-score">{away.id} {game.awayScore ?? 0} – {game.homeScore ?? 0} {home.id}</em>
       </div>
     </div>

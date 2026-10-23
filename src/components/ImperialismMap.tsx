@@ -8,6 +8,8 @@ import arenas from "../lib/arenas.json";
 import { LAYERS, adjacencyFromDelaunay, buildImperialism, conquestPath, largestComponent, ownerIndicesAt } from "../lib/imperialism.mjs";
 import type { Game, Team } from "../types";
 import "./imperialism.css";
+import { TeamLogo } from "./TeamLogo";
+import { logoUrl } from "../lib/logos";
 
 type Pt = [number, number];
 type Geo = { cells: Pt[]; land: Topology };
@@ -258,7 +260,7 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
   const total = geo?.cells.length ?? 0;
   const gamesThisWeek = result && week > 0 ? result.ledger.filter((e: { week: number }) => e.week === week).length : 0;
   const name = (id: string) => byId.get(id)?.name ?? id;
-  const logo = (id: string, cls = "imp-chip-logo") => <img className={cls} src={`/logos/${id}.svg`} alt="" width={20} height={20} loading="lazy" decoding="async" />;
+  const logo = (id: string, cls = "imp-chip-logo") => <TeamLogo id={id} size={20} className={cls} />;
 
   const path = open != null && result ? conquestPath(result, open, week) : [];
 
@@ -327,7 +329,7 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
                 {texture && result.teams.map((id: string, ti: number) => (
                   <pattern key={id} id={`${uid}-t-${id}`} patternUnits="userSpaceOnUse" width={48} height={48}>
                     <rect width={48} height={48} fill={rawFill[ti]} />
-                    <image href={`/logos/${id}.svg`} x={9} y={9} width={30} height={30} opacity={0.2} preserveAspectRatio="xMidYMid meet" />
+                    <image href={logoUrl(id)} x={9} y={9} width={30} height={30} opacity={0.2} preserveAspectRatio="xMidYMid meet" />
                   </pattern>
                 ))}
               </defs>
@@ -344,7 +346,7 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
               {logoMarks.map((m) => (
                 <g key={m.id} className="imp-logo" pointerEvents="none">
                   <circle cx={m.x} cy={m.y} r={m.size * 0.58} />
-                  <image href={`/logos/${m.id}.svg`} x={m.x - m.size / 2} y={m.y - m.size / 2} width={m.size} height={m.size} preserveAspectRatio="xMidYMid meet" />
+                  <image href={logoUrl(m.id)} x={m.x - m.size / 2} y={m.y - m.size / 2} width={m.size} height={m.size} preserveAspectRatio="xMidYMid meet" />
                 </g>
               ))}
             </svg>

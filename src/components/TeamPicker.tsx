@@ -1,4 +1,5 @@
 import type { Team } from "../types";
+import { TeamLogo } from "./TeamLogo";
 export function TeamPicker({
   teams,
   selected,
@@ -19,13 +20,7 @@ export function TeamPicker({
             title={`Show ${teams.find((team) => team.id === id)?.name ?? id} only`}
             onClick={() => onChange([id])}
           >
-            <img
-              src={`/logos/${id}.svg`}
-              alt=""
-              width="25"
-              height="25"
-              decoding="async"
-            />
+            <TeamLogo id={id} size={25} />
             {id}
           </button>
         ))}
@@ -67,14 +62,7 @@ export function TeamPicker({
                   )
                 }
               />
-              <img
-                src={`/logos/${t.id}.svg`}
-                alt=""
-                width="24"
-                height="24"
-                loading="lazy"
-                decoding="async"
-              />
+              <TeamLogo id={t.id} size={24} />
               {t.name}
             </label>
           ))}

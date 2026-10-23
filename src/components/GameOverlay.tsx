@@ -10,6 +10,7 @@ import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IntermissionRink } from "./IntermissionRink";
 import { useSheetDrag } from "../hooks/useSheetDrag";
 import { useMedia } from "../hooks/useMedia";
+import { TeamLogo } from "./TeamLogo";
 
 /** On wide screens the Game Center docks at the side and the list stays usable; opening another game swaps it in. */
 export const PANEL_QUERY = "(min-width: 1500px)";
@@ -135,7 +136,7 @@ export function GameOverlay({
       <div className="dialog-matchup">
         {[away, home].map((t, i) => (
           <div className="dialog-team" key={t.id}>
-            <img src={`/logos/${t.id}.svg`} alt="" width={54} height={54} />
+            <TeamLogo id={t.id} size={54} />
             <div>
               <span>{t.city}</span>
               <h3>{t.short}</h3>

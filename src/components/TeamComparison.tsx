@@ -6,6 +6,7 @@ import { isLive } from "../lib/game-data.mjs";
 import { loadBox } from "../lib/api";
 import { useLeagueMatchups } from "./useLeagueMatchups";
 import "./team-comparison.css";
+import { TeamLogo } from "./TeamLogo";
 
 const seasonLabel = (season: number) => `${String(season).slice(0, 4)}–${String(season).slice(6)}`;
 const displayValue = (metric: RankedMatchupMetric | null) => {
@@ -42,9 +43,9 @@ function Crossover({ offenseTeam, defenseTeam, snapshot }: {
   return (
     <section className="crossover" aria-label={`${offenseTeam.name} offense versus ${defenseTeam.name} defense`}>
       <header className="crossover-head">
-        <div><img src={`/logos/${offenseTeam.id}.svg`} alt="" /><strong>{offenseTeam.short} offense</strong></div>
+        <div><TeamLogo id={offenseTeam.id} /><strong>{offenseTeam.short} offense</strong></div>
         <span>rank comparison</span>
-        <div><strong>{defenseTeam.short} defense</strong><img src={`/logos/${defenseTeam.id}.svg`} alt="" /></div>
+        <div><strong>{defenseTeam.short} defense</strong><TeamLogo id={defenseTeam.id} /></div>
       </header>
       {rows.map(({ key, offense: offenseMetric, defense: defenseMetric }) => (
         <div className="crossover-row" key={key} data-metric={key}>
@@ -105,7 +106,7 @@ function goalieForTeam(goalies: MatchupGoalie[], actualId?: number) {
 function GoalieCard({ team, goalie, status }: { team: Team; goalie: MatchupGoalie | null; status: string }) {
   return (
     <article className="goalie-card">
-      <div className="goalie-heading"><img src={`/logos/${team.id}.svg`} alt="" /><span>{team.short}</span><em>{status}</em></div>
+      <div className="goalie-heading"><TeamLogo id={team.id} /><span>{team.short}</span><em>{status}</em></div>
       {goalie ? <>
         <div className="goalie-person"><img src={goalie.headshot} alt="" loading="lazy" decoding="async" /><div><strong>{goalie.name}</strong><small>{goalie.gamesStarted} starts · {goalie.wins}–{goalie.losses}</small></div></div>
         <div className="goalie-numbers"><span><b>{goalie.savePct == null ? "—" : goalie.savePct.toFixed(3).replace(/^0/, "")}</b>SV%</span><span><b>{goalie.gaa == null ? "—" : goalie.gaa.toFixed(2)}</b>GAA</span></div>

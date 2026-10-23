@@ -57,7 +57,7 @@ async function pickSituation(flow: Locator, name: string) {
     await expect(radio).toBeChecked({ timeout: 1000 });
   }).toPass();
 }
-const card = (page: Page, k: K) => page.locator(".game-card").filter({ has: page.locator(`.matchup-team img[src="/logos/${G[k].away}.svg"]`) }).filter({ has: page.locator(`.matchup-team img[src="/logos/${G[k].home}.svg"]`) }).first();
+const card = (page: Page, k: K) => page.locator(".game-card").filter({ has: page.locator(`.matchup-team img[data-team="${G[k].away}"]`) }).filter({ has: page.locator(`.matchup-team img[data-team="${G[k].home}"]`) }).first();
 async function show(page: Page, k: K): Promise<Locator> {
   const past = G[k].state === "FINAL";
   await showPeriod(page, past ? "past" : "future");

@@ -5,6 +5,7 @@ import { isLive } from "../lib/game-data.mjs";
 import { projectGame } from "../lib/projection.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
 import { Icon } from "./icons";
+import { IntermissionRink } from "./IntermissionRink";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -164,6 +165,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, open, onToggle
           </span>
         )}
       </button>
+      {status.kind === "live" && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
       {open && <KeyStats game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} onFull={onFull} />}
     </article>
   );

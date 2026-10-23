@@ -94,3 +94,18 @@ test("the Zamboni does laps all through the intermission and leaves the ice with
   await expect.poll(x).toBeLessThan(-15); // off the ice
   await expect(int).toContainText("fresh ice for the next period");
 });
+
+test("the Scoreboard home shows the Zamboni on a game in intermission, without opening it", async ({ page }) => {
+  // The Scoreboard opens on today's games, so the live game is dated today (Eastern).
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const game = { ...base, date: today, state: "LIVE", period: 1, periodType: "REG", intermission: true, clock: "13:48" };
+  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: today, games: [game] } }));
+  await page.route("**/api/game/*", (route) => route.fulfill({ json: { ...fixture, state: "LIVE", plays: [] } }));
+  await page.goto("/");
+  const row = page.locator(`.sb-row[data-game="${game.id}"]`);
+  const int = row.getByTestId("intermission");
+  await expect(int).toBeVisible();
+  await expect(int.locator(".int-zamboni")).toBeVisible();
+  await expect(int.locator(".int-t")).toHaveText(/1[34]:\d\d/);
+  await expect(row.getByTestId("key-stats")).toHaveCount(0);
+});

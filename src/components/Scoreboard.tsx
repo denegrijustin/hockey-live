@@ -4,7 +4,9 @@ import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model
 import { isLive } from "../lib/game-data.mjs";
 import { projectGame } from "../lib/projection.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
+import { liveHeat, pregameHomeWin, slotOf, upsetBrewing, watchability } from "../lib/watchability.mjs";
 import { Icon } from "./icons";
+import { TeamLogo } from "./TeamLogo";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -24,6 +26,24 @@ function statusOf(g: Game) {
     return { text: g.intermission ? `${period} · Intermission` : `${period} · ${g.clock ?? "Updating"}`, kind: "live" };
   }
   return { text: new Date(g.start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), kind: "soon" };
+}
+
+type Status = "all" | "live" | "final" | "soon";
+type Section = { key: "upset" | "live" | "soon" | "final"; title: string; note?: string; games: Game[]; slots: boolean; live?: boolean };
+
+const slotLabel = (iso: string) => {
+  const from = new Date(iso), to = new Date(from.getTime() + 3600000);
+  const t = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return `${t(from)}–${t(to)}`;
+};
+/** Puck-drop slots in time order, the most watchable game first within each slot. */
+function slotsOf(games: Game[], rated: Map<number, { score: number; heat: number }>) {
+  const by = new Map<string, Game[]>();
+  for (const g of [...games].sort((a, b) => a.start.localeCompare(b.start))) {
+    const k = slotOf(g.start);
+    by.set(k, [...(by.get(k) ?? []), g]);
+  }
+  return [...by].map(([key, list]) => ({ key, label: slotLabel(key), games: list.sort((a, b) => (rated.get(b.id)?.heat ?? 0) - (rated.get(a.id)?.heat ?? 0) || a.start.localeCompare(b.start)) }));
 }
 
 interface Props {
@@ -60,14 +80,32 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   const day = picked ?? auto;
   const index = days.indexOf(day);
   const dayGames = useMemo(() => games.filter((g) => g.date === day), [games, day]);
-  const groups = useMemo(() => {
-    const by = (a: Game, b: Game) => a.start.localeCompare(b.start);
-    return [
-      { key: "live", title: "Live now", games: dayGames.filter(isLive).sort(by) },
-      { key: "soon", title: "Upcoming", games: dayGames.filter((g) => !isLive(g) && !finished(g)).sort(by) },
-      { key: "final", title: "Final", games: dayGames.filter(finished).sort(by) },
-    ].filter((g) => g.games.length);
-  }, [dayGames]);
+  const [status, setStatus] = useState<Status>("all");
+  // Watchability, heat and upset flags for the day's games, from the same model the win-probability bars use.
+  const rated = useMemo(() => new Map(dayGames.map((g) => {
+    const before = analysis?.before[g.id];
+    const base = baseline && baseline.season < g.season ? baselineTable : undefined;
+    const pre = before ? pregameHomeWin(g, before, base) : null;
+    const score = watchability(analysis?.analysis[g.id]?.score, pre);
+    return [g.id, { score, heat: liveHeat(score, g), upset: !!upsetBrewing(g, pre) }] as const;
+  })), [dayGames, analysis, baseline, baselineTable]);
+  const counts = useMemo(() => ({
+    live: dayGames.filter(isLive).length,
+    final: dayGames.filter(finished).length,
+    soon: dayGames.filter((g) => !isLive(g) && !finished(g)).length,
+  }), [dayGames]);
+  const sections = useMemo(() => {
+    const hot = (a: Game, b: Game) => (rated.get(b.id)?.heat ?? 0) - (rated.get(a.id)?.heat ?? 0) || a.start.localeCompare(b.start);
+    const live = dayGames.filter(isLive);
+    const all: Section[] = [
+      { key: "upset", title: "Upset brewing", note: "The underdog is ahead late.", games: live.filter((g) => rated.get(g.id)?.upset).sort(hot), slots: false, live: true },
+      { key: "live", title: "In progress", games: live.filter((g) => !rated.get(g.id)?.upset).sort(hot), slots: true, live: true },
+      { key: "soon", title: "Upcoming", games: dayGames.filter((g) => !isLive(g) && !finished(g)), slots: true },
+      { key: "final", title: "Completed", games: dayGames.filter(finished), slots: true },
+    ];
+    const show = (x: Section) => status === "all" || (status === "live" ? x.key === "upset" || x.key === "live" : x.key === status);
+    return all.filter((x) => x.games.length && show(x));
+  }, [dayGames, rated, status]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [centerId, setCenterId] = useState<number | null>(null);
   const scrollAtOpen = useRef(0);
@@ -89,28 +127,41 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
           <Icon name="chevron" size={20} />
         </button>
       </div>
+      <div className="sb-filters" role="group" aria-label="Show games by status">
+        {([["live", counts.live, "in progress"], ["final", counts.final, "completed"], ["soon", counts.soon, "upcoming"]] as const).map(([key, n, label]) => (
+          <button key={key} type="button" className={`sb-chip ${key}`} aria-pressed={status === key} disabled={!n && status !== key} onClick={() => { setStatus(status === key ? "all" : key); setOpenId(null); }}>
+            {key === "live" && n > 0 && <i aria-hidden="true" />}<b>{n}</b> {label}
+          </button>
+        ))}
+      </div>
       {loading && !games.length && <p className="sb-empty" role="status">Loading the scoreboard…</p>}
-      {!loading && !groups.length && <p className="sb-empty">No games on this day.</p>}
-      {groups.map((group) => (
-        <div className="sb-group" key={group.key}>
-          <h2 className="sb-title">{group.title}</h2>
-          <ul className="sb-list">
-            {group.games.map((g) => (
-              <li key={g.id}>
-                <ScoreRow
-                  game={g}
-                  away={teamOf(g.away)}
-                  home={teamOf(g.home)}
-                  before={analysis?.before[g.id]}
-                  baseline={baseline && baseline.season < g.season ? baselineTable : undefined}
-                  allGames={games}
-                  open={openId === g.id}
-                  onToggle={() => setOpenId(openId === g.id ? null : g.id)}
-                  onFull={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}
-                />
-              </li>
-            ))}
-          </ul>
+      {!loading && !sections.length && <p className="sb-empty">{status === "all" ? "No games on this day." : "Nothing here on this day."}</p>}
+      {sections.map((section) => (
+        <div className={`sb-group ${section.key}`} key={section.key} aria-label={section.title} role="region">
+          <h2 className="sb-title">{section.live && <i className="sb-livedot" aria-hidden="true" />}{section.title} <span className="sb-count">{section.games.length}</span>{section.note && <small>{section.note}</small>}</h2>
+          {(section.slots ? slotsOf(section.games, rated) : [{ key: "all", label: "", games: section.games }]).map((slot) => (
+            <div className="sb-slot" key={slot.key} data-slot={slot.key}>
+              {slot.label && <h3 className="sb-slot-h">{slot.label}</h3>}
+              <ul className="sb-list">
+                {slot.games.map((g) => (
+                  <li key={g.id}>
+                    <ScoreRow
+                      game={g}
+                      away={teamOf(g.away)}
+                      home={teamOf(g.home)}
+                      before={analysis?.before[g.id]}
+                      baseline={baseline && baseline.season < g.season ? baselineTable : undefined}
+                      allGames={games}
+                      watch={rated.get(g.id)?.score}
+                      open={openId === g.id || (status === "final" && section.key === "final")}
+                      onToggle={() => setOpenId(openId === g.id ? null : g.id)}
+                      onFull={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       ))}
       {centerGame && analysis && (
@@ -135,8 +186,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   );
 }
 
-function ScoreRow({ game, away, home, before, baseline, allGames, open, onToggle, onFull }: {
-  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; open: boolean; onToggle: () => void; onFull: () => void;
+function ScoreRow({ game, away, home, before, baseline, allGames, watch, open, onToggle, onFull }: {
+  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; watch?: number; open: boolean; onToggle: () => void; onFull: () => void;
 }) {
   const status = statusOf(game);
   const showScore = status.kind !== "soon" && game.awayScore != null && game.homeScore != null;
@@ -148,10 +199,10 @@ function ScoreRow({ game, away, home, before, baseline, allGames, open, onToggle
   return (
     <article className={`sb-row ${status.kind}${open ? " open" : ""}`} data-game={game.id}>
       <button className="sb-main" aria-expanded={open} aria-label={label} onClick={onToggle}>
-        <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}</span>
+        <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}{watch != null && status.kind !== "final" && <span className="sb-watch" title="Watchability: how worth watching this game is">Watch <b>{watch}</b></span>}</span>
         {([[away, game.awayScore, "away"], [home, game.homeScore, "home"]] as const).map(([team, score, side]) => (
           <span className={`sb-team${winner && winner !== side ? " lost" : ""}`} key={team.id}>
-            <img src={`/logos/${team.id}.svg`} alt="" width={32} height={32} loading="lazy" decoding="async" />
+            <TeamLogo id={team.id} size={32} />
             <span className="sb-name">{team.name.endsWith(team.short) ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}</span>
             <span className="sb-score">{showScore ? score : ""}</span>
           </span>

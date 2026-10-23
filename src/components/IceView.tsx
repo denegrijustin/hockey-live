@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { GameFeed, Team } from "../types";
 import { HIGH_DANGER_FT, NET_X, iceSummary } from "../lib/ice-view.mjs";
+import { LogoImage, TeamLogo } from "./TeamLogo";
 
 const AWAY = "var(--series-away)";
 const HOME = "var(--series-home)";
@@ -49,8 +50,8 @@ export function IceView({ data, home, away }: { data: GameFeed | null; home: Tea
         </g>
         <rect x={-NET_X - 3} y="-3" width="3" height="6" className="ice-net" />
         <rect x={NET_X} y="-3" width="3" height="6" className="ice-net" />
-        <image href={`/logos/${away.id}.svg`} x="-97" y="-39" width="13" height="13" opacity="0.9" />
-        <image href={`/logos/${home.id}.svg`} x="84" y="-39" width="13" height="13" opacity="0.9" />
+        <LogoImage id={away.id} x={-97} y={-39} size={13} opacity={0.9} />
+        <LogoImage id={home.id} x={84} y={-39} size={13} opacity={0.9} />
         {sum.shots.map((s) =>
           s.kind === "goal" ? null : (
             <circle key={s.id} cx={s.x} cy={-s.y} r={s.kind === "sog" ? 1.8 : 1.4} className={`ice-shot ${s.kind}`} style={{ "--c": s.home ? HOME : AWAY } as React.CSSProperties}>
@@ -73,7 +74,7 @@ export function IceView({ data, home, away }: { data: GameFeed | null; home: Tea
       <p className="ice-tilt-line" data-testid="ice-tilt">
         {tiltTeam ? (
           <>
-            <img src={`/logos/${tiltTeam.id}.svg`} alt="" width="16" height="16" /> <b>{tiltTeam.id}</b> has the pressure · {tiltPct}% of shot attempts
+            <TeamLogo id={tiltTeam.id} size={16} /> <b>{tiltTeam.id}</b> has the pressure · {tiltPct}% of shot attempts
             <span> in the last {Math.round(tilt!.minutes)} minutes</span>
           </>
         ) : tilt ? (

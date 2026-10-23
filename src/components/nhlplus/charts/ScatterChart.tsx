@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { linearScale, niceTicks, paddedExtent } from "../../../lib/nhlplus-view.mjs";
 import { useWidth } from "./useWidth";
+import { LogoImage } from "../../TeamLogo";
 
-export type ScatterPoint = { key: string; x: number | null; y: number | null; img?: string; label: string; lines: string[] };
+export type ScatterPoint = { key: string; x: number | null; y: number | null; team?: string; label: string; lines: string[] };
 
 /**
  * Logo scatterplot. `invertY` flips the vertical axis so "up" is always better when lower values are better.
@@ -63,7 +64,7 @@ export function ScatterChart({ points, xLabel, yLabel, xFmt, yFmt, invertY = fal
               onPointerEnter={() => setActive(p.key)} onPointerDown={() => setActive(p.key)} onClick={() => onToggle(p.key)}>
               {(on || hot) && <circle r={size / 2 + 3} className={on ? "np-ring-on" : "np-ring-hot"} />}
               <circle r={size / 2 + 4} fill="transparent" />
-              {p.img ? <image href={p.img} x={-size / 2} y={-size / 2} width={size} height={size} /> : <circle r={5} className="np-dot" />}
+              {p.team ? <LogoImage id={p.team} x={-size / 2} y={-size / 2} size={size} /> : <circle r={5} className="np-dot" />}
             </g>
           );
         })}

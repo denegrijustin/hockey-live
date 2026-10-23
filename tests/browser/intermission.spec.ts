@@ -26,7 +26,7 @@ test("a game in intermission shows the feed's countdown and the Zamboni on its c
   await expect(int).toContainText("until period 2");
   await expect(int.locator(".int-zamboni")).toBeVisible();
   await expect(int.locator(".int-sign")).toBeVisible();
-  await expect(int.locator("image")).toHaveAttribute("href", `/logos/${base.home}.svg`);
+  await expect(int.locator("image")).toHaveAttribute("href", `/logos/retro/${base.home}.png`);
   // It is in the home team's colors.
   const hex = (await int.locator(".int-zamboni").evaluate((e) => getComputedStyle(e).getPropertyValue("--z-body"))).trim();
   expect(hex).toBe(zamboniColors(homeTeam.cardColor ?? homeTeam.color).body);

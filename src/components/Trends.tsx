@@ -2,6 +2,7 @@ import { useChartUnit } from "../lib/chartUnit";
 import { useEffect, useMemo, useState } from "react";
 import { playoffTrend, rollingSeries } from "../lib/model.mjs";
 import type { Game, Team } from "../types";
+import { LogoImage } from "./TeamLogo";
 // Plot area inside the 1000-wide viewBox. The side margins hold axis labels that are drawn at a real 11px (see chartUnit).
 const PLOT_L = 125, PLOT_W = 805;
 
@@ -192,14 +193,7 @@ export function Trends({
                         stroke={s.team.color}
                         strokeWidth="3"
                       />
-                      <image
-                        href={`/logos/${s.team.id}.svg`}
-                        x={x(index) - 9}
-                        y={y(point.value) - 9}
-                        width="18"
-                        height="18"
-                        aria-hidden="true"
-                      />
+                      <LogoImage id={s.team.id} x={x(index) - 9} y={y(point.value) - 9} size={18} />
                       <title>{`${s.team.name}: ${point.value.toFixed(1)}%${point.live ? " live" : ""}`}</title>
                     </g>
                   ) : null;

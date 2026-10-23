@@ -10,6 +10,7 @@ import { GoalieComparison } from "./TeamComparison";
 import { IntermissionRink } from "./IntermissionRink";
 import { CardExpanded, CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
+import { TeamLogo } from "./TeamLogo";
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
 export const GameCard = memo(function GameCard({
@@ -88,7 +89,7 @@ export const GameCard = memo(function GameCard({
           <div className="matchup-teams">
             {[away, home].map((team, index) => (
               <div className="matchup-team" key={team.id}>
-                <img src={`/logos/${team.id}.svg`} alt="" loading="lazy" decoding="async" width={40} height={40} />
+                <TeamLogo id={team.id} size={40} />
                 <div>
                   <span>{team.city}</span><h3>{team.short}</h3>
                   <small className="team-record">

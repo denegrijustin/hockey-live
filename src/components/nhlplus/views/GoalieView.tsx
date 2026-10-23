@@ -76,7 +76,7 @@ export function GoalieView({ ctx }: { ctx: Ctx }) {
         <Panel id="np-g-chart" title={`Goals saved above expected vs. shots faced · ${sitLabel}`} sub={<>Each logo is a goalie. Total <MetricTip id="gsax">goals saved above expected</MetricTip> rises with workload, so read it beside shots faced. <Derived /></>}>
           <ScatterChart
             ariaLabel={`Goals saved above expected versus shots faced, ${sitLabel}, one logo per goalie`}
-            points={rows.map((r) => ({ key: String(r.id), x: r.SOG, y: r.gsax, img: `/logos/${r.team}.svg`, label: `${r.name} (${r.team})`, lines: [sitLabel, `GSAx: ${fmtSigned(r.gsax)}`, `Shots faced: ${fmtInt(r.SOG)}`, `${fmtInt(r.gp)} GP · ${fmtMin(r.toi)} min`] }))}
+            points={rows.map((r) => ({ key: String(r.id), x: r.SOG, y: r.gsax, team: r.team, label: `${r.name} (${r.team})`, lines: [sitLabel, `GSAx: ${fmtSigned(r.gsax)}`, `Shots faced: ${fmtInt(r.SOG)}`, `${fmtInt(r.gp)} GP · ${fmtMin(r.toi)} min`] }))}
             xLabel="Shots on goal faced" yLabel="Goals saved above expected" xFmt={(v) => String(Math.round(v))} yFmt={(v) => fmtSigned(v, 1)}
             avgY={0} avgYText="0 = as expected" dimOthers={false} highlight={cmpIds.map(String)} onToggle={(k) => toggleCmp(+k)}
           />

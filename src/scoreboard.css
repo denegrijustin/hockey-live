@@ -257,3 +257,20 @@ html[data-home] {
   font-size: 1rem;
   font-weight: 650;
 }
+
+/* Status filters, sections and puck-drop slots */
+.scoreboard .sb-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.scoreboard .sb-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-3); background: var(--surface-5); color: var(--text-4); font: inherit; font-size: .8125rem; cursor: pointer; transition: transform .12s, background .12s; }
+.scoreboard .sb-chip b { font-variant-numeric: tabular-nums; color: var(--text-6); }
+.scoreboard .sb-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--red-5); }
+.scoreboard .sb-chip[aria-pressed="true"] { background: var(--surface-8); border-color: var(--mint-5); color: var(--mint-6); }
+.scoreboard .sb-chip:disabled { opacity: .5; cursor: default; }
+.scoreboard .sb-chip:active:not(:disabled) { transform: scale(.97); }
+.scoreboard .sb-title .sb-count { margin-left: 6px; padding: 0 8px; border-radius: 999px; background: var(--surface-7); font-size: .6875rem; font-weight: 600; color: var(--text-3); }
+.scoreboard .sb-title small { display: block; margin-top: 2px; font-size: .6875rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-1); }
+.scoreboard .sb-livedot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--red-5); }
+.scoreboard .sb-group.upset .sb-title { color: var(--amber-5); }
+.scoreboard .sb-slot + .sb-slot { margin-top: 10px; }
+.scoreboard .sb-slot-h { margin: 8px 2px 6px; font-size: .6875rem; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: var(--text-1); }
+.scoreboard .sb-watch { margin-left: 10px; padding: 1px 8px; border-radius: 999px; background: var(--surface-7); font-size: .6875rem; font-weight: 500; color: var(--text-3); }
+.scoreboard .sb-watch b { color: var(--text-6); font-variant-numeric: tabular-nums; }

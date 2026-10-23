@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { simulatePlayoffs } from "../lib/playoff-sim.mjs";
 import type { Game, Team } from "../types";
 import "./playoff-odds.css";
+import { TeamLogo } from "./TeamLogo";
 
 const SIMS = 20000;
 const fmt = (p: number) => (p >= 99.5 ? ">99" : p < 0.5 ? "–" : String(Math.round(p)));
@@ -107,7 +108,7 @@ export function PlayoffOdds({
                           <td className="po-team">
                             <div className="po-team-cell">
                               <i className="po-accent" style={{ background: t.cardColor ?? t.color }} />
-                              <img src={`/logos/${t.id}.svg`} alt="" loading="lazy" decoding="async" width={22} height={22} />
+                              <TeamLogo id={t.id} size={22} />
                               <span>{t.short}<br /><small className="po-sub">{t.division}</small></span>
                             </div>
                           </td>

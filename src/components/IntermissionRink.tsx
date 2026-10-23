@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Game, Team } from "../types";
 import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, resurfaceProgress, exitProgress, EXIT_PATH, zamboniColors, zamboniPose, FINISH_S } from "../lib/intermission.mjs";
+import { LogoImage } from "./TeamLogo";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
 /** When this intermission was first seen, kept so a reload doesn't restart the fallback clock. */
@@ -122,7 +123,7 @@ export function IntermissionRink({ game, home, away, compact = false }: { game: 
             <rect x="5.5" y="38.5" width="5.5" height="8" rx="1" className="int-net" />
             <rect x="189" y="38.5" width="5.5" height="8" rx="1" className="int-net" />
           </g>
-          <image href={`/logos/${home.id}.svg`} x="89" y="31.5" width="22" height="22" preserveAspectRatio="xMidYMid meet" />
+          <LogoImage id={home.id} x={89} y={31.5} size={22} />
         </g>
         <rect x="0.6" y="36" width="4.4" height="13" rx="0.8" className="int-gate" />
         {!still && (

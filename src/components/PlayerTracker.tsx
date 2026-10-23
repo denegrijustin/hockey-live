@@ -2,6 +2,7 @@ import { PlayerIdentity } from "./PlayerIdentity";
 import { usePlayerBox } from "./PlayerImpact";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
 import type { Boxscore, Game, PlayerData, Team } from "../types";
+import { TeamLogo } from "./TeamLogo";
 // Season-context TOI (PlayerSeason.toi) comes through as average seconds on
 // ice per game; boxscore TOI (Player.toi) is already an "mm:ss" string from
 // the NHL feed. Normalize both to the same display so the two team columns
@@ -89,7 +90,7 @@ function TeamTracker({
   return (
     <div className="tracker-team">
       <div className="tracker-team-head">
-        <img src={`/logos/${team.id}.svg`} alt="" width={26} height={26} loading="lazy" decoding="async" />
+        <TeamLogo id={team.id} size={26} />
         <h4>{team.name}</h4>
       </div>
       {!live.length ? (

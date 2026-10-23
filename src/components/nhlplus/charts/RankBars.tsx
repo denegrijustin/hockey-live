@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { sortRows } from "../../../lib/nhlplus-view.mjs";
+import { TeamLogo } from "../../TeamLogo";
 
-export type RankItem = { key: string; label: string; img?: string; value: number | null; text: string; lines?: string[]; toiText?: string };
+export type RankItem = { key: string; label: string; team?: string; value: number | null; text: string; lines?: string[]; toiText?: string };
 
 /**
  * Ranked bars that start at the league average: a bar to the right is above it, to the left below it. Colour says whether
@@ -31,7 +32,7 @@ export function RankBars({ items, avg, avgText, higherIsBetter, highlight, onTog
                 aria-label={`${r.label}: ${metricLabel} ${r.text}, rank ${r.value == null ? "not available" : i + 1}`}
                 onPointerEnter={() => setActive(r.key)} onPointerLeave={() => setActive(null)} onFocus={() => setActive(r.key)} onBlur={() => setActive(null)} onClick={() => onToggle(r.key)}>
                 <span className="np-rank-n">{r.value == null ? "–" : i + 1}</span>
-                {r.img && <img src={r.img} alt="" width="20" height="20" loading="lazy" />}
+                {r.team && <TeamLogo id={r.team} size={20} />}
                 <b>{r.key}</b>
                 <span className="np-rank-track" aria-hidden="true">
                   <i className="np-rank-mid" />

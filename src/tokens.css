@@ -41,8 +41,9 @@
     --red-5: #fbb5af;
     --series-away: #73d9c1;
     --series-home: #f2bc67;
-    --chip-for-dark-ink: #eef2f6;
-    --chip-for-light-ink: #0000;
+    --logo-chip: #f7f9fb;
+    --logo-chip-line: #0000001f;
+    --logo-chip-fallback: #17243a;
     --series-blue: #8fb8e8;
 }
 @media (prefers-color-scheme: light) {
@@ -86,8 +87,9 @@
     --red-5: #69120b;
     --series-away: #0f6e5a;
     --series-home: #8f5400;
-    --chip-for-dark-ink: #0000;
-    --chip-for-light-ink: #17243a;
+    --logo-chip: #f7f9fb;
+    --logo-chip-line: #0000001f;
+    --logo-chip-fallback: #17243a;
     --series-blue: #245a94;
   }
 }
@@ -130,8 +132,9 @@
     --red-5: #fccbc7;
     --series-away: #9ff0d9;
     --series-home: #ffd78f;
-    --chip-for-dark-ink: #ffffff;
-    --chip-for-light-ink: #0000;
+    --logo-chip: #f7f9fb;
+    --logo-chip-line: #00000066;
+    --logo-chip-fallback: #17243a;
     --series-blue: #b8d4f5;
   }
 }
@@ -174,16 +177,17 @@
     --red-5: #490d07;
     --series-away: #07443a;
     --series-home: #5f3600;
-    --chip-for-dark-ink: #0000;
-    --chip-for-light-ink: #0b1424;
+    --logo-chip: #f7f9fb;
+    --logo-chip-line: #00000066;
+    --logo-chip-fallback: #17243a;
     --series-blue: #123a68;
   }
 }
 
-/* Team logos: a mark drawn mostly in dark ink sits on a light chip on the dark theme, one drawn mostly in light ink on a dark chip on the light theme (the chips are transparent otherwise). */
-.team-logo { border-radius: 6px; box-sizing: border-box; padding: 1px; }
-.team-logo[data-ink="dark"] { background: var(--chip-for-dark-ink); }
-.team-logo[data-ink="light"] { background: var(--chip-for-light-ink); }
-.team-logo-svg .logo-chip { fill: transparent; }
-.team-logo-svg[data-ink="dark"] .logo-chip { fill: var(--chip-for-dark-ink); }
-.team-logo-svg[data-ink="light"] .logo-chip { fill: var(--chip-for-light-ink); }
+/* Team logos: every vintage logo sits on the same light chip, in both themes, so each one reads the same and none disappears into the page. A current-logo fallback (drawn for dark pages) gets a dark chip. */
+.team-logo { border-radius: 8px; box-sizing: border-box; padding: 2px; }
+.team-logo[width="16"], .team-logo[width="18"], .team-logo[width="20"] { padding: 1px; border-radius: 5px; }
+.team-logo[data-ink="retro"] { background: var(--logo-chip); box-shadow: inset 0 0 0 1px var(--logo-chip-line); }
+.team-logo[data-ink="light"] { background: var(--logo-chip-fallback); }
+.team-logo-svg .logo-chip { fill: var(--logo-chip); stroke: var(--logo-chip-line); stroke-width: .4; }
+.team-logo-svg[data-ink="light"] .logo-chip { fill: var(--logo-chip-fallback); stroke: none; }

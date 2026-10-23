@@ -301,3 +301,46 @@ html[data-home] {
 .scoreboard .sb-actions .gc-icon { min-width: 44px; min-height: 44px; }
 .scoreboard .sb-why-heat { margin: 10px 0 0; font-size: .8125rem; line-height: 1.45; color: var(--text-3); }
 .scoreboard .sb-why-heat b { color: var(--amber-5); }
+
+/* Layout order: the day switcher, Watch now, then the status filters (the toolbar only groups them on a wide screen). */
+.scoreboard { display: flex; flex-direction: column; }
+.scoreboard .sb-toolbar { display: contents; }
+.scoreboard .sb-days { order: 1; }
+.scoreboard .watch-now { order: 2; }
+.scoreboard .sb-filters { order: 3; }
+.scoreboard > .sb-group, .scoreboard > .sb-empty, .scoreboard > .skel { order: 4; }
+
+/* A wide screen is a desktop, not a phone: one toolbar, dense two-line rows with every column visible, and pointer-sized controls. */
+@media (min-width: 1100px) {
+  .scoreboard { max-width: 1280px; }
+  .scoreboard .sb-toolbar { display: flex; order: 1; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0 14px; }
+  .scoreboard .sb-days { order: 0; padding: 0; justify-content: flex-start; gap: 10px; }
+  .scoreboard .sb-filters { order: 0; margin: 0; }
+  .scoreboard .sb-day { text-align: left; display: flex; align-items: baseline; gap: 12px; }
+  .scoreboard .sb-day h1 { font-size: 1.375rem; }
+  .scoreboard .sb-step { width: 34px; min-width: 34px; height: 34px; border-radius: 8px; }
+  .scoreboard .sb-chip { min-height: 34px; padding: 0 12px; font-size: .8125rem; }
+  .scoreboard .watch-now { order: 2; }
+  .scoreboard .watch-now h2 { display: none; }
+  .scoreboard .wn-tile { min-height: 0; padding: 8px 12px; }
+  .scoreboard .sb-title { margin: 22px 0 8px; }
+  .scoreboard .sb-list { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .scoreboard .sb-row { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) 4.75rem auto; align-items: center; column-gap: 16px; padding: 8px 16px; border-radius: 10px; }
+  .scoreboard .sb-top, .scoreboard .sb-body { display: contents; }
+  .scoreboard .sb-top .sb-status { grid-column: 1; grid-row: 1; padding: 0; flex-wrap: wrap; row-gap: 4px; align-content: center; }
+  .scoreboard .sb-actions { grid-column: 4; grid-row: 1; }
+  .scoreboard .sb-body .sb-main { grid-column: 2; grid-row: 1; padding: 4px 0; display: grid; grid-template-columns: minmax(220px, 340px) minmax(180px, 1fr); column-gap: 32px; row-gap: 4px; justify-content: start; }
+  .scoreboard .sb-body .sb-main .sb-team { grid-column: 1; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; }
+  .scoreboard .sb-main .sb-team .team-logo { width: 26px; height: 26px; }
+  .scoreboard .sb-main .sb-name { font-size: .9375rem; }
+  .scoreboard .sb-main .sb-score { font-size: 1.125rem; min-width: 1.5ch; text-align: right; }
+  .scoreboard .sb-body .sb-main .sb-prob { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .scoreboard .sb-body .sb-rate { grid-column: 3; grid-row: 1; padding: 0; }
+  .scoreboard .score-ring { width: 40px; height: 40px; }
+  .scoreboard .score-ring strong { font-size: .9375rem; }
+  .scoreboard .sb-tier { display: none; }
+  .scoreboard .sb-actions .gc-icon { min-width: 34px; min-height: 34px; width: 34px; height: 34px; }
+  .scoreboard .sb-venue, .scoreboard .sb-flow, .scoreboard .sb-recap, .scoreboard .sb-stats, .scoreboard .sb-row > .intermission, .scoreboard .sb-row > .pulse-ring { grid-column: 1 / -1; }
+  .scoreboard .sb-venue { padding: 0 0 2px; grid-row: 2; font-size: .75rem; }
+  .scoreboard .sb-row .sb-top .late-flag { margin-left: 0; }
+}

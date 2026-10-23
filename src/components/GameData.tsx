@@ -319,7 +319,7 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
       <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="var(--text-2)"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
       {ticks.map((minute) => <g key={minute} className="flow-time-mark"><line x1={x(minute)} x2={x(minute)} y1="7" y2={height - 19}/><text x={x(minute)} y={height - 5} textAnchor={minute === 0 ? "start" : minute === end ? "end" : "middle"}>{minute === 0 ? "START" : minute === end ? `END · ${minute}m` : `${minute}m`}</text></g>)}
       <line x1={left} x2={right} y1={center} y2={center} className="flow-zero" />
-      <path d={curve} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
+      <path className="flow-line" pathLength={1} d={curve} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
       <line x1={x(elapsed)} x2={x(elapsed)} y1="7" y2={height - 19} className="flow-progress" />
       <circle cx={x(elapsed)} cy={y(flow.current)} r={compact ? 3.5 : 4.5} className="flow-progress-dot" />
       {!compact && <><line x1={x(selected.minute)} x2={x(selected.minute)} y1="10" y2={height - 14} className="flow-cursor"/><LogoImage id={home.id} x={3} y={4} size={20} /><LogoImage id={away.id} x={3} y={height - 27} size={20} /></>}

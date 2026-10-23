@@ -5,6 +5,7 @@ import "./tokens.css";
 import "./styles.css";
 import "./nav.css";
 import "./scoreboard.css";
+import "./picks.css";
 import "./motion.css";
 import { initMotion } from "./motion";
 initMotion();

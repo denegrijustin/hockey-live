@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Skeleton } from "../Skeleton";
 import rawTeams from "../../data/teams.json";
 import type { Team } from "../../types";
 import { SIT_FILTERS, SIT_LABEL } from "../../lib/nhlplus.mjs";
@@ -89,7 +90,7 @@ export function Panel({ title, sub, children, actions, id }: { title: React.Reac
 export function Unavailable({ what, onRetry }: { what: string; onRetry?: () => void }) {
   return <div className="np-empty" role="status">{what} is not available right now.{onRetry && <> <button type="button" className="mp-link" onClick={onRetry}>Retry</button></>}</div>;
 }
-export const Loading = ({ what }: { what: string }) => <div className="np-empty" role="status">Loading {what}…</div>;
+export const Loading = ({ what }: { what: string }) => <Skeleton rows={2} label={`Loading ${what}`} />;
 
 /** Small chip for "derived" calculations. */
 export const Derived = () => <span className="np-derived" title="Calculated here from MoneyPuck values">derived</span>;

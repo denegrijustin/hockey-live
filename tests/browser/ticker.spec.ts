@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+// This spec is about animated behaviour; the suite default is reduced motion (see playwright.config.ts).
+test.use({ reducedMotion: "no-preference" });
+
 const DAY = "2026-10-10";
 // The saved season moves on every day (this day's games now have final scores), so the tests serve their own copy in
 // which the pinned day is still ahead: every game that day is scheduled, with no score.

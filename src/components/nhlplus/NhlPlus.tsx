@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSlidingUnderline } from "../../hooks/useSlidingUnderline";
 import type { Game, Team } from "../../types";
 import { useMoneyPuck, useMoneyPuckRefresh } from "../../lib/moneypuck-client";
 import { NHLPLUS_EVENT, useNhlPlusTarget } from "../../lib/nhlplus-nav";
@@ -46,6 +47,8 @@ export function NhlPlus({ games, season }: { games: Game[]; season: number; team
   }, [apply]);
 
   const v = s.view;
+  const subnav = useRef<HTMLElement>(null);
+  useSlidingUnderline(subnav, v);
   const summary = useMoneyPuck(season, "summary");
   const skaters = useMoneyPuck(season, "skaters", { enabled: v === "players" || (v === "data" && s.dSource === "skaters") });
   const lines = useMoneyPuck(season, "lines", { enabled: (v === "players" && s.pTab === "lines") || (v === "data" && s.dSource === "lines") });
@@ -61,7 +64,7 @@ export function NhlPlus({ games, season }: { games: Game[]; season: number; team
     <section className="nhlplus" aria-label="NHL+">
       <h2 className="sr-only">NHL+</h2>
       <div className="np-bar">
-        <nav className="np-subnav" aria-label="NHL+ views">
+        <nav ref={subnav} className="np-subnav" aria-label="NHL+ views">
           {VIEWS.map(([id, label]) => <button key={id} type="button" aria-pressed={v === id} onClick={() => set({ view: id })}>{label}</button>)}
         </nav>
         <div className="np-refresh-top">

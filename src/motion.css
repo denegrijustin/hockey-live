@@ -6,7 +6,7 @@
 
 /* ---- loops stop when nobody can see them ---- */
 html[data-hidden] *, html[data-hidden] *::before, html[data-hidden] *::after,
-.sb-row.offscreen *, .sb-row.offscreen *::before, .sb-row.offscreen *::after { animation-play-state: paused !important; }
+.sb-row.offscreen *, .sb-row.offscreen *::before, .sb-row.offscreen *::after, .game-card.offscreen *, .game-card.offscreen *::before, .game-card.offscreen *::after { animation-play-state: paused !important; }
 
 /* ---- Watch now ---- */
 .watch-now { margin: 4px 0 16px; }
@@ -58,12 +58,76 @@ html[data-hidden] *, html[data-hidden] *::before, html[data-hidden] *::after,
 .sr-pop { position: fixed; left: 50%; top: 50%; translate: -50% -50%; z-index: 60; width: min(92vw, 400px); max-height: 80vh; overflow: auto; padding: 14px; border-radius: 14px; background: var(--surface-3); border: 1px solid var(--line-4); box-shadow: 0 18px 50px rgb(0 0 0 / 55%); color: var(--text-5); text-align: left; animation: pop-in .22s cubic-bezier(.2, .9, .3, 1.2); }
 @keyframes pop-in { from { opacity: 0; scale: .94; } }
 
+/* ---- a score changing: the number ticks over and flashes, the card pulses once ---- */
+.sb-row { position: relative; }
+.sb-score { position: relative; }
+.sb-score .ts-num { display: inline-block; }
+.sb-score.scored .ts-num { animation: ts-tick .5s cubic-bezier(.2, 1.4, .4, 1) backwards; }
+.sb-score.scored::after { content: ""; position: absolute; inset: -4px -8px; border-radius: 10px; background: var(--mint-5); opacity: 0; animation: ts-flash 1.1s ease-out; pointer-events: none; }
+.pulse-ring { position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--mint-5); opacity: 0; pointer-events: none; animation: ring-pulse 1.2s ease-out; z-index: 2; }
+@keyframes ts-tick { from { transform: translateY(-55%) scale(1.5); opacity: 0; } }
+@keyframes ts-flash { 0% { opacity: .55; } 100% { opacity: 0; } }
+@keyframes ring-pulse { 0% { opacity: .9; transform: scale(.985); } 100% { opacity: 0; transform: scale(1.015); } }
+
+/* ---- cards arrive, views and tabs slide ---- */
+.sb-list > li, .game-grid > .game-card { animation: card-in .34s cubic-bezier(.2, .8, .2, 1) backwards; }
+.sb-list > li:nth-child(2), .game-grid > .game-card:nth-child(2) { animation-delay: 30ms; }
+.sb-list > li:nth-child(3), .game-grid > .game-card:nth-child(3) { animation-delay: 60ms; }
+.sb-list > li:nth-child(4), .game-grid > .game-card:nth-child(4) { animation-delay: 90ms; }
+.sb-list > li:nth-child(5), .game-grid > .game-card:nth-child(5) { animation-delay: 120ms; }
+.sb-list > li:nth-child(n + 6), .game-grid > .game-card:nth-child(n + 6) { animation-delay: 150ms; }
+@keyframes card-in { from { opacity: 0; transform: translateY(14px); } }
+.view-in { animation: view-in .24s cubic-bezier(.2, .8, .2, 1) backwards; }
+@keyframes view-in { from { opacity: 0; transform: translateY(10px); } }
+/* The tab underline is one element that slides: --ux and --uw come from useSlidingUnderline. */
+.np-subnav { position: relative; }
+.np-subnav[data-slide]::after, .tab-bar[data-slide]::after { content: ""; position: absolute; left: 0; width: 1px; height: 3px; border-radius: 2px; background: var(--mint-5); transform-origin: left; transform: translateX(var(--ux, 0px)) scaleX(var(--uw, 0)); transition: transform .3s cubic-bezier(.2, .8, .2, 1); pointer-events: none; }
+.np-subnav[data-slide]::after { bottom: 0; }
+.tab-bar[data-slide]::after { top: 0; }
+.np-subnav[data-slide] button[aria-pressed="true"]::after { display: none; }
+
+/* ---- touch feedback ---- */
+.sb-chip, .sb-main, .sb-full, .gc-icon, .np-subnav button, .tab-item, .wn-tile, .sb-step, .pk-card, .sheet button, .card-toggle { transition: transform .18s cubic-bezier(.3, 1.6, .5, 1); }
+.sb-chip:active, .sb-main:active, .sb-full:active, .gc-icon:active, .np-subnav button:active, .tab-item:active, .sb-step:active, .card-toggle:active { transform: scale(.96); }
+
+/* ---- refresh toast ---- */
+.toast-host { position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); z-index: 90; display: grid; justify-items: center; pointer-events: none; }
+.toast { padding: 8px 16px; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--line-4); color: var(--text-5); font-size: .8125rem; font-weight: 650; box-shadow: 0 10px 30px rgb(0 0 0 / 40%); animation: toast-in .3s cubic-bezier(.2, .9, .3, 1.2), toast-out .3s ease-in 1.9s forwards; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(.95); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(8px); } }
+
+/* ---- skeletons ---- */
+.skel { display: grid; gap: 10px; margin: 6px 0; }
+.skel.card { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.skel-item { display: grid; gap: 10px; padding: 16px; border-radius: 14px; border: 1px solid var(--line-1); background: var(--surface-5); }
+.skel.row .skel-item { padding: 12px 14px; }
+.skel-line { position: relative; display: block; height: 12px; border-radius: 6px; background: var(--surface-7); overflow: hidden; }
+.skel-line::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(255 255 255 / 10%), transparent); transform: translateX(-100%); animation: skel 1.4s ease-in-out infinite; }
+.skel-line.w60 { width: 60%; } .skel-line.w90 { width: 90%; } .skel-line.w40 { width: 40%; }
+@keyframes skel { to { transform: translateX(100%); } }
+
+/* ---- charts draw in ---- */
+.pr-bar { transform-box: fill-box; transform-origin: bottom; animation: bar-grow .6s cubic-bezier(.2, .8, .2, 1) backwards; }
+.pr-bar.down { transform-origin: top; }
+.pr-line, .flow-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: line-draw .9s ease-out .25s backwards; }
+.pr-dot { animation: dot-pop .3s ease-out .9s backwards; }
+.sb-bar > i:first-child { transform-origin: left; animation: bar-in .7s cubic-bezier(.2, .8, .2, 1) backwards; }
+@keyframes bar-grow { from { transform: scaleY(0); } }
+@keyframes bar-in { from { transform: scaleX(0); } }
+@keyframes line-draw { from { stroke-dashoffset: 1; } }
+@keyframes dot-pop { from { opacity: 0; } }
+
 /* ---- motion off: the one-shots do not play, the loops stand still (pseudo-elements cannot sit inside :is(), so they are listed on their own) ---- */
-html[data-motion="off"] :is(.rise-tag, .sr-pop, .late-flag i, .wn-when i),
+html[data-motion="off"] :is(.rise-tag, .sr-pop, .late-flag i, .wn-when i, .sb-list > li, .game-grid > .game-card, .view-in, .pulse-ring, .sb-score.scored .ts-num, .toast, .pr-bar, .pr-line, .flow-line, .pr-dot, .sb-bar > i:first-child),
 html[data-motion="off"] .late-flag::after,
-html[data-motion="off"] .wn-tile.hot::after { animation: none !important; }
-html[data-motion="off"] :is(.sr-fill, .wn-tile) { transition: none !important; }
+html[data-motion="off"] .wn-tile.hot::after,
+html[data-motion="off"] .sb-score.scored::after,
+html[data-motion="off"] .skel-line::after { animation: none !important; }
+html[data-motion="off"] :is(.sr-fill, .wn-tile, .sb-chip, .sb-main, .sb-full, .gc-icon, .np-subnav button, .tab-item, .sb-step, .pk-card, .card-toggle),
+html[data-motion="off"] .np-subnav::after,
+html[data-motion="off"] .tab-bar::after { transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
-  :is(.rise-tag, .sr-pop, .late-flag i, .wn-when i), .late-flag::after, .wn-tile.hot::after { animation: none !important; }
-  :is(.sr-fill, .wn-tile) { transition: none !important; }
+  :is(.rise-tag, .sr-pop, .late-flag i, .wn-when i, .sb-list > li, .game-grid > .game-card, .view-in, .pulse-ring, .sb-score.scored .ts-num, .toast, .pr-bar, .pr-line, .flow-line, .pr-dot, .sb-bar > i:first-child),
+  .late-flag::after, .wn-tile.hot::after, .sb-score.scored::after, .skel-line::after { animation: none !important; }
+  :is(.sr-fill, .wn-tile, .sb-chip, .sb-main, .sb-full, .gc-icon, .np-subnav button, .tab-item, .sb-step, .pk-card, .card-toggle), .np-subnav::after, .tab-bar::after { transition: none !important; }
 }

@@ -11,6 +11,7 @@ import { IntermissionRink } from "./IntermissionRink";
 import { CardExpanded, CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { usePauseOffscreen } from "../motion";
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
 export const GameCard = memo(function GameCard({
@@ -29,6 +30,7 @@ export const GameCard = memo(function GameCard({
   const past = finished(game), live = isLive(game);
   const [expanded, setExpanded] = useState(false), [gameCenterOpen, setGameCenterOpen] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
+  usePauseOffscreen(cardRef);
   const { ref: feedRef, data: feed } = useCardFeed(game);
   const goal = useGoalFlash(game);
   const nhl = useCardNhlPlus(game, cardRef, expanded);

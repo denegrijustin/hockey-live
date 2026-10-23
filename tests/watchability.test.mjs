@@ -45,3 +45,41 @@ test("periods and slots", () => {
   assert.equal(periodOf({ period: 3, periodType: "SO" }), 4);
   assert.equal(slotOf("2026-10-22T23:37:10Z"), "2026-10-22T23:00:00.000Z");
 });
+
+import { tierOf, watchBreakdown, pickWatchNow, recap } from "../src/lib/watchability.mjs";
+
+test("tiers", () => {
+  assert.deepEqual([80, 75, 60, 49].map((n) => tierOf(n).key), ["high", "high", "mid", "low"]);
+});
+
+test("the breakdown adds up to the forecast, and a live game reports its bonus separately", () => {
+  const b = watchBreakdown(80, 0.5);
+  assert.equal(b.score, 87);
+  assert.equal(b.parts.reduce((n, p) => n + p.points, 0), b.score);
+  const hot = watchBreakdown(60, 0.5, live({}));
+  assert.equal(hot.parts.reduce((n, p) => n + p.points, 0), hot.score); // the parts explain the forecast, not the live bonus
+  assert.ok(hot.bonus > 0 && hot.total === hot.score + hot.bonus);
+  assert.equal(b.bonus, 0);
+  assert.equal(watchBreakdown(60, null).parts.length, 1);
+});
+
+test("watch now: hottest live first, then the best starting within the hour, capped", () => {
+  const now = Date.parse("2026-10-22T23:00:00Z");
+  const mk = (id, state, startMin, score, heat = score) => ({ game: { id, state, start: new Date(now + startMin * 60000).toISOString() }, score, heat });
+  const items = [mk(1, "LIVE", -30, 50, 70), mk(2, "LIVE", -40, 60, 90), mk(3, "FUT", 20, 80), mk(4, "FUT", 45, 90), mk(5, "FUT", 90, 99), mk(6, "FINAL", -200, 99), mk(7, "LIVE", -10, 40, 55), mk(8, "LIVE", -5, 30, 35)];
+  const tiles = pickWatchNow(items, now, { max: 5 });
+  assert.deepEqual(tiles.map((t) => t.game.id), [2, 1, 7, 8, 4]); // 3 and 4 are soon; 4 is the better one; 5 starts in 90 minutes; 6 is over
+  assert.equal(pickWatchNow(items, now, { max: 3 }).length, 3);
+  assert.deepEqual(pickWatchNow(items, now, { max: 3 }).map((t) => t.kind), ["live", "live", "live"]);
+  assert.equal(tiles.at(-1).minutes, 45);
+});
+
+test("recap says who won, whether it was an upset, and how the shots went", () => {
+  const names = { home: "Maple Leafs", away: "Bruins" };
+  const g = { state: "FINAL", homeScore: 3, awayScore: 2, end: "OT", homeShots: 24, awayShots: 31 };
+  assert.match(recap(g, 0.35, names), /Maple Leafs beat Bruins 3–2 in overtime\. An upset: Maple Leafs had just a 35% chance/);
+  assert.match(recap(g, 0.35, names), /won despite being outshot 31–24/);
+  assert.match(recap({ ...g, end: "REG", homeShots: null }, 0.7, names), /favorite \(70% before the game\)/);
+  assert.match(recap({ ...g, end: "REG" }, 0.5, names), /near coin flip/);
+  assert.equal(recap({ state: "LIVE", homeScore: 1, awayScore: 0 }, 0.5, names), "");
+});

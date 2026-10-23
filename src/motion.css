@@ -1,0 +1,69 @@
+/*
+ * Motion. Every effect here is a one-shot that plays because something changed, and moves only transform and opacity.
+ * The few loops (the live dot, the late-game glow) stop when their card is off-screen or the tab is hidden, and everything
+ * is switched off by <html data-motion="off"> (reduced-motion, data-saver or a low battery: see motion.ts).
+ */
+
+/* ---- loops stop when nobody can see them ---- */
+html[data-hidden] *, html[data-hidden] *::before, html[data-hidden] *::after,
+.sb-row.offscreen *, .sb-row.offscreen *::before, .sb-row.offscreen *::after { animation-play-state: paused !important; }
+
+/* ---- Watch now ---- */
+.watch-now { margin: 4px 0 16px; }
+.watch-now h2 { margin: 0 0 8px; font-size: .8125rem; letter-spacing: .08em; text-transform: uppercase; color: var(--mint-5); }
+.watch-now ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.wn-tile { width: 100%; height: 100%; min-height: 44px; display: grid; gap: 4px; align-content: start; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface-5); color: var(--text-5); font: inherit; cursor: pointer; position: relative; overflow: hidden; transition: transform .18s cubic-bezier(.3, 1.6, .5, 1); }
+.wn-tile:active { transform: scale(.96); }
+.wn-tile.live { border-color: color-mix(in srgb, var(--mint-5) 45%, var(--line-2)); }
+.wn-tile.hot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--amber-5); opacity: .55; animation: late-glow 2.4s ease-in-out infinite; pointer-events: none; }
+.wn-when { display: flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 700; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.wn-when i { width: 7px; height: 7px; border-radius: 50%; background: var(--red-5); animation: live-dot 1.6s ease-in-out infinite; }
+.wn-teams { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; font-size: .875rem; }
+.wn-teams > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.wn-teams b { font-weight: 700; }
+.wn-teams em { font-style: normal; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; justify-self: end; }
+.wn-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; font-size: .75rem; color: var(--text-1); }
+.wn-foot strong { color: var(--amber-5); font-size: .6875rem; letter-spacing: .02em; }
+.wn-short { display: none; }
+@keyframes live-dot { 50% { opacity: .35; transform: scale(.8); } }
+@keyframes late-glow { 50% { opacity: .12; } }
+.rise-tag { font-style: normal; font-size: .6875rem; font-weight: 800; color: var(--mint-5); animation: tag-in .5s cubic-bezier(.2, 1.4, .4, 1) backwards; }
+@keyframes tag-in { from { opacity: 0; transform: translateY(6px) scale(.8); } }
+@media (max-width: 720px) {
+  .watch-now ul { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .wn-tile { padding: 8px; gap: 3px; }
+  .wn-teams { font-size: .8125rem; gap: 2px 4px; }
+  .wn-teams > span { gap: 4px; }
+  .wn-teams em { font-size: 1rem; }
+  .wn-long { display: none; }
+  .wn-short { display: inline; }
+}
+
+/* ---- close and late, on a row ---- */
+.sb-row.hot { box-shadow: 0 0 0 1px color-mix(in srgb, var(--amber-5) 70%, transparent); }
+.late-flag { display: inline-flex; align-items: center; gap: 7px; margin-left: 10px; padding: 2px 10px 2px 8px; border-radius: 999px; font-size: .6875rem; font-weight: 750; color: var(--amber-1); background: var(--amber-5); position: relative; }
+.late-flag::after { content: ""; position: absolute; inset: -3px; border-radius: inherit; box-shadow: 0 0 0 2px var(--amber-5); opacity: 0; animation: late-ring 2.4s ease-out infinite; }
+.late-flag i { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-1); animation: live-dot 1.6s ease-in-out infinite; }
+@keyframes late-ring { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.12); } }
+
+/* ---- the score ring ---- */
+.score-ring { position: relative; width: 52px; height: 52px; display: grid; place-items: center; }
+.score-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.sr-track { fill: none; stroke: color-mix(in srgb, var(--score-color) 20%, transparent); stroke-width: 4; }
+.sr-fill { fill: none; stroke: var(--score-color); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .9s cubic-bezier(.2, .8, .2, 1); }
+.score-ring strong { position: relative; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.sr-btn { position: absolute; inset: 0; display: grid; place-items: center; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; border-radius: 50%; min-height: 0; }
+.sr-btn::before { content: ""; position: absolute; inset: -8px; }
+.sr-btn:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; }
+.sr-pop { position: fixed; left: 50%; top: 50%; translate: -50% -50%; z-index: 60; width: min(92vw, 400px); max-height: 80vh; overflow: auto; padding: 14px; border-radius: 14px; background: var(--surface-3); border: 1px solid var(--line-4); box-shadow: 0 18px 50px rgb(0 0 0 / 55%); color: var(--text-5); text-align: left; animation: pop-in .22s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes pop-in { from { opacity: 0; scale: .94; } }
+
+/* ---- motion off: the one-shots do not play, the loops stand still (pseudo-elements cannot sit inside :is(), so they are listed on their own) ---- */
+html[data-motion="off"] :is(.rise-tag, .sr-pop, .late-flag i, .wn-when i),
+html[data-motion="off"] .late-flag::after,
+html[data-motion="off"] .wn-tile.hot::after { animation: none !important; }
+html[data-motion="off"] :is(.sr-fill, .wn-tile) { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.rise-tag, .sr-pop, .late-flag i, .wn-when i), .late-flag::after, .wn-tile.hot::after { animation: none !important; }
+  :is(.sr-fill, .wn-tile) { transition: none !important; }
+}

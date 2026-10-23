@@ -229,11 +229,11 @@ export function CompactGameProjection({ game, before, baseline }: { game: Game; 
 }
 
 /** One fetch of the game feed for a small card, shared by everything on the card that draws from it (the flow chart, the ice view, the goal flash). */
-export function useCardFeed(game: Game) {
+export function useCardFeed(game: Game, enabled = true) {
   const { ref, visible } = useVisible();
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
   const { data } = useFeed<GameFeed>(
-    visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
+    enabled && visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
     isLive(game) ? 30000 : 3600000,
   );
   return { ref, data };

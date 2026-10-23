@@ -61,3 +61,58 @@ export const slotOf = (start) => {
   d.setUTCMinutes(0, 0, 0);
   return d.toISOString();
 };
+
+/** The score's tier: it picks the ring's color and the verdict word. */
+export const tierOf = (score) => (score >= 75 ? { key: "high", label: "Must watch" } : score >= 50 ? { key: "mid", label: "Worth a look" } : { key: "low", label: "Background" });
+
+/** Where a watchability score came from, for the ring's "why": the stakes and how even the game looks; for a live game also how much hotter it is right now. */
+export function watchBreakdown(importance, homeWin, game) {
+  const stakes = Number.isFinite(importance) ? importance : 50;
+  const score = watchability(importance, homeWin);
+  const parts = [{ key: "stakes", label: "Stakes", points: Math.round(0.65 * stakes), note: `Game importance ${Math.round(stakes)} out of 100 (counts for 65%)` }];
+  if (homeWin != null) {
+    const even = Math.round((1 - Math.abs(2 * homeWin - 1)) * 100);
+    parts.push({ key: "even", label: "Competitiveness", points: Math.round(0.35 * even), note: `${even}% even: ${Math.round(homeWin * 100)}–${100 - Math.round(homeWin * 100)} before the puck drops (counts for 35%)` });
+  }
+  // The ring shows the forecast; a live game that is close and late is hotter than that right now.
+  const bonus = game ? Math.max(0, Math.round(liveHeat(score, game)) - score) : 0;
+  return { score, bonus, total: Math.min(100, score + bonus), parts };
+}
+
+/**
+ * The Watch-now strip: the hottest live games first, then the best games starting within the hour, at most `max` in all.
+ * @param {{game: any, score: number, heat: number}[]} items
+ */
+export function pickWatchNow(items, now, { max = 5, soonMs = 3_600_000 } = {}) {
+  const live = [], soon = [];
+  for (const it of items) {
+    const g = it.game;
+    if (isLiveState(g)) live.push({ ...it, kind: "live", minutes: 0 });
+    else if (g.state === "FUT" || g.state === "PRE") {
+      const t = Date.parse(g.start);
+      if (t > now - 300_000 && t - now <= soonMs) soon.push({ ...it, kind: "soon", minutes: Math.max(0, Math.round((t - now) / 60_000)) });
+    }
+  }
+  live.sort((a, b) => b.heat - a.heat || a.game.id - b.game.id);
+  soon.sort((a, b) => b.score - a.score || a.game.start.localeCompare(b.game.start));
+  return [...live, ...soon].slice(0, max);
+}
+
+/** What happened in a finished game, and why it went that way, in a few plain sentences. */
+export function recap(g, pregameHome, names) {
+  if (!["OFF", "FINAL"].includes(g.state) || g.homeScore == null || g.awayScore == null || g.homeScore === g.awayScore) return "";
+  const homeWon = g.homeScore > g.awayScore;
+  const winner = homeWon ? names.home : names.away, loser = homeWon ? names.away : names.home;
+  const hi = Math.max(g.homeScore, g.awayScore), lo = Math.min(g.homeScore, g.awayScore);
+  const how = g.end === "OT" ? " in overtime" : g.end === "SO" ? " in a shootout" : "";
+  const out = [`${winner} beat ${loser} ${hi}–${lo}${how}.`];
+  if (pregameHome != null) {
+    const wp = Math.round((homeWon ? pregameHome : 1 - pregameHome) * 100);
+    out.push(wp <= 40 ? `An upset: ${winner} had just a ${wp}% chance before the game.` : wp >= 60 ? `The favorite (${wp}% before the game) took care of business.` : `A near coin flip before the game (${wp}–${100 - wp}).`);
+  }
+  if (g.homeShots != null && g.awayShots != null) {
+    const w = homeWon ? g.homeShots : g.awayShots, l = homeWon ? g.awayShots : g.homeShots;
+    out.push(w < l ? `${winner} won despite being outshot ${l}–${w}.` : w > l ? `${winner} outshot ${loser} ${w}–${l}.` : `Shots were even at ${w}.`);
+  }
+  return out.join(" ");
+}

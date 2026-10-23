@@ -9,10 +9,10 @@ const game = (id: number, offset: number, away: string, home: string, state = "F
   home, away, homeScore: score[1], awayScore: score[0], end: state === "FINAL" ? "REG" : "", broadcasts: [], round: null,
 });
 
-async function open(page: Page, url = "/") {
+async function open(page: Page, url = "/", extra: any[] = []) {
   const snapshot = {
     season, updatedAt: new Date().toISOString(), source: "test fixture",
-    games: [game(9201, 0, "CHI", "EDM"), game(9202, 0, "MIN", "DAL"), game(9203, 0, "BOS", "TOR", "FINAL", [2, 3]), game(9204, 1, "NYR", "NJD"), game(9205, 0, "SEA", "VAN", "FINAL", [1, 4]), { ...game(9206, 0, "COL", "WPG", "LIVE", [2, 2]), period: 3, periodType: "REG", clock: "04:10" }],
+    games: [game(9201, 0, "CHI", "EDM"), game(9202, 0, "MIN", "DAL"), game(9203, 0, "BOS", "TOR", "FINAL", [2, 3]), game(9204, 1, "NYR", "NJD"), game(9205, 0, "SEA", "VAN", "FINAL", [1, 4]), { ...game(9206, 0, "COL", "WPG", "LIVE", [2, 2]), period: 3, periodType: "REG", clock: "04:10" }, ...extra],
   };
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
@@ -98,7 +98,7 @@ test.describe("scoreboard home", () => {
     const slot = page.locator(".sb-group.soon .sb-slot");
     await expect(slot).toHaveCount(1); // both upcoming games drop at the same time
     await expect(slot.locator(".sb-slot-h")).toContainText("–");
-    const scores = await slot.locator(".sb-watch b").allInnerTexts();
+    const scores = await slot.locator(".score-ring strong").allInnerTexts();
     expect(scores).toHaveLength(2);
     expect(Number(scores[0])).toBeGreaterThanOrEqual(Number(scores[1]));
   });
@@ -110,5 +110,59 @@ test.describe("scoreboard home", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
     await page.getByRole("button", { name: /completed/ }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
+  });
+
+  test("Watch now: the hottest live games first, then the best starting within the hour; close and late glows; a tap opens the Game Center", async ({ page, isMobile }) => {
+    const soon = { ...game(9210, 0, "TBL", "FLA"), start: new Date(Date.now() + 25 * 60000).toISOString() };
+    const live = (id: number, away: string, home: string, score: [number, number], period: number, clock: string) => ({ ...game(id, 0, away, home, "LIVE", score), period, periodType: "REG", clock, start: new Date(Date.now() - 3600000).toISOString() });
+    await open(page, "/", [live(9207, "LAK", "SJS", [1, 0], 2, "10:00"), live(9208, "NSH", "STL", [0, 0], 1, "15:00"), live(9209, "PHI", "PIT", [4, 1], 3, "02:00"), soon]);
+    const strip = page.getByTestId("watch-now");
+    const tiles = strip.locator(".wn-tile");
+    await expect(tiles.first()).toBeVisible();
+    // At most 3 on a phone, 5 on desktop (5 live and 1 soon exist here, so the live games fill the strip).
+    await expect(tiles).toHaveCount(isMobile ? 3 : 5);
+    await expect(tiles.first()).toHaveClass(/live/);
+    // The tied 3rd-period game is close and late: it glows and says so.
+    const hot = strip.locator(`.wn-tile[data-game="9206"]`);
+    await expect(hot).toHaveClass(/hot/);
+    await expect(hot).toContainText(/Close/);
+    // The blowout is the coolest live game: it is not ahead of the tied one.
+    const order = await tiles.evaluateAll((els) => els.map((e) => e.getAttribute("data-game")));
+    expect(order.indexOf("9206")).toBeLessThan(order.indexOf("9209") === -1 ? 99 : order.indexOf("9209"));
+    // A tile shows the score and a win probability.
+    await expect(hot).toContainText("2");
+    await expect(hot.locator(".wn-foot")).toContainText("%");
+    await hot.click();
+    await expect(page.locator("dialog.game-dialog, .game-panel").first()).toBeVisible();
+  });
+
+  test("the ring shows the watchability score and tapping it says why", async ({ page }) => {
+    await open(page);
+    const row = page.locator(".sb-row.soon").first();
+    const ring = row.locator(".score-ring");
+    await expect(ring).toBeVisible();
+    expect(Number(await ring.locator("strong").innerText())).toBeGreaterThan(0);
+    await ring.getByRole("button", { name: /Show why/ }).click();
+    const why = page.getByTestId("score-why");
+    await expect(why).toBeVisible();
+    await expect(why).toContainText("Stakes");
+    await expect(why).toContainText("Competitiveness");
+    // The ring and the breakdown always agree (the number can move once last season's data arrives).
+    await expect.poll(async () => (await why.locator("h3").innerText()).split(" ")[0]).toBe(await ring.locator("strong").innerText());
+    await page.keyboard.press("Escape");
+    await expect(why).toHaveCount(0);
+  });
+
+  test("a card has the venue, a Game Center button and TV chips; a finished game says what happened", async ({ page }) => {
+    await open(page);
+    const row = page.locator(".sb-row.soon").first();
+    await expect(row.locator(".sb-venue")).toContainText("Test Arena");
+    await row.getByRole("button", { name: /Open Game Center/ }).click();
+    await expect(page.locator("dialog.game-dialog, .game-panel").first()).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: /completed/ }).click();
+    const recap = page.getByTestId("recap").first();
+    await expect(recap).toContainText("What happened");
+    await expect(recap).toContainText(/beat/);
   });
 });

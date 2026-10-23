@@ -1,13 +1,19 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { projectGame } from "../lib/projection.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
-import { liveHeat, pregameHomeWin, slotOf, upsetBrewing, watchability } from "../lib/watchability.mjs";
+import { closeAndLate, liveHeat, pregameHomeWin, recap, slotOf, tierOf, upsetBrewing, watchBreakdown, watchability } from "../lib/watchability.mjs";
 import { Icon } from "./icons";
 import { IntermissionRink } from "./IntermissionRink";
 import { TeamLogo } from "./TeamLogo";
+import { NetworkLogos } from "./NetworkLogos";
+import { ScoreRing } from "./ScoreRing";
+import { WatchNow } from "./WatchNow";
+import { CompactGameFlow, useCardFeed } from "./GameData";
+import { useMedia } from "../hooks/useMedia";
+import { usePauseOffscreen } from "../motion";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -72,6 +78,16 @@ function useEtToday() {
   return today;
 }
 
+/** The current time, refreshed every `ms`, so "starts in 20 min" and the Watch-now strip stay current. */
+function useTick(ms: number) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => !document.hidden && setNow(Date.now()), ms);
+    return () => clearInterval(id);
+  }, [ms]);
+  return now;
+}
+
 export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading }: Props) {
   const today = useEtToday();
   const days = useMemo(() => [...new Set(games.filter((g) => g.type !== 0).map((g) => g.date))].sort(), [games]);
@@ -82,14 +98,18 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   const index = days.indexOf(day);
   const dayGames = useMemo(() => games.filter((g) => g.date === day), [games, day]);
   const [status, setStatus] = useState<Status>("all");
-  // Watchability, heat and upset flags for the day's games, from the same model the win-probability bars use.
-  const rated = useMemo(() => new Map(dayGames.map((g) => {
+  // Watchability, heat and upset flags, from the same model the win-probability bars use.
+  const rate = useCallback((g: Game) => {
     const before = analysis?.before[g.id];
     const base = baseline && baseline.season < g.season ? baselineTable : undefined;
     const pre = before ? pregameHomeWin(g, before, base) : null;
-    const score = watchability(analysis?.analysis[g.id]?.score, pre);
-    return [g.id, { score, heat: liveHeat(score, g), upset: !!upsetBrewing(g, pre) }] as const;
-  })), [dayGames, analysis, baseline, baselineTable]);
+    const importance = analysis?.analysis[g.id]?.score;
+    const score = watchability(importance, pre);
+    return { score, heat: liveHeat(score, g), upset: !!upsetBrewing(g, pre), pre, importance, before, base };
+  }, [analysis, baseline, baselineTable]);
+  const rated = useMemo(() => new Map(dayGames.map((g) => [g.id, rate(g)] as const)), [dayGames, rate]);
+  const phone = useMedia("(max-width: 720px)");
+  const now = useTick(30_000);
   const counts = useMemo(() => ({
     live: dayGames.filter(isLive).length,
     final: dayGames.filter(finished).length,
@@ -128,6 +148,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
           <Icon name="chevron" size={20} />
         </button>
       </div>
+      <WatchNow games={games} teams={teams} rate={rate} now={now} max={phone ? 3 : 5} onOpen={(g) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }} />
       <div className="sb-filters" role="group" aria-label="Show games by status">
         {([["live", counts.live, "in progress"], ["final", counts.final, "completed"], ["soon", counts.soon, "upcoming"]] as const).map(([key, n, label]) => (
           <button key={key} type="button" className={`sb-chip ${key}`} aria-pressed={status === key} disabled={!n && status !== key} onClick={() => { setStatus(status === key ? "all" : key); setOpenId(null); }}>
@@ -153,7 +174,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
                       before={analysis?.before[g.id]}
                       baseline={baseline && baseline.season < g.season ? baselineTable : undefined}
                       allGames={games}
-                      watch={rated.get(g.id)?.score}
+                      rating={rated.get(g.id)}
+                      analysisRow={analysis?.analysis[g.id]}
                       open={openId === g.id || (status === "final" && section.key === "final")}
                       onToggle={() => setOpenId(openId === g.id ? null : g.id)}
                       onFull={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}
@@ -187,38 +209,78 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   );
 }
 
-function ScoreRow({ game, away, home, before, baseline, allGames, watch, open, onToggle, onFull }: {
-  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; watch?: number; open: boolean; onToggle: () => void; onFull: () => void;
+function ScoreRow({ game, away, home, before, baseline, allGames, rating, analysisRow, open, onToggle, onFull }: {
+  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: { score: number; pre: number | null; importance?: number }; analysisRow?: any; open: boolean; onToggle: () => void; onFull: () => void;
 }) {
+  const ref = useRef<HTMLElement>(null);
+  usePauseOffscreen(ref);
   const status = statusOf(game);
   const showScore = status.kind !== "soon" && game.awayScore != null && game.homeScore != null;
   const projection = useMemo(() => (before ? projectGame(game, before, baseline) : null), [game, before, baseline]);
   const homePct = projection ? Math.round(projection.homeWin * 100) : null;
   const awayPct = homePct != null ? 100 - homePct : null;
   const winner = status.kind === "final" && showScore ? (game.homeScore! > game.awayScore! ? "home" : "away") : null;
+  const cl = closeAndLate(game);
   const label = `${away.name} at ${home.name}, ${status.text}${showScore ? `, ${game.awayScore} to ${game.homeScore}` : ""}${homePct != null ? `, win probability ${away.id} ${awayPct} percent, ${home.id} ${homePct} percent` : ""}`;
+  // The feed (for the momentum chart) is fetched while a live game is on screen, and for a finished one only once it is opened.
+  const { ref: feedRef, data: feed } = useCardFeed(game, status.kind === "live" || open);
+  const score = rating?.score ?? 50, tier = tierOf(score);
+  const why = rating ? watchBreakdown(rating.importance, rating.pre, game) : null;
+  const names = { away: away.short, home: home.short };
+  const recapText = status.kind === "final" ? recap(game, rating?.pre ?? null, names) : "";
+  const flowShown = (status.kind === "live" && !game.intermission) || (open && status.kind !== "soon");
   return (
-    <article className={`sb-row ${status.kind}${open ? " open" : ""}`} data-game={game.id}>
-      <button className="sb-main" aria-expanded={open} aria-label={label} onClick={onToggle}>
-        <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}{watch != null && status.kind !== "final" && <span className="sb-watch" title="Watchability: how worth watching this game is">Watch <b>{watch}</b></span>}</span>
-        {([[away, game.awayScore, "away"], [home, game.homeScore, "home"]] as const).map(([team, score, side]) => (
-          <span className={`sb-team${winner && winner !== side ? " lost" : ""}`} key={team.id}>
-            <TeamLogo id={team.id} size={32} />
-            <span className="sb-name">{team.name.endsWith(team.short) ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}</span>
-            <span className="sb-score">{showScore ? score : ""}</span>
-          </span>
-        ))}
-        {homePct != null && awayPct != null && (
-          <span className="sb-prob" role="img" aria-label={`Win probability: ${away.id} ${awayPct} percent, ${home.id} ${homePct} percent`}>
-            <span className="sb-pct">{away.id} {awayPct}%</span>
-            <span className="sb-bar"><i style={{ width: `${awayPct}%` }} /><i /></span>
-            <span className="sb-pct">{homePct}% {home.id}</span>
-          </span>
-        )}
-      </button>
+    <article ref={ref} className={`sb-row ${status.kind}${open ? " open" : ""}${cl.both ? " hot" : ""} tier-${tier.key}`} data-game={game.id}>
+      <div className="sb-top">
+        <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}{cl.both && <span className="late-flag" title={cl.label}><i aria-hidden="true" />Close &amp; late</span>}</span>
+        <span className="sb-actions">
+          <span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>
+          <button type="button" className="gc-icon" onClick={onFull} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>
+        </span>
+      </div>
+      <div className="sb-body">
+        <button className="sb-main" aria-expanded={open} aria-label={label} onClick={onToggle}>
+          {([[away, game.awayScore, "away"], [home, game.homeScore, "home"]] as const).map(([team, score, side]) => (
+            <span className={`sb-team${winner && winner !== side ? " lost" : ""}`} key={team.id}>
+              <TeamLogo id={team.id} size={32} />
+              <span className="sb-name">{team.name.endsWith(team.short) ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}</span>
+              <span className="sb-score">{showScore ? score : ""}</span>
+            </span>
+          ))}
+          {homePct != null && awayPct != null && (
+            <span className="sb-prob" role="img" aria-label={`Win probability: ${away.id} ${awayPct} percent, ${home.id} ${homePct} percent`}>
+              <span className="sb-pct">{away.id} {awayPct}%</span>
+              <span className="sb-bar"><i style={{ width: `${awayPct}%` }} /><i /></span>
+              <span className="sb-pct">{homePct}% {home.id}</span>
+            </span>
+          )}
+        </button>
+        {before && (status.kind !== "final" || open) ? (
+          <div className="sb-rate">
+            <ScoreRing score={score} label={`Watchability ${score} out of 100, ${tier.label}`}>
+              {why && <WhyScore why={why} tier={tier.label} reason={analysisRow?.reasons?.[0]} />}
+            </ScoreRing>
+            <span className="sb-tier">{tier.label}</span>
+          </div>
+        ) : null}
+      </div>
+      <p className="sb-venue"><span aria-hidden="true">📍 </span>{game.venue || "Venue unavailable"}</p>
       {status.kind === "live" && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
+      <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
+      {open && recapText && <p className="sb-recap" data-testid="recap"><b>What happened</b> {recapText}</p>}
       {open && <KeyStats game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} onFull={onFull} />}
     </article>
+  );
+}
+
+function WhyScore({ why, tier, reason }: { why: ReturnType<typeof watchBreakdown>; tier: string; reason?: string }) {
+  return (
+    <div className="sb-why" data-testid="score-why">
+      <h3>{why.score} · {tier}</h3>
+      <ul>{why.parts.map((p) => <li key={p.key}><b>{p.label}</b> <span>+{p.points}</span><small>{p.note}</small></li>)}</ul>
+      {why.bonus > 0 && <p className="sb-why-heat"><b>Hotter right now: +{why.bonus} → {why.total}.</b> A close score late in the game is worth watching more than its forecast.</p>}
+      {reason && <p className="sb-why-reason">{reason}</p>}
+    </div>
   );
 }
 

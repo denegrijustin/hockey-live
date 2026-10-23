@@ -274,3 +274,30 @@ html[data-home] {
 .scoreboard .sb-slot-h { margin: 8px 2px 6px; font-size: .6875rem; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: var(--text-1); }
 .scoreboard .sb-watch { margin-left: 10px; padding: 1px 8px; border-radius: 999px; background: var(--surface-7); font-size: .6875rem; font-weight: 500; color: var(--text-3); }
 .scoreboard .sb-watch b { color: var(--text-6); font-variant-numeric: tabular-nums; }
+
+/* The card: status and actions on top, teams beside the score ring, venue, momentum, recap */
+.scoreboard .sb-row { --score-color: var(--text-1); }
+.scoreboard .sb-row.tier-high { --score-color: var(--mint-5); }
+.scoreboard .sb-row.tier-mid { --score-color: var(--amber-5); }
+.scoreboard .sb-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px 0; min-width: 0; }
+.scoreboard .sb-top .sb-status { min-width: 0; flex-wrap: wrap; }
+.scoreboard .sb-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.scoreboard .sb-actions .tv-network { display: inline-flex; align-items: center; }
+.scoreboard .sb-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.scoreboard .sb-body .sb-main { padding: 10px 8px 6px 16px; }
+.scoreboard .sb-rate { display: grid; justify-items: center; gap: 4px; padding-right: 16px; }
+.scoreboard .sb-tier { font-size: .6875rem; font-weight: 650; color: var(--score-color); text-align: center; }
+.scoreboard .sb-venue { margin: 0; padding: 0 16px 12px; font-size: .75rem; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scoreboard .sb-flow:empty { display: none; }
+.scoreboard .sb-flow { padding: 0 12px 10px; }
+.scoreboard .sb-recap { margin: 0; padding: 10px 16px; border-top: 1px solid var(--line-1); font-size: .8125rem; line-height: 1.5; color: var(--text-3); }
+.scoreboard .sb-recap b { display: block; font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-1); }
+.scoreboard .sb-why h3 { margin: 0 0 8px; font-size: 1rem; }
+.scoreboard .sb-why ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.scoreboard .sb-why li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; }
+.scoreboard .sb-why li span { font-weight: 700; font-variant-numeric: tabular-nums; }
+.scoreboard .sb-why li small { grid-column: 1 / -1; color: var(--text-1); font-size: .75rem; line-height: 1.4; }
+.scoreboard .sb-why-reason { margin: 10px 0 0; font-size: .8125rem; color: var(--text-3); }
+.scoreboard .sb-actions .gc-icon { min-width: 44px; min-height: 44px; }
+.scoreboard .sb-why-heat { margin: 10px 0 0; font-size: .8125rem; line-height: 1.45; color: var(--text-3); }
+.scoreboard .sb-why-heat b { color: var(--amber-5); }

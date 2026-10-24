@@ -14,7 +14,7 @@ test.describe("wide screens", () => {
     test.skip(!!isMobile, "desktop layout");
     await open(page, 1440, 900);
     const nav = page.getByRole("navigation", { name: "Dashboard views" });
-    await expect(nav.getByRole("button")).toHaveCount(10);
+    await expect(nav.getByRole("button")).toHaveCount(11);
     await expect(nav.getByRole("button", { name: "Schedule", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.locator(".tab-bar")).toHaveCount(0);
     await nav.getByRole("button", { name: "Standings" }).click();
@@ -50,8 +50,8 @@ test.describe("phones", () => {
     await expect(bar.getByRole("button", { name: "Team trends" })).toHaveAttribute("aria-current", "page");
     await bar.getByRole("button", { name: "More" }).click();
     const sheet = page.getByRole("dialog", { name: "More" });
-    await expect(sheet.getByRole("button")).toHaveCount(7); // six views + Refresh data
-    for (const name of ["Schedule", "Picks", "NHL+", "NHL EDGE", "Playoff odds", "Imperialism map"]) await expect(sheet.getByRole("button", { name, exact: true })).toBeVisible();
+    await expect(sheet.getByRole("button")).toHaveCount(8); // seven views + Refresh data
+    for (const name of ["Schedule", "Team schedule", "Picks", "NHL+", "NHL EDGE", "Playoff odds", "Imperialism map"]) await expect(sheet.getByRole("button", { name, exact: true })).toBeVisible();
     await sheet.getByRole("button", { name: "NHL+", exact: true }).click();
     await expect(sheet).toBeHidden();
     await expect(page.locator(".nhlplus").first()).toBeVisible();

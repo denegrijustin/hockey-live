@@ -15,6 +15,7 @@ const V = (id: string, label: string, icon: IconName, short = label): ViewDef =>
 const SCORES = V("scoreboard", "Scoreboard", "games", "Scores");
 const SCHEDULE = V("games", "Schedule", "calendar");
 const PICKS = V("picks", "Picks", "picks");
+const TEAMSCHED = V("teamschedule", "Team schedule", "team", "Team schedule");
 const STANDINGS = V("standings", "Standings", "standings");
 const TRENDS = V("trends", "Team trends", "trends", "Trends");
 const PLAYERS = V("players", "Players", "players");
@@ -25,11 +26,11 @@ const MAP = V("map", "Imperialism map", "map");
 
 /** Phones: four views in the tab bar, the rest behind More (the HIG caps a tab bar at five). */
 const PRIMARY = [SCORES, STANDINGS, TRENDS, PLAYERS];
-const MORE = [SCHEDULE, PICKS, NHLPLUS, EDGE, ODDS, MAP];
+const MORE = [SCHEDULE, TEAMSCHED, PICKS, NHLPLUS, EDGE, ODDS, MAP];
 export const VIEW_IDS = [...PRIMARY, ...MORE].map((v) => v.id);
 /** Desktop: every view, grouped, in a sidebar. */
 const GROUPS: [string, ViewDef[]][] = [
-  ["Dashboard", [SCORES, SCHEDULE, PICKS, STANDINGS, ODDS]],
+  ["Dashboard", [SCORES, SCHEDULE, TEAMSCHED, PICKS, STANDINGS, ODDS]],
   ["Analytics", [NHLPLUS, TRENDS, EDGE, PLAYERS]],
   ["Explore", [MAP]],
 ];

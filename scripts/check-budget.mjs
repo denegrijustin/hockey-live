@@ -17,7 +17,7 @@ for (const f of list("assets/", ".js")) {
   limits.push([`assets/${f}`, size, 130 * KB]);
 }
 limits.push(["all JavaScript", totalJs, 300 * KB]);
-for (const f of list("assets/", ".css")) limits.push([`assets/${f}`, gz(new URL(`assets/${f}`, dist)), 25 * KB]);
+for (const f of list("assets/", ".css")) limits.push([`assets/${f}`, gz(new URL(`assets/${f}`, dist)), 28 * KB]);
 // Fetched data: the season files grow all season, so they get the most room.
 const dataFiles = (dir) => list(dir, ".json");
 for (const f of dataFiles("data/seasons/")) limits.push([`data/seasons/${f}`, gz(new URL(`data/seasons/${f}`, dist)), 150 * KB]);

@@ -6,11 +6,12 @@
 .inj-counts li { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-5); font-size: .8125rem; color: var(--text-3); }
 .inj-counts b { font-size: 1rem; color: var(--text-6); font-variant-numeric: tabular-nums; margin-right: 4px; }
 .inj-h { margin: 16px 0 8px; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
-.inj-teams { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-.inj-team { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 12px; text-align: left; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface-5); color: inherit; font: inherit; cursor: pointer; }
+.inj-teams { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.inj-team { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-5); color: inherit; font: inherit; cursor: pointer; }
 .inj-team[aria-pressed="true"] { border-color: var(--mint-5); background: var(--surface-8); }
-.inj-team span { display: grid; line-height: 1.25; }
-.inj-team small { color: var(--text-1); font-size: .75rem; }
+.inj-team b { font-size: .8125rem; }
+@media (pointer: coarse) { .inj-team { min-height: 44px; } }
+.inj-team small { color: var(--text-1); font-size: .75rem; font-variant-numeric: tabular-nums; }
 .inj-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0 14px; }
 .inj-tools select { min-height: 44px; max-width: 100%; }
 .inj-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-3); border-radius: 10px; overflow: hidden; }
@@ -94,3 +95,20 @@
 html[data-motion="off"] .inj-figure.play .fig-pulse * { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .inj-figure.play .fig-pulse * { animation: none !important; } }
 .inj-head.blank { display: inline-grid; place-items: center; border-radius: 50%; background: var(--surface-8); color: var(--text-3); font-size: .75rem; font-weight: 700; }
+
+/* The injury card's cartoon */
+.inj-mascot svg { overflow: visible; }
+.inj-art img { display: block; width: 150px; height: auto; max-width: none; }
+.inj-mascot .m-stage { fill: color-mix(in srgb, #ffffff 22%, transparent); }
+.inj-mascot .m-ice { fill: color-mix(in srgb, #bfe0f3 70%, transparent); }
+.inj-mascot .fig-zone * { fill-opacity: .5; }
+.inj-mascot .m-q { fill: var(--text-5); }
+.inj-mascot .m-bolts, .inj-mascot .m-sweat, .inj-mascot .m-pack { transform-box: fill-box; transform-origin: center; }
+.inj-mascot.play .m-bolts { animation: m-zap .5s ease-in-out 3; }
+.inj-mascot.play .m-sweat { animation: m-drip 1.2s ease-in 3; }
+.inj-mascot.play .m-pack { animation: m-wobble .9s ease-in-out 3; }
+@keyframes m-zap { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(1.18); } }
+@keyframes m-drip { 0% { opacity: 0; transform: translateY(-4px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(14px); } }
+@keyframes m-wobble { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+html[data-motion="off"] .inj-mascot.play :is(.m-bolts, .m-sweat, .m-pack) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .inj-mascot.play :is(.m-bolts, .m-sweat, .m-pack) { animation: none !important; } }

@@ -17,6 +17,7 @@ import { refreshMoneyPuck, keyOf as mpKey } from "./lib/moneypuck-refresh.mjs";
 import { emptyPicks, picksKey, refreshPicks } from "./lib/picks-refresh.mjs";
 import { isCurrentSnapshot } from "./lib/picks.mjs";
 import { analyzeSeason } from "./lib/model.mjs";
+import { buildInjuryReport } from "./lib/injuries.mjs";
 import { seasonYear } from "./lib/moneypuck.mjs";
 const API = "https://api-web.nhle.com/v1";
 const STATS_API = "https://api.nhle.com/stats/rest/en";
@@ -90,6 +91,25 @@ async function refreshSeason(season, env) {
   if (data.games.length < 100) throw Error("Incomplete NHL season");
   await env.TEAM_STATS.put(`dashboard-season-${season}`, JSON.stringify(data));
   return data;
+}
+// ---- Injury report ----
+// ESPN's NHL injury feed, each player's impact judged from NHL box-score production (this season, else last), cached in KV for ten minutes.
+const ESPN_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries";
+const injuriesKey = (season) => `injuries-v1-${season}`;
+async function refreshInjuries(season, env) {
+  const prev = season - 10001; // 20262027 -> 20252026
+  const [espnResponse, skaters, goalies, prevSkaters, prevGoalies] = await Promise.all([
+    fetch(ESPN_INJURIES, { signal: AbortSignal.timeout(15000) }),
+    statsGet("skater", season, 2000).catch(() => []),
+    statsGet("goalie", season, 500).catch(() => []),
+    statsGet("skater", prev, 2000).catch(() => []),
+    statsGet("goalie", prev, 500).catch(() => []),
+  ]);
+  if (!espnResponse.ok) throw Error(`ESPN returned ${espnResponse.status}`);
+  const report = buildInjuryReport({ espn: await espnResponse.json(), teams, season, today: new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" }), skaters, goalies, prevSkaters, prevGoalies });
+  if (!report.items.length) throw Error("ESPN returned no injuries");
+  await env.TEAM_STATS.put(injuriesKey(season), JSON.stringify(report));
+  return report;
 }
 // ---- Picks (moneyline and puck line) ----
 // Picks are logged once, before the puck drops, from the NHL's partner odds feed and the model, then graded after the game (see lib/picks.mjs).
@@ -300,6 +320,14 @@ async function handle(request, env, ctx) {
           // ESPN is optional; clients fall back to the schedule page.
           return json({ date, games: {} }, 200, 60);
         }
+      }
+      if ((match = url.pathname.match(/^\/api\/injuries\/(20\d{6})$/))) {
+        const season = Number(match[1]);
+        const cached = await env.TEAM_STATS.get(injuriesKey(season), { type: "json" });
+        const age = cached ? Date.now() - Date.parse(cached.updatedAt) : Infinity;
+        if (cached && age < 600000) return json(cached, 200, 120);
+        if (cached) { background(injuriesKey(season), () => refreshInjuries(season, env), ctx); return json({ ...cached, stale: true }, 200, 60); }
+        return json(await refreshInjuries(season, env), 200, 120);
       }
       if ((match = url.pathname.match(/^\/api\/picks\/(20\d{6})$/))) {
         const season = Number(match[1]);

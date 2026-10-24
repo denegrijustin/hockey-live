@@ -6,6 +6,7 @@ import "./styles.css";
 import "./nav.css";
 import "./scoreboard.css";
 import "./picks.css";
+import "./injuries.css";
 import "./team-schedule.css";
 import "./motion.css";
 import { initMotion } from "./motion";

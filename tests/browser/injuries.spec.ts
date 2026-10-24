@@ -167,7 +167,7 @@ test("the player's face sits on the injury figure's head", async ({ page }) => {
 });
 
 test("the injury cartoon wears the team's colours, and a goalie is in pads with a mask", async ({ page }) => {
-  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", team: "TOR" } : k === 1 ? { ...i, pos: "D" } : i)) };
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", team: "TOR" } : k === 1 ? { ...i, pos: "D", team: "TOR" } : i)) };
   await open(page, rep);
   await page.getByLabel("Team", { exact: true }).selectOption("all");
   const cards = page.getByTestId("injury");
@@ -181,11 +181,13 @@ test("the injury cartoon wears the team's colours, and a goalie is in pads with 
   expect(await skater.locator("image").first().getAttribute("href")).toMatch(/\/logos\//);
 });
 
-test("an Edmonton goalie gets the finished illustration", async ({ page }) => {
-  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G" } : i)) };
+test("Edmonton players get the finished illustration that matches where they are hurt", async ({ page }) => {
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null; kind: string; comment: string; detail: string | null; side: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", kind: "Undisclosed", comment: "", detail: null, side: null } : k === 1 ? { ...i, pos: "C", kind: "Ankle", comment: "", detail: null, side: null } : i)) };
   await open(page, rep);
   const art = page.getByTestId("inj-art");
-  await expect(art).toHaveCount(1);
-  await expect(art).toBeVisible();
-  expect(await art.evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(100);
+  await expect(art).toHaveCount(2);
+  const srcs = await art.evaluateAll((els) => els.map((e) => (e as HTMLImageElement).getAttribute("src")).sort());
+  expect(srcs).toEqual(["/injury/oilers-goalie.webp", "/injury/oilers-skater-ankle.webp"]);
+  await expect(art.first()).toBeVisible();
+  expect(await art.first().evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(100);
 });

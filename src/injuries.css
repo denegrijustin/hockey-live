@@ -98,7 +98,7 @@ html[data-motion="off"] .inj-figure.play .fig-pulse * { animation: none !importa
 
 /* The injury card's cartoon */
 .inj-mascot svg { overflow: visible; }
-.inj-art img { display: block; max-width: 100%; height: auto; }
+.inj-art img { display: block; width: 150px; height: auto; max-width: none; }
 .inj-mascot .m-stage { fill: color-mix(in srgb, #ffffff 22%, transparent); }
 .inj-mascot .m-ice { fill: color-mix(in srgb, #bfe0f3 70%, transparent); }
 .inj-mascot .fig-zone * { fill-opacity: .5; }

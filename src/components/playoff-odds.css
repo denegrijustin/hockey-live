@@ -2,31 +2,56 @@
 .po-note { color: var(--muted); font-size: 0.75rem; line-height: 1.5; margin: 6px 0 14px; max-width: 70ch; }
 .po-loading { color: var(--amber); font-size: 0.8125rem; padding: 20px 0; }
 .po-conf { min-width: 0; margin-bottom: 22px; }
-.po-conf h3 { margin: 0 0 8px; font-size: 0.875rem; }
-.po-grid {
-  overflow-x: auto; max-width: 100%;
-  border: 1px solid var(--line); border-radius: 8px;
-  scrollbar-color: var(--line-2) var(--surface-6); scrollbar-width: thin;
-  overscroll-behavior-x: contain;
-}
-.po-table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 760px; font-size: 0.6875rem; white-space: nowrap; }
-.po-table th, .po-table td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--surface-7); font-variant-numeric: tabular-nums; }
-.po-table thead th { color: var(--muted); font-weight: 600; font-size: 0.6875rem; background: var(--surface-4); position: sticky; top: 0; }
-.po-table th.po-team, .po-table td.po-team {
-  position: sticky; left: 0; z-index: 2; text-align: left; background: var(--surface-4);
-  min-width: 128px; border-right: 1px solid var(--line);
-}
-.po-table thead th.po-team { z-index: 3; background: var(--surface-4); }
-.po-team-cell { display: flex; align-items: center; gap: 7px; font-weight: 600; }
-.po-team-cell img { width: 22px; height: 22px; flex: none; }
-.po-team-cell span { overflow: hidden; text-overflow: ellipsis; }
+.po-conf h3 { margin: 0 0 8px; font-size: 0.9375rem; display: flex; align-items: center; gap: 10px; }
+.po-conf-logo { width: 84px; height: auto; flex: none; }
+/* The table always fits the screen: no sideways scrolling. On a phone the record and points move under the team name and the headings shorten. */
+.po-grid { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.po-table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: auto; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.po-table th, .po-table td { padding: 6px 6px; text-align: center; border-bottom: 1px solid var(--surface-7); }
+.po-table thead th { color: var(--muted); font-weight: 600; font-size: 0.6875rem; background: var(--surface-4); }
+.po-table th.po-team, .po-table td.po-team { text-align: left; background: var(--surface-4); border-right: 1px solid var(--line); }
+.po-team-cell { display: flex; align-items: center; gap: 7px; font-weight: 600; min-width: 0; }
+.po-team-cell > img { width: 22px; height: 22px; flex: none; }
+.po-name { display: grid; min-width: 0; line-height: 1.25; }
+.po-sub { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 0.6875rem; font-weight: 500; }
+.po-div-logo { width: 32px; height: auto; flex: none; }
+.po-line { display: none; }
+.po-legend { display: none; margin: 6px 2px 0; color: var(--muted); font-size: 0.6875rem; line-height: 1.4; }
+.po-short { display: none; }
 .po-accent { width: 3px; align-self: stretch; border-radius: 2px; flex: none; }
-.po-cell { color: var(--text-5); background: rgba(123, 225, 198, calc(var(--p, 0) * 0.55)); min-width: 42px; }
+.po-cell { color: var(--text-5); background: rgba(123, 225, 198, calc(var(--p, 0) * 0.55)); }
 .po-cell.po-zero { color: var(--line-4); }
 .po-cell.po-make { font-weight: 700; }
 .po-cell.po-first { box-shadow: inset 2px 0 0 var(--amber), inset -2px 0 0 var(--amber); font-weight: 700; background: rgba(233, 198, 125, calc(var(--p, 0) * 0.6)); }
 .po-table thead th.po-first { color: var(--amber); box-shadow: inset 2px 0 0 var(--amber), inset -2px 0 0 var(--amber); }
 .po-pres { background: rgba(233, 198, 125, calc(var(--p, 0) * 0.45)); }
-.po-sub { color: var(--muted); font-size: 0.6875rem; }
 .po-cut td { border-bottom: 2px dashed var(--line-2); }
-@media (max-width: 480px) { .po-table th.po-team, .po-table td.po-team { min-width: 104px; } }
+/* narrower than a wide desktop: short headings, and the full names only where they fit */
+@media (max-width: 1100px) {
+  .po-legend { display: block; }
+  .po-long { display: none; }
+  .po-short { display: inline; }
+  .po-table th, .po-table td { padding: 6px 4px; }
+}
+/* phone and small tablet: record and points go under the name */
+@media (max-width: 760px) {
+  .po-rec { display: none; }
+  .po-table thead th { letter-spacing: 0; text-transform: none; }
+  .po-line { display: inline; white-space: nowrap; }
+  .po-sub { flex-wrap: wrap; row-gap: 0; }
+  .po-table th, .po-table td { padding: 6px 2px; font-size: 0.6875rem; }
+  .po-table th.po-team, .po-table td.po-team { padding-left: 6px; }
+  .po-team-cell { gap: 5px; }
+}
+@media (max-width: 400px) {
+  .po-proj, .po-ptsword { display: none; }
+  .po-table th, .po-table td { padding-left: 1px; padding-right: 1px; }
+  .po-team-cell { gap: 4px; }
+  .po-team-cell > img { width: 18px; height: 18px; }
+  .po-table th.po-team, .po-table td.po-team { padding-left: 4px; }
+  .po-name b { font-size: 0.6875rem; }
+}
+@media (max-width: 480px) {
+  .po-div-logo { width: 24px; }
+  .po-team-cell > img { width: 20px; height: 20px; }
+}

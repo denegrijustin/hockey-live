@@ -123,7 +123,7 @@ export function IntermissionRink({ game, home, away, compact = false }: { game: 
             <rect x="5.5" y="38.5" width="5.5" height="8" rx="1" className="int-net" />
             <rect x="189" y="38.5" width="5.5" height="8" rx="1" className="int-net" />
           </g>
-          <LogoImage id={home.id} x={89} y={31.5} size={22} />
+          <LogoImage id={home.id} x={89} y={31.5} size={22} bare />
         </g>
         <rect x="0.6" y="36" width="4.4" height="13" rx="0.8" className="int-gate" />
         {!still && (

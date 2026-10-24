@@ -187,8 +187,8 @@ export function GameOverlay({
       <details className="game-center-section" open>
         <summary>Starting goalies <span>+</span></summary>
         <GoalieComparison game={game} away={away} home={home} />
-        <GameInjuries away={away} home={home} season={game.season} />
       </details>
+      <GameInjuries away={away} home={home} season={game.season} />
       <GameCenterAnalytics game={game} away={away} home={home} onClose={onClose} />
       <details className="game-center-section">
         <summary>Player leaders and trends <span>+</span></summary>

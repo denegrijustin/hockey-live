@@ -33,19 +33,26 @@ function Side({ team, items }: { team: Team; items: Item[] }) {
   );
 }
 
-/** Who is hurt on each side of this game, how serious it is, when they may be back, and how much the team misses them (from earlier games, else last season). */
+/**
+ * Who is hurt on each side of this game, how serious it is, when they may be back, and how much the team misses them (from earlier games, else last season).
+ * An expandable section, closed until asked for, so it never crowds out the rest of the card or the Game Center.
+ */
 export function GameInjuries({ away, home, season }: { away: Team; home: Team; season: number }) {
   const { data, error } = useFeed<Report>(`/api/injuries/${season}`, 600_000);
-  if (!data) return error ? <p className="gi-note" data-testid="game-injuries">The injury report is unavailable right now.</p> : <p className="gi-note" role="status" data-testid="game-injuries">Loading injuries…</p>;
-  const of = (t: Team) => data.items.filter((i) => i.team === t.id);
+  const of = (t: Team) => (data?.items ?? []).filter((i) => i.team === t.id);
+  const summary = data ? `${away.id} ${of(away).length} · ${home.id} ${of(home).length} out` : error ? "unavailable" : "loading…";
   return (
-    <section className="game-injuries" data-testid="game-injuries" aria-label={`Injuries: ${away.name} and ${home.name}`}>
-      <h3 className="gi-title">Injuries</h3>
-      <div className="gi-grid">
-        <Side team={away} items={of(away)} />
-        <Side team={home} items={of(home)} />
-      </div>
-      <p className="gi-note">Impact is judged on the player’s earlier games this season, or last season if he has few. Source: ESPN. Return dates are estimates.</p>
-    </section>
+    <details className="game-center-section game-injuries" data-testid="game-injuries">
+      <summary>Injuries <em>{summary}</em><span aria-hidden="true">+</span></summary>
+      {!data ? <p className="gi-note" role={error ? undefined : "status"}>{error ? "The injury report is unavailable right now." : "Loading injuries…"}</p> : (
+        <>
+          <div className="gi-grid">
+            <Side team={away} items={of(away)} />
+            <Side team={home} items={of(home)} />
+          </div>
+          <p className="gi-note">Impact is judged on the player’s earlier games this season, or last season if he has few. Source: ESPN. Return dates are estimates.</p>
+        </>
+      )}
+    </details>
   );
 }

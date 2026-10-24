@@ -86,11 +86,10 @@ export function TeamComparison({ away, home, season }: {
   return (
     <div className="cmp matchup-comparison" aria-label={`${away.name} versus ${home.name} matchup comparison`}>
       <div className="comparison-title">
-        <div><p className="eyebrow">CROSSOVER ENGINE</p><h3>{teamA.short} vs. {teamB.short}</h3></div>
-        <button type="button" className="swap-teams" onClick={() => setSwapped((value) => !value)}>⇄ Swap sides</button>
+        <div><p className="eyebrow">CROSSOVER ENGINE</p><h3>{teamA.short} offense vs. {teamB.short} defense</h3></div>
+        <button type="button" className="swap-teams" aria-label={`Swap sides: show ${teamB.short} offense vs. ${teamA.short} defense`} title={`Show ${teamB.short} offense vs. ${teamA.short} defense`} onClick={() => setSwapped((value) => !value)}>⇄ Swap sides</button>
       </div>
       <Crossover offenseTeam={teamA} defenseTeam={teamB} snapshot={data} />
-      <Crossover offenseTeam={teamB} defenseTeam={teamA} snapshot={data} />
       <p className="cmp-note comparison-source">
         Rank comparisons, not predictions. Shared ranks use unrounded values across {data.poolSize} eligible teams. Higher is better except goals and shots allowed.
         <br />Source: {data.source} · {seasonLabel(data.season)} · updated {new Date(data.updatedAt).toLocaleString()}{data.stale ? " · saved snapshot (live refresh unavailable)" : ""}

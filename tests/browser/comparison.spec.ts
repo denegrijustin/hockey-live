@@ -16,10 +16,16 @@ test("rank line, crossover comparison at 320px, team swapping and ESPN link", as
   const dialog = page.locator("dialog.game-dialog");
   const cmp = dialog.locator(".matchup-comparison");
   await expect(cmp.locator(".crossover-row").first()).toBeVisible();
+  // One view at a time: offense against defense, and Swap sides is the way to the other direction.
+  await expect(cmp.locator(".crossover")).toHaveCount(1);
+  const firstView = await cmp.locator(".crossover").getAttribute("aria-label");
   await expect(cmp).toContainText("Rank comparisons, not predictions");
   const before = await cmp.locator(".comparison-title h3").innerText();
-  await cmp.getByRole("button", { name: "⇄ Swap sides" }).click();
+  await cmp.getByRole("button", { name: /Swap sides/ }).click();
   await expect(cmp.locator(".comparison-title h3")).not.toHaveText(before);
+  await expect(cmp.locator(".crossover")).toHaveCount(1);
+  expect(await cmp.locator(".crossover").getAttribute("aria-label")).not.toBe(firstView);
+  await expect(cmp.locator(".comparison-title h3")).toContainText(/offense vs\. .* defense/);
   const left = await cmp.locator(".metric-offense").first().boundingBox();
   const right = await cmp.locator(".metric-defense").first().boundingBox();
   expect(left!.x).toBeLessThan(right!.x);

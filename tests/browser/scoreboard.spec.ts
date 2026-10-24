@@ -108,6 +108,27 @@ test.describe("scoreboard home", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
   });
 
+  test("each completed game shows both teams' league rank, and an upset (the underdog won) stands out", async ({ page }) => {
+    // Seattle has been winning and Vancouver losing, so Vancouver beating Seattle today is the upset; Boston-Toronto is not.
+    const history = Array.from({ length: 8 }, (_, k) => [game(9300 + k, -9 + k, "SEA", "OTT", "FINAL", [4, 1]), game(9320 + k, -9 + k, "VAN", "MTL", "FINAL", [1, 4])]).flat();
+    await open(page, "/", history);
+    const strip = page.getByTestId("sb-done");
+    const chip = (id: number) => strip.locator(`[data-game-id="${id}"]`);
+    await expect(chip(9205).locator(".sb-rank")).toHaveCount(2);
+    await expect(chip(9205).locator(".sb-rank").first()).toHaveText(/^#\d+$/);
+    await expect(chip(9205)).toHaveAttribute("data-upset", "1");
+    await expect(chip(9205).locator(".sb-upset-tag")).toHaveText("UPSET");
+    await expect(chip(9203)).toHaveAttribute("data-upset", "0");
+    await expect(chip(9203).locator(".sb-upset-tag")).toHaveCount(0);
+    // The upset is visibly different: an amber border, not the plain one.
+    const [plain, hot] = await Promise.all([chip(9203).evaluate((e) => getComputedStyle(e).borderTopColor), chip(9205).evaluate((e) => getComputedStyle(e).borderTopColor)]);
+    expect(hot).not.toBe(plain);
+    // The cards carry the rank too, and the upset flag on a finished game's card.
+    await page.getByRole("group", { name: "Show games by status" }).getByRole("button", { name: /completed/ }).click();
+    await expect(page.locator(".sb-row.upset-won")).toHaveCount(1);
+    await expect(page.locator(".sb-row .sb-rank").first()).toHaveText(/^#\d+$/);
+  });
+
   test("the completed strip does not push a 360px phone sideways", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await open(page);

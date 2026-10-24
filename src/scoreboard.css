@@ -382,11 +382,20 @@ html[data-home] {
 
 /* Completed games: one small chip each, in a compact grid at the top of the board */
 .scoreboard .sb-done .sb-title { margin: 10px 0 6px; }
-.scoreboard .sb-done ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 6px; }
-.scoreboard .sb-done-chip { position: relative; display: grid; gap: 2px; width: 100%; min-height: 44px; padding: 5px 34px 5px 10px; text-align: left; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-5); color: var(--text-4); font: inherit; font-size: .8125rem; cursor: pointer; }
+.scoreboard .sb-done ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 6px; }
+.scoreboard .sb-done-chip { position: relative; display: grid; gap: 2px; width: 100%; min-height: 44px; padding: 5px 62px 5px 10px; text-align: left; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-5); color: var(--text-4); font: inherit; font-size: .8125rem; cursor: pointer; }
 .scoreboard .sb-done-t { display: flex; align-items: center; gap: 6px; min-width: 0; line-height: 1.25; }
 .scoreboard .sb-done-t b { font-weight: 600; }
 .scoreboard .sb-done-t i { margin-left: auto; font-style: normal; font-variant-numeric: tabular-nums; }
 .scoreboard .sb-done-t.win b, .scoreboard .sb-done-t.win i { color: var(--text-6); font-weight: 800; }
-.scoreboard .sb-done-chip em { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: .6875rem; font-weight: 700; color: var(--text-1); letter-spacing: .04em; }
+.scoreboard .sb-done-end { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: grid; justify-items: end; gap: 2px; }
+.scoreboard .sb-done-chip em { font-style: normal; font-size: .6875rem; font-weight: 700; color: var(--text-1); letter-spacing: .04em; }
 @media (min-width: 1100px) { .scoreboard .sb-done ul { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } .scoreboard .sb-done-chip { min-height: 38px; padding-top: 3px; padding-bottom: 3px; } }
+
+/* League rank beside each team, and the upset flag: the underdog won, so the chip and card stand out in amber */
+.scoreboard .sb-rank { margin-left: 4px; color: var(--text-1); font-size: .6875rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scoreboard .sb-done-t .sb-rank { margin-left: 0; }
+.scoreboard .sb-upset-tag { padding: 1px 6px; border-radius: 999px; background: var(--amber-5); color: var(--surface-1); font-size: .625rem; font-weight: 800; letter-spacing: .06em; line-height: 1.4; }
+.scoreboard .sb-row .sb-upset-tag { margin-left: 8px; }
+.scoreboard .sb-done-chip.upset { border-color: var(--amber-5); background: color-mix(in srgb, var(--amber-5) 14%, var(--surface-5)); box-shadow: inset 3px 0 0 var(--amber-5); }
+.scoreboard .sb-row.upset-won { border-color: var(--amber-5); box-shadow: inset 3px 0 0 var(--amber-5); }

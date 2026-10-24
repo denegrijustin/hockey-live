@@ -23,7 +23,7 @@ async function open(page: Page, url = "/", extra: any[] = []) {
 test.describe("scoreboard home", () => {
   test("opens on the day's games with win probability and none of the schedule controls", async ({ page }) => {
     await open(page);
-    await expect(page.locator(".sb-row")).toHaveCount(5);
+    await expect(page.locator(".sb-row")).toHaveCount(3);
     await expect(page.locator(".sb-prob")).toHaveCount(3); // the finals have none
     await expect(page.locator(".control-dock")).toHaveCount(0);
     await expect(page.locator(".game-card")).toHaveCount(0);
@@ -74,10 +74,10 @@ test.describe("scoreboard home", () => {
     await expect(bar.getByRole("button", { name: /1 in progress/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: /2 completed/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: /2 upcoming/ })).toBeVisible();
-    // Sections, in the order the board reads: the live game is either brewing an upset or in progress, then upcoming, then completed.
+    // Sections, in the order the board reads: the live game is either brewing an upset or in progress, then upcoming. The finals are a compact strip above them.
     const names = await page.locator(".sb-group").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
-    expect(names.at(-2)).toBe("Upcoming");
-    expect(names.at(-1)).toBe("Completed");
+    expect(names.at(-1)).toBe("Upcoming");
+    expect(names).not.toContain("Completed");
     expect(["Upset brewing", "In progress"]).toContain(names[0]);
     // One tap on Completed: only the finals, each already expanded.
     await bar.getByRole("button", { name: /2 completed/ }).click();
@@ -86,11 +86,33 @@ test.describe("scoreboard home", () => {
     await expect(bar.getByRole("button", { name: /2 completed/ })).toHaveAttribute("aria-pressed", "true");
     // Tapping it again brings the whole board back.
     await bar.getByRole("button", { name: /2 completed/ }).click();
-    await expect(page.locator(".sb-row")).toHaveCount(5);
+    await expect(page.locator(".sb-row")).toHaveCount(3);
     await expect(page.getByTestId("key-stats")).toHaveCount(0);
     await bar.getByRole("button", { name: /2 upcoming/ }).click();
     await expect(page.locator(".sb-row.soon")).toHaveCount(2);
     await expect(page.locator(".sb-row.final")).toHaveCount(0);
+  });
+
+  test("completed games are a compact strip at the top of the board, one chip each, and a chip opens the game center", async ({ page }) => {
+    await open(page);
+    const strip = page.getByTestId("sb-done");
+    await expect(strip).toBeVisible();
+    await expect(strip.locator("button")).toHaveCount(2);
+    // Above the live and upcoming sections, and the chips are small (one short row each).
+    const [stripBox, firstGroup] = await Promise.all([strip.boundingBox(), page.locator(".sb-group").first().boundingBox()]);
+    expect(stripBox!.y).toBeLessThan(firstGroup!.y);
+    expect((await strip.locator("button").first().boundingBox())!.height).toBeLessThanOrEqual(72);
+    await expect(strip.locator("button").first()).toContainText(/F(\/OT|\/SO)?$/);
+    await expect(page.locator(".sb-row.final")).toHaveCount(0); // no full card for them down the page
+    await strip.locator("button").first().click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+  });
+
+  test("the completed strip does not push a 360px phone sideways", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await open(page);
+    await expect(page.getByTestId("sb-done")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
   });
 
   test("games sit in puck-drop slots, the most watchable first, and each shows its watchability", async ({ page }) => {

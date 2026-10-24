@@ -3483,13 +3483,13 @@ select,
 }
 .int-boards { fill: var(--text-6); stroke: var(--line-3); stroke-width: 1.2; }
 .int-kick { fill: none; stroke: var(--amber-4); stroke-width: 1.6; }
-.int-ice { fill: var(--text-3); }
+.int-ice { fill: #eef5fa; } /* ice is white in every colour mode */
 .int-gate { fill: var(--surface-6); stroke: var(--line-3); stroke-width: 0.5; }
-.int-scuffs path { fill: none; stroke: var(--text-5); stroke-width: 0.5; stroke-linecap: round; opacity: 0.8; }
+.int-scuffs path { fill: none; stroke: #a9bccb; stroke-width: 0.5; stroke-linecap: round; opacity: 0.85; }
 /* the fresh, glossy ice, laid down along the Zamboni's route as it goes */
 .int-fresh {
   fill: none;
-  stroke: var(--text-6);
+  stroke: #ffffff;
   stroke-width: 14;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -3498,14 +3498,14 @@ select,
 }
 .int-fresh.done { stroke-dashoffset: 0; }
 .int-marks { opacity: 0.9; }
-.int-goal { stroke: var(--red-3); stroke-width: 0.5; fill: none; }
-.int-blue { stroke: var(--line-5); stroke-width: 2.4; fill: none; }
-.int-red { stroke: var(--red-3); stroke-width: 1.4; stroke-dasharray: 3 1.4; fill: none; }
-.int-circle { fill: none; stroke: var(--red-3); stroke-width: 0.6; }
-.int-circle.blue { stroke: var(--line-5); stroke-width: 0.9; }
-.int-dot { fill: var(--red-3); }
-.int-crease { fill: color-mix(in srgb, var(--text-1) 60%, transparent); stroke: var(--red-3); stroke-width: 0.5; }
-.int-net { fill: color-mix(in srgb, var(--overlay) 80%, transparent); stroke: var(--red-3); stroke-width: 0.7; }
+.int-goal { stroke: #d6293e; stroke-width: 0.5; fill: none; }
+.int-blue { stroke: #2f6fb5; stroke-opacity: .75; stroke-width: 2.4; fill: none; }
+.int-red { stroke: #d6293e; stroke-width: 1.4; stroke-dasharray: 3 1.4; fill: none; }
+.int-circle { fill: none; stroke: #d6293e; stroke-width: 0.6; }
+.int-circle.blue { stroke: #2f6fb5; stroke-width: 0.9; }
+.int-dot { fill: #d6293e; }
+.int-crease { fill: #cfe3f3; stroke: #d6293e; stroke-width: 0.5; }
+.int-net { fill: #dfe7ee; stroke: #d6293e; stroke-width: 0.7; }
 .int-zshadow { fill: color-mix(in srgb, var(--surface-6) 28%, transparent); }
 .int-zbody { fill: var(--z-body, var(--amber-4)); stroke: var(--z-edge, var(--amber-2)); stroke-width: 0.5; }
 .int-tire { fill: var(--surface-5); }
@@ -3535,13 +3535,13 @@ select,
 }
 .ice-view .mini-heading { margin: 0 0 6px; }
 .ice-rink { display: block; width: 100%; height: auto; aspect-ratio: 210 / 95; }
-.ice-sheet { fill: var(--text-4); stroke: var(--line-3); stroke-width: 1.4; }
+.ice-sheet { fill: #eef5fa; stroke: var(--line-3); stroke-width: 1.4; }
 .ice-danger { fill: color-mix(in srgb, var(--red-3) 13%, transparent); stroke: color-mix(in srgb, var(--red-3) 40%, transparent); stroke-width: 0.4; stroke-dasharray: 2 1.6; }
 .ice-red { stroke: var(--red-3); stroke-width: 1.4; stroke-dasharray: 3 1.4; fill: none; }
-.ice-blue { stroke: var(--line-5); stroke-width: 2; fill: none; }
+.ice-blue { stroke: #2f6fb5; stroke-opacity: .75; stroke-width: 2; fill: none; }
 .ice-goalline { stroke: var(--red-3); stroke-width: 0.5; fill: none; }
 .ice-mark { fill: none; stroke: var(--red-3); stroke-width: 0.5; opacity: 0.7; }
-.ice-mark.blue { stroke: var(--line-5); }
+.ice-mark.blue { stroke: #2f6fb5; }
 .ice-net { fill: #fff; stroke: var(--red-3); stroke-width: 0.7; }
 .ice-shot { fill: var(--c); stroke: rgb(0 0 0 / 55%); stroke-width: 0.35; opacity: 0.9; }
 .ice-shot.miss { fill: transparent; stroke: var(--c); stroke-width: 0.7; opacity: 0.85; }

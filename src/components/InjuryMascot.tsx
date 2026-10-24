@@ -30,6 +30,11 @@ export function poseFor(goalie: boolean, zone: string): keyof typeof POSES {
   return "skater-unknown";
 }
 
+/** Teams with a hand-drawn set in their own jersey (public/injury/teams/<ID>/<pose>.webp). Utah wears Arizona's. Everyone else gets the neutral drawing, recoloured. */
+const DRAWN = new Set(["ANA", "ARI", "BOS", "BUF", "CAR", "CBJ", "CGY", "CHI", "DAL", "DET", "EDM", "FLA", "LAK", "MIN", "NJD", "NSH", "NYI", "NYR", "OTT", "PHI", "PIT", "STL", "TBL", "TOR", "VAN", "VGK", "WPG", "WSH"]);
+const ALIAS: Record<string, string> = { UTA: "ARI" };
+export const drawnSet = (team: string) => { const t = ALIAS[team] ?? team; return DRAWN.has(t) ? t : null; };
+
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 const load = (src: string) => new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
 
@@ -65,20 +70,27 @@ async function paint(canvas: HTMLCanvasElement, pose: Pose, team: string) {
  * The injury card's picture: one of ten hand-drawn poses (a skater's head, shoulder, arm, hand, leg or stomach; a goalie's leg or shoulder; or a shrug when the
  * team is not saying), in the team's colours with its logo on the chest. It pops in once when the card scrolls into view.
  */
-export function InjuryMascot({ team, goalie, zone, side, label, size = 160 }: { team: string; goalie: boolean; zone: string; side: "left" | "right" | null; label: string; face?: string | null; size?: number }) {
+export function InjuryMascot({ team, goalie, zone, side, label, size = 150 }: { team: string; goalie: boolean; zone: string; side: "left" | "right" | null; label: string; face?: string | null; size?: number }) {
   const ref = useRef<HTMLDivElement>(null), canvas = useRef<HTMLCanvasElement>(null);
   const seen = useOnScreen(ref, true);
   const [ready, setReady] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const key = poseFor(goalie, zone), pose = POSES[key];
+  const drawn = drawnSet(team);
   useEffect(() => {
+    if (drawn) return;
     let live = true;
     setReady(false);
     if (canvas.current) paint(canvas.current, pose, team).then(() => live && setReady(true)).catch(() => undefined);
     return () => { live = false; };
   }, [key, team]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setLoaded(false); }, [key, drawn]);
+  const shown = drawn ? loaded : ready;
   return (
-    <div ref={ref} className={`inj-figure inj-mascot inj-pose${seen && ready ? " play" : ""}${ready ? " ready" : ""}`} data-zone={zone} data-side={side ?? ""} data-goalie={goalie ? "1" : "0"} data-pose={key} role="img" aria-label={`Injury location: ${label}`}>
-      <canvas ref={canvas} style={{ width: size }} data-testid="inj-art" />
+    <div ref={ref} className={`inj-figure inj-mascot inj-pose${seen && shown ? " play" : ""}${shown ? " ready" : ""}`} data-zone={zone} data-side={side ?? ""} data-goalie={goalie ? "1" : "0"} data-pose={key} role="img" aria-label={`Injury location: ${label}`}>
+      {drawn
+        ? <img src={`/injury/teams/${drawn}/${key}.webp`} alt="" style={{ height: size }} decoding="async" onLoad={() => setLoaded(true)} data-testid="inj-art" data-set="team" />
+        : <canvas ref={canvas} style={{ width: size }} data-testid="inj-art" data-set="neutral" />}
     </div>
   );
 }

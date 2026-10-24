@@ -117,8 +117,21 @@ test("each card's drawing follows where the player is hurt: the named part, or a
   expect((await art("Jeff Malott")).pose).toBe("skater-unknown"); // illness
 });
 
+test("teams with their own drawn set use it; Utah wears Arizona's; the others get the recoloured neutral drawing", async ({ page }) => {
+  const teamsOf = ["EDM", "UTA", "COL"];
+  const base = report.items[0] as object;
+  await open(page, { ...report, items: teamsOf.map((team, k) => ({ ...base, id: "t" + k, name: "Player " + k, team })) });
+  await page.getByLabel("Team", { exact: true }).selectOption("all");
+  const arts = page.getByTestId("inj-art");
+  await expect(arts).toHaveCount(3);
+  await expect(arts.nth(0)).toHaveAttribute("src", /\/injury\/teams\/EDM\//);
+  await expect(arts.nth(1)).toHaveAttribute("src", /\/injury\/teams\/ARI\//);
+  await expect(arts.nth(2)).toHaveAttribute("data-set", "neutral");
+  expect(await arts.nth(0).evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(80);
+});
+
 test("the drawing is painted in the team's colours with its logo, and pops in once", async ({ page }) => {
-  await open(page, { ...report, items: report.items.map((i: object) => ({ ...i, team: "MIN" })) }); // Minnesota's jersey is green
+  await open(page, { ...report, items: report.items.map((i: object) => ({ ...i, team: "COL" })) }); // Colorado has no drawn set yet: the neutral drawing is recoloured to burgundy
   await page.getByLabel("Team", { exact: true }).selectOption("all");
   const fig = page.getByTestId("injury").first().locator(".inj-figure");
   await expect(fig).toHaveClass(/ready/);
@@ -129,7 +142,7 @@ test("the drawing is painted in the team's colours with its logo, and pops in on
     return { navy, opaque };
   });
   expect(px.opaque).toBeGreaterThan(5000);
-  expect(px.navy / px.opaque).toBeLessThan(0.02); // the drawing is navy; on a green team almost none of that blue is left
+  expect(px.navy / px.opaque).toBeLessThan(0.02); // the drawing is navy; on a burgundy team almost none of that blue is left
 });
 
 const withEdm = { ...report, items: report.items.map((i: { team: string }, k: number) => (k < 2 ? { ...i, team: "EDM" } : i)) };
@@ -171,7 +184,7 @@ test.describe("the drawing's motion", () => {
     const fig = page.getByTestId("injury").first().locator(".inj-figure");
     await fig.scrollIntoViewIfNeeded();
     await expect(fig).toHaveClass(/play/);
-    expect(await fig.locator("canvas").evaluate((e) => ({ name: getComputedStyle(e).animationName, count: getComputedStyle(e).animationIterationCount }))).toEqual({ name: "pose-pop", count: "1" });
+    expect(await fig.getByTestId("inj-art").evaluate((e) => ({ name: getComputedStyle(e).animationName, count: getComputedStyle(e).animationIterationCount }))).toEqual({ name: "pose-pop", count: "1" });
   });
 });
 
@@ -179,5 +192,5 @@ test("with motion off nothing animates", async ({ page }) => {
   await open(page);
   const fig = page.getByTestId("injury").first().locator(".inj-figure");
   await fig.scrollIntoViewIfNeeded();
-  expect(await fig.locator("canvas").evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
+  expect(await fig.getByTestId("inj-art").evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
 });

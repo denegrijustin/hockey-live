@@ -80,26 +80,16 @@
 
 /* The body that lights up where the injury is */
 .inj-figure { flex: none; display: grid; place-items: center; }
-.inj-figure svg { display: block; overflow: visible; }
-.fig-body circle, .fig-body path { fill: color-mix(in srgb, var(--text-1) 12%, transparent); stroke: var(--text-1); stroke-width: 1.6; stroke-linejoin: round; opacity: .75; }
-.fig-body .fig-limb { fill: none; stroke-width: 9; stroke-linecap: round; opacity: .35; }
-.fig-body .fig-limb.leg { stroke-width: 12; }
-.fig-q { fill: var(--text-1); font-size: 40px; font-weight: 700; }
-.fig-zone * { fill: var(--red-5); fill-opacity: .6; stroke: var(--red-5); stroke-width: 1.4; }
-.fig-pulse * { fill: none; stroke: var(--red-5); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
-.inj-figure.play .fig-pulse * { animation: zone-pulse 1.1s ease-out 3; }
-@keyframes zone-pulse { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
 .inj-figure-wrap { display: grid; justify-items: center; gap: 2px; text-align: center; }
 .inj-figure-wrap small { font-size: .6875rem; color: var(--text-1); max-width: 7.5rem; line-height: 1.2; }
 .inj-card .inj-mid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
-html[data-motion="off"] .inj-figure.play .fig-pulse * { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { .inj-figure.play .fig-pulse * { animation: none !important; } }
 .inj-head.blank { display: inline-grid; place-items: center; border-radius: 50%; background: var(--surface-8); color: var(--text-3); font-size: .75rem; font-weight: 700; }
 
 /* The injury card's drawn pose */
-.inj-pose canvas { display: block; height: auto; max-width: none; opacity: 0; }
-.inj-pose.ready canvas { opacity: 1; }
-.inj-pose.play canvas { animation: pose-pop .5s ease-out 1; }
+.inj-pose :is(canvas, img) { display: block; height: auto; max-width: none; opacity: 0; }
+.inj-pose img { width: auto; }
+.inj-pose.ready :is(canvas, img) { opacity: 1; }
+.inj-pose.play :is(canvas, img) { animation: pose-pop .5s ease-out 1; }
 @keyframes pose-pop { 0% { opacity: 0; transform: translateY(8px) scale(.94); } 100% { opacity: 1; transform: none; } }
-html[data-motion="off"] .inj-pose.play canvas { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { .inj-pose.play canvas { animation: none !important; } }
+html[data-motion="off"] .inj-pose.play :is(canvas, img) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .inj-pose.play :is(canvas, img) { animation: none !important; } }

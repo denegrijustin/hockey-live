@@ -3,7 +3,7 @@ import type { Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { ordinal } from "../lib/injuries.mjs";
 import { injuryZone } from "../lib/injury-zone.mjs";
-import { InjuryFigure } from "./InjuryFigure";
+import { InjuryMascot } from "./InjuryMascot";
 import { InjuryHeadshot } from "./InjuryHeadshot";
 import { TeamLogo } from "./TeamLogo";
 
@@ -29,7 +29,7 @@ function Side({ team, items }: { team: Team; items: Item[] }) {
                 <span className="gi-name"><b>{i.name}</b>{i.pos ? <small> {i.pos}</small> : null} <span className={`gi-sev ${i.severity.level}`}>{i.severity.label}</span></span>
                 <span className="gi-line">{zone.label !== i.kind ? `${zone.label} · ` : ""}{i.kind} · {i.back.text}</span>
                 <span className={`gi-impact ${i.impact.level ?? "none"}`} title={`Judged on ${basis(i.impact)}`}>{i.impact.label}{i.impact.percentile != null ? ` · ${ordinal(i.impact.percentile)} pct` : ""} <small>({basis(i.impact)})</small></span>
-                <span className="gi-fig"><InjuryFigure zone={zone.zone} side={zone.side} label={zone.label} size={36} face={i.headshot} /></span>
+                <span className="gi-fig"><InjuryMascot team={team.id} goalie={i.pos === "G"} zone={zone.zone} side={zone.side} label={zone.label} size={56} /></span>
               </li>
             );
           })}

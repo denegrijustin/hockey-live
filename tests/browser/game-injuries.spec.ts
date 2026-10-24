@@ -91,7 +91,7 @@ test("in the Game Center the injuries are their own expandable section", async (
   await expect(box.locator('.gi-side[data-team="ANA"]')).toContainText("out");
 });
 
-test("each injured player in a card has his picture and a body figure for the injury", async ({ page }) => {
+test("each injured player in a card has his picture and a drawing of the injury", async ({ page }) => {
   await open(page);
   const row = page.getByTestId("game-injuries").locator('.gi-side[data-team="ANA"] [data-testid="game-injury"]').first();
   await expect(row.getByTestId("inj-headshot")).toHaveAttribute("src", /espncdn\.com/);

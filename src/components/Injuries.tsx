@@ -42,7 +42,7 @@ function Card({ item, teamName }: { item: Item; teamName: string }) {
         <div><dt>Status</dt><dd>{item.status}</dd></div>
         <div><dt>Back</dt><dd>{item.back.text}</dd></div>
       </dl>
-      <div className="inj-figure-wrap"><InjuryMascot team={item.team} goalie={item.pos === "G"} zone={zone.zone} side={zone.side} label={zone.label} face={item.headshot} size={172} /><small>{zone.label}</small></div>
+      <div className="inj-figure-wrap"><InjuryMascot team={item.team} goalie={item.pos === "G"} zone={zone.zone} side={zone.side} label={zone.label} size={160} /><small>{zone.label}</small></div>
       </div>
       <div className="inj-impact" data-level={im.level ?? "none"}>
         <div className="inj-impact-top"><b>{im.label}</b>{im.percentile != null && <span>{ordinal(im.percentile)} percentile</span>}</div>

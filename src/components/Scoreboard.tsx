@@ -64,6 +64,8 @@ interface Props {
   baselineTable?: any;
   sourceSeason: number;
   loading?: boolean;
+  /** Opens the league-wide list of all games with its filters and search. */
+  onBrowse?: () => void;
 }
 
 /**
@@ -87,7 +89,7 @@ function useTick(ms: number) {
   return now;
 }
 
-export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading }: Props) {
+export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading, onBrowse }: Props) {
   const today = useEtToday();
   const days = useMemo(() => [...new Set(games.filter((g) => g.type !== 0).map((g) => g.date))].sort(), [games]);
   // Open on today; on an off day, the next day with games (or the last one, at the end of the season).
@@ -164,6 +166,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
         ))}
       </div>
       </div>
+      {onBrowse && <button type="button" className="sb-browse" onClick={onBrowse}>All games, filters &amp; search <Icon name="chevron" size={16} /></button>}
       <WatchNow games={games} teams={teams} rate={rate} now={now} max={phone ? 3 : 5} onOpen={(g) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }} />
       {loading && !games.length && <Skeleton rows={4} label="Loading the scoreboard" />}
       {!loading && !sections.length && <p className="sb-empty">{status === "all" ? "No games on this day." : "Nothing here on this day."}</p>}

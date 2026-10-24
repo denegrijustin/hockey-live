@@ -78,3 +78,10 @@
   .ts-chip, .ts-jump, .ts-step, .ts-today, .ts-seg button, .ts-pick select { min-height: 34px; }
   .ts-day { min-height: 104px; }
 }
+
+/* Calendar chips name the opponent (abbreviation) beside its logo, so nobody has to know every logo. */
+.ts-abbr { font-weight: 800; color: var(--text-6); letter-spacing: .02em; }
+@media (max-width: 640px) {
+  .ts-gchip .ts-gtext { display: grid; justify-items: center; line-height: 1.15; white-space: normal; text-align: center; }
+  .ts-gchip { min-height: 52px; }
+}

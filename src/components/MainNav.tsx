@@ -12,10 +12,9 @@ interface ViewDef {
 }
 
 const V = (id: string, label: string, icon: IconName, short = label): ViewDef => ({ id, label, short, icon });
-const SCORES = V("scoreboard", "Scoreboard", "games", "Scores");
-const SCHEDULE = V("games", "Schedule", "calendar");
+const SCORES = V("scoreboard", "Home", "games", "Home");
 const PICKS = V("picks", "Picks", "picks");
-const TEAMSCHED = V("teamschedule", "Team schedule", "team", "Team schedule");
+const TEAMSCHED = V("teamschedule", "Schedule", "calendar", "Schedule");
 const STANDINGS = V("standings", "Standings", "standings");
 const TRENDS = V("trends", "Team trends", "trends", "Trends");
 const PLAYERS = V("players", "Players", "players");
@@ -26,16 +25,18 @@ const MAP = V("map", "Imperialism map", "map");
 
 /** Phones: four views in the tab bar, the rest behind More (the HIG caps a tab bar at five). */
 const PRIMARY = [SCORES, STANDINGS, TRENDS, PLAYERS];
-const MORE = [SCHEDULE, TEAMSCHED, PICKS, NHLPLUS, EDGE, ODDS, MAP];
-export const VIEW_IDS = [...PRIMARY, ...MORE].map((v) => v.id);
+const MORE = [TEAMSCHED, PICKS, NHLPLUS, EDGE, ODDS, MAP];
+/** "games" is the league-wide list of all games with filters: reached from Home ("All games, filters & search"), so it has no tab of its own. */
+export const VIEW_IDS = [...[...PRIMARY, ...MORE].map((v) => v.id), "games"];
 /** Desktop: every view, grouped, in a sidebar. */
 const GROUPS: [string, ViewDef[]][] = [
-  ["Dashboard", [SCORES, SCHEDULE, TEAMSCHED, PICKS, STANDINGS, ODDS]],
+  ["Dashboard", [SCORES, TEAMSCHED, PICKS, STANDINGS, ODDS]],
   ["Analytics", [NHLPLUS, TRENDS, EDGE, PLAYERS]],
   ["Explore", [MAP]],
 ];
 
-export function MainNav({ view, setView, liveCount = 0, onRefresh }: { view: string; setView: (id: string) => void; liveCount?: number; onRefresh?: () => void }) {
+export function MainNav({ view: shownView, setView, liveCount = 0, onRefresh }: { view: string; setView: (id: string) => void; liveCount?: number; onRefresh?: () => void }) {
+  const view = shownView === "games" ? "scoreboard" : shownView; // the league-wide list is part of Home
   const wide = useMedia("(min-width: 1100px)");
   const [more, setMore] = useState(false);
   const bar = useRef<HTMLElement>(null);

@@ -115,6 +115,6 @@ test("pulling down from the top refreshes the data; a short pull does not", asyn
 test("hover styling does not stick to the tab bar after a tap", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Standings", exact: true }).tap();
-  const bg = await page.getByRole("button", { name: "Scoreboard", exact: true }).evaluate((e) => getComputedStyle(e).backgroundColor);
+  const bg = await page.getByRole("button", { name: "Home", exact: true }).evaluate((e) => getComputedStyle(e).backgroundColor);
   expect(bg).toBe("rgba(0, 0, 0, 0)");
 });

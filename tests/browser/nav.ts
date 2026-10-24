@@ -10,3 +10,9 @@ export async function goTo(page: Page, name: string) {
   await page.getByRole("button", { name: "More", exact: true }).click();
   await page.getByRole("dialog", { name: "More" }).getByRole("button", { name, exact: true }).click();
 }
+
+/** Opens the league-wide list of all games (with its filters and search) from Home, where it now lives. */
+export async function goToAllGames(page: Page) {
+  await goTo(page, "Home");
+  await page.getByRole("button", { name: /All games, filters/ }).click();
+}

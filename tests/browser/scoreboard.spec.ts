@@ -207,4 +207,11 @@ test.describe("scoreboard home", () => {
     expect(inside).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual((await page.evaluate(() => innerWidth)) + 1);
   });
+
+  test("Home leads to the league-wide list of all games, with its filters and search", async ({ page }) => {
+    await open(page);
+    await page.getByRole("button", { name: /All games, filters/ }).click();
+    await expect(page.locator(".game-card").first()).toBeVisible();
+    await expect(page.locator(".sb-row")).toHaveCount(0);
+  });
 });

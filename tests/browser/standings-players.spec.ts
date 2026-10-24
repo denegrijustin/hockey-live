@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {goTo} from './nav';
+import {goToAllGames} from './nav';
 import { closeTeams, openTeams, teamCount } from "./controls";
 test('standings groups and projected totals work on all screen sizes',async({page},info)=>{
  await page.goto('/?view=games'); await page.getByRole('button',{name:'Standings',exact:true}).click();
@@ -42,7 +42,7 @@ test('Players defaults to My three independently and supports custom teams or Al
  await page.getByRole('button',{name:'My three',exact:true}).click();
  await expect(await teamCount(page)).toHaveText('3');
  await closeTeams(page);
- await goTo(page,'Schedule');
+ await goToAllGames(page);
  await expect(await teamCount(page)).toHaveText('2');
  await openTeams(page);
  await expect(page.getByRole('checkbox',{name:'Florida Panthers',exact:true})).toBeChecked();

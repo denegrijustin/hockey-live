@@ -127,7 +127,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
                   <button key={i.id} type="button" className={`ts-gchip ${i.status}${i.result ? ` r-${i.result}` : ""}`} onClick={() => open(i.game)}
                     aria-label={`${i.home ? "Home against" : "At"} ${teamOf(i.opp).name}, ${i.status === "upcoming" ? time(i.start) : i.status === "live" ? "live" : `${i.result ?? ""} ${i.us} to ${i.them}`}. Open Game Center`}>
                     <TeamLogo id={i.opp} size={20} />
-                    <span className="ts-gtext"><em>{i.home ? "vs" : "@"}</em> {i.status === "upcoming" ? time(i.start).replace(" ", "").toLowerCase() : `${i.result ?? ""} ${i.us}–${i.them}`}</span>
+                    <span className="ts-gtext"><em>{i.home ? "vs" : "@"}</em> <b className="ts-abbr">{i.opp}</b> {i.status === "upcoming" ? time(i.start).replace(" ", "").toLowerCase() : `${i.result ?? ""} ${i.us}–${i.them}`}</span>
                   </button>
                 ))}
               </div>

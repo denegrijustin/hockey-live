@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { closeTeams, filterGames, isPhone, openTeams, filterValue, pickOnlyTeam, selectAllTeams, selectMyThree, teamCount } from "./controls";
-import { goTo } from "./nav";
+import { goToAllGames } from "./nav";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
 test("default teams, league selection, graphs and season navigation", async ({
   page,
@@ -45,7 +45,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
   await expect(page.locator(".trend-panel")).toContainText("Current season only");
   await expect(page.locator(".chart-wrap image")).toHaveCount(3);
-  await goTo(page, "Schedule");
+  await goToAllGames(page);
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
   await expect(page.locator(".game-card").first()).toContainText("FINAL");
   await page.getByRole("button", { name: "Team trends", exact: true }).click();

@@ -24,7 +24,7 @@ async function open(page: Page) {
   await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
   await page.route(`**/data/seasons/${season}.json`, (route) => route.fulfill({ json: snapshot }));
   await page.goto("/");
-  await goTo(page, "Team schedule");
+  await goTo(page, "Schedule");
   await page.getByLabel("Team", { exact: true }).selectOption("TOR");
   await expect(page.getByRole("heading", { name: "Toronto Maple Leafs", level: 1 })).toBeVisible();
 }
@@ -79,6 +79,8 @@ test("the calendar opens on the current month, shows each game on its day, and m
   // Played games carry their result; upcoming ones their time.
   const played = page.locator(`.ts-day[data-date="${etDay(-1)}"] .ts-gchip`);
   if (await played.count()) await expect(played.first()).toContainText(/[WL]|OTL/);
+  // Each game names its opponent next to the logo, so nobody has to know every logo.
+  await expect(page.locator(".ts-gchip .ts-abbr").first()).toHaveText(/^[A-Z]{3}$/);
   await page.getByRole("button", { name: "Next month" }).click();
   await expect(page.getByTestId("ts-month")).toHaveText(monthName(1));
   await page.getByRole("button", { name: "Previous month" }).click();

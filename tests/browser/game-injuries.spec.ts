@@ -14,7 +14,10 @@ const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_Yo
 const report = buildInjuryReport({ espn, teams, today, season, skaters: [...filler, sk(names[0], 8, 9, 8, 50)] });
 const game = { id: 9601, season, type: 2, date: today, start: new Date(Date.now() + 5 * 3600000).toISOString(), state: "FUT", scheduleState: "OK", venue: "Scotiabank Arena", home: "TOR", away: "ANA", homeScore: null, awayScore: null, end: "", broadcasts: [], round: null };
 
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+
 async function open(page: Page, injuries: unknown = report, expand = true) {
+  await page.route("**/a.espncdn.com/**", (route) => route.fulfill({ contentType: "image/png", body: PNG }));
   const snapshot = { season, updatedAt: new Date().toISOString(), source: "fixture", games: [game] };
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
@@ -86,4 +89,13 @@ test("in the Game Center the injuries are their own expandable section", async (
   expect(await box.evaluate((e) => !e.closest(".game-center-section:not(.game-injuries)"))).toBe(true);
   await box.locator("summary").click();
   await expect(box.locator('.gi-side[data-team="ANA"]')).toContainText("out");
+});
+
+test("each injured player in a card has his picture and a body figure for the injury", async ({ page }) => {
+  await open(page);
+  const row = page.getByTestId("game-injuries").locator('.gi-side[data-team="ANA"] [data-testid="game-injury"]').first();
+  await expect(row.getByTestId("inj-headshot")).toHaveAttribute("src", /espncdn\.com/);
+  await expect(row.locator(".inj-figure")).toHaveAttribute("data-zone", /.+/);
+  const [pic, fig] = await Promise.all([row.getByTestId("inj-headshot").boundingBox(), row.locator(".inj-figure").boundingBox()]);
+  expect(pic!.x + pic!.width).toBeLessThanOrEqual(fig!.x); // the picture and the figure do not overlap
 });

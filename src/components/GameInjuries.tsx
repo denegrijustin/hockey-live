@@ -2,9 +2,12 @@ import { useState } from "react";
 import type { Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { ordinal } from "../lib/injuries.mjs";
+import { injuryZone } from "../lib/injury-zone.mjs";
+import { InjuryFigure } from "./InjuryFigure";
+import { InjuryHeadshot } from "./InjuryHeadshot";
 import { TeamLogo } from "./TeamLogo";
 
-type Item = { id: string; name: string; pos: string | null; team: string; kind: string; status: string; severity: { level: string; label: string }; back: { text: string }; impact: { basis: "season" | "last" | "none"; level: "high" | "medium" | "low" | null; label: string; percentile: number | null; gp: number; small?: boolean } };
+type Item = { id: string; name: string; pos: string | null; team: string; headshot: string | null; side: string | null; comment: string; kind: string; status: string; severity: { level: string; label: string }; back: { text: string }; impact: { basis: "season" | "last" | "none"; level: "high" | "medium" | "low" | null; label: string; percentile: number | null; gp: number; small?: boolean } };
 type Report = { items: Item[]; stale?: boolean };
 const SHOWN = 4;
 const basis = (i: Item["impact"]) => (i.basis === "none" ? "no earlier games" : i.basis === "last" ? `${i.gp} GP last season` : i.small ? `${i.gp} GP, small sample` : `${i.gp} GP this season`);
@@ -18,14 +21,18 @@ function Side({ team, items }: { team: Team; items: Item[] }) {
       <h4><TeamLogo id={team.id} size={20} /> {team.short} <span>{items.length ? `${items.length} out${high ? ` · ${high} high-impact` : ""}` : "No injuries reported"}</span></h4>
       {items.length > 0 && (
         <ul>
-          {shown.map((i) => (
-            <li key={i.id} data-testid="game-injury" data-impact={i.impact.level ?? "none"}>
-              <span className="gi-name"><b>{i.name}</b>{i.pos ? <small> {i.pos}</small> : null}</span>
-              <span className={`gi-sev ${i.severity.level}`}>{i.severity.label}</span>
-              <span className="gi-line">{i.kind} · {i.back.text}</span>
-              <span className={`gi-impact ${i.impact.level ?? "none"}`} title={`Judged on ${basis(i.impact)}`}>{i.impact.label}{i.impact.percentile != null ? ` · ${ordinal(i.impact.percentile)} pct` : ""} <small>({basis(i.impact)})</small></span>
-            </li>
-          ))}
+          {shown.map((i) => {
+            const zone = injuryZone(i);
+            return (
+              <li key={i.id} data-testid="game-injury" data-impact={i.impact.level ?? "none"}>
+                <InjuryHeadshot src={i.headshot} name={i.name} size={40} />
+                <span className="gi-name"><b>{i.name}</b>{i.pos ? <small> {i.pos}</small> : null} <span className={`gi-sev ${i.severity.level}`}>{i.severity.label}</span></span>
+                <span className="gi-line">{zone.label !== i.kind ? `${zone.label} · ` : ""}{i.kind} · {i.back.text}</span>
+                <span className={`gi-impact ${i.impact.level ?? "none"}`} title={`Judged on ${basis(i.impact)}`}>{i.impact.label}{i.impact.percentile != null ? ` · ${ordinal(i.impact.percentile)} pct` : ""} <small>({basis(i.impact)})</small></span>
+                <span className="gi-fig"><InjuryFigure zone={zone.zone} side={zone.side} label={zone.label} size={26} /></span>
+              </li>
+            );
+          })}
         </ul>
       )}
       {items.length > SHOWN && <button type="button" className="gi-more" onClick={() => setAll(!all)}>{all ? "Show fewer" : `Show all ${items.length}`}</button>}

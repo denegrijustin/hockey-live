@@ -135,7 +135,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
       { key: "final", title: "Completed", games: dayGames.filter(finished), slots: true },
     ];
     const show = (x: Section) => status === "all" || (status === "live" ? x.key === "upset" || x.key === "live" : x.key === status);
-    return all.filter((x) => x.games.length && show(x));
+    // With every game showing, the finished ones sit in a compact strip at the top instead of full cards at the bottom.
+    return all.filter((x) => x.games.length && show(x) && !(status === "all" && x.key === "final"));
   }, [dayGames, rated, status]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [centerId, setCenterId] = useState<number | null>(null);
@@ -169,6 +170,25 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
       </div>
       {onBrowse && <button type="button" className="sb-browse" onClick={onBrowse}>All games, filters &amp; search <Icon name="chevron" size={16} /></button>}
       <WatchNow games={games} teams={teams} rate={rate} now={now} max={phone ? 3 : 5} onOpen={(g) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }} />
+      {status === "all" && counts.final > 0 && (
+        <div className="sb-done" role="region" aria-label="Completed" data-testid="sb-done">
+          <h2 className="sb-title">Completed <span className="sb-count">{counts.final}</span></h2>
+          <ul>
+            {dayGames.filter(finished).sort((a, b) => b.start.localeCompare(a.start)).map((g) => {
+              const hs = g.homeScore ?? 0, as = g.awayScore ?? 0, tag = g.end && g.end !== "REG" ? `F/${g.end}` : "F";
+              return (
+                <li key={g.id}>
+                  <button type="button" className="sb-done-chip" data-game-id={g.id} aria-label={`${teamOf(g.away).name} ${as}, ${teamOf(g.home).name} ${hs}, final${g.end && g.end !== "REG" ? ` in ${g.end}` : ""}. Open the game center.`} onClick={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}>
+                    <span className={`sb-done-t${as > hs ? " win" : ""}`}><TeamLogo id={g.away} size={18} /><b>{g.away}</b><i>{as}</i></span>
+                    <span className={`sb-done-t${hs > as ? " win" : ""}`}><TeamLogo id={g.home} size={18} /><b>{g.home}</b><i>{hs}</i></span>
+                    <em>{tag}</em>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
       {loading && !games.length && <Skeleton rows={4} label="Loading the scoreboard" />}
       {!loading && !sections.length && <p className="sb-empty">{status === "all" ? "No games on this day." : "Nothing here on this day."}</p>}
       {sections.map((section) => (

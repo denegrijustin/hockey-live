@@ -2,6 +2,9 @@ import { useMemo, useState } from "react";
 import type { Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { ordinal } from "../lib/injuries.mjs";
+import { injuryZone } from "../lib/injury-zone.mjs";
+import { InjuryFigure } from "./InjuryFigure";
+import { InjuryHeadshot } from "./InjuryHeadshot";
 import { Skeleton } from "./Skeleton";
 import { TeamLogo } from "./TeamLogo";
 
@@ -22,21 +25,25 @@ const injuryText = (i: Item) => [i.kind, i.detail && i.detail !== "Not specified
 
 function Card({ item, teamName }: { item: Item; teamName: string }) {
   const { impact: im, severity: sv } = item;
+  const zone = injuryZone(item);
   return (
     <li className={`inj-card sev-${sv.level}`} data-testid="injury" data-team={item.team} data-impact={im.level ?? "none"}>
       <div className="inj-who">
-        {item.headshot ? <img className="inj-head" src={item.headshot} alt="" width={48} height={48} loading="lazy" decoding="async" /> : <span className="inj-head blank" aria-hidden="true" />}
+        <InjuryHeadshot src={item.headshot} name={item.name} size={48} />
         <div className="inj-name">
           <b>{item.name}</b>
           <span>{item.pos ? `${item.pos} · ` : ""}<TeamLogo id={item.team} size={16} /> {teamName}</span>
         </div>
         <span className={`inj-sev ${sv.level}`}>{sv.label}</span>
       </div>
+      <div className="inj-mid">
       <dl className="inj-facts">
         <div><dt>Injury</dt><dd>{injuryText(item)}</dd></div>
         <div><dt>Status</dt><dd>{item.status}</dd></div>
         <div><dt>Back</dt><dd>{item.back.text}</dd></div>
       </dl>
+      <div className="inj-figure-wrap"><InjuryFigure zone={zone.zone} side={zone.side} label={zone.label} size={44} /><small>{zone.label}</small></div>
+      </div>
       <div className="inj-impact" data-level={im.level ?? "none"}>
         <div className="inj-impact-top"><b>{im.label}</b>{im.percentile != null && <span>{ordinal(im.percentile)} percentile</span>}</div>
         <div className="inj-bar" role="img" aria-label={im.percentile != null ? `${ordinal(im.percentile)} percentile of ${im.group === "goalie" ? "goalies" : "skaters"}` : "No ranking"}><i style={{ width: `${im.percentile ?? 0}%` }} /></div>

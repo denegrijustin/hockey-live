@@ -17,7 +17,11 @@ const prevSkaters = [...filler(40, 6), sk(names[1], 75, 60, 70, 300)];
 const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 const report = buildInjuryReport({ espn, teams, today, season, skaters, prevSkaters });
 
+// A 1x1 transparent PNG stands in for ESPN's player pictures.
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+
 async function open(page: Page, body: unknown = report) {
+  await page.route("**/a.espncdn.com/**", (route) => route.fulfill({ contentType: "image/png", body: PNG }));
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.route(`**/api/injuries/${season}`, (route) => route.fulfill({ json: body }));
   await page.goto("/");
@@ -87,4 +91,49 @@ test("an unavailable report says so instead of showing nothing", async ({ page }
   await page.goto("/");
   await goTo(page, "Injury report");
   await expect(page.getByText(/injury report is unavailable/i)).toBeVisible();
+});
+
+test("each injury has the player's picture, and initials stand in when there is none", async ({ page }) => {
+  await open(page);
+  const card = page.getByTestId("injury").filter({ hasText: names[0] });
+  await expect(card.getByTestId("inj-headshot")).toHaveAttribute("src", /espncdn\.com/);
+  expect(await card.getByTestId("inj-headshot").evaluate((e) => (e as HTMLImageElement).width)).toBe(48);
+  const none = { ...report, items: report.items.map((i: { headshot: string | null }, k: number) => (k === 0 ? { ...i, headshot: null } : i)) };
+  await page.unroute(`**/api/injuries/${season}`);
+  await page.route(`**/api/injuries/${season}`, (route) => route.fulfill({ json: none }));
+  await page.reload();
+  await goTo(page, "Injury report");
+  await expect(page.getByTestId("inj-headshot-fallback").first()).toHaveText(/^[A-Z]{1,2}$/);
+});
+
+test("a body figure shows where the injury is: the named body part, its side, or a region for a general report", async ({ page }) => {
+  await open(page);
+  const zoneOf = async (name: string) => page.getByTestId("injury").filter({ hasText: name }).locator(".inj-figure").evaluate((e) => ({ zone: e.getAttribute("data-zone"), side: e.getAttribute("data-side"), label: e.getAttribute("aria-label") }));
+  const knee = await zoneOf("Ryan Poehling"); // "Knee (lower body)"
+  expect(knee.zone).toBe("knee");
+  expect(knee.label).toContain("Knee");
+  expect((await zoneOf("Pavel Mintyukov")).zone).toBe("lower"); // "Lower Body" only: a region, not a spot
+  expect((await zoneOf("Jeff Malott")).zone).toBe("illness");
+  await expect(page.getByTestId("injury").filter({ hasText: "Ryan Poehling" }).locator(".fig-zone *").first()).toBeVisible();
+});
+
+test.describe("the body figure's motion", () => {
+  test.use({ reducedMotion: "no-preference" });
+  test("the spot pulses three times when it comes into view, then stays lit", async ({ page }) => {
+    await open(page);
+    const fig = page.getByTestId("injury").filter({ hasText: "Ryan Poehling" }).locator(".inj-figure");
+    await fig.scrollIntoViewIfNeeded();
+    await expect(fig).toHaveClass(/play/);
+    const style = await fig.locator(".fig-pulse *").first().evaluate((e) => ({ name: getComputedStyle(e).animationName, count: getComputedStyle(e).animationIterationCount }));
+    expect(style).toEqual({ name: "zone-pulse", count: "3" }); // three pulses, never a loop
+    expect(await fig.locator(".fig-zone *").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none"); // the lit spot itself does not move
+  });
+});
+
+test("with motion off the spot is simply lit: nothing pulses", async ({ page }) => {
+  await open(page);
+  const fig = page.getByTestId("injury").filter({ hasText: "Ryan Poehling" }).locator(".inj-figure");
+  await fig.scrollIntoViewIfNeeded();
+  expect(await fig.locator(".fig-pulse *").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
+  await expect(fig.locator(".fig-zone *").first()).toBeVisible();
 });

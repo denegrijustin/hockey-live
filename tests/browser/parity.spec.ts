@@ -17,6 +17,29 @@ test("Playoff odds tab shows a grid per conference, 16 teams each, with no sidew
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+for (const [label, width] of [["a 360px phone", 360], ["a tablet", 768], ["a laptop", 1280]] as const) {
+  test(`Playoff odds fits ${label} with no sideways scroll, and shows the conference and division logos`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?view=games");
+    await goTo(page, "Playoff odds");
+    for (const conf of ["E", "W"]) {
+      const grid = page.getByTestId(`po-grid-${conf}`);
+      await expect(grid).toBeVisible({ timeout: 30000 });
+      const fit = await grid.evaluate((g) => ({ scroll: g.scrollWidth, client: g.clientWidth, table: g.querySelector("table")!.getBoundingClientRect().width }));
+      expect(fit.scroll).toBeLessThanOrEqual(fit.client + 1);
+      expect(fit.table).toBeLessThanOrEqual(fit.client + 1);
+      expect(await grid.evaluate((g) => getComputedStyle(g).overflowX)).not.toBe("auto");
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(page.locator(".po-conf-logo")).toHaveCount(2);
+    for (const img of await page.locator(".po-conf-logo").all()) expect(await img.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(50);
+    if (true) {
+      await expect(page.locator(".po-div-logo").first()).toBeVisible();
+      expect(await page.locator(".po-div-logo").first().evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(50);
+    }
+  });
+}
+
 test("Imperialism map renders, time-travels and opens a region card", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));

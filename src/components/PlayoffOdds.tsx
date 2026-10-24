@@ -5,6 +5,8 @@ import "./playoff-odds.css";
 import { TeamLogo } from "./TeamLogo";
 
 const SIMS = 20000;
+const DIV_FILE: Record<string, string> = { Atlantic: "atlantic", Metropolitan: "metro", Central: "central", Pacific: "pacific" };
+const COLS: [string, string, string][] = [["Div 1st", "D1", "Chance to finish first in the division"], ["Div 2nd", "D2", "Chance to finish second in the division"], ["Div 3rd", "D3", "Chance to finish third in the division"], ["WC1", "W1", "Chance to take the first wild-card spot"], ["WC2", "W2", "Chance to take the second wild-card spot"], ["Make it", "Make", "Chance to make the playoffs"], ["#1 in conf.", "#1", "Chance to finish first in the conference"], ["Presidents’ Trophy", "Pres.", "Chance to finish first in the league"]];
 const fmt = (p: number) => (p >= 99.5 ? ">99" : p < 0.5 ? "–" : String(Math.round(p)));
 const Cell = ({ p, cls = "" }: { p: number; cls?: string }) => (
   <td
@@ -80,23 +82,16 @@ export function PlayoffOdds({
             );
           return (
             <div className="po-conf" key={conf}>
-              <h3>{conf === "E" ? "Eastern Conference" : "Western Conference"}</h3>
-              <div className="po-grid" data-testid={`po-grid-${conf}`} tabIndex={0} role="region" aria-label={`${conf === "E" ? "Eastern" : "Western"} Conference playoff probabilities`}>
+              <h3><img className="po-conf-logo" src={`/logos/league/${conf === "E" ? "east" : "west"}.webp`} alt={conf === "E" ? "Eastern Conference" : "Western Conference"} width="84" height="61" /></h3>
+              <div className="po-grid" data-testid={`po-grid-${conf}`} role="region" aria-label={`${conf === "E" ? "Eastern" : "Western"} Conference playoff probabilities`}>
                 <table className="po-table">
                   <thead>
                     <tr>
-                      <th className="po-team">Team</th>
-                      <th>Record</th>
-                      <th>Pts</th>
-                      <th>Proj. pts</th>
-                      <th>Div 1st</th>
-                      <th>Div 2nd</th>
-                      <th>Div 3rd</th>
-                      <th>WC1</th>
-                      <th>WC2</th>
-                      <th>Make it</th>
-                      <th className="po-first">#1 in conf.</th>
-                      <th>Presidents’ Trophy</th>
+                      <th className="po-team" scope="col">Team</th>
+                      <th className="po-rec">Record</th>
+                      <th className="po-rec">Pts</th>
+                      <th className="po-proj" title="Projected points at the end of the season"><span className="po-long">Proj. pts</span><span className="po-short">Proj</span></th>
+                      {COLS.map(([long, short, tip]) => <th key={long} className={long === "#1 in conf." ? "po-first" : ""} title={tip} scope="col"><span className="po-long">{long}</span><span className="po-short">{short}</span></th>)}
                     </tr>
                   </thead>
                   <tbody>
@@ -109,12 +104,12 @@ export function PlayoffOdds({
                             <div className="po-team-cell">
                               <i className="po-accent" style={{ background: t.cardColor ?? t.color }} />
                               <TeamLogo id={t.id} size={22} />
-                              <span>{t.short}<br /><small className="po-sub">{t.division}</small></span>
+                              <span className="po-name"><b>{t.short}</b><small className="po-sub"><img className="po-div-logo" src={`/logos/league/${DIV_FILE[t.division] ?? "atlantic"}.webp`} alt={`${t.division} Division`} width="32" height="21" title={`${t.division} Division`} /><span className="po-line">{row.w}–{row.l}–{row.ot} · {row.pts}<span className="po-ptsword"> pts</span></span></small></span>
                             </div>
                           </td>
-                          <td>{row.w}–{row.l}–{row.ot}</td>
-                          <td>{row.pts}</td>
-                          <td>{Math.round(x.expPts)}</td>
+                          <td className="po-rec">{row.w}–{row.l}–{row.ot}</td>
+                          <td className="po-rec">{row.pts}</td>
+                          <td className="po-proj">{Math.round(x.expPts)}</td>
                           <Cell p={x.pDivision[0]} />
                           <Cell p={x.pDivision[1]} />
                           <Cell p={x.pDivision[2]} />
@@ -129,6 +124,7 @@ export function PlayoffOdds({
                   </tbody>
                 </table>
               </div>
+              <p className="po-legend">Proj = projected points · D1–D3 = finishing 1st–3rd in the division · W1–W2 = wild-card spots · Make = makes the playoffs · #1 = top of the conference · Pres. = Presidents’ Trophy</p>
             </div>
           );
         })}

@@ -165,3 +165,17 @@ test("the player's face sits on the injury figure's head", async ({ page }) => {
   const fig = page.getByTestId("injury").first().locator(".inj-figure");
   await expect(fig.getByTestId("fig-face")).toHaveAttribute("href", /a\.espncdn\.com/);
 });
+
+test("the injury cartoon wears the team's colours, and a goalie is in pads with a mask", async ({ page }) => {
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G" } : k === 1 ? { ...i, pos: "D" } : i)) };
+  await open(page, rep);
+  const cards = page.getByTestId("injury");
+  const g = cards.locator(".inj-mascot[data-goalie='1']");
+  await expect(g).toHaveCount(1);
+  await expect(g.locator(".m-mask")).toHaveCount(1);
+  await expect(g.locator(".m-pack")).toHaveCount(0);
+  const skater = cards.locator(".inj-mascot[data-goalie='0']").first();
+  await expect(skater.locator(".m-pack")).toHaveCount(1);
+  await expect(skater.locator("rect").first()).toBeVisible();
+  expect(await skater.locator("image").first().getAttribute("href")).toMatch(/\/logos\//);
+});

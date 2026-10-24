@@ -95,3 +95,19 @@
 html[data-motion="off"] .inj-figure.play .fig-pulse * { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .inj-figure.play .fig-pulse * { animation: none !important; } }
 .inj-head.blank { display: inline-grid; place-items: center; border-radius: 50%; background: var(--surface-8); color: var(--text-3); font-size: .75rem; font-weight: 700; }
+
+/* The injury card's cartoon */
+.inj-mascot svg { overflow: visible; }
+.inj-mascot .m-stage { fill: color-mix(in srgb, #ffffff 22%, transparent); }
+.inj-mascot .m-ice { fill: color-mix(in srgb, #bfe0f3 70%, transparent); }
+.inj-mascot .fig-zone * { fill-opacity: .5; }
+.inj-mascot .m-q { fill: var(--text-5); }
+.inj-mascot .m-bolts, .inj-mascot .m-sweat, .inj-mascot .m-pack { transform-box: fill-box; transform-origin: center; }
+.inj-mascot.play .m-bolts { animation: m-zap .5s ease-in-out 3; }
+.inj-mascot.play .m-sweat { animation: m-drip 1.2s ease-in 3; }
+.inj-mascot.play .m-pack { animation: m-wobble .9s ease-in-out 3; }
+@keyframes m-zap { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(1.18); } }
+@keyframes m-drip { 0% { opacity: 0; transform: translateY(-4px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(14px); } }
+@keyframes m-wobble { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+html[data-motion="off"] .inj-mascot.play :is(.m-bolts, .m-sweat, .m-pack) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .inj-mascot.play :is(.m-bolts, .m-sweat, .m-pack) { animation: none !important; } }

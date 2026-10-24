@@ -167,8 +167,9 @@ test("the player's face sits on the injury figure's head", async ({ page }) => {
 });
 
 test("the injury cartoon wears the team's colours, and a goalie is in pads with a mask", async ({ page }) => {
-  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G" } : k === 1 ? { ...i, pos: "D" } : i)) };
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", team: "TOR" } : k === 1 ? { ...i, pos: "D" } : i)) };
   await open(page, rep);
+  await page.getByLabel("Team", { exact: true }).selectOption("all");
   const cards = page.getByTestId("injury");
   const g = cards.locator(".inj-mascot[data-goalie='1']");
   await expect(g).toHaveCount(1);
@@ -178,4 +179,13 @@ test("the injury cartoon wears the team's colours, and a goalie is in pads with 
   await expect(skater.locator(".m-pack")).toHaveCount(1);
   await expect(skater.locator("rect").first()).toBeVisible();
   expect(await skater.locator("image").first().getAttribute("href")).toMatch(/\/logos\//);
+});
+
+test("an Edmonton goalie gets the finished illustration", async ({ page }) => {
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G" } : i)) };
+  await open(page, rep);
+  const art = page.getByTestId("inj-art");
+  await expect(art).toHaveCount(1);
+  await expect(art).toBeVisible();
+  expect(await art.evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(100);
 });

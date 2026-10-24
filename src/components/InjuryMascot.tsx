@@ -38,6 +38,9 @@ export function spotsFor(zone: string, side: "left" | "right" | null): Spot[] {
   }
 }
 
+/** Finished artwork, for the players it has been drawn for: team and position. Everyone else gets the drawn cartoon below. */
+const ART: Record<string, string> = { "EDM:G": "/injury/oilers-goalie.png" };
+
 const shade = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, #000)`;
 const SKIN = "#e8b894";
 
@@ -53,6 +56,7 @@ export function InjuryMascot({ team, goalie, zone, side, label, face, size = 190
   const { jersey, trim } = kitFor(team);
   const pants = shade(jersey, 45);
   const spots = spotsFor(zone, side);
+  const art = ART[`${team}:${goalie ? "G" : "S"}`];
   const photo = !!face && !bad;
   const pad = (s: "r" | "l") => {
     const [x1, y1] = along(s, 0.1), [x2, y2] = along(s, 1);
@@ -71,6 +75,11 @@ export function InjuryMascot({ team, goalie, zone, side, label, face, size = 190
       </g>
     );
   };
+  if (art) return (
+    <div ref={ref} className="inj-figure inj-mascot inj-art" data-zone={zone} data-side={side ?? ""} data-goalie="1" role="img" aria-label={`Injury location: ${label}`}>
+      <img src={art} alt="" width={size} height={Math.round(size * 0.905)} decoding="async" data-testid="inj-art" />
+    </div>
+  );
   return (
     <div ref={ref} className={`inj-figure inj-mascot${seen ? " play" : ""}`} data-zone={zone} data-side={side ?? ""} data-goalie={goalie ? "1" : "0"} role="img" aria-label={`Injury location: ${label}`}>
       <svg viewBox="0 0 240 200" width={size} height={size * (200 / 240)} aria-hidden="true">

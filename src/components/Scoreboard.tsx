@@ -11,6 +11,7 @@ import { TeamLogo } from "./TeamLogo";
 import { NetworkLogos } from "./NetworkLogos";
 import { ScoreRing } from "./ScoreRing";
 import { WatchNow } from "./WatchNow";
+import { HeatIce } from "./HeatIce";
 import { CompactGameFlow, useCardFeed } from "./GameData";
 import { useMedia } from "../hooks/useMedia";
 import { haptic, useChanged, useFlip, usePauseOffscreen } from "../motion";
@@ -286,7 +287,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, analys
       </div>
       <p className="sb-venue"><span aria-hidden="true">📍 </span>{game.venue || "Venue unavailable"}</p>
       {status.kind === "live" && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
-      <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
+      <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}{flowShown && <HeatIce data={feed} home={home} away={away} />}</div>
       {open && recapText && <p className="sb-recap" data-testid="recap"><b>What happened</b> {recapText}</p>}
       {open && <KeyStats game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} onFull={onFull} />}
     </article>

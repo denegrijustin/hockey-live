@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Team } from "../types";
 import { useFeed } from "../lib/polling";
+import { ordinal } from "../lib/injuries.mjs";
 import { Skeleton } from "./Skeleton";
 import { TeamLogo } from "./TeamLogo";
 
@@ -37,8 +38,8 @@ function Card({ item, teamName }: { item: Item; teamName: string }) {
         <div><dt>Back</dt><dd>{item.back.text}</dd></div>
       </dl>
       <div className="inj-impact" data-level={im.level ?? "none"}>
-        <div className="inj-impact-top"><b>{im.label}</b>{im.percentile != null && <span>{im.percentile}th percentile</span>}</div>
-        <div className="inj-bar" role="img" aria-label={im.percentile != null ? `${im.percentile}th percentile of ${im.group === "goalie" ? "goalies" : "skaters"}` : "No ranking"}><i style={{ width: `${im.percentile ?? 0}%` }} /></div>
+        <div className="inj-impact-top"><b>{im.label}</b>{im.percentile != null && <span>{ordinal(im.percentile)} percentile</span>}</div>
+        <div className="inj-bar" role="img" aria-label={im.percentile != null ? `${ordinal(im.percentile)} percentile of ${im.group === "goalie" ? "goalies" : "skaters"}` : "No ranking"}><i style={{ width: `${im.percentile ?? 0}%` }} /></div>
         <small>{basisText(im)}{im.basis !== "none" && im.group !== "goalie" && im.gp ? ` · ${im.goals}G ${im.assists}A` : ""}{im.group === "goalie" && im.savePct ? ` · ${im.savePct.toFixed(3).replace(/^0/, "")} SV%` : ""}</small>
       </div>
       {item.comment && <p className="inj-note">{item.comment}</p>}

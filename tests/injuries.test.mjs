@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { normName, parseEspnInjuries, severity, timeBack, impactBook, impactFor, buildInjuryReport, daysBetween } from "../src/lib/injuries.mjs";
+import { ordinal, normName, parseEspnInjuries, severity, timeBack, impactBook, impactFor, buildInjuryReport, daysBetween } from "../src/lib/injuries.mjs";
 
 const teams = JSON.parse(readFileSync("src/data/teams.json", "utf8"));
 const espn = JSON.parse(readFileSync("tests/fixtures/espn-injuries.json", "utf8"));
@@ -103,4 +103,8 @@ test("the report ranks injuries by impact and shows which teams are hurt most", 
   assert.ok(top.lost >= report.teams.at(-1).lost);
   assert.equal(report.teams.reduce((n, t) => n + t.count, 0), 15);
   assert.equal(report.season, 20262027);
+});
+
+test("percentiles read 1st, 2nd, 3rd, 11th, 12th, 13th, 21st, 98th", () => {
+  assert.deepEqual([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 98, 100].map(ordinal), ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "23rd", "98th", "100th"]);
 });

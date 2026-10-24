@@ -163,3 +163,6 @@ export function buildInjuryReport({ espn, teams, today, now = Date.now(), season
     items,
   };
 }
+
+/** 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th ... 21st, 98th. */
+export const ordinal = (n) => `${n}${[11, 12, 13].includes(n % 100) ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[n % 10] ?? "th")}`;

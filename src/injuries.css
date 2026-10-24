@@ -48,3 +48,26 @@
 .inj-empty { padding: 28px 0; text-align: center; color: var(--text-1); }
 .inj-source { margin: 16px 0 0; font-size: .75rem; line-height: 1.5; color: var(--text-1); }
 @media (min-width: 1100px) { .inj-tools select, .inj-seg button { min-height: 34px; } }
+
+/* Injuries inside a game card */
+.game-injuries { display: grid; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line-1); }
+.gi-title { margin: 0; font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-1); }
+.gi-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.gi-side h4 { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; font-size: .9375rem; }
+.gi-side h4 span { font-size: .75rem; font-weight: 500; color: var(--text-1); }
+.gi-side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.gi-side li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; padding: 8px 10px; border-radius: 10px; background: var(--surface-4); }
+.gi-name b { font-size: .875rem; }
+.gi-name small { color: var(--text-1); }
+.gi-sev { justify-self: end; padding: 2px 8px; border-radius: 999px; font-size: .6875rem; font-weight: 750; background: var(--surface-7); color: var(--text-3); white-space: nowrap; }
+.gi-sev.season, .gi-sev.serious { background: color-mix(in srgb, var(--red-5) 22%, transparent); color: var(--red-5); }
+.gi-sev.moderate { background: color-mix(in srgb, var(--amber-5) 22%, transparent); color: var(--amber-5); }
+.gi-sev.minor { background: color-mix(in srgb, var(--mint-5) 20%, transparent); color: var(--mint-5); }
+.gi-line, .gi-impact { grid-column: 1 / -1; font-size: .75rem; color: var(--text-3); }
+.gi-impact { font-weight: 650; }
+.gi-impact.high { color: var(--red-5); }
+.gi-impact.medium { color: var(--amber-5); }
+.gi-impact small { font-weight: 400; color: var(--text-1); }
+.gi-more { justify-self: start; margin-top: 6px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line-3); border-radius: 999px; background: transparent; color: var(--mint-5); font: inherit; font-size: .8125rem; font-weight: 650; cursor: pointer; }
+.gi-note { margin: 0; font-size: .75rem; color: var(--text-1); line-height: 1.45; }
+@media (min-width: 1100px) { .gi-more { min-height: 34px; } .scoreboard .game-injuries { grid-column: 1 / -1; } }

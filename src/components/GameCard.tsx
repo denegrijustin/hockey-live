@@ -11,6 +11,7 @@ import { IntermissionRink } from "./IntermissionRink";
 import { CardExpanded, CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { GameInjuries } from "./GameInjuries";
 import { usePauseOffscreen } from "../motion";
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -127,6 +128,7 @@ export const GameCard = memo(function GameCard({
         <div className="why-watch"><span>WHY IT MATTERS</span><p>{importanceSummary}</p></div>
         <CompactGameProjection game={game} before={before} baseline={baseline} />
         <GoalieComparison game={game} away={away} home={home} compact />
+        <GameInjuries away={away} home={home} season={game.season} />
         <button type="button" className="card-collapse" onClick={() => setExpanded(false)}>Collapse game card</button>
       </div>}
 

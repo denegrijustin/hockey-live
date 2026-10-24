@@ -14,6 +14,7 @@ import { WatchNow } from "./WatchNow";
 import { HeatIce } from "./HeatIce";
 import { CompactGameFlow, useCardFeed } from "./GameData";
 import { useMedia } from "../hooks/useMedia";
+import { useEtToday } from "../hooks/useEtToday";
 import { haptic, useChanged, useFlip, usePauseOffscreen } from "../motion";
 import { Skeleton } from "./Skeleton";
 
@@ -69,17 +70,6 @@ interface Props {
  * The home screen: the league's games for a day with win probability and nothing else. Tap a game for a few key stats;
  * from there, "Full game center" opens everything.
  */
-/** The NHL's calendar day (Eastern time), re-read every minute so a page left open rolls over at midnight. */
-function useEtToday() {
-  const read = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-  const [today, setToday] = useState(read);
-  useEffect(() => {
-    const id = setInterval(() => setToday(read()), 60_000);
-    return () => clearInterval(id);
-  }, []);
-  return today;
-}
-
 /** A list of games whose members slide to their new places when the order changes (a game getting hotter, a filter applied). */
 function FlipList({ games, children }: { games: Game[]; children: React.ReactNode }) {
   const ref = useRef<HTMLUListElement>(null);

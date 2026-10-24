@@ -194,3 +194,57 @@ test("with motion off nothing animates", async ({ page }) => {
   await fig.scrollIntoViewIfNeeded();
   expect(await fig.getByTestId("inj-art").evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
 });
+
+const withEdm = { ...report, items: report.items.map((i: { team: string }, k: number) => (k < 2 ? { ...i, team: "EDM" } : i)) };
+
+test("the report opens on Edmonton, and picking another team changes the list straight away", async ({ page }) => {
+  await open(page, withEdm);
+  await expect(page.getByLabel("Team", { exact: true })).toHaveValue("EDM");
+  const teamsShown = () => page.getByTestId("injury").evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("data-team")))]);
+  expect(await teamsShown()).toEqual(["EDM"]);
+  const other = withEdm.items.find((i: { team: string }) => i.team !== "EDM")!.team;
+  await page.getByLabel("Team", { exact: true }).selectOption(other);
+  expect(await teamsShown()).toEqual([other]);
+  await page.getByLabel("Team", { exact: true }).selectOption("all");
+  expect((await teamsShown()).length).toBeGreaterThan(1);
+});
+
+test("Teams hit hardest is a compact row of small chips", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await open(page);
+  const boxes = await page.locator(".inj-team").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
+  expect(Math.max(...boxes)).toBeLessThanOrEqual(46);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
+});
+
+test("the player's face sits on the injury figure's head", async ({ page }) => {
+  await open(page);
+  const fig = page.getByTestId("injury").first().locator(".inj-figure");
+  await expect(fig.getByTestId("fig-face")).toHaveAttribute("href", /a\.espncdn\.com/);
+});
+
+test("the injury cartoon wears the team's colours, and a goalie is in pads with a mask", async ({ page }) => {
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", team: "TOR" } : k === 1 ? { ...i, pos: "D", team: "TOR" } : i)) };
+  await open(page, rep);
+  await page.getByLabel("Team", { exact: true }).selectOption("all");
+  const cards = page.getByTestId("injury");
+  const g = cards.locator(".inj-mascot[data-goalie='1']");
+  await expect(g).toHaveCount(1);
+  await expect(g.locator(".m-mask")).toHaveCount(1);
+  await expect(g.locator(".m-pack")).toHaveCount(0);
+  const skater = cards.locator(".inj-mascot[data-goalie='0']").first();
+  await expect(skater.locator(".m-pack")).toHaveCount(1);
+  await expect(skater.locator("rect").first()).toBeVisible();
+  expect(await skater.locator("image").first().getAttribute("href")).toMatch(/\/logos\//);
+});
+
+test("Edmonton players get the finished illustration that matches where they are hurt", async ({ page }) => {
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null; kind: string; comment: string; detail: string | null; side: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", kind: "Undisclosed", comment: "", detail: null, side: null } : k === 1 ? { ...i, pos: "C", kind: "Ankle", comment: "", detail: null, side: null } : i)) };
+  await open(page, rep);
+  const art = page.getByTestId("inj-art");
+  await expect(art).toHaveCount(2);
+  const srcs = await art.evaluateAll((els) => els.map((e) => (e as HTMLImageElement).getAttribute("src")).sort());
+  expect(srcs).toEqual(["/injury/oilers-goalie.webp", "/injury/oilers-skater-ankle.webp"]);
+  await expect(art.first()).toBeVisible();
+  expect(await art.first().evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(100);
+});

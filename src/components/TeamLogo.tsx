@@ -29,11 +29,13 @@ export function TeamLogo({ id, size, className, alt = "", eager = false }: { id:
 }
 
 /** The same inside an SVG chart: a chip behind the logo (colored by CSS from its ink) and the logo itself. */
-export function LogoImage({ id, x, y, size, opacity, title }: { id: string; x: number; y: number; size: number; opacity?: number; title?: string }) {
+export function LogoImage({ id, x, y, size, opacity, title, bare = false }: { id: string; x: number; y: number; size: number; opacity?: number; title?: string; bare?: boolean }) {
+  // On the ice (white) a vintage logo needs no chip at all: it sits straight on the ice. A current logo is drawn for dark pages, so it keeps a round dark disc.
+  const chip = !(bare && logoInk(id) === "retro");
   return (
     <g className="team-logo-svg" data-ink={logoInk(id)} opacity={opacity}>
       {title && <title>{title}</title>}
-      <rect className="logo-chip" x={x - 1} y={y - 1} width={size + 2} height={size + 2} rx={size * 0.22} />
+      {chip && <rect className="logo-chip" x={x - 1} y={y - 1} width={size + 2} height={size + 2} rx={bare ? (size + 2) / 2 : size * 0.22} />}
       <image href={logoUrl(id)} x={x} y={y} width={size} height={size} preserveAspectRatio="xMidYMid meet" />
     </g>
   );

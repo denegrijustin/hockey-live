@@ -50,8 +50,8 @@ export function IceView({ data, home, away }: { data: GameFeed | null; home: Tea
         </g>
         <rect x={-NET_X - 3} y="-3" width="3" height="6" className="ice-net" />
         <rect x={NET_X} y="-3" width="3" height="6" className="ice-net" />
-        <LogoImage id={away.id} x={-97} y={-39} size={13} opacity={0.9} />
-        <LogoImage id={home.id} x={84} y={-39} size={13} opacity={0.9} />
+        <LogoImage id={away.id} x={-97} y={-39} size={13} opacity={0.9} bare />
+        <LogoImage id={home.id} x={84} y={-39} size={13} opacity={0.9} bare />
         {sum.shots.map((s) =>
           s.kind === "goal" ? null : (
             <circle key={s.id} cx={s.x} cy={-s.y} r={s.kind === "sog" ? 1.8 : 1.4} className={`ice-shot ${s.kind}`} style={{ "--c": s.home ? HOME : AWAY } as React.CSSProperties}>

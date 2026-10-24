@@ -112,3 +112,11 @@ test("the Scoreboard home shows the Zamboni on a game in intermission, without o
   await expect(int.locator(".int-t")).toHaveText(/1[34]:\d\d/);
   await expect(row.getByTestId("key-stats")).toHaveCount(0);
 });
+
+test("the logo at centre ice sits straight on the ice, with no square chip behind it", async ({ page }) => {
+  const card = await open(page, { intermission: true, clock: "9:00" });
+  const logo = card.locator(".int-rink .team-logo-svg");
+  await expect(logo).toHaveCount(1);
+  await expect(logo.locator("image")).toBeVisible();
+  await expect(logo.locator(".logo-chip")).toHaveCount(0);
+});

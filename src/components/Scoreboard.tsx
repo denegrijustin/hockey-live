@@ -12,6 +12,7 @@ import { NetworkLogos } from "./NetworkLogos";
 import { ScoreRing } from "./ScoreRing";
 import { WatchNow } from "./WatchNow";
 import { HeatIce } from "./HeatIce";
+import { GameInjuries } from "./GameInjuries";
 import { CompactGameFlow, useCardFeed } from "./GameData";
 import { useMedia } from "../hooks/useMedia";
 import { useEtToday } from "../hooks/useEtToday";
@@ -282,7 +283,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, analys
       {status.kind === "live" && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
       <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}{flowShown && <HeatIce data={feed} home={home} away={away} />}</div>
       {open && recapText && <p className="sb-recap" data-testid="recap"><b>What happened</b> {recapText}</p>}
-      {open && <KeyStats game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} onFull={onFull} />}
+      {open && <KeyStats game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} onFull={onFull}><GameInjuries away={away} home={home} season={game.season} /></KeyStats>}
     </article>
   );
 }
@@ -298,7 +299,7 @@ function WhyScore({ why, tier, reason }: { why: ReturnType<typeof watchBreakdown
   );
 }
 
-function KeyStats({ game, away, home, before, allGames, projection, onFull }: { game: Game; away: Team; home: Team; before: any; allGames: Game[]; projection: any; onFull: () => void }) {
+function KeyStats({ game, away, home, before, allGames, projection, onFull, children }: { game: Game; away: Team; home: Team; before: any; allGames: Game[]; projection: any; onFull: () => void; children?: React.ReactNode }) {
   const rec = (t: Team) => { const r = recordBeforeGame(allGames, game, t.id); return `${r.w}-${r.l}-${r.ot}`; };
   const per = (t: Team, k: "gf" | "ga") => { const row = before?.[t.id]; return row?.gp ? (row[k] / row.gp).toFixed(1) : "–"; };
   const form = (t: Team) => (before?.[t.id]?.results ?? []).slice(-5);
@@ -320,6 +321,7 @@ function KeyStats({ game, away, home, before, allGames, projection, onFull }: { 
         {shots && <div><dt>Shots on goal</dt><dd>{game.awayShots}</dd><dd>{game.homeShots}</dd></div>}
         {projection?.score && <div><dt>Projected final</dt><dd>{projection.score.away}</dd><dd>{projection.score.home}</dd></div>}
       </dl>
+      {children}
       <button className="sb-full" onClick={onFull}>
         Full game center <Icon name="chevron" size={18} />
       </button>

@@ -6,6 +6,7 @@ import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
 import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
+import { GameInjuries } from "./GameInjuries";
 import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IntermissionRink } from "./IntermissionRink";
 import { useSheetDrag } from "../hooks/useSheetDrag";
@@ -186,6 +187,7 @@ export function GameOverlay({
       <details className="game-center-section" open>
         <summary>Starting goalies <span>+</span></summary>
         <GoalieComparison game={game} away={away} home={home} />
+        <GameInjuries away={away} home={home} season={game.season} />
       </details>
       <GameCenterAnalytics game={game} away={away} home={home} onClose={onClose} />
       <details className="game-center-section">

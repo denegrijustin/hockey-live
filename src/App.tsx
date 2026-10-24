@@ -44,6 +44,7 @@ const ImperialismMap = lazy(() =>
   import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
 );
 const TeamSchedule = lazy(() => import("./components/TeamSchedule").then((m) => ({ default: m.TeamSchedule })));
+const Injuries = lazy(() => import("./components/Injuries").then((m) => ({ default: m.Injuries })));
 const Picks = lazy(() => import("./components/Picks").then((m) => ({ default: m.Picks })));
 const NhlPlus = lazy(() =>
   import("./components/nhlplus/NhlPlus").then((m) => ({ default: m.NhlPlus })),
@@ -199,7 +200,7 @@ export default function App() {
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
-      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && (
+      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && (
         <ScoreTicker
           games={data.games}
           teams={teams}
@@ -250,7 +251,7 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && view !== "picks" && view !== "teamschedule" && (
+        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">
@@ -338,6 +339,11 @@ export default function App() {
             {view === "teamschedule" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the team schedule" />}>
                 <TeamSchedule games={data.games} teams={teams} defaultTeam={selected[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
+              </Suspense></ErrorBoundary>
+            )}
+            {view === "injuries" && (
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the injury report" />}>
+                <Injuries season={season} teams={teams} />
               </Suspense></ErrorBoundary>
             )}
             {view === "picks" && (

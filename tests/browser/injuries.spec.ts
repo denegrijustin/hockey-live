@@ -117,15 +117,15 @@ test("each card's drawing follows where the player is hurt: the named part, or a
   expect((await art("Jeff Malott")).pose).toBe("skater-unknown"); // illness
 });
 
-test("teams with their own drawn set use it; Utah wears Arizona's; the others get the recoloured neutral drawing", async ({ page }) => {
-  const teamsOf = ["EDM", "UTA", "COL"];
+test("teams with their own drawn set use it; Utah and Seattle have their own; the others get the recoloured neutral drawing", async ({ page }) => {
+  const teamsOf = ["EDM", "UTA", "COL"]; // Colorado has no drawn set yet
   const base = report.items[0] as object;
   await open(page, { ...report, items: teamsOf.map((team, k) => ({ ...base, id: "t" + k, name: "Player " + k, team })) });
   await page.getByLabel("Team", { exact: true }).selectOption("all");
   const arts = page.getByTestId("inj-art");
   await expect(arts).toHaveCount(3);
   await expect(arts.nth(0)).toHaveAttribute("src", /\/injury\/teams\/EDM\//);
-  await expect(arts.nth(1)).toHaveAttribute("src", /\/injury\/teams\/ARI\//);
+  await expect(arts.nth(1)).toHaveAttribute("src", /\/injury\/teams\/UTA\//);
   await expect(arts.nth(2)).toHaveAttribute("data-set", "neutral");
   expect(await arts.nth(0).evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(80);
 });

@@ -30,9 +30,9 @@ export function poseFor(goalie: boolean, zone: string): keyof typeof POSES {
   return "skater-unknown";
 }
 
-/** Teams with a hand-drawn set in their own jersey (public/injury/teams/<ID>/<pose>.webp). Utah wears Arizona's. Everyone else gets the neutral drawing, recoloured. */
-const DRAWN = new Set(["ANA", "ARI", "BOS", "BUF", "CAR", "CBJ", "CGY", "CHI", "DAL", "DET", "EDM", "FLA", "LAK", "MIN", "NJD", "NSH", "NYI", "NYR", "OTT", "PHI", "PIT", "STL", "TBL", "TOR", "VAN", "VGK", "WPG", "WSH"]);
-const ALIAS: Record<string, string> = { UTA: "ARI" };
+/** Teams with a hand-drawn set in their own jersey (public/injury/teams/<ID>/<pose>.webp). Utah has its own (the Coyotes). Everyone else gets the neutral drawing, recoloured. */
+const DRAWN = new Set(["ANA", "BOS", "BUF", "CAR", "CBJ", "CGY", "CHI", "DAL", "DET", "EDM", "FLA", "LAK", "MIN", "NJD", "NSH", "NYI", "NYR", "OTT", "PHI", "PIT", "SEA", "STL", "TBL", "TOR", "UTA", "VAN", "VGK", "WPG", "WSH"]);
+const ALIAS: Record<string, string> = {};
 export const drawnSet = (team: string) => { const t = ALIAS[team] ?? team; return DRAWN.has(t) ? t : null; };
 
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));

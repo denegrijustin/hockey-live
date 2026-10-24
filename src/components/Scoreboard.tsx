@@ -3,8 +3,8 @@ import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { projectGame } from "../lib/projection.mjs";
-import { teamRanks } from "../lib/ranks.mjs";
-import { closeAndLate, liveHeat, pregameHomeWin, recap, slotOf, tierOf, upsetBrewing, watchBreakdown, watchability } from "../lib/watchability.mjs";
+import { teamRanks, rankTitle } from "../lib/ranks.mjs";
+import { closeAndLate, liveHeat, pregameHomeWin, recap, slotOf, tierOf, upsetBrewing, upsetWon, watchBreakdown, watchability } from "../lib/watchability.mjs";
 import { Icon } from "./icons";
 import { IntermissionRink } from "./IntermissionRink";
 import { TeamLogo } from "./TeamLogo";
@@ -107,7 +107,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
     const pre = before ? pregameHomeWin(g, before, base) : null;
     const importance = analysis?.analysis[g.id]?.score;
     const score = watchability(importance, pre);
-    return { score, heat: liveHeat(score, g), upset: !!upsetBrewing(g, pre), pre, importance, before, base };
+    return { score, heat: liveHeat(score, g), upset: !!upsetBrewing(g, pre), upsetWon: upsetWon(g, pre), pre, importance, before, base };
   }, [analysis, baseline, baselineTable]);
   const rated = useMemo(() => new Map(dayGames.map((g) => [g.id, rate(g)] as const)), [dayGames, rate]);
   const phone = useMedia("(max-width: 720px)");
@@ -176,12 +176,14 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
           <ul>
             {dayGames.filter(finished).sort((a, b) => b.start.localeCompare(a.start)).map((g) => {
               const hs = g.homeScore ?? 0, as = g.awayScore ?? 0, tag = g.end && g.end !== "REG" ? `F/${g.end}` : "F";
+              const rk = ranksFor?.(g.id), upset = rated.get(g.id)?.upsetWon ?? null;
+              const rank = (id: string) => (rk?.[id] ? <small className="sb-rank" title={rankTitle(rk[id])}>#{rk[id].league}</small> : null);
               return (
                 <li key={g.id}>
-                  <button type="button" className="sb-done-chip" data-game-id={g.id} aria-label={`${teamOf(g.away).name} ${as}, ${teamOf(g.home).name} ${hs}, final${g.end && g.end !== "REG" ? ` in ${g.end}` : ""}. Open the game center.`} onClick={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}>
-                    <span className={`sb-done-t${as > hs ? " win" : ""}`}><TeamLogo id={g.away} size={18} /><b>{g.away}</b><i>{as}</i></span>
-                    <span className={`sb-done-t${hs > as ? " win" : ""}`}><TeamLogo id={g.home} size={18} /><b>{g.home}</b><i>{hs}</i></span>
-                    <em>{tag}</em>
+                  <button type="button" className={`sb-done-chip${upset != null ? " upset" : ""}`} data-game-id={g.id} data-upset={upset != null ? "1" : "0"} aria-label={`${teamOf(g.away).name}${rk?.[g.away] ? ` (ranked ${rk[g.away].league})` : ""} ${as}, ${teamOf(g.home).name}${rk?.[g.home] ? ` (ranked ${rk[g.home].league})` : ""} ${hs}, final${g.end && g.end !== "REG" ? ` in ${g.end}` : ""}.${upset != null ? ` An upset: the winner had a ${Math.round(upset * 100)} percent chance.` : ""} Open the game center.`} onClick={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}>
+                    <span className={`sb-done-t${as > hs ? " win" : ""}`}><TeamLogo id={g.away} size={18} /><b>{g.away}</b>{rank(g.away)}<i>{as}</i></span>
+                    <span className={`sb-done-t${hs > as ? " win" : ""}`}><TeamLogo id={g.home} size={18} /><b>{g.home}</b>{rank(g.home)}<i>{hs}</i></span>
+                    <span className="sb-done-end"><em>{tag}</em>{upset != null && <strong className="sb-upset-tag" title={`The winner had a ${Math.round(upset * 100)}% chance before the game`}>UPSET</strong>}</span>
                   </button>
                 </li>
               );
@@ -208,6 +210,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
                       baseline={baseline && baseline.season < g.season ? baselineTable : undefined}
                       allGames={games}
                       rating={rated.get(g.id)}
+                      ranks={ranksFor?.(g.id)}
                       analysisRow={analysis?.analysis[g.id]}
                       open={openId === g.id || (status === "final" && section.key === "final")}
                       onToggle={() => setOpenId(openId === g.id ? null : g.id)}
@@ -242,8 +245,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   );
 }
 
-function ScoreRow({ game, away, home, before, baseline, allGames, rating, analysisRow, open, onToggle, onFull }: {
-  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: { score: number; pre: number | null; importance?: number }; analysisRow?: any; open: boolean; onToggle: () => void; onFull: () => void;
+function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, open, onToggle, onFull }: {
+  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: { score: number; pre: number | null; importance?: number; upsetWon?: number | null }; ranks?: Record<string, any> | null; analysisRow?: any; open: boolean; onToggle: () => void; onFull: () => void;
 }) {
   const ref = useRef<HTMLElement>(null);
   usePauseOffscreen(ref);
@@ -264,10 +267,10 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, analys
   const recapText = status.kind === "final" ? recap(game, rating?.pre ?? null, names) : "";
   const flowShown = (status.kind === "live" && !game.intermission) || (open && status.kind !== "soon");
   return (
-    <article ref={ref} className={`sb-row ${status.kind}${open ? " open" : ""}${cl.both ? " hot" : ""} tier-${tier.key}`} data-game={game.id}>
+    <article ref={ref} className={`sb-row ${status.kind}${rating?.upsetWon != null ? " upset-won" : ""}${open ? " open" : ""}${cl.both ? " hot" : ""} tier-${tier.key}`} data-game={game.id}>
       {(awayScored || homeScored) && <span className="pulse-ring" aria-hidden="true" />}
       <div className="sb-top">
-        <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}{cl.both && <span className="late-flag" title={cl.label}><i aria-hidden="true" />Close &amp; late</span>}</span>
+        <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}{rating?.upsetWon != null && <strong className="sb-upset-tag">UPSET</strong>}{cl.both && <span className="late-flag" title={cl.label}><i aria-hidden="true" />Close &amp; late</span>}</span>
         <span className="sb-actions">
           <span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>
           <button type="button" className="gc-icon" onClick={onFull} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>
@@ -278,7 +281,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, analys
           {([[away, game.awayScore, "away"], [home, game.homeScore, "home"]] as const).map(([team, score, side]) => (
             <span className={`sb-team${winner && winner !== side ? " lost" : ""}`} key={team.id}>
               <TeamLogo id={team.id} size={32} />
-              <span className="sb-name">{team.name.endsWith(team.short) ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}</span>
+              <span className="sb-name">{team.name.endsWith(team.short) ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}{ranks?.[team.id] && <small className="sb-rank" title={rankTitle(ranks[team.id])}>#{ranks[team.id].league}</small>}</span>
               <span className={`sb-score${(side === "away" ? awayScored : homeScored) ? " scored" : ""}`}><span className="ts-num">{showScore ? score : ""}</span></span>
             </span>
           ))}

@@ -55,6 +55,13 @@ export function upsetBrewing(g, pregameHome) {
   return (lead >= 1 && lead <= 2) || (lead === 0 && periodOf(g) >= 4) ? dog : null;
 }
 
+/** A finished game the underdog won: the winner had a 40% chance or less before it started. Returns the winner's pre-game chance (0..1), or null. */
+export function upsetWon(g, pregameHome) {
+  if (!["OFF", "FINAL"].includes(g.state) || pregameHome == null || g.homeScore == null || g.awayScore == null || g.homeScore === g.awayScore) return null;
+  const wp = g.homeScore > g.awayScore ? pregameHome : 1 - pregameHome;
+  return wp <= 0.4 ? wp : null;
+}
+
 /** Start time rounded down to the hour: the puck-drop slot a game belongs to. */
 export const slotOf = (start) => {
   const d = new Date(start);

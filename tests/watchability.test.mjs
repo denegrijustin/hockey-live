@@ -83,3 +83,15 @@ test("recap says who won, whether it was an upset, and how the shots went", () =
   assert.match(recap({ ...g, end: "REG" }, 0.5, names), /near coin flip/);
   assert.equal(recap({ state: "LIVE", homeScore: 1, awayScore: 0 }, 0.5, names), "");
 });
+
+import { upsetWon } from "../src/lib/watchability.mjs";
+test("upsetWon: the winner had a 40% chance or less before the game", () => {
+  const fin = (h, a) => ({ state: "OFF", homeScore: h, awayScore: a });
+  assert.equal(upsetWon(fin(3, 2), 0.35), 0.35); // home underdog won
+  assert.ok(Math.abs(upsetWon(fin(2, 3), 0.7) - 0.3) < 1e-9); // away underdog won
+  assert.equal(upsetWon(fin(3, 2), 0.6), null); // the favourite won
+  assert.equal(upsetWon(fin(3, 2), 0.41), null); // a near coin flip is not an upset
+  assert.equal(upsetWon({ state: "LIVE", homeScore: 3, awayScore: 2 }, 0.3), null); // not finished
+  assert.equal(upsetWon(fin(2, 2), 0.3), null);
+  assert.equal(upsetWon(fin(3, 2), null), null);
+});

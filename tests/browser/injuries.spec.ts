@@ -106,36 +106,30 @@ test("each injury has the player's picture, and initials stand in when there is 
   await expect(page.getByTestId("inj-headshot-fallback").first()).toHaveText(/^[A-Z]{1,2}$/);
 });
 
-test("a body figure shows where the injury is: the named body part, its side, or a region for a general report", async ({ page }) => {
+test("each card's drawing follows where the player is hurt: the named part, or a shrug when the team is not saying", async ({ page }) => {
   await open(page);
-  const zoneOf = async (name: string) => page.getByTestId("injury").filter({ hasText: name }).locator(".inj-figure").evaluate((e) => ({ zone: e.getAttribute("data-zone"), side: e.getAttribute("data-side"), label: e.getAttribute("aria-label") }));
-  const knee = await zoneOf("Ryan Poehling"); // "Knee (lower body)"
+  const art = async (name: string) => page.getByTestId("injury").filter({ hasText: name }).locator(".inj-figure").evaluate((e) => ({ zone: e.getAttribute("data-zone"), pose: e.getAttribute("data-pose"), label: e.getAttribute("aria-label") }));
+  const knee = await art("Ryan Poehling"); // "Knee (lower body)"
   expect(knee.zone).toBe("knee");
+  expect(knee.pose).toBe("ankle");
   expect(knee.label).toContain("Knee");
-  expect((await zoneOf("Pavel Mintyukov")).zone).toBe("lower"); // "Lower Body" only: a region, not a spot
-  expect((await zoneOf("Jeff Malott")).zone).toBe("illness");
-  await expect(page.getByTestId("injury").filter({ hasText: "Ryan Poehling" }).locator(".fig-zone *").first()).toBeVisible();
+  expect((await art("Pavel Mintyukov")).pose).toBe("ankle"); // "Lower Body" only
+  expect((await art("Jeff Malott")).pose).toBe("skater-unknown"); // illness
 });
 
-test.describe("the body figure's motion", () => {
-  test.use({ reducedMotion: "no-preference" });
-  test("the spot pulses three times when it comes into view, then stays lit", async ({ page }) => {
-    await open(page);
-    const fig = page.getByTestId("injury").filter({ hasText: "Ryan Poehling" }).locator(".inj-figure");
-    await fig.scrollIntoViewIfNeeded();
-    await expect(fig).toHaveClass(/play/);
-    const style = await fig.locator(".fig-pulse *").first().evaluate((e) => ({ name: getComputedStyle(e).animationName, count: getComputedStyle(e).animationIterationCount }));
-    expect(style).toEqual({ name: "zone-pulse", count: "3" }); // three pulses, never a loop
-    expect(await fig.locator(".fig-zone *").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none"); // the lit spot itself does not move
+test("the drawing is painted in the team's colours with its logo, and pops in once", async ({ page }) => {
+  await open(page, { ...report, items: report.items.map((i: object) => ({ ...i, team: "MIN" })) }); // Minnesota's jersey is green
+  await page.getByLabel("Team", { exact: true }).selectOption("all");
+  const fig = page.getByTestId("injury").first().locator(".inj-figure");
+  await expect(fig).toHaveClass(/ready/);
+  const px = await fig.locator("canvas").evaluate((c: HTMLCanvasElement) => {
+    const d = c.getContext("2d")!.getImageData(0, 0, c.width, c.height).data;
+    let navy = 0, opaque = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200) { opaque++; if (d[i + 2] > d[i] + 40 && d[i + 2] > d[i + 1] + 25) navy++; }
+    return { navy, opaque };
   });
-});
-
-test("with motion off the spot is simply lit: nothing pulses", async ({ page }) => {
-  await open(page);
-  const fig = page.getByTestId("injury").filter({ hasText: "Ryan Poehling" }).locator(".inj-figure");
-  await fig.scrollIntoViewIfNeeded();
-  expect(await fig.locator(".fig-pulse *").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
-  await expect(fig.locator(".fig-zone *").first()).toBeVisible();
+  expect(px.opaque).toBeGreaterThan(5000);
+  expect(px.navy / px.opaque).toBeLessThan(0.02); // the drawing is navy; on a green team almost none of that blue is left
 });
 
 const withEdm = { ...report, items: report.items.map((i: { team: string }, k: number) => (k < 2 ? { ...i, team: "EDM" } : i)) };
@@ -160,34 +154,30 @@ test("Teams hit hardest is a compact row of small chips", async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
 });
 
-test("the player's face sits on the injury figure's head", async ({ page }) => {
-  await open(page);
-  const fig = page.getByTestId("injury").first().locator(".inj-figure");
-  await expect(fig.getByTestId("fig-face")).toHaveAttribute("href", /a\.espncdn\.com/);
-});
-
-test("the injury cartoon wears the team's colours, and a goalie is in pads with a mask", async ({ page }) => {
-  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", team: "TOR" } : k === 1 ? { ...i, pos: "D", team: "TOR" } : i)) };
+test("poses: a goalie gets goalie gear, a skater does not, and every injury has a pose", async ({ page }) => {
+  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null; team: string }, k: number) => (k === 0 ? { ...i, pos: "G", team: "TOR" } : k === 1 ? { ...i, pos: "D", team: "TOR" } : i)) };
   await open(page, rep);
   await page.getByLabel("Team", { exact: true }).selectOption("all");
-  const cards = page.getByTestId("injury");
-  const g = cards.locator(".inj-mascot[data-goalie='1']");
-  await expect(g).toHaveCount(1);
-  await expect(g.locator(".m-mask")).toHaveCount(1);
-  await expect(g.locator(".m-pack")).toHaveCount(0);
-  const skater = cards.locator(".inj-mascot[data-goalie='0']").first();
-  await expect(skater.locator(".m-pack")).toHaveCount(1);
-  await expect(skater.locator("rect").first()).toBeVisible();
-  expect(await skater.locator("image").first().getAttribute("href")).toMatch(/\/logos\//);
+  const poses = await page.getByTestId("injury").evaluateAll((els) => els.map((e) => ({ goalie: e.querySelector(".inj-figure")!.getAttribute("data-goalie"), pose: e.querySelector(".inj-figure")!.getAttribute("data-pose") })));
+  expect(poses.every((p) => !!p.pose)).toBe(true);
+  expect(poses.filter((p) => p.goalie === "1").every((p) => p.pose!.startsWith("goalie-"))).toBe(true);
+  expect(poses.filter((p) => p.goalie === "0").every((p) => !p.pose!.startsWith("goalie-"))).toBe(true);
 });
 
-test("Edmonton players get the finished illustration that matches where they are hurt", async ({ page }) => {
-  const rep = { ...withEdm, items: withEdm.items.map((i: { pos: string | null; kind: string; comment: string; detail: string | null; side: string | null }, k: number) => (k === 0 ? { ...i, pos: "G", kind: "Undisclosed", comment: "", detail: null, side: null } : k === 1 ? { ...i, pos: "C", kind: "Ankle", comment: "", detail: null, side: null } : i)) };
-  await open(page, rep);
-  const art = page.getByTestId("inj-art");
-  await expect(art).toHaveCount(2);
-  const srcs = await art.evaluateAll((els) => els.map((e) => (e as HTMLImageElement).getAttribute("src")).sort());
-  expect(srcs).toEqual(["/injury/oilers-goalie.webp", "/injury/oilers-skater-ankle.webp"]);
-  await expect(art.first()).toBeVisible();
-  expect(await art.first().evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(100);
+test.describe("the drawing's motion", () => {
+  test.use({ reducedMotion: "no-preference" });
+  test("it pops in once", async ({ page }) => {
+    await open(page);
+    const fig = page.getByTestId("injury").first().locator(".inj-figure");
+    await fig.scrollIntoViewIfNeeded();
+    await expect(fig).toHaveClass(/play/);
+    expect(await fig.locator("canvas").evaluate((e) => ({ name: getComputedStyle(e).animationName, count: getComputedStyle(e).animationIterationCount }))).toEqual({ name: "pose-pop", count: "1" });
+  });
+});
+
+test("with motion off nothing animates", async ({ page }) => {
+  await open(page);
+  const fig = page.getByTestId("injury").first().locator(".inj-figure");
+  await fig.scrollIntoViewIfNeeded();
+  expect(await fig.locator("canvas").evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
 });

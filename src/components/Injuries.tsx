@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { ordinal } from "../lib/injuries.mjs";
@@ -42,7 +42,7 @@ function Card({ item, teamName }: { item: Item; teamName: string }) {
         <div><dt>Status</dt><dd>{item.status}</dd></div>
         <div><dt>Back</dt><dd>{item.back.text}</dd></div>
       </dl>
-      <div className="inj-figure-wrap"><InjuryFigure zone={zone.zone} side={zone.side} label={zone.label} size={44} /><small>{zone.label}</small></div>
+      <div className="inj-figure-wrap"><InjuryFigure zone={zone.zone} side={zone.side} label={zone.label} size={64} face={item.headshot} /><small>{zone.label}</small></div>
       </div>
       <div className="inj-impact" data-level={im.level ?? "none"}>
         <div className="inj-impact-top"><b>{im.label}</b>{im.percentile != null && <span>{ordinal(im.percentile)} percentile</span>}</div>
@@ -57,16 +57,17 @@ function Card({ item, teamName }: { item: Item; teamName: string }) {
 /** Who is hurt, how serious it looks, when they may be back, and how much their team misses them (judged from earlier games, else last season). */
 export function Injuries({ season, teams }: { season: number; teams: Team[] }) {
   const { data, error } = useFeed<Report>(`/api/injuries/${season}`, 600_000);
-  const [team, setTeam] = useState("all");
+  const [team, setTeam] = useState("EDM");
   const [level, setLevel] = useState<Level>("all");
   const [sort, setSort] = useState<Sort>("impact");
   const nameOf = (id: string) => teams.find((t) => t.id === id)?.name ?? id;
-  const shown = useMemo(() => {
-    const list = (data?.items ?? []).filter((i) => (team === "all" || i.team === team) && (level === "all" || (level === "minor" ? i.severity.level === "minor" || i.severity.level === "unknown" : level === "serious" ? i.severity.level === "serious" || i.severity.level === "season" : i.severity.level === level)));
+  const mine = team === "all" || (data?.items ?? []).some((i) => i.team === team) ? team : "all";
+  const shown = (() => {
+    const list = (data?.items ?? []).filter((i) => (mine === "all" || i.team === mine) && (level === "all" || (level === "minor" ? i.severity.level === "minor" || i.severity.level === "unknown" : level === "serious" ? i.severity.level === "serious" || i.severity.level === "season" : i.severity.level === level)));
     if (sort === "back") return [...list].sort((a, b) => (a.back.days ?? 9999) - (b.back.days ?? 9999) || (b.impact.percentile ?? -1) - (a.impact.percentile ?? -1));
     if (sort === "team") return [...list].sort((a, b) => nameOf(a.team).localeCompare(nameOf(b.team)) || (b.impact.percentile ?? -1) - (a.impact.percentile ?? -1));
     return list;
-  }, [data, team, level, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  })();
 
   if (!data && !error) return <section className="injuries" aria-label="Injury report"><Skeleton rows={4} label="Loading the injury report" /></section>;
   if (!data) return <section className="injuries" aria-label="Injury report"><p className="empty">The injury report is unavailable right now. Try again in a moment.</p></section>;
@@ -82,17 +83,17 @@ export function Injuries({ season, teams }: { season: number; teams: Team[] }) {
         <li><b>{data.counts.longTerm}</b> long-term</li>
         <li><b>{data.counts.high}</b> high-impact</li>
       </ul>
-      <h2 className="inj-h">Teams hit hardest</h2>
+      <h2 className="inj-h">Teams hit hardest <small>(★ high-impact)</small></h2>
       <ul className="inj-teams">
         {data.teams.slice(0, 6).map((t) => (
-          <li key={t.team}><button type="button" className="inj-team" aria-pressed={team === t.team} onClick={() => setTeam(team === t.team ? "all" : t.team)}>
-            <TeamLogo id={t.team} size={28} /><span><b>{t.team}</b><small>{t.count} out{t.high ? ` · ${t.high} high-impact` : ""}</small></span>
+          <li key={t.team}><button type="button" className="inj-team" aria-label={`${t.team}, ${t.count} out${t.high ? `, ${t.high} high-impact` : ""}`} aria-pressed={mine === t.team} onClick={() => setTeam(mine === t.team ? "all" : t.team)}>
+            <TeamLogo id={t.team} size={20} /><b>{t.team}</b><small>{t.count}{t.high ? ` · ${t.high}★` : ""}</small>
           </button></li>
         ))}
       </ul>
       <div className="inj-tools">
         <label><span className="sr-only">Team</span>
-          <select value={team} onChange={(e) => setTeam(e.target.value)} aria-label="Team">
+          <select value={mine} onChange={(e) => setTeam(e.target.value)} aria-label="Team">
             <option value="all">All teams</option>
             {[...new Set(data.items.map((i) => i.team))].sort((a, b) => nameOf(a).localeCompare(nameOf(b))).map((id) => <option key={id} value={id}>{nameOf(id)}</option>)}
           </select>

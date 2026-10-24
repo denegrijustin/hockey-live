@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useId, useRef, useState } from "react";
 import { useOnScreen } from "../motion";
 
 type Shape = { t: "circle"; cx: number; cy: number; r: number } | { t: "rect"; x: number; y: number; w: number; h: number; rx?: number } | { t: "ellipse"; cx: number; cy: number; rx: number; ry: number };
@@ -9,7 +9,7 @@ export function shapesFor(zone: string, side: "left" | "right" | null): Shape[] 
   const x = (d: number, s: number) => 50 + d * s;
   const pair = (f: (s: number) => Shape) => sides.map(f);
   switch (zone) {
-    case "head": return [{ t: "circle", cx: 50, cy: 20, r: 15 }];
+    case "head": return [{ t: "circle", cx: 50, cy: 22, r: 22 }];
     case "neck": return [{ t: "rect", x: 43, y: 30, w: 14, h: 12, rx: 4 }];
     case "shoulder": return pair((s) => ({ t: "circle", cx: x(18, s), cy: 47, r: 10 }));
     case "arm": return pair((s) => ({ t: "rect", x: s === 1 ? 62 : 14, y: 52, w: 14, h: 42, rx: 7 }));
@@ -40,7 +40,10 @@ const draw = (s: Shape, k: number, cls?: string) =>
  * A small body that lights up where the injury is. When it scrolls into view the spot pulses three times, then stays lit; with motion off (or on a phone
  * set to save data or power) it is simply lit. Illness and personal reasons light the whole figure; an unspecified region shades the upper or lower half.
  */
-export function InjuryFigure({ zone, side, label, size = 56 }: { zone: string; side: "left" | "right" | null; label: string; size?: number }) {
+export function InjuryFigure({ zone, side, label, size = 56, face = null }: { zone: string; side: "left" | "right" | null; label: string; size?: number; face?: string | null }) {
+  const clip = useId();
+  const [bad, setBad] = useState(false);
+  const showFace = !!face && !bad;
   const ref = useRef<HTMLDivElement>(null);
   const seen = useOnScreen(ref, true);
   const shapes = shapesFor(zone, side);
@@ -48,12 +51,18 @@ export function InjuryFigure({ zone, side, label, size = 56 }: { zone: string; s
     <div ref={ref} className={`inj-figure${seen ? " play" : ""}`} data-zone={zone} data-side={side ?? ""} role="img" aria-label={`Injury location: ${label}`}>
       <svg viewBox="0 0 100 204" width={size} height={size * 2.04} aria-hidden="true">
         <g className="fig-body">
-          <circle cx="50" cy="20" r="13" />
+          <circle cx="50" cy={showFace ? 22 : 20} r={showFace ? 20 : 13} />
           <path d="M44 31h12v10H44z" />
           <path d="M30 44q20-8 40 0l3 52q-23 8-46 0z" />
           <path d="M30 46L16 98M70 46l14 52" className="fig-limb" />
           <path d="M41 106l-3 80M59 106l3 80" className="fig-limb leg" />
         </g>
+        {showFace && (
+          <>
+            <clipPath id={clip}><circle cx="50" cy="22" r="19" /></clipPath>
+            <image href={face!} x="29" y="1" width="42" height="42" preserveAspectRatio="xMidYMin slice" clipPath={`url(#${clip})`} onError={() => setBad(true)} data-testid="fig-face" />
+          </>
+        )}
         {zone === "unknown" ? <text x="50" y="112" textAnchor="middle" className="fig-q">?</text> : null}
         <g className="fig-zone">{shapes.map((s, k) => draw(s, k))}</g>
         <g className="fig-pulse">{shapes.map((s, k) => draw(s, k))}</g>

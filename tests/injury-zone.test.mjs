@@ -34,3 +34,8 @@ test("general reports show a region, not a spot, and illness and personal reason
   assert.equal(z("Undisclosed").zone, "unknown");
   assert.equal(z("Not specified").label, "Not specified");
 });
+
+import { readFileSync } from "node:fs";
+test("the page's security policy lets the player pictures load", () => {
+  assert.match(readFileSync(new URL("../public/_headers", import.meta.url), "utf8"), /img-src[^;]*https:\/\/a\.espncdn\.com/);
+});

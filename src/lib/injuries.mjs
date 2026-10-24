@@ -38,7 +38,7 @@ export function parseEspnInjuries(json, teams) {
         name: a.displayName ?? "Unknown player",
         pos: a.position?.abbreviation ?? null,
         team,
-        headshot: a.headshot?.href ?? null,
+        headshot: a.headshot?.href ?? (a.id ? `https://a.espncdn.com/i/headshots/nhl/players/full/${a.id}.png` : null),
         status: STATUS[String(i.status ?? "").toLowerCase()] ?? i.status ?? "Unknown",
         longTerm: /\bLT\b/i.test(d.fantasyStatus?.abbreviation ?? ""),
         kind,

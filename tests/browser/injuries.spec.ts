@@ -137,3 +137,31 @@ test("with motion off the spot is simply lit: nothing pulses", async ({ page }) 
   expect(await fig.locator(".fig-pulse *").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
   await expect(fig.locator(".fig-zone *").first()).toBeVisible();
 });
+
+const withEdm = { ...report, items: report.items.map((i: { team: string }, k: number) => (k < 2 ? { ...i, team: "EDM" } : i)) };
+
+test("the report opens on Edmonton, and picking another team changes the list straight away", async ({ page }) => {
+  await open(page, withEdm);
+  await expect(page.getByLabel("Team", { exact: true })).toHaveValue("EDM");
+  const teamsShown = () => page.getByTestId("injury").evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("data-team")))]);
+  expect(await teamsShown()).toEqual(["EDM"]);
+  const other = withEdm.items.find((i: { team: string }) => i.team !== "EDM")!.team;
+  await page.getByLabel("Team", { exact: true }).selectOption(other);
+  expect(await teamsShown()).toEqual([other]);
+  await page.getByLabel("Team", { exact: true }).selectOption("all");
+  expect((await teamsShown()).length).toBeGreaterThan(1);
+});
+
+test("Teams hit hardest is a compact row of small chips", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await open(page);
+  const boxes = await page.locator(".inj-team").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
+  expect(Math.max(...boxes)).toBeLessThanOrEqual(46);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
+});
+
+test("the player's face sits on the injury figure's head", async ({ page }) => {
+  await open(page);
+  const fig = page.getByTestId("injury").first().locator(".inj-figure");
+  await expect(fig.getByTestId("fig-face")).toHaveAttribute("href", /a\.espncdn\.com/);
+});

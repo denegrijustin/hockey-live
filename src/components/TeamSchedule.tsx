@@ -20,10 +20,10 @@ const resultText = (i: Item) => (i.status === "upcoming" ? time(i.start) : `${i.
 
 interface Props { games: Game[]; teams: Team[]; defaultTeam?: string; analysis: any; baseline: any; baselineTable?: any; sourceSeason: number }
 
-/** A team's whole season, as a list of cards that opens on the game closest to being played, or as a calendar that opens on this month. */
+/** A team's whole season: a calendar that opens on this month (the default), or a list of cards that opens on the game closest to being played. */
 export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, baselineTable, sourceSeason }: Props) {
   const [teamId, setTeamId] = useState(defaultTeam && teams.some((t) => t.id === defaultTeam) ? defaultTeam : teams[0]?.id);
-  const [mode, setMode] = useState<"list" | "calendar">("list");
+  const [mode, setMode] = useState<"list" | "calendar">("calendar");
   const [filter, setFilter] = useState<Filter>("all");
   const today = useEtToday();
   const team = teams.find((t) => t.id === teamId)!;

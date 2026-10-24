@@ -18,7 +18,7 @@ const games = [
   }),
 ];
 
-async function open(page: Page) {
+async function open(page: Page, mode: "list" | "calendar" = "list") {
   const snapshot = { season, updatedAt: new Date().toISOString(), source: "fixture", games };
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
@@ -27,6 +27,8 @@ async function open(page: Page) {
   await goTo(page, "Schedule");
   await page.getByLabel("Team", { exact: true }).selectOption("TOR");
   await expect(page.getByRole("heading", { name: "Toronto Maple Leafs", level: 1 })).toBeVisible();
+  // The Schedule opens on the calendar; the list tests switch to the list.
+  if (mode === "list") await page.getByRole("button", { name: "List", exact: true }).click();
 }
 const monthName = (offset = 0) => { const d = new Date(`${etDay(0).slice(0, 7)}-15T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() + offset); return d.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }); };
 
@@ -70,9 +72,8 @@ test("the completed and upcoming chips narrow the list; completed games show the
   await expect(page.locator("[data-next]")).toBeVisible();
 });
 
-test("the calendar opens on the current month, shows each game on its day, and moves month to month", async ({ page }) => {
-  await open(page);
-  await page.getByRole("button", { name: "Calendar", exact: true }).click();
+test("the Schedule opens on the calendar, on the current month, shows each game on its day, and moves month to month", async ({ page }) => {
+  await open(page, "calendar");
   await expect(page.getByTestId("ts-month")).toHaveText(monthName(0));
   await expect(page.locator(".ts-day.today")).toHaveCount(1);
   await expect(page.locator(`.ts-day[data-date="${etDay(1)}"] .ts-gchip`).or(page.locator(`.ts-day[data-date="${etDay(-1)}"] .ts-gchip`)).first()).toBeVisible();
@@ -107,4 +108,13 @@ test("both views fit a 360px phone with no sideways scroll", async ({ page }) =>
   await page.getByRole("button", { name: "Calendar", exact: true }).click();
   await expect(page.getByTestId("ts-calendar")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
+});
+
+test("the Schedule opens on the calendar, not the list", async ({ page }) => {
+  await open(page, "calendar");
+  await expect(page.getByTestId("ts-calendar")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Calendar", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("ts-list")).toHaveCount(0);
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.getByTestId("ts-list")).toBeVisible();
 });

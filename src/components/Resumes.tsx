@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { Game, Team } from "../types";
 import { buildResumes } from "../lib/resumes.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { TeamLink } from "./TeamProfile";
 import "./resumes.css";
 
 type Meet = { id: number; opp: string; oppRank: number; home: boolean; gf: number; ga: number; end: string; bad?: boolean };
@@ -13,7 +14,7 @@ const heat = (rank: number, size: number) => {
   return { background: `color-mix(in srgb, ${t < 0.5 ? "var(--green-5, #3fb68b)" : "var(--red-5, #e06a6a)"} ${Math.round(Math.abs(t - 0.5) * 2 * 70)}%, transparent)` };
 };
 
-function Chip({ m, win }: { m: Meet; win: boolean }) {
+export function Chip({ m, win }: { m: Meet; win: boolean }) {
   return (
     <li className={`rs-chip${m.bad ? " bad" : ""}`} title={`${win ? "Won" : "Lost"} ${win ? m.gf : m.gf}–${m.ga}${m.end ? ` (${m.end})` : ""} ${m.home ? "at home against" : "on the road against"} the #${m.oppRank} team${m.bad ? ". A bad loss: the opponent is in the bottom ten." : ""}`}>
       <TeamLogo id={m.opp} size={22} />
@@ -48,7 +49,7 @@ export function Resumes({ teams, table, games }: { teams: Team[]; table: Record<
         {rows.map((r) => (
           <li key={r.team} className="rs-row" data-team={r.team}>
             <span className="rs-rank">{r.rank}</span>
-            <span className="rs-team"><TeamLogo id={r.team} size={30} /><span><b title={nameOf(r.team)}>{shortOf(r.team)}</b><small>{r.record} · {r.pts} pts</small></span></span>
+            <span className="rs-team"><TeamLogo id={r.team} size={30} /><span><b title={nameOf(r.team)}><TeamLink id={r.team}>{shortOf(r.team)}</TeamLink></b><small>{r.record} · {r.pts} pts</small></span></span>
             <div className="rs-wins"><h4>Best wins</h4>{r.bestWins.length ? <ul>{r.bestWins.map((m) => <Chip key={m.id} m={m} win />)}</ul> : <p className="rs-none">No wins yet</p>}</div>
             <div className="rs-losses"><h4>Losses</h4>{r.lossCount ? <ul>{r.losses.map((m) => <Chip key={m.id} m={m} win={false} />)}{r.moreLosses > 0 && <li className="rs-more">+{r.moreLosses} more</li>}</ul> : <p className="rs-none">Unbeaten</p>}</div>
             <span className="rs-cells">

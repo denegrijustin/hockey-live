@@ -3,6 +3,7 @@ import { simulatePlayoffs } from "../lib/playoff-sim.mjs";
 import type { Game, Team } from "../types";
 import "./playoff-odds.css";
 import { TeamLogo } from "./TeamLogo";
+import { TeamLink } from "./TeamProfile";
 
 const SIMS = 20000;
 const DIV_FILE: Record<string, string> = { Atlantic: "atlantic", Metropolitan: "metro", Central: "central", Pacific: "pacific" };
@@ -104,7 +105,7 @@ export function PlayoffOdds({
                             <div className="po-team-cell">
                               <i className="po-accent" style={{ background: t.cardColor ?? t.color }} />
                               <TeamLogo id={t.id} size={22} />
-                              <span className="po-name"><b>{t.short}</b><small className="po-sub"><img className="po-div-logo" src={`/logos/league/${DIV_FILE[t.division] ?? "atlantic"}.webp`} alt={`${t.division} Division`} width="32" height="21" title={`${t.division} Division`} /><span className="po-line">{row.w}–{row.l}–{row.ot} · {row.pts}<span className="po-ptsword"> pts</span></span></small></span>
+                              <span className="po-name"><b><TeamLink id={t.id}>{t.short}</TeamLink></b><small className="po-sub"><img className="po-div-logo" src={`/logos/league/${DIV_FILE[t.division] ?? "atlantic"}.webp`} alt={`${t.division} Division`} width="32" height="21" title={`${t.division} Division`} /><span className="po-line">{row.w}–{row.l}–{row.ot} · {row.pts}<span className="po-ptsword"> pts</span></span></small></span>
                             </div>
                           </td>
                           <td className="po-rec">{row.w}–{row.l}–{row.ot}</td>

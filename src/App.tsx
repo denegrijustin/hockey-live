@@ -1,6 +1,7 @@
 import { isLive } from "./lib/game-data.mjs";
 import { useSeason } from "./hooks/useSeason";
 import { useGameLists } from "./hooks/useGameLists";
+import { TeamProfileProvider } from "./components/TeamProfile";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
@@ -196,7 +197,7 @@ export default function App() {
     setSort("date");
   };
   return (
-    <>
+    <TeamProfileProvider teams={teams} table={analysis?.table ?? null} games={data?.games ?? []} season={season}>
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
@@ -604,6 +605,6 @@ export default function App() {
           onClose={() => setTeamsOpen(false)}
         />
       )}
-    </>
+    </TeamProfileProvider>
   );
 }

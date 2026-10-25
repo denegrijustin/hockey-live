@@ -3490,12 +3490,14 @@ select,
 .int-fresh {
   fill: none;
   stroke: #ffffff;
-  stroke-width: 14;
-  stroke-linecap: round;
+  stroke-width: 13.5;
+  stroke-linecap: butt;
   stroke-linejoin: round;
   stroke-dasharray: 100 100;
   stroke-dashoffset: 100; /* set frame by frame to follow the Zamboni */
 }
+.int-finish { fill: #fff; opacity: var(--ice-finish, 0); }
+.int-finish.done { opacity: 1; }
 .int-fresh.done { stroke-dashoffset: 0; }
 .int-marks { opacity: 0.9; }
 .int-goal { stroke: #d6293e; stroke-width: 0.5; fill: none; }
@@ -3506,15 +3508,21 @@ select,
 .int-dot { fill: #d6293e; }
 .int-crease { fill: #cfe3f3; stroke: #d6293e; stroke-width: 0.5; }
 .int-net { fill: #dfe7ee; stroke: #d6293e; stroke-width: 0.7; }
-.int-zshadow { fill: color-mix(in srgb, var(--surface-6) 28%, transparent); }
+.int-zshadow { fill: #152f40; opacity: .16; filter: blur(.6px); }
 .int-zbody { fill: var(--z-body, var(--amber-4)); stroke: var(--z-edge, var(--amber-2)); stroke-width: 0.5; }
 .int-tire { fill: var(--surface-5); }
 .int-cab { fill: var(--z-cab, var(--amber-3)); stroke: var(--z-edge, var(--amber-2)); stroke-width: 0.4; }
 .int-driver { fill: var(--amber-5); stroke: rgb(0 0 0 / 40%); stroke-width: 0.3; }
 .int-cond { fill: var(--text-1); stroke: var(--line-2); stroke-width: 0.4; }
 .int-sign { fill: var(--z-sign, var(--surface-6)); stroke: var(--z-accent, var(--amber-4)); stroke-width: 0.4; }
-.int-sign-t { font: 800 2.5px system-ui, sans-serif; fill: #fff; }
+.int-sign-t { font: 800 1.65px system-ui, sans-serif; fill: #fff; }
 .int-sign-t.gold { fill: var(--z-accent, var(--amber-4)); }
+.int-hitch, .int-bumper { fill: none; stroke: #526b78; stroke-width: .7; }
+.int-body-shine { fill: none; stroke: #fff; stroke-opacity: .35; stroke-width: .35; }
+.int-driver-coat { fill: #263b4a; }
+.int-water { fill: none; stroke: #bce5f1; stroke-width: 1.4; opacity: .65; }
+.int-chassis { animation: int-idle 2.8s ease-in-out infinite; }
+@keyframes int-idle { 0%, 100% { transform: translateY(-.08px); } 50% { transform: translateY(.08px); } }
 .int-cap {
   margin: 6px 0 0;
   font-size: 0.78rem;

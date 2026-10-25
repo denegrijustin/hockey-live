@@ -120,3 +120,31 @@ test("the logo at centre ice sits straight on the ice, with no square chip behin
   await expect(logo.locator("image")).toBeVisible();
   await expect(logo.locator(".logo-chip")).toHaveCount(0);
 });
+
+test("the rear blade paints the trail and the roof sign stays horizontal through turns", async ({ page }, testInfo) => {
+  await page.clock.install();
+  const card = await open(page, { intermission: true, clock: "15:00" });
+  const rink = card.locator('.int-rink');
+  await expect(card.locator('.int-zamboni')).toHaveAttribute('transform', /translate/);
+  let sawTurn = false;
+  for (let step = 0; step < 30; step++) {
+    const geometry = await rink.evaluate((svg) => {
+      const machine = svg.querySelector('.int-zamboni') as SVGGElement;
+      const sign = svg.querySelector('.int-placard') as SVGGElement;
+      const paint = svg.querySelector('.int-fresh') as SVGPathElement;
+      const matrix = machine.transform.baseVal.consolidate()!.matrix;
+      const signMatrix = sign.transform.baseVal.consolidate()!.matrix;
+      const end = paint.getPointAtLength(paint.getTotalLength() * (1 - Number(paint.style.strokeDashoffset) / 100));
+      const rear = new DOMPoint(-10, 0).matrixTransform(matrix);
+      const combined = matrix.multiply(signMatrix);
+      return { gap: Math.hypot(end.x-rear.x, end.y-rear.y), angle: Math.atan2(combined.b, combined.a), turning: Math.abs(matrix.b) > .1 };
+    });
+    expect(geometry.gap).toBeLessThan(.1);
+    expect(Math.abs(geometry.angle)).toBeLessThan(.001);
+    sawTurn ||= geometry.turning;
+    await page.clock.fastForward(28_000);
+  }
+  expect(sawTurn).toBe(true);
+  await expect(card.locator('.int-sign-t')).toHaveText('BRING NHL TO KC');
+  await rink.screenshot({ path: testInfo.outputPath('zamboni.png') });
+});

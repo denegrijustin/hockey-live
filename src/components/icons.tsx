@@ -17,6 +17,7 @@ const paths: Record<string, ReactNode> = {
   chevron: <path d="M9 6l6 6-6 6" />,
   calendar: (<><rect x="3.5" y="5" width="17" height="15" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></>),
   search: (<><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>),
+  night: <path d="M20 14.6A8 8 0 1 1 9.4 4a6.4 6.4 0 0 0 10.6 10.6z" />,
   refresh: <path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" />,
 };
 

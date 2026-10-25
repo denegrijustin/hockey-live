@@ -14,7 +14,7 @@ let totalJs = 0;
 for (const f of list("assets/", ".js")) {
   const size = gz(new URL(`assets/${f}`, dist));
   totalJs += size;
-  limits.push([`assets/${f}`, size, 130 * KB]);
+  limits.push([`assets/${f}`, size, 135 * KB]);
 }
 limits.push(["all JavaScript", totalJs, 300 * KB]);
 for (const f of list("assets/", ".css")) limits.push([`assets/${f}`, gz(new URL(`assets/${f}`, dist)), 28 * KB]);

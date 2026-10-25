@@ -7,6 +7,7 @@ import { InjuryMascot } from "./InjuryMascot";
 import { InjuryHeadshot } from "./InjuryHeadshot";
 import { Skeleton } from "./Skeleton";
 import { TeamLogo } from "./TeamLogo";
+import { TeamLink } from "./TeamProfile";
 
 type Impact = { basis: "season" | "last" | "none"; small?: boolean; gp: number; perGame?: number; percentile: number | null; level: "high" | "medium" | "low" | null; label: string; goals?: number; assists?: number; toi?: number | null; savePct?: number | null; group?: string };
 type Item = { id: string; name: string; pos: string | null; team: string; headshot: string | null; status: string; kind: string; detail: string | null; side: string | null; updated: string | null; comment: string; severity: { level: "season" | "serious" | "moderate" | "minor" | "unknown"; label: string; days: number | null }; back: { text: string; days: number | null }; impact: Impact };
@@ -32,7 +33,7 @@ function Card({ item, teamName }: { item: Item; teamName: string }) {
         <InjuryHeadshot src={item.headshot} name={item.name} size={48} />
         <div className="inj-name">
           <b>{item.name}</b>
-          <span>{item.pos ? `${item.pos} · ` : ""}<TeamLogo id={item.team} size={16} /> {teamName}</span>
+          <span>{item.pos ? `${item.pos} · ` : ""}<TeamLogo id={item.team} size={16} /> <TeamLink id={item.team}>{teamName}</TeamLink></span>
         </div>
         <span className={`inj-sev ${sv.level}`}>{sv.label}</span>
       </div>

@@ -4,6 +4,7 @@ import type { Game, Team } from "../types";
 import { signed, entryLine } from "../lib/model.mjs";
 import { TeamLogo } from "./TeamLogo";
 import { Resumes } from "./Resumes";
+import { TeamLink } from "./TeamProfile";
 export function Standings({
   teams,
   table,
@@ -81,7 +82,7 @@ export function Standings({
                     <td>
                       <div className="table-team">
                         <TeamLogo id={t.id} size={28} />
-                        <b>{t.name}</b>
+                        <b><TeamLink id={t.id}>{t.name}</TeamLink></b>
                       </div>
                     </td>
                     <td>{t.division}</td>

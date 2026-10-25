@@ -1,0 +1,32 @@
+.gx-head h2 { margin: 2px 0; }
+.gx-head p:last-child { margin: 4px 0 12px; max-width: 70ch; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+.gx-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gx-col { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; gap: 3px; }
+.gx-col li { display: grid; grid-template-columns: 1.6rem 30px minmax(0, 1fr); align-items: center; gap: 6px; min-height: 44px; }
+.gx-rank { text-align: right; color: var(--text-3); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.gx-val { display: grid; place-items: center; min-height: 40px; border-radius: 6px; color: #fff; font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+@media (min-width: 1000px) { .gx-cols { gap: 16px; max-width: 900px; } .gx-col li { grid-template-columns: 2rem 34px minmax(0, 1fr); gap: 10px; } .gx-val { font-size: 1.125rem; } }
+@media (max-width: 480px) { .gx-cols { gap: 5px; } .gx-col li { grid-template-columns: 1.3rem 26px minmax(0, 1fr); gap: 3px; } .gx-col li .team-logo { width: 26px; height: 26px; } .gx-val { font-size: .875rem; } }
+
+/* Goalies table */
+.gg-table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0 2px; font-variant-numeric: tabular-nums; }
+.gg-short { display: none; }
+.gg-table th:not(.gg-name), .gg-table td:not(.gg-name) { width: 17%; }
+.gg-table th, .gg-table th button, .gg-table th span { white-space: normal; overflow-wrap: anywhere; }
+.gg-table th { padding: 4px 4px; text-align: center; font-size: .6875rem; line-height: 1.2; color: var(--text-3); font-weight: 700; vertical-align: bottom; }
+.gg-table th button { display: grid; justify-items: center; gap: 2px; width: 100%; min-height: 44px; padding: 2px; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.gg-table th i { font-style: normal; font-size: .625rem; color: var(--muted); }
+.gg-table th.gg-key button { color: var(--text-6); }
+.gg-table td { padding: 6px 4px; text-align: center; background: var(--surface-3); font-size: .875rem; }
+.gg-table td.gg-key { color: #fff; font-weight: 800; }
+.gg-table .gg-name { text-align: left; }
+.gg-table td.gg-name { border-radius: 8px 0 0 8px; overflow: hidden; }
+.gg-who b { white-space: normal; min-width: 0; }
+.gg-who { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.gg-table td.gg-name b { font-weight: 600; font-size: .8125rem; line-height: 1.2; }
+.gg-rank { width: 1.4rem; text-align: right; color: var(--text-3); font-size: .8125rem; flex: none; }
+.gg-table td:last-child { border-radius: 0 8px 8px 0; }
+.gg-more { margin: 8px 0 0; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-3); background: transparent; color: var(--mint-5); font: inherit; font-weight: 650; cursor: pointer; }
+@media (max-width: 700px) { .gg-long { display: none; } .gg-short { display: inline; } .gg-table th:not(.gg-name), .gg-table td:not(.gg-name) { width: 15%; } }
+@media (max-width: 480px) { .gg-table th, .gg-table td { padding-left: 2px; padding-right: 2px; } .gg-table td.gg-name .team-logo { width: 22px; height: 22px; } .gg-rank { width: 1.1rem; } .gg-table td { font-size: .8125rem; } .gg-table th { font-size: .625rem; } .gg-table td.gg-name b { font-size: .75rem; } }
+@media (min-width: 1000px) { .gg-table td.gg-name b { font-size: .9375rem; } .gg-table td { font-size: .9375rem; } .gg-table th { font-size: .75rem; } }

@@ -44,3 +44,12 @@
 .gr-goals em { font-style: normal; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-4); }
 .gr-note { margin: 0; color: var(--muted); font-size: .6875rem; line-height: 1.5; }
 @media (max-width: 480px) { .gr-star-row { gap: 4px; } .gr-star b { font-size: .75rem; } .gr-goals li { grid-template-columns: 4.2rem 3px 2rem minmax(0, 1fr) 2.6rem 2rem; gap: 4px; } }
+
+.gr-periods h4 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gr-toggle { display: inline-flex; border: 1px solid var(--line-3); border-radius: 8px; overflow: hidden; }
+.gr-toggle button { min-height: 32px; padding: 0 10px; border: 0; border-radius: 0; background: transparent; color: var(--text-3); font: inherit; font-size: .75rem; font-weight: 600; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.gr-toggle button[aria-pressed="true"] { background: var(--surface-8); color: var(--mint-6); }
+.gr-pgrid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.gr-period { display: grid; gap: 4px; padding: 8px 10px; border-radius: 10px; background: var(--surface-3); font-variant-numeric: tabular-nums; }
+.gr-period small { color: var(--muted); font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; }
+.gr-prow { display: flex; justify-content: space-between; font-size: .875rem; } .gr-prow b { color: var(--text-3); font-weight: 600; } .gr-prow b.lead { color: var(--text-6); font-weight: 800; }

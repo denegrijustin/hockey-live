@@ -1,0 +1,9 @@
+.gx-head h2 { margin: 2px 0; }
+.gx-head p:last-child { margin: 4px 0 12px; max-width: 70ch; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+.gx-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gx-col { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; gap: 3px; }
+.gx-col li { display: grid; grid-template-columns: 1.6rem 30px minmax(0, 1fr); align-items: center; gap: 6px; min-height: 44px; }
+.gx-rank { text-align: right; color: var(--text-3); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.gx-val { display: grid; place-items: center; min-height: 40px; border-radius: 6px; color: #fff; font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+@media (min-width: 1000px) { .gx-cols { gap: 16px; max-width: 900px; } .gx-col li { grid-template-columns: 2rem 34px minmax(0, 1fr); gap: 10px; } .gx-val { font-size: 1.125rem; } }
+@media (max-width: 480px) { .gx-cols { gap: 5px; } .gx-col li { grid-template-columns: 1.3rem 26px minmax(0, 1fr); gap: 3px; } .gx-col li .team-logo { width: 26px; height: 26px; } .gx-val { font-size: .875rem; } }

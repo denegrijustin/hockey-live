@@ -5,7 +5,9 @@ test("NHL+ Play vs results places every team in a play × results grid", async (
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/?view=games");
   await goTo(page, "NHL+");
-  await page.getByRole("button", { name: "Play vs results" }).click();
+  const nav = page.getByRole("navigation", { name: "NHL+ views" });
+  if (await nav.getByRole("button", { name: "Play vs results" }).isHidden()) await nav.locator('button[aria-pressed="true"]').click(); // folded into one button on a phone
+  await nav.getByRole("button", { name: "Play vs results" }).click();
   await expect(page.getByRole("heading", { name: "Playing well? Winning?" })).toBeVisible();
   await expect(page.locator(".pm-cell")).toHaveCount(9);
   await expect(page.locator('[data-cell="well/winning"] h4')).toContainText("The real deal");

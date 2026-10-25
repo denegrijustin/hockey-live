@@ -34,6 +34,28 @@ test.describe("a phone never scrolls sideways", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
   });
 
+  test("NHL+ opens with its header folded into one line, so the content starts high on the page", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto("/?view=nhlplus");
+    const nav = page.getByRole("navigation", { name: "NHL+ views" });
+    await expect(nav).toBeVisible({ timeout: 30000 });
+    // One view button and Refresh, not seven tabs on two rows.
+    await expect(nav.getByRole("button", { name: "Teams", exact: true })).toBeVisible();
+    await expect(nav.getByRole("button", { name: "Matchups", exact: true })).toBeHidden();
+    await page.locator(".np-panel").first().waitFor({ timeout: 30000 });
+    const top = await page.locator(".np-panel").first().evaluate((e) => Math.round(e.getBoundingClientRect().top));
+    expect(top).toBeLessThan(430);
+    // Tapping the current view opens the others, and picking one switches and folds it away again.
+    await nav.getByRole("button", { name: "Teams", exact: true }).click();
+    await expect(nav.getByRole("button", { name: "Goalies", exact: true })).toBeVisible();
+    await nav.getByRole("button", { name: "Goalies", exact: true }).click();
+    await expect(nav.getByRole("button", { name: "Goalies", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(nav.getByRole("button", { name: "Matchups", exact: true })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Check MoneyPuck for new data" })).toBeVisible();
+    // The team picker is not repeated above a view that has its own team controls.
+    await expect(page.locator(".phone-controls")).toHaveCount(0);
+  });
+
   test("a wide stat table becomes cards with labelled numbers and a Sort by menu", async ({ page }) => {
     await page.goto("/?view=nhlplus");
     const row = page.locator(".np-table tbody tr").first();

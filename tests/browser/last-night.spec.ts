@@ -109,3 +109,20 @@ test("a game from last night fits a 360px phone with no sideways scroll", async 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   expect(await page.getByTestId("last-night-game").evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
 });
+
+for (const [label, width] of [["a 360px phone", 360], ["a laptop", 1280]] as const) {
+  test(`final scores on ${label}: team, score and team sit side by side and never overlap`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page);
+    const rows = page.getByTestId("last-night").locator(".ln-finals li");
+    await expect(rows.first()).toBeVisible({ timeout: 30000 });
+    for (let i = 0; i < (await rows.count()); i++) {
+      const [away, score, home, row] = await Promise.all([
+        rows.nth(i).locator(".ln-side").first().boundingBox(), rows.nth(i).locator(".ln-score").boundingBox(), rows.nth(i).locator(".ln-side.home").boundingBox(), rows.nth(i).boundingBox(),
+      ]);
+      expect(away!.x + away!.width).toBeLessThanOrEqual(score!.x + 1);
+      expect(score!.x + score!.width).toBeLessThanOrEqual(home!.x + 1);
+      expect(home!.x + home!.width).toBeLessThanOrEqual(row!.x + row!.width + 1);
+    }
+  });
+}

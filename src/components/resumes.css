@@ -1,0 +1,31 @@
+.rs-key { margin: 6px 0 12px; max-width: 80ch; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+.rs-key b { color: var(--text-4); }
+.rs-key .rs-bad-key { color: var(--red-5); }
+.rs-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); counter-reset: none; }
+.rs-row { display: grid; gap: 8px 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface-5); min-width: 0;
+  grid-template-columns: 2rem minmax(0, 1fr) auto; grid-template-areas: "rank team cells" "wins wins wins" "losses losses losses"; align-items: center; }
+.rs-rank { grid-area: rank; font-size: 1.125rem; font-weight: 800; color: var(--text-5); text-align: center; font-variant-numeric: tabular-nums; }
+.rs-team { grid-area: team; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rs-team > span { display: grid; min-width: 0; line-height: 1.25; }
+.rs-team b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-team small { color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
+.rs-cells { grid-area: cells; display: flex; gap: 4px; }
+.rs-cell { display: grid; justify-items: center; align-content: center; min-width: 40px; min-height: 44px; padding: 2px 4px; border-radius: 8px; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.rs-cell small { font-size: .625rem; letter-spacing: .06em; color: var(--text-3); }
+.rs-cell b { font-size: .9375rem; color: var(--text-6); }
+.rs-cell i { font-style: normal; font-size: .6875rem; color: var(--text-3); }
+.rs-wins { grid-area: wins; } .rs-losses { grid-area: losses; }
+.rs-wins h4, .rs-losses h4 { margin: 0 0 4px; font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.rs-wins ul, .rs-losses ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.rs-chip { position: relative; display: flex; align-items: center; gap: 6px; white-space: nowrap; padding: 3px 8px 3px 5px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--surface-3); font-variant-numeric: tabular-nums; }
+.rs-chip-s { display: flex; align-items: baseline; gap: 4px; font-size: .75rem; color: var(--text-5); } .rs-chip-s small { font-size: .625rem; color: var(--text-1); }
+.rs-chip-w { font-size: .6875rem; color: var(--text-1); }
+.rs-chip.bad { border-color: var(--red-5); background: color-mix(in srgb, var(--red-5) 16%, var(--surface-3)); }
+.rs-bad { position: absolute; top: -7px; right: 4px; padding: 0 5px; border-radius: 999px; background: var(--red-5); color: var(--surface-1); font-style: normal; font-size: .625rem; font-weight: 800; letter-spacing: .05em; line-height: 1.5; }
+.rs-more { align-self: center; padding: 0 6px; font-size: .75rem; color: var(--muted); }
+.rs-none { margin: 0; color: var(--muted); font-size: .8125rem; }
+/* A wide screen reads each team on one line: wins, losses and the three ranks side by side. */
+@media (min-width: 1000px) {
+  .rs-row { grid-template-columns: 2rem 12rem minmax(0, 1fr) minmax(0, 1.2fr) auto; grid-template-areas: "rank team wins losses cells"; }
+}
+@media (max-width: 480px) { .rs-cell { min-width: 36px; } .rs-chip { padding-right: 6px; } }

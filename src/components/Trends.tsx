@@ -3,6 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { playoffTrend, rollingSeries } from "../lib/model.mjs";
 import type { Game, Team } from "../types";
 import { LogoImage } from "./TeamLogo";
+import { GsaxBoard } from "./GsaxBoard";
+import { GoalieGsax } from "./GoalieGsax";
+import { useMoneyPuck } from "../lib/moneypuck-client";
+import { gsaxByGame, rollingMean } from "../lib/gsax.mjs";
 // Plot area inside the 1000-wide viewBox. The side margins hold axis labels that are drawn at a real 11px (see chartUnit).
 const PLOT_L = 125, PLOT_W = 805;
 
@@ -28,6 +32,7 @@ export function Trends({
     [hover, setHover] = useState<number | null>(null),
     chartRef = useChartUnit<SVGSVGElement>(1000);
   const current = season === currentSeason;
+  const mpGames = useMoneyPuck(season, "games", { enabled: metric === "gsax", watchAge: current });
   useEffect(() => {
     if (!current && metric === "playoffs") setMetric("difference");
   }, [current, metric]);
@@ -42,9 +47,11 @@ export function Trends({
         data:
           metric === "playoffs"
             ? playoffHistory[t.id]
-            : rollingSeries(table[t.id], metric, window),
+            : metric === "gsax"
+              ? rollingMean(gsaxByGame(mpGames.data, games, t.id), window)
+              : rollingSeries(table[t.id], metric, window),
       })),
-    [teams, table, metric, window, playoffHistory],
+    [teams, table, metric, window, playoffHistory, mpGames.data, games],
   );
   const values = series.flatMap((s) => s.data.map((p: any) => p.value));
   const minimum = metric === "playoffs" ? 0 : Math.min(0, ...values),
@@ -66,6 +73,9 @@ export function Trends({
     ),
   ];
   return (
+    <>
+    <GsaxBoard season={season} teams={leagueTeams} current={current} />
+    <GoalieGsax season={season} current={current} />
     <section className="panel trend-panel">
       <div className="panel-heading">
         <div>
@@ -83,6 +93,7 @@ export function Trends({
             Metric
             <select value={metric} onChange={(e) => setMetric(e.target.value)}>
               {current && <option value="playoffs">Playoff chance</option>}
+              <option value="gsax">Goals saved above expected</option>
               <option value="difference">Goal differential</option>
               <option value="gf">Goals for</option>
               <option value="ga">Goals against</option>
@@ -136,7 +147,7 @@ export function Trends({
               aria-label={
                 metric === "playoffs"
                   ? "Estimated playoff chance by game number"
-                  : `${window}-game ${metric} averages by game number`
+                  : `${window}-game ${metric === "gsax" ? "goals saved above expected" : metric} averages by game number`
               }
               onPointerDown={inspectChart}
               onPointerMove={inspectChart}
@@ -263,5 +274,6 @@ export function Trends({
         </>
       )}
     </section>
+    </>
   );
 }

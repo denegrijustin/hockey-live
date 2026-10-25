@@ -17,21 +17,50 @@ export function intermissionLeft({ base, at, seenAt, now }) {
   return Math.max(0, (INTERMISSION_MS - (now - seenAt)) / 1000);
 }
 
-/**
- * The resurfacing route in a 200 x 85 rink: four laps of the boards, each one inside the last, so the whole sheet is done by the end.
- * Strips are `width` wide and the laps are `width` apart so they just meet. Returns an SVG path with rounded corners.
- */
-export function resurfacePath(width = 10, W = 200, H = 85) {
-  const laps = 4;
-  const parts = [];
-  for (let i = 0; i < laps; i++) {
-    const g = width / 2 + 1 + i * width;
-    const x0 = g, y0 = g, x1 = W - g, y1 = H - g, r = Math.max(4, 24 - i * 5);
-    parts.push(
-      `${i ? "L" : "M"}${x0 + r} ${y0}H${x1 - r}Q${x1} ${y0} ${x1} ${y0 + r}V${y1 - r}Q${x1} ${y1} ${x1 - r} ${y1}H${x0 + r}Q${x0} ${y1} ${x0} ${y1 - r}V${y0 + r}Q${x0} ${y0} ${x0 + r} ${y0}`,
-    );
+/** Six lengthwise passes, connected by tangent-continuous rounded U-turns. */
+export function resurfacePath() {
+  let d = "M30 10H170";
+  const k = 0.55228475, r = 6.5;
+  for (let i = 0; i < 5; i++) {
+    const y = 10 + i * 13, x = i % 2 ? 30 : 170, side = i % 2 ? -1 : 1;
+    d += `C${x + side * r * k} ${y} ${x + side * r} ${y + r * (1-k)} ${x + side * r} ${y+r}`;
+    d += `C${x + side * r} ${y+r*(1+k)} ${x+side*r*k} ${y+2*r} ${x} ${y+2*r}H${i % 2 ? 170 : 30}`;
   }
-  return parts.join("");
+  return d;
+}
+
+/** Sample once, then interpolate by travel time. Curvature slows turns smoothly;
+ * straight sections retain constant speed. The paint follows the actual rear blade.
+ * `pointAt` is supplied by SVG so this module remains usable in node tests. */
+export function resurfacingMotion(pointAt, length, rear = 10) {
+  const samples = [];
+  const angleAt = (s) => {
+    const a = pointAt(Math.max(0, s - 0.2)), b = pointAt(Math.min(length, s + 0.2));
+    return Math.atan2(b.y-a.y, b.x-a.x);
+  };
+  const delta = (a, b) => Math.atan2(Math.sin(a-b), Math.cos(a-b));
+  let time = 0, paint = 0, heading = angleAt(0);
+  const count = Math.ceil(length * 2);
+  for (let i = 0; i <= count; i++) {
+    const distance = length * i / count, p = pointAt(distance), angle = angleAt(distance);
+    const bend = Math.abs(delta(angleAt(Math.min(length, distance+5)), angleAt(Math.max(0, distance-5))));
+    if (i) time += length / count * (1 + 0.65 * Math.min(1, bend / 1.5));
+    heading += delta(angle, heading);
+    const bx = p.x - rear * Math.cos(angle), by = p.y - rear * Math.sin(angle);
+    if (i) paint += Math.hypot(bx-samples[i-1].bx, by-samples[i-1].by);
+    samples.push({ x: p.x, y: p.y, deg: heading*180/Math.PI, bx, by, time, paint });
+  }
+  return {
+    trail: samples.map((p, i) => `${i ? "L" : "M"}${p.bx.toFixed(3)} ${p.by.toFixed(3)}`).join(""),
+    at(progress) {
+      const t = Math.min(1, Math.max(0, progress)) * time;
+      let lo = 0, hi = samples.length-1;
+      while (hi-lo > 1) { const mid = (lo+hi)>>1; if (samples[mid].time < t) lo=mid; else hi=mid; }
+      const a=samples[lo], b=samples[hi], f=(t-a.time)/(b.time-a.time);
+      return { x:a.x+(b.x-a.x)*f, y:a.y+(b.y-a.y)*f, deg:a.deg+(b.deg-a.deg)*f,
+        fresh:100*(1-(a.paint+(b.paint-a.paint)*f)/paint) };
+    },
+  };
 }
 
 /** The Zamboni is off the ice, with the whole sheet fresh, when this many seconds are left. */
@@ -49,7 +78,7 @@ export function resurfaceProgress(left, total = INTERMISSION_MS / 1000) {
 /** How far through its drive off the ice (0 to 1): it leaves after the laps and is gone with 10 seconds left. */
 export const exitProgress = (left) => Math.min(1, Math.max(0, (FINISH_S + EXIT_S - left) / EXIT_S));
 /** The way off the ice: from the last lap's end to the gate in the left boards. */
-export const EXIT_PATH = "M45 36L22 42.5H-18";
+export const EXIT_PATH = "M30 75C10 75 18 42.5 5 42.5H-18";
 /** Where the Zamboni is, which way it faces and how much fresh ice lies behind it, `p` (0..1) of the way along its route between points `a` and `b`. */
 export function zamboniPose(a, b, p) {
   const deg = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;

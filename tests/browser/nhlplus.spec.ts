@@ -29,7 +29,17 @@ async function openPlus(page: Page) {
   await goTo(page, "NHL+");
   await expect(page.locator(".nhlplus")).toBeVisible();
 }
-const sub = (page: Page, name: string) => page.getByRole("navigation", { name: "NHL+ views" }).getByRole("button", { name, exact: true });
+// On a phone the views are folded into one button; picking one opens the list first, so a test can click a view by name either way.
+const sub = (page: Page, name: string) => {
+  const nav = page.getByRole("navigation", { name: "NHL+ views" });
+  const view = nav.getByRole("button", { name, exact: true });
+  const click = view.click.bind(view);
+  view.click = async (options?: Parameters<typeof click>[0]) => {
+    if (await view.isHidden()) await nav.locator('button[aria-pressed="true"]').click();
+    return click(options);
+  };
+  return view;
+};
 const noHScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
 const cell = (page: Page, team: string, col: string) => page.locator(`tr[data-team="${team}"] td[data-col="${col}"]`);
 

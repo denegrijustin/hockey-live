@@ -253,7 +253,7 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && (
+        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && !(phone && view === "nhlplus") && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">

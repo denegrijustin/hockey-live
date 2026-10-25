@@ -3,6 +3,7 @@ import { projectedStandings } from "../lib/standings-projection.mjs";
 import type { Game, Team } from "../types";
 import { signed, entryLine } from "../lib/model.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { Resumes } from "./Resumes";
 export function Standings({
   teams,
   table,
@@ -14,7 +15,7 @@ export function Standings({
   games: Game[];
   baseline: any;
 }) {
-  const [group,setGroup]=useState('league'), [mode,setMode]=useState('current');
+  const [group,setGroup]=useState('league'), [mode,setMode]=useState('current'), [tab,setTab]=useState<'table'|'resumes'>('table');
   const projected=useMemo(()=>projectedStandings(teams,table,games,baseline),[teams,table,games,baseline]);
   const groups=group==='league'?['League']:group==='conference'?['E','W']:['Atlantic','Metropolitan','Central','Pacific'];
   const score=(id:string)=>mode==='projected'?projected[id].projected:table[id].pts;
@@ -31,6 +32,11 @@ export function Standings({
         </div>
         <span className="muted-label">Points rank · ties shared</span>
       </div>
+      <div className="inj-seg rs-tabs" role="group" aria-label="Standings or resumés">
+        <button type="button" aria-pressed={tab==='table'} onClick={()=>setTab('table')}>Standings table</button>
+        <button type="button" aria-pressed={tab==='resumes'} onClick={()=>setTab('resumes')}>Resumés: who they beat, who beat them</button>
+      </div>
+      {tab==='resumes' ? <Resumes teams={teams} table={table} games={games} /> : <>
       <div className="chart-filters"><label>Standings view<select value={mode} onChange={e=>setMode(e.target.value)}><option value="current">Current standings</option><option value="projected">Projected final standings</option></select></label><label>Group standings<select value={group} onChange={e=>setGroup(e.target.value)}><option value="league">League</option><option value="conference">Conference</option><option value="division">Division</option></select></label></div>
       {mode==='projected' && <p className="detail-note">Projected points = current points + remaining scheduled games × blended points pace. Current pace is blended with 20 games of prior-season pace (55% baseline if unavailable). A heuristic forecast, not playoff odds; ignores opponent strength and roster changes.</p>}
       {groups.map(label=><div key={label}><h3>{label==='E'?'Eastern Conference':label==='W'?'Western Conference':label}</h3><div className="table-scroll">
@@ -120,6 +126,7 @@ export function Standings({
         Entry line is a points-only playoff reference. Official tiebreaks,
         clinching and elimination are not inferred from this table.
       </p>
+      </>}
     </section>
   );
 }

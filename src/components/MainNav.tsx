@@ -15,6 +15,7 @@ const V = (id: string, label: string, icon: IconName, short = label): ViewDef =>
 const SCORES = V("scoreboard", "Home", "games", "Home");
 const PICKS = V("picks", "Picks", "picks");
 const INJURIES = V("injuries", "Injury report", "injury", "Injuries");
+const YESTERDAY = V("yesterday", "Last night", "night", "Last night");
 const TEAMSCHED = V("teamschedule", "Schedule", "calendar", "Schedule");
 const STANDINGS = V("standings", "Standings", "standings");
 const TRENDS = V("trends", "Team trends", "trends", "Trends");
@@ -26,12 +27,12 @@ const MAP = V("map", "Imperialism map", "map");
 
 /** Phones: four views in the tab bar, the rest behind More (the HIG caps a tab bar at five). */
 const PRIMARY = [SCORES, STANDINGS, TRENDS, PLAYERS];
-const MORE = [TEAMSCHED, INJURIES, PICKS, NHLPLUS, EDGE, ODDS, MAP];
+const MORE = [YESTERDAY, TEAMSCHED, INJURIES, PICKS, NHLPLUS, EDGE, ODDS, MAP];
 /** "games" is the league-wide list of all games with filters: reached from Home ("All games, filters & search"), so it has no tab of its own. */
 export const VIEW_IDS = [...[...PRIMARY, ...MORE].map((v) => v.id), "games"];
 /** Desktop: every view, grouped, in a sidebar. */
 const GROUPS: [string, ViewDef[]][] = [
-  ["Dashboard", [SCORES, TEAMSCHED, INJURIES, PICKS, STANDINGS, ODDS]],
+  ["Dashboard", [SCORES, YESTERDAY, TEAMSCHED, INJURIES, PICKS, STANDINGS, ODDS]],
   ["Analytics", [NHLPLUS, TRENDS, EDGE, PLAYERS]],
   ["Explore", [MAP]],
 ];

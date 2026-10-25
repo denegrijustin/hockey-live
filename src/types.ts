@@ -40,6 +40,9 @@ export type Snapshot = {
 };
 export type Player = {
   hits?: number | null;
+  blocks?: number | null;
+  takeaways?: number | null;
+  giveaways?: number | null;
   number?: number | null;
   headshot?: string;
   id: number;

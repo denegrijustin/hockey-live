@@ -4,6 +4,7 @@ import type { Game, Team } from "../types";
 import "./playoff-odds.css";
 import { TeamLogo } from "./TeamLogo";
 import { TeamLink } from "./TeamProfile";
+import { PlayoffTracker } from "./PlayoffTracker";
 
 const SIMS = 20000;
 const DIV_FILE: Record<string, string> = { Atlantic: "atlantic", Metropolitan: "metro", Central: "central", Pacific: "pacific" };
@@ -71,6 +72,7 @@ export function PlayoffOdds({
         </div>
       </div>
       {!result && <p className="po-loading" role="status">Running simulations…</p>}
+      {result && <PlayoffTracker teams={teams} result={result} />}
       {result &&
         (["E", "W"] as const).map((conf) => {
           const rows = teams

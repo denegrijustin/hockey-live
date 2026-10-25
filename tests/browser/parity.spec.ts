@@ -67,3 +67,22 @@ test("Imperialism map renders, time-travels and opens a region card", async ({ p
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });
+
+for (const [label, width] of [["a 360px phone", 360], ["a laptop", 1280], ["a wide desktop", 1700]] as const) {
+  test(`Playoff tracker on ${label}: every team in exactly one tier, 8 spots a conference, no sideways scroll`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?view=games");
+    await goTo(page, "Playoff odds");
+    const tracker = page.getByTestId("playoff-tracker");
+    await expect(tracker).toBeVisible({ timeout: 30000 });
+    for (const conf of ["E", "W"]) {
+      const c = tracker.locator(`.pt-conf[data-conf="${conf}"]`);
+      await expect(c.locator(".pt-slots li")).toHaveCount(8); // eight spots, filled or open
+      const teamsShown = await c.locator(".pt-slots .pt-chip, .pt-logos .pt-chip").count();
+      expect(teamsShown).toBe(16);
+      const inCount = Number((await c.getByTestId("pt-in-count").innerText()).split("/")[0]);
+      await expect(c.locator(".pt-slots .pt-chip")).toHaveCount(inCount);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}

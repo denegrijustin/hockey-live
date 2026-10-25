@@ -46,6 +46,7 @@ const ImperialismMap = lazy(() =>
 );
 const TeamSchedule = lazy(() => import("./components/TeamSchedule").then((m) => ({ default: m.TeamSchedule })));
 const Injuries = lazy(() => import("./components/Injuries").then((m) => ({ default: m.Injuries })));
+const LastNight = lazy(() => import("./components/LastNight").then((m) => ({ default: m.LastNight })));
 const Picks = lazy(() => import("./components/Picks").then((m) => ({ default: m.Picks })));
 const NhlPlus = lazy(() =>
   import("./components/nhlplus/NhlPlus").then((m) => ({ default: m.NhlPlus })),
@@ -201,7 +202,7 @@ export default function App() {
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
-      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && (
+      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && (
         <ScoreTicker
           games={data.games}
           teams={teams}
@@ -252,7 +253,7 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && (
+        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">
@@ -336,6 +337,11 @@ export default function App() {
             )}
             {view === "scoreboard" && (
               <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} onBrowse={() => setView("games")} />
+            )}
+            {view === "yesterday" && (
+              <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading last night" />}>
+                <LastNight games={data.games} teams={teams} season={season} current={season === (manifest?.current ?? season)} />
+              </Suspense></ErrorBoundary>
             )}
             {view === "teamschedule" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the team schedule" />}>

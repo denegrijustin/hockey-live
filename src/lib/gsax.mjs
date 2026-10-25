@@ -34,3 +34,16 @@ export function rollingMean(points, window) {
     return { date: p.date, value: vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0 };
   });
 }
+
+import { goalieMetrics } from "./nhlplus.mjs";
+
+/** Goalies with enough ice time to mean something, each with goals against, expected goals against, goals saved above expected and the per-60 rate. Ranked by GSAx. */
+export function goalieBoard(summary, { minToi = 3600 } = {}) {
+  const rows = [];
+  for (const g of summary?.goalies ?? []) {
+    const m = goalieMetrics(g.sit?.all);
+    if (!m || !isNum(m.gsax) || !isNum(m.toi) || m.toi < minToi) continue;
+    rows.push({ id: g.id, name: g.name, team: g.team, gp: m.gp, toi: m.toi, GA: /** @type {number} */ (m.GA), xGA: /** @type {number} */ (m.xGA), gsax: /** @type {number} */ (m.gsax), per60: m.gsaxPer60 });
+  }
+  return rows.sort((a, b) => b.gsax - a.gsax || a.name.localeCompare(b.name));
+}

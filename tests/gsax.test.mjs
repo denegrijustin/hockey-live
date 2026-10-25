@@ -33,3 +33,13 @@ test("a rolling mean skips missing games", () => {
   assert.deepEqual(rollingMean(pts, 1).map((p) => p.value), [2, 0, 4]);
   assert.deepEqual(rollingMean(pts, 3).map((p) => p.value), [2, 2, 3]);
 });
+
+import { goalieBoard } from "../src/lib/gsax.mjs";
+test("the goalie board keeps goalies with real ice time and ranks them by GSAx", () => {
+  const g = (name, toi, xGA, GA) => ({ id: name, name, team: "AAA", sit: { all: { gp: 5, toi, xGA, GA, SOG: 100 } } });
+  const b = goalieBoard({ goalies: [g("Low", 5000, 10, 9), g("High", 5000, 20, 10), g("Tiny", 600, 5, 0), { id: "x", name: "None", team: "AAA", sit: {} }] });
+  assert.deepEqual(b.map((r) => r.name), ["High", "Low"]);
+  assert.equal(b[0].gsax, 10);
+  assert.ok(Math.abs(b[0].per60 - (10 * 3600) / 5000) < 1e-9);
+  assert.equal(goalieBoard({ goalies: [g("Tiny", 600, 5, 0)] }, { minToi: 300 }).length, 1);
+});

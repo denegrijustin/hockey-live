@@ -4,6 +4,7 @@ import { playoffTrend, rollingSeries } from "../lib/model.mjs";
 import type { Game, Team } from "../types";
 import { LogoImage } from "./TeamLogo";
 import { GsaxBoard } from "./GsaxBoard";
+import { GoalieGsax } from "./GoalieGsax";
 import { useMoneyPuck } from "../lib/moneypuck-client";
 import { gsaxByGame, rollingMean } from "../lib/gsax.mjs";
 // Plot area inside the 1000-wide viewBox. The side margins hold axis labels that are drawn at a real 11px (see chartUnit).
@@ -74,6 +75,7 @@ export function Trends({
   return (
     <>
     <GsaxBoard season={season} teams={leagueTeams} current={current} />
+    <GoalieGsax season={season} current={current} />
     <section className="panel trend-panel">
       <div className="panel-heading">
         <div>

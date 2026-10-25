@@ -19,7 +19,7 @@ test('current-season player face, jersey and accessible profile',async({page},in
  await page.goto('/?view=games');await page.getByRole('button',{name:'Players',exact:true}).click();
  const button=page.getByRole('button',{name:'View Connor McDavid details'}).first();
  await expect(button).toContainText('#97'); await expect(button.locator('img')).toHaveCount(1);
- await expect(page.getByRole("columnheader",{name:"Hits",exact:true})).toBeVisible();
+ if (info.project.use.isMobile) await expect(button.locator("xpath=ancestor::tr").locator("td[data-label=\"Hits\"]")).toHaveCount(1); else await expect(page.getByRole("columnheader",{name:"Hits",exact:true})).toBeVisible();
  await expect(button.locator("xpath=ancestor::tr")).toContainText("3");
  await button.click(); await expect(page.locator('dialog[open]')).toContainText('Statistics for this season have not been published yet.');
  await expect.poll(()=>page.locator('dialog[open] .profile-bio img').evaluate((el:HTMLImageElement)=>el.complete ? el.naturalWidth : 0),{timeout:15000}).toBeGreaterThan(0);

@@ -21,6 +21,11 @@ async function open(page: Page, live: unknown = null) {
   await page.goto("/?view=games");
   await expect(page.locator(".ticker-item").first()).toBeAttached();
 }
+// On a phone the strip is a static summary (see the phone tests at the end), so the scrolling tests are for the desktop project.
+test.beforeEach(({ isMobile }, info) => {
+  test.skip(!!isMobile && !info.title.startsWith("on a phone"), "the phone has no scrolling strip");
+  test.skip(!isMobile && info.title.startsWith("on a phone"), "phone only");
+});
 const real = (page: Page) => page.locator(".ticker-track > li:not(.ticker-dup) .ticker-item");
 
 test("the strip sits at the very top, says TODAY, and lists every game on the day", async ({ page }) => {
@@ -115,4 +120,24 @@ test("every logo in the strip loads up front, including the ones still off to th
     .poll(() => ticker.locator("img").evaluateAll((imgs) => imgs.filter((i) => !(i as HTMLImageElement).complete || (i as HTMLImageElement).naturalWidth === 0).length), { timeout: 10_000 })
     .toBe(0);
   expect(await ticker.locator("img").evaluateAll((imgs) => imgs.every((i) => (i as HTMLImageElement).loading === "eager"))).toBe(true);
+});
+
+test("on a phone the strip does not move or scroll sideways: one line of counts that opens the day as a list", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(`${DAY}T12:00:00-05:00`));
+  const season = await seasonOnDay(page);
+  await page.route("**/data/seasons/20262027.json", (route) => route.fulfill({ json: season }));
+  await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.goto("/?view=games");
+  const ticker = page.getByRole("region", { name: "Today's games" });
+  await expect(ticker.locator(".ticker-title")).toHaveText("TODAY");
+  await expect(ticker.locator(".ticker-counts")).toContainText(/\d+ games?/);
+  await expect(ticker.locator(".ticker-track")).toHaveCount(0); // no marquee
+  await expect(ticker.locator(".ticker-item")).toHaveCount(0); // closed: just the summary
+  expect(await page.evaluate(() => [...document.querySelectorAll("*")].filter((e) => ["auto", "scroll"].includes(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 1).length)).toBe(0);
+  await ticker.getByRole("button", { name: /games?/ }).click();
+  const expected = season.games.filter((g: { date: string }) => g.date === DAY).length;
+  await expect(ticker.locator(".ticker-item")).toHaveCount(expected);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
+  await ticker.locator(".ticker-item").first().click();
+  await expect(page.locator("dialog.game-dialog")).toBeVisible();
 });

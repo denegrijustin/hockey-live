@@ -1,6 +1,7 @@
 import { isLive } from "./lib/game-data.mjs";
 import { useSeason } from "./hooks/useSeason";
 import { useGameLists } from "./hooks/useGameLists";
+import { useStackedTables } from "./hooks/useStackedTables";
 import { TeamProfileProvider } from "./components/TeamProfile";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
@@ -112,6 +113,7 @@ export default function App() {
     } catch {}
     document.documentElement.toggleAttribute("data-home", home);
   }, [view, home]);
+  useStackedTables(view);
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
     [data],

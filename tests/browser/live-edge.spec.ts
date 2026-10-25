@@ -41,7 +41,9 @@ test("live data updates without collapsing open cards; failure retains last scor
     return route.fulfill({ json: { ...fixture, state: "LIVE", homeScore: Math.min(calls - 1, 1), plays: [{id:9001,order:1,period:1,time:"19:00",type:"goal",team:fixture.home,player:"Test Scorer",penalty:null}] } });
   });
   await page.goto("/?view=games");
+  if (page.viewportSize()!.width <= 720) await page.locator(".ticker-summary").click(); // on a phone the strip is a summary until opened
   await expect(page.locator(".ticker")).toContainText("FLA"); // the strip at the top carries the live game
+  if (page.viewportSize()!.width <= 720) await page.locator(".ticker-summary").click(); // and closed again
   await showLiveGame(page);
   const card = page.locator(".live-card").first();
   await card.scrollIntoViewIfNeeded();
@@ -165,7 +167,9 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   };
   await page.route("**/api/boxscore/**", (route) => route.fulfill({ json: boxscore }));
   await page.goto("/?view=games");
+  if (page.viewportSize()!.width <= 720) await page.locator(".ticker-summary").click(); // on a phone the strip is a summary until opened
   await expect(page.locator(".ticker")).toContainText("FLA"); // the strip at the top carries the live game
+  if (page.viewportSize()!.width <= 720) await page.locator(".ticker-summary").click(); // and closed again
   await showLiveGame(page);
   const card = page.locator(".live-card").first();
   await card.locator(".game-card-summary").click();

@@ -6,7 +6,7 @@ test("a team logo in the standings opens that team's profile, and Close puts it 
   await page.goto("/?view=games");
   await page.getByRole("button", { name: "Standings", exact: true }).click();
   const row = page.locator("tbody tr").first();
-  const name = (await row.locator("b").first().innerText()).trim();
+  const name = ((await row.locator(".st-full").first().textContent()) ?? "").trim();
   await row.locator("img.team-logo").first().click();
   const d = dialog(page);
   await expect(d).toBeVisible();
@@ -22,7 +22,7 @@ test("a team name opens its profile too: standings table, resumés and playoff o
   await page.goto("/?view=games");
   await page.getByRole("button", { name: "Standings", exact: true }).click();
   const tableName = page.locator("tbody tr").first().locator("button.team-link");
-  const full = (await tableName.innerText()).trim();
+  const full = ((await tableName.locator(".st-full").textContent()) ?? "").trim();
   await tableName.click();
   await expect(dialog(page).getByRole("heading", { name: full })).toBeVisible();
   await page.keyboard.press("Escape");

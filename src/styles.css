@@ -3758,3 +3758,53 @@ body {
     overflow: visible;
   }
 }
+
+/* Standings fits the screen: no sideways scrolling. On a phone the division, W, L and OT columns fold into one record, the team shows its abbreviation, and the entry-line gap sits under it. */
+.table-scroll.st-fit { overflow: visible; }
+.standings-table .st-rec, .standings-table .st-abbr, .standings-table .st-sub { display: none; }
+.standings-table .table-team b { display: grid; line-height: 1.25; }
+.standings-table .st-sub { font-weight: 400; font-size: .6875rem; color: var(--text-1); letter-spacing: 0; }
+@media (max-width: 860px) {
+  .standings-table .st-div, .standings-table .st-wlo, .standings-table .st-gap { display: none; }
+  .standings-table .st-rec { display: table-cell; }
+  .standings-table .st-sub { display: block; }
+  .standings-table th, .standings-table td { padding-left: 4px; padding-right: 4px; }
+}
+@media (max-width: 600px) {
+  .standings-table .st-full { display: none; }
+  .standings-table .st-abbr { display: inline; }
+  .standings-table .table-team { gap: 6px; }
+  .standings-table .table-team img { width: 22px; height: 22px; }
+}
+@media (max-width: 480px) { .standings-table .st-l5 { display: none; } .standings-table { font-size: .75rem; } }
+
+/* Phones: a wide table is a list of cards, never a sideways scroll. useStackedTables labels each cell with its column and adds a Sort by menu. */
+.stk-sort { display: none; }
+@media (max-width: 600px) {
+  .stk-sort { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: .8125rem; color: var(--text-3); }
+  .stk-sort select { flex: 1; min-height: 44px; min-width: 0; }
+  .table-scroll:not(.st-fit), .nhlp-table-wrap, .nhlplus .np-table-wrap { overflow: visible !important; max-height: none !important; }
+  .table-scroll:not(.st-fit) table, .nhlp-table, .nhlplus .np-table { display: block; min-width: 0 !important; width: 100%; white-space: normal; }
+  .table-scroll:not(.st-fit) thead, .nhlp-table thead, .nhlplus .np-table thead { display: none; }
+  .table-scroll:not(.st-fit) tbody, .nhlp-table tbody, .nhlplus .np-table tbody { display: grid; gap: 8px; }
+  .table-scroll:not(.st-fit) tbody tr, .nhlp-table tbody tr, .nhlplus .np-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 14px; padding: 10px 12px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--surface-4); }
+  .table-scroll:not(.st-fit) td, .table-scroll:not(.st-fit) tbody th, .nhlp-table td, .nhlplus .np-table td, .nhlplus .np-table tbody th { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; padding: 3px 0 !important; border: 0 !important; background: transparent !important; text-align: right !important; position: static !important; }
+  .table-scroll:not(.st-fit) td::before, .nhlp-table td::before, .nhlplus .np-table td::before { content: attr(data-label); color: var(--muted); font-size: .6875rem; letter-spacing: .04em; text-align: left; flex: none; }
+  .table-scroll:not(.st-fit) tbody tr > :first-child, .nhlp-table tbody tr > :first-child, .nhlplus .np-table tbody tr > :first-child { grid-column: 1 / -1; justify-content: flex-start; text-align: left !important; font-size: .9375rem; font-weight: 650; padding-bottom: 6px !important; border-bottom: 1px solid var(--line-1) !important; margin-bottom: 4px; }
+  .table-scroll:not(.st-fit) tbody tr > :first-child::before, .nhlp-table tbody tr > :first-child::before, .nhlplus .np-table tbody tr > :first-child::before { content: none; }
+  .table-scroll:not(.st-fit) td[colspan], .nhlplus .np-table td[colspan] { grid-column: 1 / -1; }
+  .nhlplus .np-subnav { flex-wrap: wrap; overflow: visible; }
+}
+
+/* Phone ticker: counts on one line, the day's games as a list when opened. Nothing scrolls. */
+.ticker-static { display: block; height: auto; }
+.ticker-static .ticker-summary { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 12px 0 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ticker-static .ticker-counts { flex: 1; font-size: .8125rem; color: var(--text-4); } .ticker-static .ticker-counts .live { color: var(--red-5, #e06a6a); }
+.ticker-static .ticker-chev { color: var(--muted); }
+.ticker-static .ticker-list { list-style: none; margin: 0; padding: 4px 12px 10px; display: grid; gap: 4px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ticker-static .ticker-item { width: 100%; min-height: 44px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 380px) { .ticker-static .ticker-list { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 720px) { :root { --ticker-h: 44px; } }
+@media (max-width: 600px) {
+  .table-scroll:not(.st-fit) td, .table-scroll:not(.st-fit) td code, .nhlp-table td, .nhlplus .np-table td, .nhlplus .np-table td code { overflow-wrap: anywhere; word-break: break-word; white-space: normal; min-width: 0; }
+}

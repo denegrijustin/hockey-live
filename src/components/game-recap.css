@@ -1,0 +1,46 @@
+.game-recap { display: grid; gap: 12px; padding: 12px; border-radius: 14px; border: 1px solid var(--line-1); background: color-mix(in srgb, var(--surface-3) 55%, transparent); min-width: 0; }
+.game-recap h4 { margin: 0 0 6px; font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+.game-recap h4 small { margin-left: 6px; letter-spacing: 0; text-transform: none; font-weight: 400; }
+.gr-dbar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.gr-dbar span { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: var(--series-home); }
+.gr-dbar i:first-child { background: var(--series-away); } .gr-dbar i:last-child { flex: 1; }
+.gr-race svg, .gr-map svg { display: block; width: 100%; height: auto; }
+.gr-race svg { max-width: 760px; }
+.gr-grid { stroke: var(--line-1); } .gr-sep { stroke: var(--line-3); stroke-dasharray: 3 3; }
+.gr-ax { fill: var(--text-1); font-size: 11px; }
+.gr-line { fill: none; stroke-width: 2.4; stroke-linejoin: round; } .gr-line.away { stroke: var(--series-away); } .gr-line.home { stroke: var(--series-home); }
+.gr-goal { stroke: #f5c542; stroke-width: 2; } .gr-goal.away { fill: var(--series-away); } .gr-goal.home { fill: var(--series-home); }
+.gr-goal-n { fill: #111; font-size: 9px; font-weight: 800; }
+.gr-end { font-size: 11px; font-weight: 700; } .gr-end.away { fill: var(--series-away); } .gr-end.home { fill: var(--series-home); }
+.gr-mid { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; grid-template-areas: "stats stats" "away home"; align-items: start; }
+.gr-mid > .gr-compare { grid-area: stats; } .gr-mid > .gr-map.away { grid-area: away; } .gr-mid > .gr-map.home { grid-area: home; }
+@media (min-width: 900px) { .gr-mid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); grid-template-areas: "away stats home"; } }
+.gr-map h4 { text-align: center; }
+.gr-ice { fill: #eef5fa; stroke: var(--line-3); } .gr-gline { stroke: #d6293e; stroke-width: .6; } .gr-bline { stroke: #2f6fb5; stroke-width: 1.4; opacity: .7; }
+.gr-net { fill: #dfe7ee; stroke: #d6293e; stroke-width: .5; } .gr-crease { fill: #cfe3f3; stroke: #d6293e; stroke-width: .5; }
+.gr-cir { fill: none; stroke: #d6293e; stroke-width: .4; opacity: .8; } .gr-dot0 { fill: #d6293e; }
+.gr-shot.away { fill: var(--series-away); fill-opacity: .85; stroke: #0006; stroke-width: .25; } .gr-shot.home { fill: var(--series-home); fill-opacity: .85; stroke: #0006; stroke-width: .25; }
+.gr-shot.miss { fill: none; stroke-width: .6; stroke-dasharray: 1.4 1; } .gr-shot.miss.away { stroke: var(--series-away); } .gr-shot.miss.home { stroke: var(--series-home); }
+.gr-shot.goal { stroke: #f5c542; stroke-width: 1.2; }
+.gr-compare { display: grid; gap: 8px; }
+.gr-row { display: grid; grid-template-columns: 3.4rem 1fr 3.4rem; align-items: center; gap: 2px 8px; font-variant-numeric: tabular-nums; }
+.gr-row b:first-child { text-align: left; } .gr-row b:nth-child(3) { text-align: right; } .gr-row b { font-size: 1rem; }
+.gr-rlabel { text-align: center; font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.gr-bars { grid-column: 1 / -1; display: flex; gap: 3px; height: 6px; } .gr-bars i { border-radius: 99px; } .gr-bars .away { background: var(--series-away); } .gr-bars .home { background: var(--series-home); }
+.gr-star-row { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.gr-star { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border-radius: 12px; background: var(--surface-3); text-align: center; line-height: 1.25; min-width: 0; }
+.gr-star img, .gr-ph { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--surface-8); display: grid; place-items: center; font-weight: 700; }
+.gr-star small { color: #f5c542; font-size: .6875rem; } .gr-star b { font-size: .8125rem; } .gr-star span { color: var(--text-3); font-size: .6875rem; }
+.gr-goalies { display: grid; gap: 6px; margin-top: 8px; }
+.gr-goalies div { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; padding: 6px 10px; border-radius: 10px; background: var(--surface-3); font-size: .8125rem; }
+.gr-goalies span { grid-column: 1; color: var(--text-3); font-size: .75rem; } .gr-goalies strong { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 1.0625rem; } .gr-goalies .pos { color: #5fd1a0; } .gr-goalies .neg { color: #f08a97; }
+.gr-chances { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; } .gr-chances li { display: flex; align-items: center; gap: 8px; font-size: .8125rem; } .gr-chances span { margin-left: auto; color: var(--text-3); }
+.gr-goals ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px 18px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .gr-goals ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.gr-goals li { display: grid; grid-template-columns: 4.6rem 3px 2.2rem minmax(0, 1fr) 3.4rem 2.2rem; align-items: center; gap: 6px; min-height: 30px; font-size: .8125rem; }
+.gr-when { color: var(--text-1); font-variant-numeric: tabular-nums; font-size: .75rem; } .gr-goals li > i { align-self: stretch; border-radius: 2px; } .gr-goals li.away > i { background: var(--series-away); } .gr-goals li.home > i { background: var(--series-home); }
+.gr-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-xgbar { height: 5px; border-radius: 99px; background: var(--surface-7); overflow: hidden; } .gr-xgbar i { display: block; height: 100%; background: #f5c542; }
+.gr-goals em { font-style: normal; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-4); }
+.gr-note { margin: 0; color: var(--muted); font-size: .6875rem; line-height: 1.5; }
+@media (max-width: 480px) { .gr-star-row { gap: 4px; } .gr-star b { font-size: .75rem; } .gr-goals li { grid-template-columns: 4.2rem 3px 2rem minmax(0, 1fr) 2.6rem 2rem; gap: 4px; } }

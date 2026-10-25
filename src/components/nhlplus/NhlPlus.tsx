@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSlidingUnderline } from "../../hooks/useSlidingUnderline";
+import { useMedia } from "../../hooks/useMedia";
 import type { Game, Team } from "../../types";
 import { useMoneyPuck, useMoneyPuckRefresh } from "../../lib/moneypuck-client";
 import { NHLPLUS_EVENT, useNhlPlusTarget } from "../../lib/nhlplus-nav";
@@ -47,6 +48,8 @@ export function NhlPlus({ games, season }: { games: Game[]; season: number; team
   }, [apply]);
 
   const v = s.view;
+  const phone = useMedia("(max-width: 600px)");
+  const [menu, setMenu] = useState(false);
   const subnav = useRef<HTMLElement>(null);
   useSlidingUnderline(subnav, v);
   const summary = useMoneyPuck(season, "summary");
@@ -64,12 +67,13 @@ export function NhlPlus({ games, season }: { games: Game[]; season: number; team
     <section className="nhlplus" aria-label="NHL+">
       <h2 className="sr-only">NHL+</h2>
       <div className="np-bar">
-        <nav ref={subnav} className="np-subnav" aria-label="NHL+ views">
-          {VIEWS.map(([id, label]) => <button key={id} type="button" aria-pressed={v === id} onClick={() => set({ view: id })}>{label}</button>)}
+        {/* On a phone the seven views are one button showing the current view; tapping it opens the rest, so the header is one line instead of three. */}
+        <nav ref={subnav} className={`np-subnav${phone ? " np-subnav-phone" : ""}${phone && menu ? " open" : ""}`} aria-label="NHL+ views">
+          {VIEWS.map(([id, label]) => <button key={id} type="button" aria-pressed={v === id} aria-expanded={phone && v === id ? menu : undefined} onClick={() => { if (phone && v === id) setMenu((m) => !m); else { set({ view: id }); setMenu(false); } }}>{label}{phone && v === id ? <i aria-hidden="true">{menu ? "▴" : "▾"}</i> : null}</button>)}
         </nav>
         <div className="np-refresh-top">
           {msg && <span role="status" aria-live="polite" className="np-refresh-msg">{msg}</span>}
-          <button type="button" className="np-refresh-btn" disabled={refresh.running} onClick={() => refresh.refresh()} aria-label="Check MoneyPuck for new data">{refresh.running ? "Checking…" : "↻ Refresh"}</button>
+          <button type="button" className="np-refresh-btn" disabled={refresh.running} onClick={() => refresh.refresh()} aria-label="Check MoneyPuck for new data"><span aria-hidden="true">↻</span><span className="np-refresh-label"> {refresh.running ? "Checking…" : "Refresh"}</span></button>
         </div>
       </div>
       <DataStatus compact state={primary.state} updated={primary.updated} stale={primary.stale} savedCopy={primary.savedCopy} what={what} onRetry={primary.retry} />

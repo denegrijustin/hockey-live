@@ -26,37 +26,38 @@ export function Standings({
         <div>
           <p className="eyebrow">THE BIGGER PICTURE</p>
           <h2>League standings</h2>
-          <p>
+          <p className="st-intro">
             Rebuilt from completed regular-season results. Your selected teams
             are highlighted.
           </p>
         </div>
-        <span className="muted-label">Points rank · ties shared</span>
+        <span className="muted-label st-intro">Points rank · ties shared</span>
       </div>
       <div className="inj-seg rs-tabs" role="group" aria-label="Standings or resumés">
         <button type="button" aria-pressed={tab==='table'} onClick={()=>setTab('table')}>Standings table</button>
-        <button type="button" aria-pressed={tab==='resumes'} onClick={()=>setTab('resumes')}>Resumés: who they beat, who beat them</button>
+        <button type="button" aria-pressed={tab==='resumes'} onClick={()=>setTab('resumes')}>Resumés<span className="st-intro">: who they beat, who beat them</span></button>
       </div>
       {tab==='resumes' ? <Resumes teams={teams} table={table} games={games} /> : <>
       <div className="chart-filters"><label>Standings view<select value={mode} onChange={e=>setMode(e.target.value)}><option value="current">Current standings</option><option value="projected">Projected final standings</option></select></label><label>Group standings<select value={group} onChange={e=>setGroup(e.target.value)}><option value="league">League</option><option value="conference">Conference</option><option value="division">Division</option></select></label></div>
       {mode==='projected' && <p className="detail-note">Projected points = current points + remaining scheduled games × blended points pace. Current pace is blended with 20 games of prior-season pace (55% baseline if unavailable). A heuristic forecast, not playoff odds; ignores opponent strength and roster changes.</p>}
-      {groups.map(label=><div key={label}><h3>{label==='E'?'Eastern Conference':label==='W'?'Western Conference':label}</h3><div className="table-scroll">
+      {groups.map(label=><div key={label}><h3>{label==='E'?'Eastern Conference':label==='W'?'Western Conference':label}</h3><div className="table-scroll st-fit">
         <table className="standings-table">
           <thead>
             <tr>
               <th>Rank</th>
               <th>Team</th>
-              <th>Division</th>
+              <th className="st-div">Division</th>
               <th>GP</th>
-              <th>W</th>
-              <th>L</th>
-              <th>OT</th>
+              <th className="st-wlo">W</th>
+              <th className="st-wlo">L</th>
+              <th className="st-wlo">OT</th>
+              <th className="st-rec">W–L–OT</th>
               <th>PTS</th>
               {mode==='projected' && <th>Projected PTS</th>}
               <th>PTS %</th>
               <th>GD</th>
-              <th>Last 5</th>
-              <th>Entry-line gap</th>
+              <th className="st-l5">Last 5</th>
+              <th className="st-gap">Entry-line gap</th>
             </tr>
           </thead>
           <tbody>
@@ -82,14 +83,15 @@ export function Standings({
                     <td>
                       <div className="table-team">
                         <TeamLogo id={t.id} size={28} />
-                        <b><TeamLink id={t.id}>{t.name}</TeamLink></b>
+                        <b><TeamLink id={t.id}><span className="st-full">{t.name}</span><span className="st-abbr" title={t.name}>{t.id}</span></TeamLink>{s.gp ? <small className="st-sub">{signed(s.pts - entryLine(table, t.id, teams))} line</small> : null}</b>
                       </div>
                     </td>
-                    <td>{t.division}</td>
+                    <td className="st-div">{t.division}</td>
                     <td>{s.gp}</td>
-                    <td>{s.w}</td>
-                    <td>{s.l}</td>
-                    <td>{s.ot}</td>
+                    <td className="st-wlo">{s.w}</td>
+                    <td className="st-wlo">{s.l}</td>
+                    <td className="st-wlo">{s.ot}</td>
+                    <td className="st-rec">{s.w}–{s.l}–{s.ot}</td>
                     <td>
                       <strong>{s.pts}</strong>
                     </td>
@@ -102,7 +104,7 @@ export function Standings({
                     <td className={s.gf - s.ga >= 0 ? "positive" : "negative"}>
                       {signed(s.gf - s.ga)}
                     </td>
-                    <td>
+                    <td className="st-l5">
                       <div className="form-row">
                         {s.results.slice(-5).map((r: any, i: number) => (
                           <span className={r.outcome} key={i}>
@@ -111,7 +113,7 @@ export function Standings({
                         ))}
                       </div>
                     </td>
-                    <td>
+                    <td className="st-gap">
                       {s.gp
                         ? signed(s.pts - entryLine(table, t.id, teams))
                         : "—"}

@@ -1,6 +1,7 @@
 import { isLive } from "./lib/game-data.mjs";
 import { useSeason } from "./hooks/useSeason";
 import { useGameLists } from "./hooks/useGameLists";
+import { useStackedTables } from "./hooks/useStackedTables";
 import { TeamProfileProvider } from "./components/TeamProfile";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
@@ -112,6 +113,7 @@ export default function App() {
     } catch {}
     document.documentElement.toggleAttribute("data-home", home);
   }, [view, home]);
+  useStackedTables(view);
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
     [data],
@@ -253,7 +255,7 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && (
+        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && !(phone && view === "nhlplus") && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">

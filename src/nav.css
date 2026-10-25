@@ -676,3 +676,4 @@
     animation: none;
   }
 }
+@media (max-width: 600px) { .status-banner { font-size: .75rem; padding: 2px 4px 2px 10px; margin-bottom: 4px; } }

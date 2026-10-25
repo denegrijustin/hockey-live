@@ -97,34 +97,41 @@ export function PlayoffOdds({
                       {COLS.map(([long, short, tip]) => <th key={long} className={long === "#1 in conf." ? "po-first" : ""} title={tip} scope="col"><span className="po-long">{long}</span><span className="po-short">{short}</span></th>)}
                     </tr>
                   </thead>
-                  <tbody>
-                    {rows.map((t) => {
-                      const x = result.teams[t.id];
-                      const row = table[t.id] ?? { w: 0, l: 0, ot: 0, pts: 0 };
-                      return (
-                        <tr key={t.id}>
-                          <td className="po-team">
-                            <div className="po-team-cell">
-                              <i className="po-accent" style={{ background: t.cardColor ?? t.color }} />
-                              <TeamLogo id={t.id} size={22} />
-                              <span className="po-name"><b><TeamLink id={t.id}>{t.short}</TeamLink></b><small className="po-sub"><img className="po-div-logo" src={`/logos/league/${DIV_FILE[t.division] ?? "atlantic"}.webp`} alt={`${t.division} Division`} width="32" height="21" title={`${t.division} Division`} /><span className="po-line">{row.w}–{row.l}–{row.ot} · {row.pts}<span className="po-ptsword"> pts</span></span></small></span>
-                            </div>
-                          </td>
-                          <td className="po-rec">{row.w}–{row.l}–{row.ot}</td>
-                          <td className="po-rec">{row.pts}</td>
-                          <td className="po-proj">{Math.round(x.expPts)}</td>
-                          <Cell p={x.pDivision[0]} />
-                          <Cell p={x.pDivision[1]} />
-                          <Cell p={x.pDivision[2]} />
-                          <Cell p={x.pWildCard[0]} />
-                          <Cell p={x.pWildCard[1]} />
-                          <Cell p={x.pPlayoffs} cls="po-make" />
-                          <Cell p={x.pConferenceFirst} cls="po-first" />
-                          <Cell p={x.pPresidents} cls="po-pres" />
-                        </tr>
-                      );
-                    })}
-                  </tbody>
+                  {[...new Set(rows.map((t) => t.division))].sort().map((division) => (
+                    <tbody key={division} className="po-divgroup">
+                      <tr className="po-divrow">
+                        <th colSpan={3 + COLS.length} scope="colgroup">
+                          <span><img className="po-div-logo" src={`/logos/league/${DIV_FILE[division] ?? "atlantic"}.webp`} alt="" width="56" height="37" />{division} Division</span>
+                        </th>
+                      </tr>
+                      {rows.filter((t) => t.division === division).map((t) => {
+                        const x = result.teams[t.id];
+                        const row = table[t.id] ?? { w: 0, l: 0, ot: 0, pts: 0 };
+                        return (
+                          <tr key={t.id}>
+                            <td className="po-team">
+                              <div className="po-team-cell">
+                                <i className="po-accent" style={{ background: t.cardColor ?? t.color }} />
+                                <TeamLogo id={t.id} size={22} />
+                                <span className="po-name"><b><TeamLink id={t.id}>{t.short}</TeamLink></b><small className="po-sub"><span className="po-line">{row.w}–{row.l}–{row.ot} · {row.pts}<span className="po-ptsword"> pts</span></span></small></span>
+                              </div>
+                            </td>
+                            <td className="po-rec">{row.w}–{row.l}–{row.ot}</td>
+                            <td className="po-rec">{row.pts}</td>
+                            <td className="po-proj">{Math.round(x.expPts)}</td>
+                            <Cell p={x.pDivision[0]} />
+                            <Cell p={x.pDivision[1]} />
+                            <Cell p={x.pDivision[2]} />
+                            <Cell p={x.pWildCard[0]} />
+                            <Cell p={x.pWildCard[1]} />
+                            <Cell p={x.pPlayoffs} cls="po-make" />
+                            <Cell p={x.pConferenceFirst} cls="po-first" />
+                            <Cell p={x.pPresidents} cls="po-pres" />
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  ))}
                 </table>
               </div>
               <p className="po-legend">Proj = projected points · D1–D3 = finishing 1st–3rd in the division · W1–W2 = wild-card spots · Make = makes the playoffs · #1 = top of the conference · Pres. = Presidents’ Trophy</p>

@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Boxscore, Game, Team } from "../types";
+import { useFeed } from "../lib/polling";
+import type { Boxscore, Game, GameFeed, Team } from "../types";
 import { loadBox } from "../lib/api";
 import { useMoneyPuck } from "../lib/moneypuck-client";
 import { bestAndWorst, finalsOn, goalieOfTheNight, lastNightDate, lineOf, nightsOf } from "../lib/last-night.mjs";
 import { Skeleton } from "./Skeleton";
+import { GameRecap } from "./GameRecap";
+import { CompactGameFlow } from "./GameData";
 import { TeamLogo } from "./TeamLogo";
 import "./last-night.css";
 
@@ -37,6 +40,37 @@ function Bar({ n, left, right }: { n: Night; left: number; right: number }) {
   );
 }
 
+/** Best and worst nights, each a bar of what built the score. Used for the whole night and for one game. */
+function NightsChart({ best, worst, title }: { best: Night[]; worst: Night[]; title: string }) {
+  const shown = [...best, ...worst];
+  const right = Math.max(1, ...shown.map((n) => Math.max(0, n.parts.points) + Math.max(0, n.parts.onIce) + Math.max(0, n.parts.other)));
+  const left = Math.max(0.6, ...shown.map((n) => Math.max(0, -n.parts.onIce) + Math.max(0, -n.parts.penalties) + Math.max(0, -n.parts.other)));
+  return (
+              <section className="ln-chart" aria-label={title}>
+          <header><h3>{title}</h3><p>What built each game score</p></header>
+          <ul className="ln-legend">
+            <li><i className="ln-seg points" />Goals + assists</li><li><i className="ln-seg onice" />On-ice play (plus-minus)</li><li><i className="ln-seg pen" />Penalties</li><li><i className="ln-seg other" />Shots, blocks, hits, takeaways</li>
+          </ul>
+          {([["Best", best], ["Worst", worst]] as const).filter(([, rows]) => rows.length).map(([title, rows]) => (
+            <div key={title} className="ln-group">
+              <h4>{title}<span>Game score</span></h4>
+              <ol>
+                {rows.map((n) => (
+                  <li key={`${title}${n.gameId}-${n.id}`}>
+                    <Face src={n.headshot} name={n.name} size={36} />
+                    <span className="ln-who"><b>{n.name}</b><small>{n.team} · {lineOf(n)}</small></span>
+                    <Bar n={n} left={left} right={right} />
+                    <strong className={`ln-gs ${n.total >= 0 ? "pos" : "neg"}`}>{signed(n.total)}</strong>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+          <p className="ln-note">Game score is built from the box score: 0.75 per goal, 0.62 per assist, 0.075 per shot on goal, 0.05 per block, 0.15 per plus-minus point (standing in for goals for and against while on the ice), −0.075 per penalty minute, and small amounts for hits, takeaways and giveaways. Skaters with 8+ minutes only. It is our own box-score version of a game score, so it will not match models that also count shot attempts on the ice.</p>
+        </section>
+  );
+}
+
 /** The day before: every final, the best and worst individual nights, and the goalie of the night. */
 export function LastNight({ games, teams, season, current = true }: { games: Game[]; teams: Team[]; season: number; current?: boolean }) {
   const date = useMemo(() => lastNightDate(games), [games]);
@@ -58,9 +92,9 @@ export function LastNight({ games, teams, season, current = true }: { games: Gam
 
   if (!date) return <section className="panel ln" aria-label="Last night in the NHL"><h2>Last night in the NHL</h2><p className="detail-note">No games have been finished before today yet.</p></section>;
   const label = new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  const shown = [...best, ...worst];
-  const right = Math.max(1, ...shown.map((n) => Math.max(0, n.parts.points) + Math.max(0, n.parts.onIce) + Math.max(0, n.parts.other)));
-  const left = Math.max(0.6, ...shown.map((n) => Math.max(0, -n.parts.onIce) + Math.max(0, -n.parts.penalties) + Math.max(0, -n.parts.other)));
+  const [open, setOpen] = useState<number | null>(null);
+  const openFinal = finals.find((f) => f.id === open);
+  if (openFinal) return <GameNight final={openFinal} box={boxes?.find((b) => b.id === openFinal.id) ?? null} loading={boxes === null} teams={teams} label={label} onBack={() => setOpen(null)} />;
   return (
     <section className="panel ln" aria-labelledby="ln-title" data-testid="last-night">
       <header className="ln-head">
@@ -69,15 +103,17 @@ export function LastNight({ games, teams, season, current = true }: { games: Gam
       </header>
       <div className="ln-top">
         <section className="ln-finals" aria-label="Final scores">
-          <h3>Final scores</h3>
+          <h3>Final scores <span>Tap a game</span></h3>
           <ol>
             {finals.map((f) => {
               const aw = f.awayScore > f.homeScore;
               return (
-                <li key={f.id} data-game-id={f.id} aria-label={`${nameOf(f.away)} ${f.awayScore}, ${nameOf(f.home)} ${f.homeScore}, final${f.end ? ` in ${f.end}` : ""}`}>
+                <li key={f.id} data-game-id={f.id}>
+                  <button type="button" className="ln-gamebtn" aria-label={`${nameOf(f.away)} ${f.awayScore}, ${nameOf(f.home)} ${f.homeScore}, final${f.end ? ` in ${f.end}` : ""}. Open the game: best and worst nights, shot chart and analysis.`} onClick={() => setOpen(f.id)}>
                   <span className={`ln-side${aw ? " win" : ""}`}><TeamLogo id={f.away} size={26} /><b>{f.away}</b></span>
                   <span className="ln-score"><strong className={aw ? "win" : ""}>{f.awayScore}</strong><i>–</i><strong className={aw ? "" : "win"}>{f.homeScore}</strong>{f.end && <small>{f.end}</small>}</span>
                   <span className={`ln-side home${aw ? "" : " win"}`}><b>{f.home}</b><TeamLogo id={f.home} size={26} /></span>
+                  </button>
                 </li>
               );
             })}
@@ -105,30 +141,29 @@ export function LastNight({ games, teams, season, current = true }: { games: Gam
           )}
         </section>
       </div>
-      {boxes !== null && nights.length > 0 && (
-        <section className="ln-chart" aria-label="Best and worst nights">
-          <header><h3>Best and worst nights</h3><p>What built each game score</p></header>
-          <ul className="ln-legend">
-            <li><i className="ln-seg points" />Goals + assists</li><li><i className="ln-seg onice" />On-ice play (plus-minus)</li><li><i className="ln-seg pen" />Penalties</li><li><i className="ln-seg other" />Shots, blocks, hits, takeaways</li>
-          </ul>
-          {([["Best", best], ["Worst", worst]] as const).map(([title, rows]) => (
-            <div key={title} className="ln-group">
-              <h4>{title}<span>Game score</span></h4>
-              <ol>
-                {rows.map((n) => (
-                  <li key={`${title}${n.gameId}-${n.id}`}>
-                    <Face src={n.headshot} name={n.name} size={36} />
-                    <span className="ln-who"><b>{n.name}</b><small>{n.team} · {lineOf(n)}</small></span>
-                    <Bar n={n} left={left} right={right} />
-                    <strong className={`ln-gs ${n.total >= 0 ? "pos" : "neg"}`}>{signed(n.total)}</strong>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))}
-          <p className="ln-note">Game score is built from the box score: 0.75 per goal, 0.62 per assist, 0.075 per shot on goal, 0.05 per block, 0.15 per plus-minus point (standing in for goals for and against while on the ice), −0.075 per penalty minute, and small amounts for hits, takeaways and giveaways. Skaters with 8+ minutes only. It is our own box-score version of a game score, so it will not match models that also count shot attempts on the ice.</p>
-        </section>
-      )}
+      {boxes !== null && nights.length > 0 && <NightsChart best={best} worst={worst} title="Best and worst nights" />}
+    </section>
+  );
+}
+
+/** One game from last night: its own best and worst nights, then the recap (deserved to win, shot maps, numbers, periods, stars, goals) and the win-probability flow. */
+function GameNight({ final, box, loading, teams, label, onBack }: { final: ReturnType<typeof finalsOn>[number]; box: Boxscore | null; loading: boolean; teams: Team[]; label: string; onBack: () => void }) {
+  const home = teams.find((t) => t.id === final.home)!, away = teams.find((t) => t.id === final.away)!;
+  const { data: feed } = useFeed<GameFeed>(`/api/game/${final.id}`, 3_600_000);
+  const nights = useMemo(() => (box ? nightsOf([box]) : []), [box]);
+  const { best, worst } = useMemo(() => bestAndWorst(nights, 5), [nights]);
+  return (
+    <section className="panel ln ln-game" aria-labelledby="lg-title" data-testid="last-night-game" data-game-id={final.id}>
+      <button type="button" className="ln-back" onClick={onBack}>← All of last night</button>
+      <header className="ln-gamehead">
+        <span className="ln-side"><TeamLogo id={away.id} size={44} /><b>{away.id}</b></span>
+        <h2 id="lg-title" className="ln-bigscore" aria-label={`${away.name} ${final.awayScore}, ${home.name} ${final.homeScore}`}><strong className={final.awayScore > final.homeScore ? "win" : ""}>{final.awayScore}</strong><i>–</i><strong className={final.homeScore > final.awayScore ? "win" : ""}>{final.homeScore}</strong><small>Final{final.end ? ` / ${final.end}` : ""}</small></h2>
+        <span className="ln-side home"><b>{home.id}</b><TeamLogo id={home.id} size={44} /></span>
+      </header>
+      <p className="ln-gamedate">{away.name} at {home.name} · {label}</p>
+      {loading ? <Skeleton rows={3} label="Loading the box score" /> : nights.length > 0 ? <NightsChart best={best} worst={worst} title="This game: best and worst nights" /> : <p className="detail-note">The box score for this game is not available yet.</p>}
+      {feed?.plays?.length ? <div className="ln-flow"><CompactGameFlow data={feed} home={home} away={away} /></div> : null}
+      <GameRecap data={feed ?? null} home={home} away={away} />
     </section>
   );
 }

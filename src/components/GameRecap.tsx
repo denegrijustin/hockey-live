@@ -101,6 +101,37 @@ function Compare({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   );
 }
 
+/** Each period side by side: unblocked attempts or expected goals, for the team that was ahead in it. */
+function Periods({ r, home, away }: { r: Recap; home: Team; away: Team }) {
+  const [by, setBy] = useState<"shots" | "xg">("shots");
+  const periods = [...new Set(r.list.map((a: any) => a.period).filter(Boolean))].sort() as number[];
+  if (periods.length < 2) return null;
+  const name = (p: number) => (p <= 3 ? ["1st", "2nd", "3rd"][p - 1] : p === 4 ? "OT" : `${p - 3}OT`);
+  const val = (p: number, isHome: boolean) => r.list.filter((a: any) => a.period === p && a.home === isHome).reduce((s: number, a: any) => s + (by === "xg" ? a.xg : 1), 0);
+  return (
+    <section className="gr-periods" aria-label="Period breakdown">
+      <h4>Period breakdown
+        <span className="gr-toggle" role="group" aria-label="Measure">
+          <button type="button" aria-pressed={by === "shots"} onClick={() => setBy("shots")}>Attempts</button>
+          <button type="button" aria-pressed={by === "xg"} onClick={() => setBy("xg")}>xG</button>
+        </span>
+      </h4>
+      <div className="gr-pgrid">
+        {periods.map((p) => {
+          const a = val(p, false), h = val(p, true), f = (v: number) => (by === "xg" ? v.toFixed(2) : String(v));
+          return (
+            <div key={p} className="gr-period" data-period={p}>
+              <small>{name(p)} period</small>
+              <div className="gr-prow"><b className={a > h ? "lead" : ""}>{away.id} {f(a)}</b><b className={h > a ? "lead" : ""}>{f(h)} {home.id}</b></div>
+              <span className="gr-bars" role="presentation"><i className="away" style={{ width: `${(a / ((a + h) || 1)) * 100}%` }} /><i className="home" style={{ width: `${(h / ((a + h) || 1)) * 100}%` }} /></span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function Stars({ r, game, home, away }: { r: Recap; game: GameFeed; home: Team; away: Team }) {
   const [bad, setBad] = useState<Record<number, boolean>>({});
   if (r.performers) {
@@ -173,6 +204,7 @@ export function GameRecap({ data, home, away }: { data: GameFeed | null; home: T
         <Compare r={recap} home={home} away={away} />
         <AttemptMap r={recap} side="home" team={home} />
       </div>
+      <Periods r={recap} home={home} away={away} />
       <Stars r={recap} game={data} home={home} away={away} />
       <Goals r={recap} />
       <p className="gr-note">

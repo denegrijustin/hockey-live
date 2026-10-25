@@ -22,6 +22,15 @@ async function open(page: Page, url = "/?view=yesterday") {
   await page.route("**/data/games/*.json", (route) => route.fulfill({ status: 404, body: "{}" }));
   await page.route(/\/data\/moneypuck\/\d+\/games\.json/, (route) => route.fulfill({ json: mpGames }));
   await page.route("**/api/moneypuck/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+  await page.route("**/api/game/*", (route) => {
+    const id = Number(new URL(route.request().url()).pathname.split("/").pop());
+    const g = games.find((x) => x.id === id);
+    if (!g) return route.fulfill({ status: 404, body: "{}" });
+    let n = 0;
+    const shot = (team: string, i: number, period: number, time: string, type = "shot-on-goal", player = "Skater") => ({ id: id * 100 + ++n, order: n, type, team, x: team === g.home ? 80 - (i % 4) : -78 + (i % 4), y: (i % 5) - 2, period, periodType: "REG", time, player });
+    const plays = [...Array.from({ length: 6 }, (_, i) => shot(g.home, i, 1 + (i % 3), `${2 + i}:00`)), ...Array.from({ length: 5 }, (_, i) => shot(g.away, i, 1 + (i % 3), `${4 + i}:30`)), shot(g.home, 1, 2, "08:10", "goal", "Home Scorer"), shot(g.away, 2, 3, "02:40", "goal", "Away Scorer")];
+    return route.fulfill({ json: { ...g, plays, shots: plays, goals: plays.filter((p) => p.type === "goal"), stats: [{ label: "hit", home: 12, away: 9 }, { label: "faceoff", home: 20, away: 18 }] } });
+  });
   await page.route("**/assets.nhle.com/**", (route) => route.fulfill({ status: 404, body: "" }));
   await page.goto(url);
 }
@@ -70,3 +79,33 @@ for (const [label, width] of [["a 360px phone", 360], ["a laptop", 1280]] as con
     expect(await page.getByTestId("last-night").evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
   });
 }
+
+test("a game opens from the list: its own best and worst nights, the game flow, shot maps and period breakdown, and Back returns", async ({ page }) => {
+  await open(page);
+  const box = page.getByTestId("last-night");
+  await expect(box.locator(".ln-finals li").first()).toBeVisible({ timeout: 30000 });
+  await box.locator(".ln-finals li").first().getByRole("button").click(); // ANA at PHI
+  const game = page.getByTestId("last-night-game");
+  await expect(game).toBeVisible();
+  await expect(game).toContainText("at Philadelphia Flyers");
+  await expect(game.locator(".ln-bigscore")).toContainText("5");
+  // Only this game's players are in its best and worst chart.
+  const names = await game.locator(".ln-chart .ln-who b").allInnerTexts();
+  expect(names.every((n) => ["Jake Sanderson", "Drake Batherson"].includes(n))).toBe(true);
+  await expect(game.getByTestId("game-recap")).toBeVisible({ timeout: 30000 });
+  await expect(game.locator(".gr-map")).toHaveCount(2);
+  await expect(game.locator(".gr-period").first()).toBeVisible();
+  await game.getByRole("button", { name: "xG" }).click();
+  await expect(game.locator(".gr-prow").first()).toContainText(/\d\.\d\d/);
+  await game.getByRole("button", { name: /All of last night/ }).click();
+  await expect(box.locator(".ln-finals li")).toHaveCount(3);
+});
+
+test("a game from last night fits a 360px phone with no sideways scroll", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await open(page);
+  await page.getByTestId("last-night").locator(".ln-finals li").nth(2).getByRole("button").click();
+  await expect(page.getByTestId("game-recap")).toBeVisible({ timeout: 30000 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(await page.getByTestId("last-night-game").evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+});

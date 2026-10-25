@@ -11,7 +11,7 @@ test("Playoff odds tab shows a grid per conference, 16 teams each, with no sidew
   for (const conf of ["E", "W"]) {
     const grid = page.getByTestId(`po-grid-${conf}`);
     await expect(grid).toBeVisible({ timeout: 30000 });
-    await expect(grid.locator("tbody tr")).toHaveCount(16);
+    await expect(grid.locator("tbody tr:not(.po-divrow)")).toHaveCount(16);
   }
   await expect(page.locator(".po-note, [class*='po-']").first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -33,10 +33,12 @@ for (const [label, width] of [["a 360px phone", 360], ["a tablet", 768], ["a lap
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.locator(".po-conf-logo")).toHaveCount(2);
     for (const img of await page.locator(".po-conf-logo").all()) expect(await img.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(50);
-    if (true) {
-      await expect(page.locator(".po-div-logo").first()).toBeVisible();
-      expect(await page.locator(".po-div-logo").first().evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(50);
-    }
+    // Each conference is two division bands, each with its logo and its name, instead of a tiny badge on every row.
+    await expect(page.locator(".po-divrow")).toHaveCount(4);
+    await expect(page.locator(".po-divrow").first()).toContainText("Division");
+    expect(await page.locator(".po-divrow img").first().evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(50);
+    await expect(page.locator(".po-team-cell .po-div-logo")).toHaveCount(0);
+    for (const conf of ["E", "W"]) await expect(page.getByTestId(`po-grid-${conf}`).locator("tbody tr:not(.po-divrow)")).toHaveCount(16);
   });
 }
 

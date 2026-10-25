@@ -87,15 +87,20 @@ test.describe("NHL+ Teams", () => {
     await expect(page.locator(".np-pt")).toHaveCount(n);
   });
 
-  test("sorting by a column and aria-sort", async ({ page }) => {
+  test("sorting by a column and aria-sort", async ({ page }, info) => {
     await mock(page);
     await openPlus(page);
-    const th = page.getByRole("columnheader", { name: /^xGA\/60/ });
-    await th.locator(".np-sortbtn").click();
+    const phone = !!info.project.use.isMobile; // on a phone the header is hidden and the Sort by menu does the sorting
+    const th = phone ? page.locator("th", { hasText: /^xGA\/60/ }).first() : page.getByRole("columnheader", { name: /^xGA\/60/ });
+    if (phone) {
+      const options = await page.getByLabel("Sort by").first().locator("option").allInnerTexts();
+      await page.getByLabel("Sort by").first().selectOption({ label: options.find((o) => o.startsWith("xGA/60"))! });
+    } else await th.locator(".np-sortbtn").click();
     await expect(th).toHaveAttribute("aria-sort", "ascending");
     const vals = await page.locator('.np-table tbody td[data-col="xGA60"]').allTextContents();
     const nums = vals.map(Number);
     expect([...nums].sort((a, b) => a - b)).toEqual(nums);
+    if (phone) return;
     await th.locator(".np-sortbtn").click();
     await expect(th).toHaveAttribute("aria-sort", "descending");
   });
@@ -204,23 +209,29 @@ test.describe("NHL+ Matchups", () => {
 
 test.describe("NHL+ Goalies, Players, Trends, Data", () => {
   test("goalie table separates totals from rates and sorts", async ({ page }, info) => {
+    const phone = !!info.project.use.isMobile; // a phone shows cards: the header row is hidden
     await mock(page);
     await openPlus(page);
     await sub(page, "Goalies").click();
     const groups = page.locator("th.np-group");
     await expect(groups.nth(0)).toHaveText("Totals");
     await expect(groups.nth(1)).toHaveText("Rates");
+    if (!phone) {
     for (const name of ["GP", "TOI (min)", "Shots faced", "xGA", "GA", "GSAx"]) await expect(page.getByRole("columnheader", { name: new RegExp(`^${name.replace(/[()]/g, "\\$&")}`) }).first()).toBeVisible();
     for (const name of ["GSAx/60", "SV%", "xSV%", "Shots faced/60"]) await expect(page.getByRole("columnheader", { name: new RegExp(`^${name.replace("/", "\\/")}`) })).toBeVisible();
     // totals columns come before rates columns
     const order = await page.locator(".np-table thead tr:nth-child(2) th").allTextContents();
     expect(order.findIndex((t) => t.startsWith("GSAx"))).toBeLessThan(order.findIndex((t) => t.startsWith("GSAx/60")));
+    }
     const rows = await page.locator(".np-table tbody tr").count();
     expect(rows).toBeGreaterThan(20);
     await page.getByLabel("Min. minutes").selectOption("100");
     expect(await page.locator(".np-table tbody tr").count()).toBeLessThan(rows);
-    const th = page.getByRole("columnheader", { name: /^GSAx\/60/ });
-    await th.locator(".np-sortbtn").click();
+    const th = phone ? page.locator("th", { hasText: /^GSAx\/60/ }).first() : page.getByRole("columnheader", { name: /^GSAx\/60/ });
+    if (phone) {
+      const options = await page.getByLabel("Sort by").first().locator("option").allInnerTexts();
+      await page.getByLabel("Sort by").first().selectOption({ label: options.find((o) => o.startsWith("GSAx/60"))! });
+    } else await th.locator(".np-sortbtn").click();
     await expect(th).toHaveAttribute("aria-sort", "descending");
     await expect(page.getByRole("heading", { name: /Goalie comparison/ })).toBeVisible();
     await expect(page.locator(".mp-cmp").first()).toBeVisible();

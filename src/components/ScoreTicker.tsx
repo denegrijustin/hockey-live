@@ -5,6 +5,7 @@ import { isLive } from "../lib/game-data.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
 import { tickerSlate, tickerStatus } from "../lib/ticker.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { useMedia } from "../hooks/useMedia";
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
 const localDay = (d = new Date()) => d.toLocaleDateString("en-CA");
@@ -35,6 +36,8 @@ export function ScoreTicker({ games, teams, day, analysis, baselineFor, sourceSe
   const { date, items } = useSlate(games, day);
   const [paused, setPaused] = useState(false);
   const [open, setOpen] = useState<Game | null>(null);
+  const phone = useMedia("(max-width: 720px)");
+  const [expanded, setExpanded] = useState(false);
   const byId = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
   const list = items.filter((g) => byId.has(g.home) && byId.has(g.away));
   if (!list.length) return null;
@@ -76,9 +79,22 @@ export function ScoreTicker({ games, teams, day, analysis, baselineFor, sourceSe
     );
   };
 
+  const liveCount = list.filter(isLive).length, doneCount = list.filter(finished).length;
+  // On a phone the strip does not move or scroll sideways: it is one line of counts that opens the whole day as a list.
+  const stripOrList = phone ? (
+    <section className={`ticker ticker-static${expanded ? " open" : ""}`} aria-label="Today's games">
+      <button type="button" className="ticker-summary" aria-expanded={expanded} onClick={() => setExpanded((e) => !e)}>
+        <span className="ticker-title">{label}</span>
+        <span className="ticker-counts">{list.length} {list.length === 1 ? "game" : "games"}{liveCount ? <> · <b className="live">{liveCount} live</b></> : null}{doneCount ? ` · ${doneCount} final` : ""}</span>
+        <span className="ticker-chev" aria-hidden="true">{expanded ? "▴" : "▾"}</span>
+      </button>
+      {expanded && <ul className="ticker-list">{list.map((g) => item(g))}</ul>}
+    </section>
+  ) : null;
   return (
     <>
-      <section className={`ticker${paused ? " paused" : ""}`} aria-label="Today's games">
+      {stripOrList}
+      {!phone && <section className={`ticker${paused ? " paused" : ""}`} aria-label="Today's games">
         <span className="ticker-title">{label}</span>
         <div className="ticker-viewport">
           <ul className="ticker-track" style={{ ["--ticker-dur" as string]: `${list.length * 5}s` }}>
@@ -90,7 +106,7 @@ export function ScoreTicker({ games, teams, day, analysis, baselineFor, sourceSe
         <button type="button" className="ticker-pause" aria-pressed={paused} onClick={() => setPaused((p) => !p)}>
           {paused ? "Play" : "Pause"}
         </button>
-      </section>
+      </section>}
       {open && analysis && home && away && (
         <Suspense fallback={null}>
           <GameOverlay

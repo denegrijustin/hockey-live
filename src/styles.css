@@ -3808,3 +3808,10 @@ body {
 @media (max-width: 600px) {
   .table-scroll:not(.st-fit) td, .table-scroll:not(.st-fit) td code, .nhlp-table td, .nhlplus .np-table td, .nhlplus .np-table td code { overflow-wrap: anywhere; word-break: break-word; white-space: normal; min-width: 0; }
 }
+
+.chart-crowd { margin: 0 0 8px; color: var(--muted); font-size: .75rem; line-height: 1.45; }
+
+@media (max-width: 600px) {
+  .panel-heading .st-intro, .rs-tabs .st-intro { display: none; }
+  .panel:has(.standings-table) .panel-heading h2, .panel:has(.rs) .panel-heading h2 { font-size: 1.25rem; margin-bottom: 4px; }
+}

@@ -57,6 +57,9 @@ export function Trends({
   const minimum = metric === "playoffs" ? 0 : Math.min(0, ...values),
     maximum = metric === "playoffs" ? 100 : Math.max(metric === "points" ? 1 : 2, ...values);
   const range = maximum - minimum || 1;
+  // With a crowd of teams (say all 32) every line in its own colour is unreadable: three are featured in colour and named, the rest sit behind in grey.
+  const crowded = teams.length > 6;
+  const featured = new Set(crowded ? (["EDM", "CHI", "MIN"].filter((id) => teams.some((t) => t.id === id)).length ? ["EDM", "CHI", "MIN"] : teams.slice(0, 3).map((t) => t.id)) : teams.map((t) => t.id));
   const maxGames = Math.max(1, ...series.map((s) => s.data.length));
   // Pointer events cover mouse, touch and pen; the chart keeps vertical swipes for scrolling (see .chart-wrap svg).
   const inspectChart = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -124,7 +127,7 @@ export function Trends({
       ) : (
         <>
           <div className="chart-legend">
-            {teams.map((t) => (
+            {teams.filter((t) => featured.has(t.id)).map((t) => (
               <span key={t.id}>
                 <i style={{ background: t.color }} />
                 {t.id}
@@ -139,6 +142,7 @@ export function Trends({
               </span>
             ))}
           </div>
+          {crowded && <p className="chart-crowd" data-testid="chart-crowd">Showing {featured.size} teams in colour and the other {teams.length - featured.size} in grey for context. Choose fewer teams (Teams, above) to compare them in colour.</p>}
           <div className="chart-wrap" onMouseLeave={() => setHover(null)}>
             <svg
               ref={chartRef}
@@ -174,12 +178,13 @@ export function Trends({
                   </g>
                 );
               })}
-              {series.map((s) => (
+              {[...series].sort((a, b) => Number(featured.has(a.team.id)) - Number(featured.has(b.team.id))).map((s) => (
                 <polyline
                   key={s.team.id}
                   fill="none"
-                  stroke={s.team.color}
-                  strokeWidth="2.6"
+                  stroke={featured.has(s.team.id) ? s.team.color : "var(--line-4)"}
+                  strokeOpacity={featured.has(s.team.id) ? 1 : 0.55}
+                  strokeWidth={featured.has(s.team.id) ? "3" : "1.3"}
                   strokeLinejoin="round"
                   points={s.data
                     .map((p: any, i: number) => `${x(i)},${y(p.value)}`)
@@ -189,7 +194,7 @@ export function Trends({
                 </polyline>
               ))}
               {metric === "playoffs" &&
-                series.map((s) => {
+                series.filter((s) => featured.has(s.team.id)).map((s) => {
                   const index = s.data.length - 1;
                   const point = s.data[index];
                   return point ? (

@@ -80,3 +80,14 @@ test("the desktop tables keep their ordinary table layout", async ({ page }, inf
   expect(heads.map((h) => h.trim().toUpperCase())).toEqual(expect.arrayContaining(["DIVISION", "W", "L", "OT", "LAST 5", "ENTRY-LINE GAP"]));
   await expect(page.locator(".stk-sort")).toBeHidden();
 });
+
+test("Team trends with every team chosen shows three in colour and the rest in grey, with a short legend", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const ids = (await (await page.request.get("/data/teams.json")).json()).map((t: { id: string }) => t.id);
+  await page.addInitScript((all) => localStorage.setItem("iceboard-teams", JSON.stringify(all)), ids);
+  await page.goto("/?view=trends");
+  await expect(page.getByTestId("chart-crowd")).toBeVisible({ timeout: 30000 });
+  expect(await page.locator(".chart-legend > span").count()).toBeLessThanOrEqual(3);
+  const colours = await page.locator(".chart-wrap polyline").evaluateAll((els) => new Set(els.map((e) => e.getAttribute("stroke"))).size);
+  expect(colours).toBeLessThanOrEqual(5); // three team colours and the grey
+});

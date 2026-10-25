@@ -26,16 +26,16 @@ export function Standings({
         <div>
           <p className="eyebrow">THE BIGGER PICTURE</p>
           <h2>League standings</h2>
-          <p>
+          <p className="st-intro">
             Rebuilt from completed regular-season results. Your selected teams
             are highlighted.
           </p>
         </div>
-        <span className="muted-label">Points rank · ties shared</span>
+        <span className="muted-label st-intro">Points rank · ties shared</span>
       </div>
       <div className="inj-seg rs-tabs" role="group" aria-label="Standings or resumés">
         <button type="button" aria-pressed={tab==='table'} onClick={()=>setTab('table')}>Standings table</button>
-        <button type="button" aria-pressed={tab==='resumes'} onClick={()=>setTab('resumes')}>Resumés: who they beat, who beat them</button>
+        <button type="button" aria-pressed={tab==='resumes'} onClick={()=>setTab('resumes')}>Resumés<span className="st-intro">: who they beat, who beat them</span></button>
       </div>
       {tab==='resumes' ? <Resumes teams={teams} table={table} games={games} /> : <>
       <div className="chart-filters"><label>Standings view<select value={mode} onChange={e=>setMode(e.target.value)}><option value="current">Current standings</option><option value="projected">Projected final standings</option></select></label><label>Group standings<select value={group} onChange={e=>setGroup(e.target.value)}><option value="league">League</option><option value="conference">Conference</option><option value="division">Division</option></select></label></div>

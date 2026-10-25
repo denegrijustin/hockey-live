@@ -47,3 +47,25 @@ test('Players defaults to My three independently and supports custom teams or Al
  await openTeams(page);
  await expect(page.getByRole('checkbox',{name:'Florida Panthers',exact:true})).toBeChecked();
 });
+
+for (const [label, width] of [["a 360px phone", 360], ["a laptop", 1280], ["a wide desktop", 1700]] as const) {
+  test(`resumés on ${label}: one per team, best wins and losses, ranks, and no sideways scroll`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?view=games");
+    await page.getByRole("button", { name: "Standings", exact: true }).click();
+    await page.getByRole("button", { name: /Resumés/ }).click();
+    const box = page.getByTestId("resumes");
+    await expect(box).toBeVisible();
+    const rows = box.locator(".rs-row");
+    await expect(rows).toHaveCount(32);
+    await expect(rows.first().locator(".rs-rank")).toHaveText("1");
+    await expect(rows.first().locator(".rs-cell")).toHaveCount(3);
+    const wins = await rows.evaluateAll((els) => els.map((e) => e.querySelectorAll(".rs-wins .rs-chip").length));
+    expect(Math.max(...wins)).toBeLessThanOrEqual(3);
+    expect(wins.some((n) => n > 0)).toBe(true); // the season has games
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    // The table view is still there behind the other tab.
+    await page.getByRole("button", { name: "Standings table" }).click();
+    await expect(page.locator("tbody tr")).toHaveCount(32);
+  });
+}

@@ -71,7 +71,8 @@
   .ts-grid { gap: 2px; }
   .ts-day { min-height: 70px; padding: 2px; border-radius: 6px; }
   .ts-gchip { flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 2px; min-height: 40px; }
-  .ts-gchip em { display: none; }
+  .ts-gchip em { font-size: .625rem; font-weight: 700; }
+  .ts-gchip { border-style: solid; }
   .ts-gchip .ts-gtext { font-size: .6875rem; }
 }
 @media (min-width: 1100px) {
@@ -85,3 +86,8 @@
   .ts-gchip .ts-gtext { display: grid; justify-items: center; line-height: 1.15; white-space: normal; text-align: center; }
   .ts-gchip { min-height: 52px; }
 }
+
+/* Home and away are always visible: "vs" for a home game, "@" for a road game, and a road game's chip has a dashed edge. */
+.ts-gchip:has(em[data-venue="away"]) { border-style: dashed; }
+.ts-oppline { display: inline-flex; align-items: baseline; gap: 3px; white-space: nowrap; }
+@media (max-width: 640px) { .ts-gchip .ts-gtext { gap: 0; } .ts-oppline { justify-content: center; } }

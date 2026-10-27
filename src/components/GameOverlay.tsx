@@ -137,7 +137,7 @@ export function GameOverlay({
       <div className="dialog-matchup">
         {[away, home].map((t, i) => (
           <div className="dialog-team" key={t.id}>
-            <TeamLogo id={t.id} size={54} />
+            <TeamLogo id={t.id} size={54} eager />
             <div>
               <span>{t.city}</span>
               <h3>{t.short}</h3>

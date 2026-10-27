@@ -118,3 +118,28 @@ test("the Schedule opens on the calendar, not the list", async ({ page }) => {
   await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(page.getByTestId("ts-list")).toBeVisible();
 });
+
+test("every calendar chip says home (vs) or away (@), on a phone too, and the Game Center logos load straight away", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?view=teamschedule");
+  const cal = page.getByTestId("ts-calendar");
+  await expect(cal).toBeVisible({ timeout: 30000 });
+  const chips = cal.locator(".ts-gchip");
+  const n = await chips.count();
+  expect(n).toBeGreaterThan(0);
+  for (let i = 0; i < n; i++) {
+    const em = chips.nth(i).locator("em");
+    await expect(em).toBeVisible();
+    await expect(em).toHaveText(/^(vs|@)$/);
+    const aria = (await chips.nth(i).getAttribute("aria-label")) ?? "";
+    expect(aria.startsWith("Home against") ? "vs" : "@").toBe((await em.innerText()).trim());
+  }
+  await expect(cal.locator(".ts-legend")).toContainText("home");
+  await chips.first().click();
+  const logos = page.locator("dialog .dialog-team img");
+  await expect(logos).toHaveCount(2);
+  for (const l of await logos.all()) {
+    await expect(l).toHaveAttribute("loading", "eager");
+    await expect.poll(() => l.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(0);
+  }
+});

@@ -127,13 +127,13 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
                   <button key={i.id} type="button" className={`ts-gchip ${i.status}${i.result ? ` r-${i.result}` : ""}`} onClick={() => open(i.game)}
                     aria-label={`${i.home ? "Home against" : "At"} ${teamOf(i.opp).name}, ${i.status === "upcoming" ? time(i.start) : i.status === "live" ? "live" : `${i.result ?? ""} ${i.us} to ${i.them}`}. Open Game Center`}>
                     <TeamLogo id={i.opp} size={20} />
-                    <span className="ts-gtext"><em>{i.home ? "vs" : "@"}</em> <b className="ts-abbr">{i.opp}</b> {i.status === "upcoming" ? time(i.start).replace(" ", "").toLowerCase() : `${i.result ?? ""} ${i.us}–${i.them}`}</span>
+                    <span className="ts-gtext"><span className="ts-oppline"><em data-venue={i.home ? "home" : "away"}>{i.home ? "vs" : "@"}</em> <b className="ts-abbr">{i.opp}</b></span> <span className="ts-gres">{i.status === "upcoming" ? time(i.start).replace(" ", "").toLowerCase() : `${i.result ?? ""} ${i.us}–${i.them}`}</span></span>
                   </button>
                 ))}
               </div>
             ))}
           </div>
-          <p className="ts-legend" aria-hidden="true"><i className="W" /> Win <i className="OTL" /> Overtime loss <i className="L" /> Loss <i className="up" /> Upcoming</p>
+          <p className="ts-legend"><i className="W" /> Win <i className="OTL" /> Overtime loss <i className="L" /> Loss <i className="up" /> Upcoming · <b>vs</b> home · <b>@</b> away</p>
         </div>
       )}
 

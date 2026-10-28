@@ -3521,8 +3521,6 @@ select,
 .int-body-shine { fill: none; stroke: #fff; stroke-opacity: .35; stroke-width: .35; }
 .int-driver-coat { fill: #263b4a; }
 .int-water { fill: none; stroke: #bce5f1; stroke-width: 1.4; opacity: .65; }
-.int-chassis { animation: int-idle 2.8s ease-in-out infinite; }
-@keyframes int-idle { 0%, 100% { transform: translateY(-.08px); } 50% { transform: translateY(.08px); } }
 .int-cap {
   margin: 6px 0 0;
   font-size: 0.78rem;

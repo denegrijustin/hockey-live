@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { EXIT_PATH, EXIT_S, FINISH_S, INTERMISSION_MS, exitProgress, resurfaceProgress, zamboniColors, zamboniPose, clockText, intermissionLeft, parseClock, resurfacePath, resurfacingMotion } from "../src/lib/intermission.mjs";
+import { EXIT_PATH, EXIT_S, FINISH_S, INTERMISSION_MS, exitProgress, resurfaceProgress, lapState, PASSES, zamboniColors, zamboniPose, clockText, intermissionLeft, parseClock, resurfacePath, resurfacingMotion } from "../src/lib/intermission.mjs";
 
 test("an intermission is 17 minutes", () => assert.equal(INTERMISSION_MS, 17 * 60_000));
 test("the feed's clock is read as minutes and seconds", () => {
@@ -53,6 +53,18 @@ test("the Zamboni is paced to the clock: laps from the start, off the ice with 1
   // The exit runs off the left edge of the rink.
   const xs = EXIT_PATH.match(/-?\d+(\.\d+)?/g).map(Number);
   assert.ok(Math.min(...xs) < -15);
+});
+test("the Zamboni does several brisk passes, the first lays the ice, and the last ends as it heads for the gate", () => {
+  assert.equal(PASSES, 6);
+  assert.deepEqual(lapState(1020), { progress: 0, laid: false });
+  const pass = (1020 - 18) / PASSES;
+  assert.ok(Math.abs(lapState(1020 - pass / 2).progress - 0.5) < 1e-9);
+  assert.equal(lapState(1020 - pass - 1).laid, true);
+  assert.ok(lapState(1020 - pass - 1).progress < 0.01); // the second pass starts over
+  assert.equal(lapState(18).progress, 1);
+  assert.equal(lapState(18).laid, true);
+  // Always moving at a visible speed: a full pass takes four minutes or so, never the whole intermission.
+  assert.ok(pass < 300);
 });
 test("the Zamboni wears the home team's colors, lifted when the color is too dark to show on ice", () => {
   assert.equal(zamboniColors("#c8102e").body, "#c8102e");

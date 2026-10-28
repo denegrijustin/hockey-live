@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildRecap, deservedToWin, estimateXg } from "../src/lib/game-recap.mjs";
+import { buildRecap, deservedToWin, estimateXg, HIGH_XG } from "../src/lib/game-recap.mjs";
 
 const live = JSON.parse(readFileSync(new URL("./fixtures/live-game.json", import.meta.url), "utf8"));
 const mp = JSON.parse(readFileSync(new URL("./fixtures/shots/2026020050.json", import.meta.url), "utf8"));
@@ -58,4 +58,12 @@ test("a game still in the second period spans only what has been played: no thir
   assert.equal(buildRecap({ game: finalGame }).series.end, 3600); // a finished game spans the full three periods
   const inThird = { ...live, period: 3, periodType: "REG", clock: "10:00", intermission: false, state: "LIVE" };
   assert.ok(buildRecap({ game: inThird }).series.end >= 3000);
+});
+
+test("high-chance shots are those worth 0.20 xG or more, in time order, goals flagged", () => {
+  const r = buildRecap({ game: live });
+  assert.ok(HIGH_XG === 0.2);
+  assert.ok(r.chances.every((c) => c.xg >= HIGH_XG));
+  assert.ok(r.chances.every((c, i, a) => i === 0 || a[i - 1].t <= c.t));
+  assert.equal(r.chances.length, r.list.filter((a) => a.xg >= HIGH_XG).length);
 });

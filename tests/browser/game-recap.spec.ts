@@ -81,3 +81,36 @@ for (const [label, width] of [["a 360px phone", 360], ["a laptop", 1280]] as con
     expect(Math.abs(a!.y - h!.y)).toBeLessThan(4);
   });
 }
+
+test("a game in the second period shows only the 1st and 2nd on the race chart, and the shot maps use dark team colours with goals ringed in the second colour", async ({ page }) => {
+  const inSecond = { ...live, period: 2, clock: "08:00" };
+  const snapshot = { season, updatedAt: new Date().toISOString(), source: "fixture", games: [inSecond, final] };
+  await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
+  await page.route(`**/data/seasons/${season}.json`, (route) => route.fulfill({ json: snapshot }));
+  await page.route("**/data/moneypuck/**/shots/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+  await page.route("**/api/moneypuck/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+  await page.route("**/api/game/*", (route) => {
+    const plays = feedPlays("TOR", "BOS").map((p) => ({ ...p, period: Math.min(p.period, 2) }));
+    return route.fulfill({ json: { ...inSecond, plays, shots: plays, goals: plays.filter((p) => p.type === "goal"), stats } });
+  });
+  await page.goto("/");
+  const row = page.locator(`.sb-row[data-game="${live.id}"]`);
+  await row.locator(".sb-main").click();
+  const recap = row.getByTestId("game-recap");
+  await expect(recap).toBeVisible();
+  const labels = await recap.locator(".gr-race .gr-ax").allTextContents();
+  expect(labels).toContain("1st");
+  expect(labels).toContain("2nd");
+  expect(labels).not.toContain("3rd");
+  expect(await recap.locator(".gr-race .gr-sep").count()).toBe(1); // one boundary: between the 1st and 2nd
+  // Shot-map markers: dark enough for white ice, the two teams told apart, and a goal outlined in a different colour than its fill.
+  const dots = await recap.locator(".gr-map circle.gr-shot").evaluateAll((els) => els.map((e) => ({ home: e.classList.contains("home"), goal: e.classList.contains("goal"), fill: (e as SVGElement).style.fill, stroke: (e as SVGElement).style.stroke })));
+  const lum = (css: string) => { const m = css.match(/\d+/g)!.map(Number); return (0.299 * m[0] + 0.587 * m[1] + 0.114 * m[2]) / 255; };
+  const solid = dots.filter((d) => d.fill);
+  expect(solid.length).toBeGreaterThan(0);
+  for (const d of solid) expect(lum(d.fill)).toBeLessThan(0.5);
+  expect(new Set(solid.filter((d) => d.home).map((d) => d.fill)).size).toBe(1);
+  expect(solid.find((d) => d.home)!.fill).not.toBe(solid.find((d) => !d.home)!.fill);
+  for (const g of dots.filter((d) => d.goal)) expect(g.stroke).not.toBe(g.fill);
+});

@@ -53,3 +53,6 @@
 .gr-period { display: grid; gap: 4px; padding: 8px 10px; border-radius: 10px; background: var(--surface-3); font-variant-numeric: tabular-nums; }
 .gr-period small { color: var(--muted); font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; }
 .gr-prow { display: flex; justify-content: space-between; font-size: .875rem; } .gr-prow b { color: var(--text-3); font-weight: 600; } .gr-prow b.lead { color: var(--text-6); font-weight: 800; }
+
+.gr-map h4 .gr-key { display: inline-block; width: 10px; height: 10px; margin-left: 6px; border-radius: 50%; border: 2px solid; vertical-align: -1px; }
+.gr-shot.goal { stroke-width: 1.6; }

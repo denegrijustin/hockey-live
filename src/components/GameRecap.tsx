@@ -3,6 +3,7 @@ import type { GameFeed, Team } from "../types";
 import { useGameShots } from "../lib/moneypuck-client";
 import { buildRecap } from "../lib/game-recap.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { markerColors } from "../lib/kits";
 import "./game-recap.css";
 
 type Recap = ReturnType<typeof buildRecap>;
@@ -27,15 +28,15 @@ function Race({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   const x = (t: number) => L + (t / r.series.end) * (W - L - R);
   const y = (v: number) => H - B - (v / max) * (H - T - B);
   const path = (pts: { t: number; v: number }[]) => pts.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`).join("");
-  const periods = [1200, 2400, 3600].filter((t) => t <= r.series.end);
+  const periods = [1200, 2400, 3600].filter((t) => t < r.series.end);
   const ticks = Array.from({ length: max + 1 }, (_, i) => i);
   return (
     <section className="gr-race" aria-label={`Expected goals race: ${away.id} ${f2(r.xg.away)}, ${home.id} ${f2(r.xg.home)}`}>
       <h4>Expected goals race <small>gold dot = goal</small></h4>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${away.id} ${f2(r.xg.away)} expected goals, ${home.id} ${f2(r.xg.home)}`}>
         {ticks.map((v) => <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} className="gr-grid" /><text x={L - 5} y={y(v) + 4} className="gr-ax" textAnchor="end">{v}</text></g>)}
-        {periods.slice(0, -1).map((t) => <line key={t} x1={x(t)} x2={x(t)} y1={T} y2={H - B} className="gr-sep" />)}
-        {[["1st", 0, 1200], ["2nd", 1200, 2400], ["3rd", 2400, 3600]].map(([n, a, b]) => <text key={n as string} x={x(((a as number) + Math.min(b as number, r.series.end)) / 2)} y={H - 8} className="gr-ax" textAnchor="middle">{n}</text>)}
+        {periods.map((t) => <line key={t} x1={x(t)} x2={x(t)} y1={T} y2={H - B} className="gr-sep" />)}
+        {[["1st", 0, 1200], ["2nd", 1200, 2400], ["3rd", 2400, 3600], ["OT", 3600, 99999]].filter(([, a]) => (a as number) < r.series.end).map(([n, a, b]) => <text key={n as string} x={x(((a as number) + Math.min(b as number, r.series.end)) / 2)} y={H - 8} className="gr-ax" textAnchor="middle">{n}</text>)}
         <path d={path(r.series.away)} className="gr-line away" />
         <path d={path(r.series.home)} className="gr-line home" />
         {r.marks.map((m) => <g key={m.n}><circle cx={x(m.t)} cy={y(m.v)} r="7" className={`gr-goal ${m.home ? "home" : "away"}`} /><text x={x(m.t)} y={y(m.v) + 4} className="gr-goal-n" textAnchor="middle">{m.n}</text></g>)}
@@ -49,10 +50,11 @@ function Race({ r, home, away }: { r: Recap; home: Team; away: Team }) {
 /** One team's attempts at the net it attacked: dot size is the chance, a gold ring is a goal, a hollow dot missed. */
 function AttemptMap({ r, side, team }: { r: Recap; side: "home" | "away"; team: Team }) {
   const id = useId();
+  const colors = markerColors(r.teams.away, r.teams.home)[side];
   const mine = r.list.filter((a: any) => a.home === (side === "home"));
   return (
     <section className={`gr-map ${side}`} aria-label={`${team.id} attempts`}>
-      <h4>{team.id} attempts</h4>
+      <h4>{team.id} attempts <i className="gr-key" style={{ background: colors.fill, borderColor: colors.ring }} aria-hidden="true" /></h4>
       <svg viewBox="0 0 85 84" role="img" aria-label={`${team.id}: ${mine.length} unblocked attempts, ${mine.filter((a: any) => a.goal).length} goals`}>
         <defs><clipPath id={id}><path d="M0 0H85V84H0z" /></clipPath></defs>
         <rect x="0.5" y="0.5" width="84" height="83" rx="26" className="gr-ice" />
@@ -67,8 +69,8 @@ function AttemptMap({ r, side, team }: { r: Recap; side: "home" | "away"; team: 
           const px = 42.5 + a.y, py = 3 + Math.max(0, Math.min(79, 89 - a.x));
           const rad = 1.3 + Math.sqrt(a.xg) * 7;
           return a.goal
-            ? <circle key={i} cx={px} cy={py} r={rad + 0.8} className={`gr-shot goal ${side}`} />
-            : <circle key={i} cx={px} cy={py} r={rad} className={`gr-shot ${side}${a.sog ? "" : " miss"}`} />;
+            ? <circle key={i} cx={px} cy={py} r={rad + 0.8} className={`gr-shot goal ${side}`} style={{ fill: colors.fill, stroke: colors.ring }} />
+            : <circle key={i} cx={px} cy={py} r={rad} className={`gr-shot ${side}${a.sog ? "" : " miss"}`} style={a.sog ? { fill: colors.fill } : { stroke: colors.fill }} />;
         })}
       </svg>
     </section>
@@ -211,7 +213,7 @@ export function GameRecap({ data, home, away }: { data: GameFeed | null; home: T
         {recap.source === "moneypuck"
           ? "Expected goals (xG) from MoneyPuck's model. Deserved to win: every attempt weighed by its chance, a tie after regulation split evenly."
           : "Expected goals (xG) are estimated from where each shot was taken (distance and angle), so they run rougher than MoneyPuck's model and update as the game is played. Blocked shots have no location and are left out of the maps and xG."}
-        {" "}Dot size is the chance; a gold ring is a goal; a hollow dot missed the net.
+        {" "}Dot size is the chance; a dot outlined in the team’s second colour is a goal; a hollow dot missed the net.
       </p>
     </section>
   );

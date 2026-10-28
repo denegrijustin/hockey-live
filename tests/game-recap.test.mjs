@@ -48,3 +48,14 @@ test("a finished game with MoneyPuck uses its expected goals, lists the goals wi
   assert.ok(r.series.home.at(-1).v === r.xg.home);
   assert.equal(r.marks.length, r.goals.length);
 });
+
+test("a game still in the second period spans only what has been played: no third period on the race chart", () => {
+  const inSecond = { ...live, period: 2, periodType: "REG", clock: "08:00", intermission: false, state: "LIVE" }; // 12:00 into the 2nd: 32 minutes played
+  const r = buildRecap({ game: inSecond });
+  assert.ok(r.series.end >= 1920 && r.series.end < 2400, `end ${r.series.end}`);
+  assert.equal(r.series.home.at(-1).t, r.series.end); // the lines stop at "now"
+  const finalGame = { ...live, state: "FINAL", end: "REG" };
+  assert.equal(buildRecap({ game: finalGame }).series.end, 3600); // a finished game spans the full three periods
+  const inThird = { ...live, period: 3, periodType: "REG", clock: "10:00", intermission: false, state: "LIVE" };
+  assert.ok(buildRecap({ game: inThird }).series.end >= 3000);
+});

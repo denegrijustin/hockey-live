@@ -1,7 +1,7 @@
 // The game recap: who created the better chances, how the expected goals built up, where each team shot from, the numbers side by side and the goals.
 // Works from the live game feed (so it updates as the game is played) and, for a finished game MoneyPuck has, from MoneyPuck's own expected-goal values.
 // Pure, so the card and the tests share it.
-import { playMinute } from "./pulse.mjs";
+import { playMinute, pulseMinute } from "./pulse.mjs";
 
 const NET = 89;
 const ATTEMPT = { goal: "goal", "shot-on-goal": "sog", "missed-shot": "miss" };
@@ -82,7 +82,11 @@ export function buildRecap({ game, mp = null }) {
   const attempts = { home: homeA.length + (blocked?.home ?? 0), away: awayA.length + (blocked?.away ?? 0) };
   const sog = { home: game.homeShots ?? homeA.filter((a) => a.sog).length, away: game.awayShots ?? awayA.filter((a) => a.sog).length };
   const faceoffs = count(game, "faceoff"), hits = count(game, "hit");
-  const end = Math.max(3600, ...list.map((a) => a.t));
+  // A finished game spans its full length (at least three periods). A game still being played spans only what has been played so far, so the race
+  // chart never shows periods that have not happened.
+  const elapsed = ["LIVE", "CRIT"].includes(game.state) ? pulseMinute(game) : null;
+  const lastShot = Math.max(0, ...list.map((a) => a.t));
+  const end = elapsed != null ? Math.max(120, elapsed * 60, lastShot) : Math.max(3600, lastShot);
   const series = (arr) => {
     let cum = 0;
     const pts = [{ t: 0, v: 0 }];

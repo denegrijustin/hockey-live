@@ -4,6 +4,9 @@ import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
+import { GameRecap } from "./GameRecap";
+import { useFeed } from "../lib/polling";
+import type { GameFeed } from "../types";
 import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
 import { GameInjuries } from "./GameInjuries";
@@ -178,6 +181,7 @@ export function GameOverlay({
         <summary>Projection and game pulse <span>+</span></summary>
         <GameData game={game} home={home} away={away} before={before} baseline={baseline} />
       </details>
+      {(past || live) && <RecapSection game={game} home={home} away={away} live={live} />}
       <details className="game-center-section" open>
         <summary>Offense vs. defense <span>+</span></summary>
         <section className="dialog-comparison" aria-label="Season team comparison">
@@ -214,4 +218,15 @@ export function GameOverlay({
   );
   // Docked, the panel renders at the page root: inside a card it would be clipped and positioned relative to the card.
   return panel ? createPortal(node, document.body) : node;
+}
+
+/** The game recap with the shot charts, in its own section: it reads the live feed, so it is here while a game is on as well as after it. */
+function RecapSection({ game, home, away, live }: { game: Game; home: Team; away: Team; live: boolean }) {
+  const { data } = useFeed<GameFeed>(`/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}`, live ? 30000 : 3600000);
+  return (
+    <details className="game-center-section game-center-recap" open data-testid="gc-recap-section">
+      <summary>Game recap and shot chart <span>+</span></summary>
+      {data ? <GameRecap data={data} home={home} away={away} /> : <p className="loading" role="status">Loading the shot chart…</p>}
+    </details>
+  );
 }

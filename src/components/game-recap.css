@@ -56,3 +56,12 @@
 
 .gr-map h4 .gr-key { display: inline-block; width: 10px; height: 10px; margin-left: 6px; border-radius: 50%; border: 2px solid; vertical-align: -1px; }
 .gr-shot.goal { stroke-width: 1.6; }
+
+/* High-chance shots (xG .20+): a magenta ring around the dot on the shot map, a ringed dot on the race chart, a marker on the momentum chart */
+.gr-chance-ring { fill: none; stroke: #c026d3; stroke-width: 1.1; }
+.gr-race .gr-chance-ring { stroke-width: 2.4; }
+.gr-chance-dot { fill: none; stroke: #c026d3; stroke-width: 2.4; }
+.gr-key.chance { display: inline-block; width: 9px; height: 9px; margin: 0 2px; border-radius: 50%; border: 2px solid #c026d3; vertical-align: -1px; background: transparent; }
+
+.flow-chance { fill: var(--surface, #fff); stroke: #c026d3; stroke-width: 1.6; }
+.flow-chance.goal { fill: #c026d3; stroke: #c026d3; }

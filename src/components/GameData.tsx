@@ -1,11 +1,13 @@
 import { useChartUnit } from "../lib/chartUnit";
 import { gameFlow, iceTilt, playMinute, pulseMinute } from "../lib/pulse.mjs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Game, GameFeed, Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { Projection } from "./Projection";
 import { isLive } from "../lib/game-data.mjs";
 import { LogoImage, TeamLogo } from "./TeamLogo";
+import { useGameShots } from "../lib/moneypuck-client";
+import { attemptsOf, HIGH_XG } from "../lib/game-recap.mjs";
 export function useVisible() {
   const ref = useRef<HTMLDivElement>(null),
     [visible, setVisible] = useState(false);
@@ -278,6 +280,9 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
   const flow = gameFlow(data);
   const [inspect, setInspect] = useState<number | null>(null);
   const chartRef = useChartUnit<SVGSVGElement>(360);
+  const over = ["OFF", "FINAL"].includes(data.state);
+  const mp = useGameShots(data.season ?? 0, data.id ?? 0, over);
+  const chances = useMemo(() => (data.plays?.length ? attemptsOf(data, over ? mp.data : null).list.filter((a: any) => a.xg >= HIGH_XG) : []), [data, mp.data, over]);
   if (!flow?.points.length) return null;
   const width = 360, height = compact ? 64 : 142, left = compact ? 8 : 28, right = compact ? 352 : 350;
   const center = compact ? 25 : 65;
@@ -320,6 +325,13 @@ function GameFlowChart({ data, home, away, compact = false }: { data: GameFeed; 
       {ticks.map((minute) => <g key={minute} className="flow-time-mark"><line x1={x(minute)} x2={x(minute)} y1="7" y2={height - 19}/><text x={x(minute)} y={height - 5} textAnchor={minute === 0 ? "start" : minute === end ? "end" : "middle"}>{minute === 0 ? "START" : minute === end ? `END · ${minute}m` : `${minute}m`}</text></g>)}
       <line x1={left} x2={right} y1={center} y2={center} className="flow-zero" />
       <path className="flow-line" pathLength={1} d={curve} fill="none" stroke={`url(#${id})`} strokeWidth={compact ? 3 : 3.5} strokeLinejoin="round" strokeLinecap="round" />
+      {chances.map((c: any, i: number) => {
+        const minute = c.t / 60;
+        if (minute > elapsed + 1e-6) return null;
+        const near = flow.points.reduce((best: any, point: any) => Math.abs(point.minute - minute) < Math.abs(best.minute - minute) ? point : best);
+        const cy = y(near.value) + (c.home ? -1 : 1) * (compact ? 6 : 8);
+        return <circle key={`hc${i}`} cx={x(minute)} cy={cy} r={compact ? 2.6 : 3.4} className={`flow-chance${c.goal ? " goal" : ""}`} data-high="1" data-goal={c.goal ? "1" : undefined}><title>{`${c.goal ? "High-chance goal" : "High-chance shot"} · ${c.xg.toFixed(2)} xG · ${c.home ? home.id : away.id}${c.player ? ` · ${c.player}` : ""}`}</title></circle>;
+      })}
       <line x1={x(elapsed)} x2={x(elapsed)} y1="7" y2={height - 19} className="flow-progress" />
       <circle cx={x(elapsed)} cy={y(flow.current)} r={compact ? 3.5 : 4.5} className="flow-progress-dot" />
       {!compact && <><line x1={x(selected.minute)} x2={x(selected.minute)} y1="10" y2={height - 14} className="flow-cursor"/><LogoImage id={home.id} x={3} y={4} size={20} /><LogoImage id={away.id} x={3} y={height - 27} size={20} /></>}

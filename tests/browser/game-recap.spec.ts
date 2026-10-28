@@ -131,3 +131,20 @@ test("the Game Center has the shot chart for a live game and for a finished one"
     if (g === final) await page.getByRole("button", { name: /completed/ }).click();
   }
 });
+
+test("high-chance shots (xG .20+) get a magenta outline on the shot maps, the xG race chart and the momentum chart", async ({ page }) => {
+  await open(page);
+  const row = page.locator(`.sb-row[data-game="${live.id}"]`);
+  await row.locator(".sb-main").click();
+  const recap = row.getByTestId("game-recap");
+  await expect(recap).toBeVisible();
+  await expect(recap.locator(".gr-map .gr-chance-ring[data-high]").first()).toBeVisible(); // slot shots are high chances
+  await expect(recap.locator(".gr-race .gr-chance-ring, .gr-race .gr-chance-dot").first()).toBeVisible();
+  await expect(recap.locator(".gr-race h4")).toContainText("high-chance");
+  const colour = await recap.locator(".gr-map .gr-chance-ring").first().evaluate((el) => getComputedStyle(el).stroke);
+  expect(colour).toBe("rgb(192, 38, 211)");
+  // The momentum chart marks the same chances; a high-chance goal is filled.
+  const flow = row.getByTestId("game-flow").or(row.getByTestId("compact-game-flow")).first();
+  await expect(flow.locator("circle.flow-chance[data-high]").first()).toBeVisible();
+  await expect(flow.locator("circle.flow-chance.goal").first()).toBeVisible();
+});

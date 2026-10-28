@@ -4,6 +4,8 @@
 import { playMinute, pulseMinute } from "./pulse.mjs";
 
 const NET = 89;
+/** A shot worth at least this much expected goals (a one-in-five chance or better) is a high-chance shot. */
+export const HIGH_XG = 0.2;
 const ATTEMPT = { goal: "goal", "shot-on-goal": "sog", "missed-shot": "miss" };
 
 /**
@@ -96,13 +98,14 @@ export function buildRecap({ game, mp = null }) {
   };
   const goals = list.filter((a) => a.goal).sort((p, q) => p.t - q.t).map((a, i) => ({ n: i + 1, ...a, when: clock(a.t).label }));
   const cumAt = (arr, t) => sum(arr.filter((a) => a.t <= t));
+  const chances = list.filter((a) => a.xg >= HIGH_XG).sort((p, q) => p.t - q.t).map((a) => ({ t: a.t, home: a.home, goal: a.goal, xg: a.xg, v: cumAt(a.home ? homeA : awayA, a.t), player: a.player }));
   const marks = goals.map((g) => ({ n: g.n, home: g.home, t: g.t, v: cumAt(g.home ? homeA : awayA, g.t), name: g.player }));
   return {
     source, teams: { home: game.home, away: game.away }, attempts, sog, xg,
     xgPerAttempt: { home: attempts.home ? xg.home / attempts.home : null, away: attempts.away ? xg.away / attempts.away : null },
     faceoffs: faceoffs ? { home: faceoffs.home, away: faceoffs.away } : null, hits: hits ? { home: hits.home, away: hits.away } : null,
     deserved: deservedToWin(homeA.map((a) => a.xg), awayA.map((a) => a.xg)),
-    series: { home: series(homeA), away: series(awayA), end }, marks, goals, list,
+    series: { home: series(homeA), away: series(awayA), end }, marks, goals, list, chances,
     topChances: [...list].sort((p, q) => q.xg - p.xg).slice(0, 3),
     performers: source === "moneypuck" ? performers(list, game) : null,
   };

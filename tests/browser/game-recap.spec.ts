@@ -114,3 +114,20 @@ test("a game in the second period shows only the 1st and 2nd on the race chart, 
   expect(solid.find((d) => d.home)!.fill).not.toBe(solid.find((d) => !d.home)!.fill);
   for (const g of dots.filter((d) => d.goal)) expect(g.stroke).not.toBe(g.fill);
 });
+
+test("the Game Center has the shot chart for a live game and for a finished one", async ({ page }) => {
+  await open(page);
+  for (const g of [live, final]) {
+    if (g === final) await page.getByRole("button", { name: /completed/ }).click();
+    await page.locator(`.sb-row[data-game="${g.id}"] .gc-icon`).click();
+    const dialog = page.locator("dialog.game-dialog[open]");
+    const section = dialog.getByTestId("gc-recap-section");
+    await expect(section).toBeVisible({ timeout: 30000 });
+    await expect(section.locator(".gr-map")).toHaveCount(2); // both teams' shot charts
+    await expect(section.locator("circle.gr-shot").first()).toBeVisible();
+    await expect(section.locator(".gr-deserved")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    if (g === final) await page.getByRole("button", { name: /completed/ }).click();
+  }
+});

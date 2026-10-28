@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Game, Team } from "../types";
-import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, resurfaceProgress, exitProgress, EXIT_PATH, zamboniColors, resurfacingMotion, FINISH_S } from "../lib/intermission.mjs";
+import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, lapState, exitProgress, EXIT_PATH, zamboniColors, resurfacingMotion, FINISH_S } from "../lib/intermission.mjs";
 import { LogoImage } from "./TeamLogo";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
@@ -49,20 +49,24 @@ function useResurfacing(still: boolean, deadline: { current: number }) {
     const motion = resurfacingMotion((s: number) => route.getPointAtLength(s), len);
     const exit = resurfacingMotion((s: number) => out.getPointAtLength(s), outLen);
     paint.current?.setAttribute("d", motion.trail);
-    let raf = 0, visible = true;
-    const frame = () => {
+    let raf = 0, visible = true, last = 0, lastQ = -1, lastFresh = "";
+    const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (!visible || document.hidden) return;
+      // 30 frames a second is smooth at this speed and halves the style and paint work (several rinks can be on screen at once).
+      if (!visible || document.hidden || now - last < 33) return;
+      last = now;
       // The job is paced to the clock: it starts with the intermission and is done when 10 seconds are left.
       const left = (deadline.current - Date.now()) / 1000;
-      const p = resurfaceProgress(left), q = exitProgress(left);
+      const lap = lapState(left), p = lap.progress, q = exitProgress(left);
       // With the laps done it drives off through the gate and is out of sight (past the boards) with 10 seconds left.
       const pose = q > 0 ? exit.at(q) : motion.at(p);
       z.setAttribute("transform", `translate(${pose.x.toFixed(3)} ${pose.y.toFixed(3)}) rotate(${pose.deg.toFixed(3)})`);
       // Keep the roof placard level and legible even during a U-turn.
       sign.current?.setAttribute("transform", `rotate(${-pose.deg})`);
-      if (paint.current) paint.current.style.strokeDashoffset = String(q > 0 ? 0 : pose.fresh);
-      svg.style.setProperty("--ice-finish", String(q));
+      const fresh = String(q > 0 || lap.laid ? 0 : pose.fresh);
+      if (paint.current && fresh !== lastFresh) paint.current.style.strokeDashoffset = lastFresh = fresh;
+      // A custom property on the root restyles everything under it, so it is only written when it changes.
+      if (q !== lastQ) svg.style.setProperty("--ice-finish", String((lastQ = q)));
     };
     const io = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io?.observe(svg);

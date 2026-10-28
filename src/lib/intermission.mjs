@@ -75,6 +75,20 @@ export function resurfaceProgress(left, total = INTERMISSION_MS / 1000) {
   const end = FINISH_S + EXIT_S;
   return Math.min(1, Math.max(0, 1 - (left - end) / (total - end)));
 }
+/** The Zamboni makes this many complete resurfacing passes of the ice in an intermission (the first lays the fresh ice, the rest go over it), each a few minutes long so it visibly moves. */
+export const PASSES = 6;
+/**
+ * Where the Zamboni is on its current pass (0 to 1) and whether the fresh ice is already down (the first pass laid it).
+ * Passes are evenly spaced so the last one ends as it heads for the gate, with FINISH_S + EXIT_S left.
+ */
+export function lapState(left, total = INTERMISSION_MS / 1000) {
+  const end = FINISH_S + EXIT_S, pass = (total - end) / PASSES;
+  const remaining = Math.max(0, left - end);
+  if (remaining <= 0) return { progress: 1, laid: true };
+  const elapsed = Math.max(0, total - end - remaining);
+  const first = elapsed < pass;
+  return { progress: first ? elapsed / pass : 1 - (remaining % pass) / pass, laid: !first };
+}
 /** How far through its drive off the ice (0 to 1): it leaves after the laps and is gone with 10 seconds left. */
 export const exitProgress = (left) => Math.min(1, Math.max(0, (FINISH_S + EXIT_S - left) / EXIT_S));
 /** The way off the ice: from the last lap's end to the gate in the left boards. */

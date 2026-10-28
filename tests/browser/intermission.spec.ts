@@ -77,17 +77,18 @@ test("the Game Center carries it too, and reduced motion keeps the ice fresh and
 
 test("the Zamboni does laps all through the intermission and leaves the ice with 10 seconds to go", async ({ page }) => {
   await page.clock.install();
-  const card = await open(page, { intermission: true, clock: "13:48" });
+  const card = await open(page, { intermission: true, clock: "16:30" });
   const int = card.getByTestId("intermission");
   const fresh = async () => Number(await int.locator(".int-fresh").evaluate((e) => (e as SVGElement).style.strokeDashoffset));
   const pose = () => int.locator(".int-zamboni").getAttribute("transform");
   await expect.poll(fresh).toBeGreaterThan(0);
   const early = await fresh();
   const first = await pose();
-  await page.clock.fastForward(120_000); // two minutes on: more of the ice is done and the machine has moved on
+  await page.clock.fastForward(100_000); // two minutes on: more of the first pass is done and the machine has moved on
   await expect.poll(fresh).toBeLessThan(early);
   expect(await pose()).not.toBe(first);
-  await page.clock.fastForward(11 * 60_000 + 30_000); // 18 seconds left: the last lap is done, and it heads for the gate
+  const [m, sec] = (await int.locator(".int-t").innerText()).split(":").map(Number);
+  await page.clock.fastForward((m * 60 + sec - 17) * 1000); // 18 seconds left: the last lap is done, and it heads for the gate
   await expect(int.locator(".int-t")).toHaveText(/^0:(1[5-9])$/);
   await expect.poll(fresh).toBe(0); // the whole sheet is fresh
   const x = async () => Number(/translate\(([-\d.]+)/.exec((await pose()) ?? "")?.[1]);
@@ -137,7 +138,8 @@ test("the rear blade paints the trail and the roof sign stays horizontal through
       const end = paint.getPointAtLength(paint.getTotalLength() * (1 - Number(paint.style.strokeDashoffset) / 100));
       const rear = new DOMPoint(-10, 0).matrixTransform(matrix);
       const combined = matrix.multiply(signMatrix);
-      return { gap: Math.hypot(end.x-rear.x, end.y-rear.y), angle: Math.atan2(combined.b, combined.a), turning: Math.abs(matrix.b) > .1 };
+      // once the first pass has laid the whole sheet there is no trail end to follow
+      return { gap: Number(paint.style.strokeDashoffset) > 0 ? Math.hypot(end.x-rear.x, end.y-rear.y) : 0, angle: Math.atan2(combined.b, combined.a), turning: Math.abs(matrix.b) > .1 };
     });
     expect(geometry.gap).toBeLessThan(.1);
     expect(Math.abs(geometry.angle)).toBeLessThan(.001);

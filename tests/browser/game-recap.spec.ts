@@ -180,3 +180,21 @@ for (const width of [360, 390, 1280]) {
     expect(overlaps).toEqual([]);
   });
 }
+
+for (const width of [360, 1280]) {
+  test(`every gauge row is centred in its box at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page);
+    await page.locator(`.sb-row[data-game="${live.id}"] .sb-main`).click();
+    const dialog = page.locator("dialog.game-dialog");
+    await expect(dialog.getByTestId("game-recap").locator(".gauge-grid").first()).toBeVisible();
+    const off = await dialog.locator(".gauge-grid").evaluateAll((grids) => grids.map((g) => {
+      const box = g.getBoundingClientRect(), kids = [...g.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width);
+      if (!kids.length) return 0;
+      const left = Math.min(...kids.map((r) => r.left)) - box.left, right = box.right - Math.max(...kids.map((r) => r.right));
+      return Math.abs(left - right);
+    }));
+    expect(off.length).toBeGreaterThan(0);
+    for (const o of off) expect(o).toBeLessThanOrEqual(3);
+  });
+}

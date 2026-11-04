@@ -36,7 +36,7 @@ test("an opened live card shows the game recap, filling in from the live feed", 
   await open(page);
   const row = page.locator(`.sb-row[data-game="${live.id}"]`);
   await row.locator(".sb-main").click();
-  const recap = row.getByTestId("game-recap");
+  const recap = page.locator("dialog.game-dialog").getByTestId("game-recap");
   await expect(recap).toBeVisible();
   await expect(recap.locator(".mini-heading")).toContainText("Updating as it is played");
   await expect(recap).toHaveAttribute("data-source", "estimate");
@@ -44,11 +44,13 @@ test("an opened live card shows the game recap, filling in from the live feed", 
   await expect(recap.locator(".gr-race svg")).toBeVisible();
   await expect(recap.locator(".gr-goal")).toHaveCount(2); // both goals are on the race chart
   await expect(recap.locator(".gr-map")).toHaveCount(2);
-  const pcts = (await recap.locator(".gr-dbar b").allInnerTexts()).join(" ");
+  const dial = recap.locator(".gr-deserved .gauge");
+  await expect(dial).toBeVisible(); // the deserved-to-win meter is a gas gauge
+  const pcts = (await dial.getAttribute("aria-label")) ?? "";
   expect(pcts).toMatch(/BOS \d+%/);
-  expect(pcts).toMatch(/\d+% TOR/);
+  expect(pcts).toMatch(/TOR \d+%/);
   // Numbers side by side: attempts, shots on goal, expected goals, xG per attempt, faceoffs, hits.
-  await expect(recap.locator(".gr-row")).toHaveCount(6);
+  await expect(recap.locator(".gr-compare .gauge")).toHaveCount(6); // every stat is a gauge
   await expect(recap.locator(".gr-compare")).toContainText("Hits");
   await expect(recap.locator(".gr-goals li")).toHaveCount(2);
   await expect(recap.locator(".gr-goals")).toContainText("Matthews");
@@ -97,7 +99,7 @@ test("a game in the second period shows only the 1st and 2nd on the race chart, 
   await page.goto("/");
   const row = page.locator(`.sb-row[data-game="${live.id}"]`);
   await row.locator(".sb-main").click();
-  const recap = row.getByTestId("game-recap");
+  const recap = page.locator("dialog.game-dialog").getByTestId("game-recap");
   await expect(recap).toBeVisible();
   const labels = await recap.locator(".gr-race .gr-ax").allTextContents();
   expect(labels).toContain("1st");
@@ -136,7 +138,7 @@ test("high-chance shots (xG .20+) get a magenta outline on the shot maps, the xG
   await open(page);
   const row = page.locator(`.sb-row[data-game="${live.id}"]`);
   await row.locator(".sb-main").click();
-  const recap = row.getByTestId("game-recap");
+  const recap = page.locator("dialog.game-dialog").getByTestId("game-recap");
   await expect(recap).toBeVisible();
   await expect(recap.locator(".gr-map .gr-chance-ring[data-high]").first()).toBeVisible(); // slot shots are high chances
   await expect(recap.locator(".gr-race .gr-chance-ring, .gr-race .gr-chance-dot").first()).toBeVisible();
@@ -144,7 +146,7 @@ test("high-chance shots (xG .20+) get a magenta outline on the shot maps, the xG
   const colour = await recap.locator(".gr-map .gr-chance-ring").first().evaluate((el) => getComputedStyle(el).stroke);
   expect(colour).toBe("rgb(192, 38, 211)");
   // The momentum chart marks the same chances; a high-chance goal is filled.
-  const flow = row.getByTestId("game-flow").or(row.getByTestId("compact-game-flow")).first();
+  const flow = page.locator("dialog.game-dialog").getByTestId("game-flow").first();
   await expect(flow.locator("circle.flow-chance[data-high]").first()).toBeVisible();
   await expect(flow.locator("circle.flow-chance.goal").first()).toBeVisible();
 });

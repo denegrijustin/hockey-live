@@ -96,7 +96,7 @@ test("a game opens from the list: its own best and worst nights, the game flow, 
   await expect(game.locator(".gr-map")).toHaveCount(2);
   await expect(game.locator(".gr-period").first()).toBeVisible();
   await game.getByRole("button", { name: "xG" }).click();
-  await expect(game.locator(".gr-prow").first()).toContainText(/\d\.\d\d/);
+  await expect(game.locator(".gr-period .gauge").first()).toContainText(/\d\.\d\d/);
   await game.getByRole("button", { name: /All of last night/ }).click();
   await expect(box.locator(".ln-finals li")).toHaveCount(3);
 });

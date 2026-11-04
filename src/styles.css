@@ -856,12 +856,14 @@ p {
   border: 1px solid var(--line-3);
   border-radius: 16px;
   padding: 24px;
-  width: min(1180px, calc(100vw - 32px));
+  width: 100vw;
   max-width: none;
-  height: min(920px, calc(100dvh - 28px));
-  max-height: calc(100dvh - 28px);
+  height: 100dvh;
+  max-height: none;
   overflow: auto;
 }
+/* Opened from a game card: the Game Center takes the whole screen, with the content centred in a readable column. */
+.game-dialog { border: 0; border-radius: 0; padding-inline: max(24px, calc((100vw - 1240px) / 2)); }
 .dialog-toolbar {
   display: flex;
   justify-content: flex-end;

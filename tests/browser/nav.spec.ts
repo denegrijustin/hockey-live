@@ -90,7 +90,7 @@ test.describe("phones", () => {
     await page.waitForTimeout(400); // slide-up finishes
     const box = (await dialog.boundingBox())!;
     expect(Math.round(box.y + box.height), "docked to the bottom edge").toBe(844);
-    expect(box.y, "the page peeks out above it").toBeGreaterThan(20);
+    expect(box.y, "the Game Center takes the whole screen").toBe(0);
     await expect(dialog.locator(".sheet-grabber")).toBeVisible();
     await expect(dialog.locator(".close-done")).toBeVisible();
     await expect(dialog.locator(".close-full")).toBeHidden();

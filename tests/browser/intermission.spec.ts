@@ -128,7 +128,7 @@ test("the rear blade paints the trail and the roof sign stays horizontal through
   const rink = card.locator('.int-rink');
   await expect(card.locator('.int-zamboni')).toHaveAttribute('transform', /translate/);
   let sawTurn = false;
-  for (let step = 0; step < 30; step++) {
+  for (let step = 0; step < 200; step++) {
     const geometry = await rink.evaluate((svg) => {
       const machine = svg.querySelector('.int-zamboni') as SVGGElement;
       const sign = svg.querySelector('.int-placard') as SVGGElement;
@@ -144,7 +144,7 @@ test("the rear blade paints the trail and the roof sign stays horizontal through
     expect(geometry.gap).toBeLessThan(.1);
     expect(Math.abs(geometry.angle)).toBeLessThan(.001);
     sawTurn ||= geometry.turning;
-    await page.clock.fastForward(28_000);
+    await page.clock.fastForward(4_000);
   }
   expect(sawTurn).toBe(true);
   await expect(card.locator('.int-sign-t')).toHaveText('BRING NHL TO KC');

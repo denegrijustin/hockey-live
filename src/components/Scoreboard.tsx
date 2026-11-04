@@ -213,7 +213,6 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
                       ranks={ranksFor?.(g.id)}
                       analysisRow={analysis?.analysis[g.id]}
                       open={openId === g.id || (status === "final" && section.key === "final")}
-                      onToggle={() => setOpenId(openId === g.id ? null : g.id)}
                       onFull={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}
                     />
                   </li>
@@ -245,8 +244,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   );
 }
 
-function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, open, onToggle, onFull }: {
-  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: { score: number; pre: number | null; importance?: number; upsetWon?: number | null }; ranks?: Record<string, any> | null; analysisRow?: any; open: boolean; onToggle: () => void; onFull: () => void;
+function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, open, onFull }: {
+  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: { score: number; pre: number | null; importance?: number; upsetWon?: number | null }; ranks?: Record<string, any> | null; analysisRow?: any; open: boolean; onFull: () => void;
 }) {
   const ref = useRef<HTMLElement>(null);
   usePauseOffscreen(ref);
@@ -277,7 +276,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
         </span>
       </div>
       <div className="sb-body">
-        <button className="sb-main" aria-expanded={open} aria-label={label} onClick={onToggle}>
+        <button className="sb-main" aria-haspopup="dialog" aria-label={`${label}. Open the full game view.`} onClick={onFull}>
           {([[away, game.awayScore, "away"], [home, game.homeScore, "home"]] as const).map(([team, score, side]) => (
             <span className={`sb-team${winner && winner !== side ? " lost" : ""}`} key={team.id}>
               <TeamLogo id={team.id} size={32} />

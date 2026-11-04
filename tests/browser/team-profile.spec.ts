@@ -34,12 +34,12 @@ test("a team name opens its profile too: standings table, resumés and playoff o
   await page.getByRole("button", { name: "Standings table" }).click();
 });
 
-test("a tap on a game card's team name still expands the card, and the profile is one tap away in the Game Center", async ({ page }) => {
+test("a tap on a game card's team name opens the full-screen Game Center, not the profile", async ({ page }) => {
   await page.goto("/");
   const name = page.locator(".sb-row .sb-name").first();
   await name.waitFor({ timeout: 30000 });
   await name.click();
-  await expect(page.locator(".sb-row.open")).toHaveCount(1);
+  await expect(page.locator("dialog.game-dialog")).toBeVisible();
   await expect(dialog(page)).toBeHidden();
 });
 

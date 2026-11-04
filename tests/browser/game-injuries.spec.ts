@@ -44,8 +44,8 @@ test("opening a game shows each side's injuries: who, the injury, how serious, w
   await expect(box.locator('.gi-side[data-team="ANA"] [data-testid="game-injury"]')).toHaveCount(4);
   await box.locator('.gi-side[data-team="ANA"]').getByRole("button", { name: /Show all 5/ }).click();
   await expect(box.locator('.gi-side[data-team="ANA"] [data-testid="game-injury"]')).toHaveCount(5);
-  // The way on to the Game Center is still there.
-  await expect(page.getByRole("button", { name: /Full game center/ })).toBeVisible();
+  // It sits in the full-screen Game Center that a card tap opens.
+  await expect(page.locator("dialog.game-dialog")).toBeVisible();
 });
 
 test("a team with no reported injuries says so", async ({ page }) => {
@@ -56,7 +56,7 @@ test("a team with no reported injuries says so", async ({ page }) => {
 test("an unavailable injury report says so inside the card, and the rest of the card still works", async ({ page }) => {
   await open(page, null);
   await expect(page.getByTestId("game-injuries")).toContainText("unavailable");
-  await expect(page.getByTestId("key-stats")).toBeVisible();
+  await expect(page.locator("dialog.game-dialog")).toBeVisible();
 });
 
 test("injuries inside a card fit a 360px phone", async ({ page }) => {
@@ -69,13 +69,13 @@ test("injuries inside a card fit a 360px phone", async ({ page }) => {
 test("injuries are an expandable section: closed by default, so the key stats stay the main thing in the opened card", async ({ page }) => {
   await open(page, report, false);
   const box = page.getByTestId("game-injuries");
-  await expect(page.getByTestId("key-stats")).toBeVisible();
+  await expect(page.locator("dialog.game-dialog")).toBeVisible();
   await expect(box).not.toHaveAttribute("open", "");
   await expect(box.locator("summary")).toContainText("ANA 5 · TOR 5 out");
   await expect(box.locator(".gi-side").first()).toBeHidden();
   await box.locator("summary").click();
   await expect(box.locator(".gi-side").first()).toBeVisible();
-  await expect(page.getByTestId("key-stats")).toBeVisible();
+  await expect(page.locator("dialog.game-dialog")).toBeVisible();
 });
 
 test("in the Game Center the injuries are their own expandable section", async ({ page }) => {

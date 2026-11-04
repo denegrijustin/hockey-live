@@ -148,7 +148,7 @@ test("on a phone the Game Center's close button says Done, with a real size", as
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/?view=teamschedule");
   await page.getByTestId("ts-calendar").locator(".ts-gchip").first().click({ timeout: 30000 });
-  const close = page.locator("dialog[open] .dialog-close");
+  const close = page.locator("dialog.game-dialog[open] > .dialog-toolbar .dialog-close");
   await expect(close).toBeVisible();
   const label = close.locator(".close-done");
   await expect(label).toBeVisible();

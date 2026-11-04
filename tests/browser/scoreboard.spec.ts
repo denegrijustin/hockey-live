@@ -29,17 +29,20 @@ test.describe("scoreboard home", () => {
     await expect(page.locator(".game-card")).toHaveCount(0);
   });
 
-  test("tapping a game shows a few key stats; Full game center is the second step", async ({ page }) => {
+  test("tapping a game opens the full-screen Game Center, with the gas-gauge stats", async ({ page }) => {
     await open(page);
     const row = page.locator(".sb-row.soon").first();
-    await expect(page.getByTestId("key-stats")).toHaveCount(0);
-    await row.locator(".sb-main").click();
-    const stats = row.getByTestId("key-stats");
-    await expect(stats).toBeVisible();
-    await expect(stats).toContainText("Record");
     await expect(page.locator("dialog.game-dialog")).toHaveCount(0);
-    await stats.getByRole("button", { name: "Full game center" }).click();
-    await expect(page.locator("dialog.game-dialog, .game-panel").first()).toBeVisible();
+    await row.locator(".sb-main").click();
+    const dialog = page.locator("dialog.game-dialog");
+    await expect(dialog).toBeVisible();
+    const box = (await dialog.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(box.x).toBe(0);
+    expect(box.y).toBe(0);
+    expect(box.width).toBe(viewport.width);
+    expect(box.height).toBe(viewport.height); // the whole screen, not a side panel
+    await expect(dialog.locator(".gauge").first()).toBeVisible();
   });
 
   test("days can be stepped, and the old game list is still the Schedule view", async ({ page }) => {

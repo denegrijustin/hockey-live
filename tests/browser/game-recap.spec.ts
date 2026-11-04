@@ -156,3 +156,27 @@ test("high-chance shots (xG .20+) get a magenta outline on the shot maps, the xG
   await expect(flow.locator("circle.flow-chance[data-high]").first()).toBeVisible();
   await expect(flow.locator("circle.flow-chance.goal").first()).toBeVisible();
 });
+
+for (const width of [360, 390, 1280]) {
+  test(`recap gauge captions do not overlap at ${width}px, even in a wide font`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page);
+    await page.locator(`.sb-row[data-game="${live.id}"] .sb-main`).click();
+    const dialog = page.locator("dialog.game-dialog");
+    await expect(dialog.getByTestId("game-recap").locator(".gauge").first()).toBeVisible();
+    await page.addStyleTag({ content: "dialog.game-dialog, dialog.game-dialog * { font-family: 'DejaVu Sans', Verdana, sans-serif !important; }" });
+    await page.waitForTimeout(300);
+    const overlaps = await dialog.locator(".gauge").evaluateAll((figures) => {
+      const hits: string[] = [];
+      for (const f of figures) {
+        const boxes = [...f.querySelectorAll("figcaption b, figcaption i, figcaption .gauge-label")].filter((e) => e.getClientRects().length > 0).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
+        for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i].r, b = boxes[j].r;
+          if (a.width && b.width && a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) hits.push(`${boxes[i].t} | ${boxes[j].t}`);
+        }
+      }
+      return hits;
+    });
+    expect(overlaps).toEqual([]);
+  });
+}

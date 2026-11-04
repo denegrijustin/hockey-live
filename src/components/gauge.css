@@ -28,8 +28,10 @@
 .ice-tilt .prediction-labels { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .metric-gap .gauge { width: 100%; min-width: 0; max-width: 140px; margin-inline: auto; }
 .goalie-gauges { margin-top: 12px; }
-.gr-hero { margin: 8px 0 10px; padding: 8px 8px 2px; border: 1px solid var(--line-2, #8883); border-radius: 12px; }
-.gr-hero .gr-deserved h4 { text-align: center; }
+.gr-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin: 8px 0 10px; padding: 8px 10px 4px; border: 1px solid var(--line-2, #8883); border-radius: 12px; }
+.gr-hero .gr-deserved h4, .gr-model h4 { text-align: center; margin: 0 0 2px; font-size: .9rem; } .gr-model h4 small, .gr-hero .gr-deserved h4 small { display: block; font-weight: 400; color: var(--text-2); font-size: .7rem; }
+.gr-model { min-width: 0; }
+@media (max-width: 560px) { .gr-hero { grid-template-columns: 1fr; } }
 .gr-hero .gauge { max-width: 260px; }
 .projection .gauge.sm { max-width: 150px; margin-inline: auto; }
 
@@ -41,3 +43,4 @@
 .gauge.sm figcaption { gap: 0 2px; }
 .gr-pgrid.gauge-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
 .gr-pgrid .gr-period { padding: 4px 2px; min-width: 0; }
+.gr-hero > :only-child { grid-column: 1 / -1; }

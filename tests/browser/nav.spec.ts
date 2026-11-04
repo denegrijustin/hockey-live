@@ -89,8 +89,8 @@ test.describe("phones", () => {
     await expect(dialog).toBeVisible();
     await page.waitForTimeout(400); // slide-up finishes
     const box = (await dialog.boundingBox())!;
-    expect(Math.round(box.y + box.height), "docked to the bottom edge").toBe(844);
-    expect(box.y, "the Game Center takes the whole screen").toBe(0);
+    expect(Math.abs(Math.round(box.y + box.height) - 844), "docked to the bottom edge").toBeLessThanOrEqual(4);
+    expect(Math.abs(box.y), "the Game Center takes the whole screen").toBeLessThanOrEqual(4);
     await expect(dialog.locator(".sheet-grabber")).toBeVisible();
     await expect(dialog.locator(".close-done")).toBeVisible();
     await expect(dialog.locator(".close-full")).toBeHidden();

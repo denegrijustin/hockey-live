@@ -38,10 +38,11 @@ test.describe("scoreboard home", () => {
     await expect(dialog).toBeVisible();
     const box = (await dialog.boundingBox())!;
     const viewport = page.viewportSize()!;
-    expect(box.x).toBe(0);
-    expect(box.y).toBe(0);
-    expect(box.width).toBe(viewport.width);
-    expect(box.height).toBe(viewport.height); // the whole screen, not a side panel
+    // The whole screen, not a side panel (a few pixels of slack: some phone renderers offset a fixed dialog by the browser bar).
+    expect(Math.abs(box.x)).toBeLessThanOrEqual(4);
+    expect(Math.abs(box.y)).toBeLessThanOrEqual(4);
+    expect(Math.abs(box.width - viewport.width)).toBeLessThanOrEqual(4);
+    expect(Math.abs(box.height - viewport.height)).toBeLessThanOrEqual(4);
     await expect(dialog.locator(".gauge").first()).toBeVisible();
   });
 

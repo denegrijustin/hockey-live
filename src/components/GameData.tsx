@@ -99,7 +99,7 @@ export function GameData({
     );
   return (
     <div ref={ref} className="game-data">
-      <Projection game={game} before={before} baseline={baseline} feed={data} error={error} />
+      <Projection game={game} before={before} baseline={baseline} feed={data} error={error} gauge={!eager} />
       {!data ? (
         <p className="detail-note">
           {error

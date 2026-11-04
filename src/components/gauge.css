@@ -1,4 +1,6 @@
 .gauge { margin: 0; display: grid; justify-items: center; gap: 2px; min-width: 0; }
+.gauge svg { max-width: 118px; }
+.gauge.lg svg { max-width: 190px; }
 .gauge svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gauge-track { fill: none; stroke: var(--line-2, #8883); stroke-linecap: butt; opacity: .55; }
 .gauge-away, .gauge-home { fill: none; stroke-linecap: butt; }
@@ -11,22 +13,22 @@
 .gauge-side { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
 .gauge-side.home { justify-content: flex-end; }
 .gauge-side b { font-size: .75rem; letter-spacing: .04em; color: var(--text-2); }
-.gauge-side i { font-style: normal; font-weight: 800; font-size: 1.05rem; }
+.gauge-side i { font-style: normal; font-weight: 800; font-size: .9rem; }
 .gauge-label { grid-column: 1 / -1; grid-row: 1; justify-self: center; font-size: .75rem; color: var(--text-2); text-align: center; order: -1; margin-bottom: 2px; }
 .gauge-side { grid-row: 2; }
-.gauge.lg { max-width: 420px; margin-inline: auto; }
-.gauge.lg .gauge-side i { font-size: 1.9rem; }
-.gauge.lg .gauge-side b { font-size: .9rem; }
-.gauge.lg .gauge-label { font-size: .85rem; }
+.gauge.lg { max-width: 260px; margin-inline: auto; }
+.gauge.lg .gauge-side i { font-size: 1.35rem; }
+.gauge.lg .gauge-side b { font-size: .8rem; }
+.gauge.lg .gauge-label { font-size: .78rem; }
 .gauge[data-leader="away"] .gauge-side.away i, .gauge[data-leader="home"] .gauge-side.home i { color: var(--text-5); }
 .gauge[data-leader="away"] .gauge-side.home i, .gauge[data-leader="home"] .gauge-side.away i { color: var(--text-3); font-weight: 600; }
-.gauge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 16px; }
+.gauge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 10px 14px; justify-items: center; }
 @media (prefers-reduced-motion: reduce) { .gauge-needle { transition: none; } }
 .projection .prediction-labels { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ice-tilt .prediction-labels { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.metric-gap .gauge { width: 100%; min-width: 150px; }
+.metric-gap .gauge { width: 100%; min-width: 0; max-width: 140px; margin-inline: auto; }
 .goalie-gauges { margin-top: 12px; }
-.gr-hero { margin: 8px 0 14px; padding: 12px 8px 4px; border: 1px solid var(--line-2, #8883); border-radius: 12px; }
+.gr-hero { margin: 8px 0 10px; padding: 8px 8px 2px; border: 1px solid var(--line-2, #8883); border-radius: 12px; }
 .gr-hero .gr-deserved h4 { text-align: center; }
-.gr-hero .gauge { max-width: 460px; }
-.projection .gauge.sm { max-width: 260px; margin-inline: auto; }
+.gr-hero .gauge { max-width: 260px; }
+.projection .gauge.sm { max-width: 150px; margin-inline: auto; }

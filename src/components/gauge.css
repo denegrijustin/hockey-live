@@ -26,3 +26,7 @@
 .ice-tilt .prediction-labels { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .metric-gap .gauge { width: 100%; min-width: 150px; }
 .goalie-gauges { margin-top: 12px; }
+.gr-hero { margin: 8px 0 14px; padding: 12px 8px 4px; border: 1px solid var(--line-2, #8883); border-radius: 12px; }
+.gr-hero .gr-deserved h4 { text-align: center; }
+.gr-hero .gauge { max-width: 460px; }
+.projection .gauge.sm { max-width: 260px; margin-inline: auto; }

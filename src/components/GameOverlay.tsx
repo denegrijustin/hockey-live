@@ -3,7 +3,7 @@ import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
-import { GameRecap } from "./GameRecap";
+import { GameRecap, DeservedHero } from "./GameRecap";
 import { useFeed } from "../lib/polling";
 import type { GameFeed } from "../types";
 import { TeamComparison } from "./TeamComparison";
@@ -145,6 +145,7 @@ export function GameOverlay({
         <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
         <span>{game.venue || "Venue unavailable"}</span>
       </div>
+      {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} />}
       <details className="game-center-section" open>
         <summary>Projection and game pulse <span>+</span></summary>
         <GameData game={game} home={home} away={away} before={before} baseline={baseline} />
@@ -185,6 +186,12 @@ export function GameOverlay({
     </dialog>
   );
   return node;
+}
+
+/** The deserved-to-win gauge first thing in the Game Center: stats and game flow, not the pregame odds. */
+function DeservedTop({ game, home, away, live }: { game: Game; home: Team; away: Team; live: boolean }) {
+  const { data } = useFeed<GameFeed>(`/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}`, live ? 30000 : 3600000);
+  return <DeservedHero data={data} home={home} away={away} />;
 }
 
 /** The game recap with the shot charts, in its own section: it reads the live feed, so it is here while a game is on as well as after it. */

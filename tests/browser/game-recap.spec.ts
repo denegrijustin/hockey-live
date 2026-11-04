@@ -132,7 +132,7 @@ test("the Game Center has the shot chart for a live game and for a finished one"
     const hero = dialog.getByTestId("deserved-hero");
     await expect(hero).toBeVisible();
     await expect(hero.locator(".gauge").first()).toHaveAttribute("aria-label", /^Deserved to win:/);
-    await expect(hero.locator(".gr-model .gauge")).toHaveAttribute("aria-label", /^Model win chance/); // beside it, in one row
+    if (g === live) await expect(hero.locator(".gr-model .gauge")).toHaveAttribute("aria-label", /^Model win chance/); // beside it, in one row (a game with no season table yet has no model to show)
     await expect(dialog.locator('.projection .gauge[aria-label^="Estimated win chance"]')).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);

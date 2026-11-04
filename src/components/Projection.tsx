@@ -5,7 +5,7 @@ import './gauge.css';
 import { projectGame } from '../lib/projection.mjs';
 export function modelGaugeProps(game: Game, p: NonNullable<ReturnType<typeof projectGame>>) {
   const home = Math.round(p.homeWin * 100);
-  return { away: 100 - home, home, awayId: game.away, homeId: game.home, label: p.live ? 'Model win chance now' : 'Pregame win chance (model)', percent: true as const };
+  return { away: 100 - home, home, awayId: game.away, homeId: game.home, label: p.live ? 'Model win chance now' : 'Model win chance (pregame)', percent: true as const };
 }
 export function Projection({ game, before, baseline, feed, error, gauge = true }: { game: Game; before: any; baseline: any; feed?: GameFeed | null; error?: string | null; /** False when the Game Center shows this gauge up top beside the deserved-to-win one. */ gauge?: boolean }) {
   const p = projectGame(game, before, baseline, feed);

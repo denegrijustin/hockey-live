@@ -131,7 +131,8 @@ test("the Game Center has the shot chart for a live game and for a finished one"
     // The first thing in the Game Center is the deserved-to-win gauge (stats and flow), not the model's win chance.
     const hero = dialog.getByTestId("deserved-hero");
     await expect(hero).toBeVisible();
-    await expect(hero.locator(".gauge")).toHaveAttribute("aria-label", /^Deserved to win:/);
+    await expect(hero.locator(".gauge").first()).toHaveAttribute("aria-label", /^Deserved to win:/);
+    await expect(hero.locator(".gr-model .gauge")).toHaveAttribute("aria-label", /^Model win chance/); // beside it, in one row
     await expect(dialog.locator('.projection .gauge[aria-label^="Estimated win chance"]')).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);

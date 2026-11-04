@@ -3,7 +3,11 @@ import type { Game, GameFeed } from '../types';
 import { Gauge } from './Gauge';
 import './gauge.css';
 import { projectGame } from '../lib/projection.mjs';
-export function Projection({ game, before, baseline, feed, error }: { game: Game; before: any; baseline: any; feed?: GameFeed | null; error?: string | null }) {
+export function modelGaugeProps(game: Game, p: NonNullable<ReturnType<typeof projectGame>>) {
+  const home = Math.round(p.homeWin * 100);
+  return { away: 100 - home, home, awayId: game.away, homeId: game.home, label: p.live ? 'Model win chance now' : 'Pregame win chance (model)', percent: true as const };
+}
+export function Projection({ game, before, baseline, feed, error, gauge = true }: { game: Game; before: any; baseline: any; feed?: GameFeed | null; error?: string | null; /** False when the Game Center shows this gauge up top beside the deserved-to-win one. */ gauge?: boolean }) {
   const p = projectGame(game, before, baseline, feed);
   const previous = useRef<{ id: number; probability: number; events: string } | null>(null);
   const [change, setChange] = useState<string | null>(null);
@@ -35,7 +39,7 @@ export function Projection({ game, before, baseline, feed, error }: { game: Game
     <div className="mini-heading">{p.live ? 'LIVE PROJECTION' : 'PREGAME PROJECTION'}<span>Model estimate</span></div>
     <div className="prediction-head"><strong>{winner}</strong>{p.score && <b aria-label="Projected final score">{game.away} {p.score.away} – {p.score.home} {game.home}</b>}</div>
     <div className="prediction-labels"><span>{game.away} {away}%</span><span>{game.home} {home}%</span></div>
-    <Gauge size={p.live || game.state === "FINAL" || game.state === "OFF" ? "sm" : "lg"} away={away} home={home} awayId={game.away} homeId={game.home} label={p.live ? "Model win chance now (score, time, shots)" : "Pregame win chance (model)"} percent />
+    {gauge && <Gauge size={p.live || game.state === "FINAL" || game.state === "OFF" ? "sm" : "lg"} away={away} home={home} awayId={game.away} homeId={game.home} label={p.live ? "Model win chance now (score, time, shots)" : "Pregame win chance (model)"} percent />}
     <p className="detail-note">{p.live ? p.factors.join(' ') : 'Most likely final score · includes an OT / shootout winner'}</p>
     {p.live && p.score && <p className="detail-note">Projected final score · most likely outcome, including OT if needed</p>}
     {p.live && <p className="prediction-change" aria-live="polite">{change ?? firstObservedChange}</p>}

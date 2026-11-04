@@ -4,6 +4,9 @@ import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameData";
 import { GameRecap, DeservedHero } from "./GameRecap";
+import { Gauge } from "./Gauge";
+import { modelGaugeProps } from "./Projection";
+import { projectGame } from "../lib/projection.mjs";
 import { useFeed } from "../lib/polling";
 import type { GameFeed } from "../types";
 import { TeamComparison } from "./TeamComparison";
@@ -145,7 +148,7 @@ export function GameOverlay({
         <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
         <span>{game.venue || "Venue unavailable"}</span>
       </div>
-      {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} />}
+      {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} before={before} baseline={baseline} />}
       <details className="game-center-section" open>
         <summary>Projection and game pulse <span>+</span></summary>
         <GameData eager game={game} home={home} away={away} before={before} baseline={baseline} />
@@ -189,9 +192,12 @@ export function GameOverlay({
 }
 
 /** The deserved-to-win gauge first thing in the Game Center: stats and game flow, not the pregame odds. */
-function DeservedTop({ game, home, away, live }: { game: Game; home: Team; away: Team; live: boolean }) {
+function DeservedTop({ game, home, away, live, before, baseline }: { game: Game; home: Team; away: Team; live: boolean; before: any; baseline: any }) {
   const { data } = useFeed<GameFeed>(`/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}`, live ? 30000 : 3600000);
-  return <DeservedHero data={data} home={home} away={away} />;
+  const model = projectGame(game, before, baseline, data);
+  // Side by side with the model's own win chance: one row, no empty space around a lone dial.
+  const beside = model ? <section className="gr-model" aria-label="Model win chance"><h4>{model.live ? "Model win chance" : "Final model odds"} <small>score, time and shots</small></h4><Gauge size="lg" {...modelGaugeProps(game, model)} /></section> : null;
+  return <DeservedHero data={data} home={home} away={away} beside={beside} />;
 }
 
 /** The game recap with the shot charts, in its own section: it reads the live feed, so it is here while a game is on as well as after it. */

@@ -6,6 +6,8 @@ import { useFeed } from "../lib/polling";
 import { Projection } from "./Projection";
 import { isLive } from "../lib/game-data.mjs";
 import { LogoImage, TeamLogo } from "./TeamLogo";
+import { Gauge } from "./Gauge";
+import "./gauge.css";
 import { useGameShots } from "../lib/moneypuck-client";
 import { attemptsOf, HIGH_XG } from "../lib/game-recap.mjs";
 export function useVisible() {
@@ -21,38 +23,9 @@ export function useVisible() {
   }, []);
   return { ref, visible };
 }
-export function ComparisonBar({
-  label,
-  away,
-  home,
-  awayColor,
-  homeColor,
-}: {
-  label: string;
-  away: number;
-  home: number;
-  awayColor: string;
-  homeColor: string;
-}) {
-  const sum = away + home;
-  return (
-    <div className="comparison-row">
-      <div>
-        <b>{away}</b>
-        <span>{label}</span>
-        <b>{home}</b>
-      </div>
-      <div className="comparison-track">
-        <i
-          style={{
-            width: `${sum ? (away / sum) * 100 : 50}%`,
-            background: sum ? awayColor : "var(--line-2)",
-          }}
-        />
-        <i style={{ flex: 1, background: sum ? homeColor : "var(--line-2)" }} />
-      </div>
-    </div>
-  );
+/** One head-to-head number, drawn as a gas gauge. */
+export function ComparisonBar({ label, away, home, awayId, homeId, format }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; awayColor?: string; homeColor?: string }) {
+  return <Gauge away={away} home={home} awayId={awayId} homeId={homeId} label={label} format={format} />;
 }
 export function GameData({
   game,
@@ -148,8 +121,8 @@ export function GameData({
             label="Shots on goal"
             away={data.awayShots ?? 0}
             home={data.homeShots ?? 0}
-            awayColor={"var(--series-away)"}
-            homeColor={"var(--series-home)"}
+            awayId={away.id}
+            homeId={home.id}
           />
           {data.stats
             .filter((s) => ["hit", "blocked-shot"].includes(s.label))
@@ -159,8 +132,8 @@ export function GameData({
                 label={s.label === "hit" ? "Hits" : "Blocks"}
                 away={s.away}
                 home={s.home}
-                awayColor={"var(--series-away)"}
-                homeColor={"var(--series-home)"}
+                awayId={away.id}
+                homeId={home.id}
               />
             ))}
           <p className="feed-time">
@@ -440,6 +413,6 @@ function IceTilt({data}:{data:GameFeed}) {
  const h=tilt.homeShare==null?null:Math.round(tilt.homeShare*100);
  return <div className="ice-tilt"><div className="mini-heading">ICE TILT <span>Shot-pressure proxy · all strengths</span></div>
  <div className="prediction-labels"><span>{data.away} {h==null?'—':`${100-h}%`}</span><span>{data.home} {h==null?'—':`${h}%`}</span></div>
- <ComparisonBar label="Unblocked attempts" away={tilt.away} home={tilt.home} awayColor="var(--series-away)" homeColor="var(--series-home)" />
+ <ComparisonBar label="Unblocked attempts" away={tilt.away} home={tilt.home} awayId={data.away} homeId={data.home} />
  <p className="detail-note">{h==null?'No unblocked attempts in this window.':`${h===50?'Even pressure':`${h>50?data.home:data.away} has more shot pressure`}.`} Last {tilt.minutes.toFixed(1)} playing minutes: shots on goal + missed shots (goals counted once). Includes power plays. This estimates pressure, not measured offensive-zone possession or live NHL EDGE zone time.</p></div>;
 }

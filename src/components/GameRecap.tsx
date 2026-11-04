@@ -7,7 +7,9 @@ import { buildRecap, HIGH_XG } from "../lib/game-recap.mjs";
 export const CHANCE_COLOR = "#c026d3";
 import { TeamLogo } from "./TeamLogo";
 import { markerColors } from "../lib/kits";
+import { Gauge } from "./Gauge";
 import "./game-recap.css";
+import "./gauge.css";
 
 type Recap = ReturnType<typeof buildRecap>;
 const pct = (p: number) => `${Math.round(p * 100)}%`;
@@ -19,7 +21,7 @@ function Deserved({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   return (
     <section className="gr-deserved" aria-label={`Deserved to win: ${away.id} ${a} percent, ${home.id} ${h} percent`}>
       <h4>Deserved to win <small>from the chances each side created</small></h4>
-      <div className="gr-dbar"><b>{away.id} {a}%</b><span role="presentation"><i style={{ width: `${a}%` }} /><i /></span><b>{h}% {home.id}</b></div>
+      <Gauge size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
     </section>
   );
 }
@@ -98,17 +100,9 @@ function Compare({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   ];
   return (
     <section className="gr-compare" aria-label={`Team numbers, ${away.id} against ${home.id}`}>
-      {rows.filter((x) => x.a != null && x.h != null).map((x) => {
-        const total = (x.a as number) + (x.h as number) || 1;
-        return (
-          <div key={x.label} className="gr-row">
-            <b>{x.fmt(x.a as number)}</b>
-            <span className="gr-rlabel">{x.label}</span>
-            <b>{x.fmt(x.h as number)}</b>
-            <span className="gr-bars" role="presentation"><i className="away" style={{ width: `${((x.a as number) / total) * 100}%` }} /><i className="home" style={{ width: `${((x.h as number) / total) * 100}%` }} /></span>
-          </div>
-        );
-      })}
+      <div className="gauge-grid">
+        {rows.filter((x) => x.a != null && x.h != null).map((x) => <Gauge key={x.label} away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} />)}
+      </div>
     </section>
   );
 }
@@ -128,17 +122,12 @@ function Periods({ r, home, away }: { r: Recap; home: Team; away: Team }) {
           <button type="button" aria-pressed={by === "xg"} onClick={() => setBy("xg")}>xG</button>
         </span>
       </h4>
-      <div className="gr-pgrid">
-        {periods.map((p) => {
-          const a = val(p, false), h = val(p, true), f = (v: number) => (by === "xg" ? v.toFixed(2) : String(v));
-          return (
-            <div key={p} className="gr-period" data-period={p}>
-              <small>{name(p)} period</small>
-              <div className="gr-prow"><b className={a > h ? "lead" : ""}>{away.id} {f(a)}</b><b className={h > a ? "lead" : ""}>{f(h)} {home.id}</b></div>
-              <span className="gr-bars" role="presentation"><i className="away" style={{ width: `${(a / ((a + h) || 1)) * 100}%` }} /><i className="home" style={{ width: `${(h / ((a + h) || 1)) * 100}%` }} /></span>
-            </div>
-          );
-        })}
+      <div className="gr-pgrid gauge-grid">
+        {periods.map((p) => (
+          <div key={p} className="gr-period" data-period={p}>
+            <Gauge away={val(p, false)} home={val(p, true)} awayId={away.id} homeId={home.id} label={`${name(p)} period`} format={by === "xg" ? f2 : String} />
+          </div>
+        ))}
       </div>
     </section>
   );

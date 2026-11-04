@@ -7,6 +7,8 @@ import { loadBox } from "../lib/api";
 import { useLeagueMatchups } from "./useLeagueMatchups";
 import "./team-comparison.css";
 import { TeamLogo } from "./TeamLogo";
+import { Gauge } from "./Gauge";
+import "./gauge.css";
 
 const seasonLabel = (season: number) => `${String(season).slice(0, 4)}–${String(season).slice(6)}`;
 const displayValue = (metric: RankedMatchupMetric | null) => {
@@ -32,6 +34,9 @@ function RankGap({ offense, defense }: { offense: RankedMatchupMetric | null; de
     : <span className="rank-gap stronger-right">{gap} rank places →</span>;
 }
 
+/** How strong a side is in this matchup row, from its league rank (first of the pool is the most). */
+const strength = (m: RankedMatchupMetric | null) => (m?.rank == null || m.pool == null ? 0 : m.pool - m.rank + 1);
+
 function Crossover({ offenseTeam, defenseTeam, snapshot }: {
   offenseTeam: Team;
   defenseTeam: Team;
@@ -56,7 +61,7 @@ function Crossover({ offenseTeam, defenseTeam, snapshot }: {
             <Badge metric={offenseMetric} />
           </div>
           <div className="metric-gap">
-            <strong>{offenseMetric?.label?.replace(" scored", "") ?? "Metric"}</strong>
+            <Gauge away={strength(offenseMetric)} home={strength(defenseMetric)} awayId={offenseTeam.id} homeId={defenseTeam.id} label={offenseMetric?.label?.replace(" scored", "") ?? "Metric"} awayText={displayValue(offenseMetric)} homeText={displayValue(defenseMetric)} />
             <RankGap offense={offenseMetric} defense={defenseMetric} />
           </div>
           <div className="metric-side metric-defense">
@@ -143,6 +148,12 @@ export function GoalieComparison({ game, away, home, compact = false }: { game: 
     <section className="goalie-comparison" aria-label="Starting goalie comparison">
       <div className="mini-heading">STARTING GOALIES <span>Official when available</span></div>
       <div className="goalie-grid">{cards.map((card) => <GoalieCard key={card.team.id} {...card} />)}</div>
+      {cards[0].goalie && cards[1].goalie && (
+        <div className="gauge-grid goalie-gauges">
+          {cards[0].goalie.savePct != null && cards[1].goalie.savePct != null && <Gauge away={cards[0].goalie.savePct} home={cards[1].goalie.savePct} awayId={away.id} homeId={home.id} label="Save percentage" span={0.04} format={(v) => v.toFixed(3).replace(/^0/, "")} />}
+          {cards[0].goalie.gaa != null && cards[1].goalie.gaa != null && <Gauge away={cards[0].goalie.gaa} home={cards[1].goalie.gaa} awayId={away.id} homeId={home.id} label="Goals against average" span={1.5} lowerBetter format={(v) => v.toFixed(2)} />}
+        </div>
+      )}
       <p className="cmp-note">{error || "Pregame status is projected from season starts until the NHL box score identifies the starter. Recent-form and individual-rest data are not available reliably in the official summary report."}</p>
     </section>
   );

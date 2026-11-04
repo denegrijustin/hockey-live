@@ -148,7 +148,7 @@ export function GameOverlay({
       {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} />}
       <details className="game-center-section" open>
         <summary>Projection and game pulse <span>+</span></summary>
-        <GameData game={game} home={home} away={away} before={before} baseline={baseline} />
+        <GameData eager game={game} home={home} away={away} before={before} baseline={baseline} />
       </details>
       {(past || live) && <RecapSection game={game} home={home} away={away} live={live} />}
       <details className="game-center-section" open>

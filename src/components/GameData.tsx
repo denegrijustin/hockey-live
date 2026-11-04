@@ -33,14 +33,18 @@ export function GameData({
   away,
   before,
   baseline,
+  eager = false,
 }: {
   game: Game;
   home: Team;
   away: Team;
   before: any;
   baseline: any;
+  /** Load at once instead of when scrolled into view (the Game Center is already open on it). */
+  eager?: boolean;
 }) {
-  const { ref, visible } = useVisible();
+  const { ref, visible: seen } = useVisible();
+  const visible = eager || seen;
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
   const { data, error } = useFeed<GameFeed>(
     visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,

@@ -1,5 +1,5 @@
 .gauge { margin: 0; display: grid; justify-items: center; gap: 2px; min-width: 0; }
-.gauge svg { max-width: 118px; }
+.gauge svg { max-width: 112px; }
 .gauge.lg svg { max-width: 190px; }
 .gauge svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gauge-track { fill: none; stroke: var(--line-2, #8883); stroke-linecap: butt; opacity: .55; }
@@ -22,7 +22,7 @@
 .gauge.lg .gauge-label { font-size: .78rem; }
 .gauge[data-leader="away"] .gauge-side.away i, .gauge[data-leader="home"] .gauge-side.home i { color: var(--text-5); }
 .gauge[data-leader="away"] .gauge-side.home i, .gauge[data-leader="home"] .gauge-side.away i { color: var(--text-3); font-weight: 600; }
-.gauge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 10px 14px; justify-items: center; }
+.gauge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px 8px; justify-items: center; }
 @media (prefers-reduced-motion: reduce) { .gauge-needle { transition: none; } }
 .projection .prediction-labels { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ice-tilt .prediction-labels { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -32,3 +32,12 @@
 .gr-hero .gr-deserved h4 { text-align: center; }
 .gr-hero .gauge { max-width: 260px; }
 .projection .gauge.sm { max-width: 150px; margin-inline: auto; }
+
+/* Side by side wherever they fit, so on a phone the small ones sit three across: tighter captions. */
+.gauge.sm .gauge-side { flex-wrap: nowrap; gap: 0 2px; white-space: nowrap; }
+.gauge.sm .gauge-side b { font-size: .5625rem; }
+.gauge.sm .gauge-side i { font-size: .75rem; }
+.gauge.sm .gauge-label { font-size: .6875rem; line-height: 1.2; }
+.gauge.sm figcaption { gap: 0 2px; }
+.gr-pgrid.gauge-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.gr-pgrid .gr-period { padding: 4px 2px; min-width: 0; }

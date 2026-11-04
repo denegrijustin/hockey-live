@@ -185,6 +185,15 @@ function Goals({ r }: { r: Recap }) {
   );
 }
 
+/** The deserved-to-win gauge on its own, for the top of the Game Center: who has earned the win from the chances each side created and how the game has flowed. */
+export function DeservedHero({ data, home, away }: { data: GameFeed | null; home: Team; away: Team }) {
+  const over = !!data && ["OFF", "FINAL"].includes(data.state);
+  const mp = useGameShots(data?.season ?? 0, data?.id ?? 0, over);
+  const recap = useMemo(() => (data ? buildRecap({ game: data, mp: over ? mp.data : null }) : null), [data, mp.data, over]);
+  if (!data || !recap || recap.list.length < 3) return null;
+  return <div className="gr-hero" data-testid="deserved-hero"><Deserved r={recap} home={home} away={away} /></div>;
+}
+
 /**
  * The game recap: who deserved to win, how the chances built up, where each team shot from, the numbers side by side, the stars and the goals. It reads the
  * live game feed, so it fills in as the game is played; a finished game MoneyPuck has uses MoneyPuck's own expected goals.

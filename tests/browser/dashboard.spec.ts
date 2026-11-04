@@ -185,7 +185,7 @@ test("recent actual game contribution and mobile card layout", async ({
 }, info) => {
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await filterGames(page, { period: "past", competition: "1", sort: "date" });
+  await filterGames(page, { period: "past", competition: "2", sort: "date" });
   const card = page.locator(".game-card").first();
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");

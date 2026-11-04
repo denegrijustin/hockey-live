@@ -79,7 +79,11 @@ test.describe("NHL+ Teams", () => {
     await openPlus(page);
     await page.getByRole("group", { name: "Situation" }).getByRole("button", { name: "Power play" }).click();
     await expect(page.locator(".np-table tbody tr")).toHaveCount(32);
-    await page.getByLabel("Min. time on ice").selectOption("40");
+    // The saved data grows through the season, so pick the minimum that splits today's teams: the largest choice that still leaves some.
+    const minutes = Object.values<any>(read("summary").teams).map((t) => t["5on4"].toi / 60);
+    const choice = [200, 100, 60, 40, 20, 10, 5, 2].find((c) => minutes.some((m) => m >= c) && minutes.some((m) => m < c));
+    test.skip(choice == null, "no minimum splits the teams yet");
+    await page.getByLabel("Min. time on ice").selectOption(String(choice));
     const n = await page.locator(".np-table tbody tr").count();
     expect(n).toBeGreaterThan(0);
     expect(n).toBeLessThan(32);

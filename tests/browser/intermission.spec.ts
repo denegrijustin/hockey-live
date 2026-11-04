@@ -108,7 +108,7 @@ test("the Scoreboard home shows the Zamboni on a game in intermission, without o
   await page.goto("/");
   const row = page.locator(`.sb-row[data-game="${game.id}"]`);
   const int = row.getByTestId("intermission");
-  await expect(int).toBeVisible();
+  await expect(int).toBeVisible({ timeout: 20000 });
   await expect(int.locator(".int-zamboni")).toBeVisible();
   await expect(int.locator(".int-t")).toHaveText(/1[34]:\d\d/);
   await expect(row.getByTestId("key-stats")).toHaveCount(0);

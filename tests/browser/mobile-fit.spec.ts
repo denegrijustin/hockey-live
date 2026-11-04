@@ -64,10 +64,11 @@ test.describe("a phone never scrolls sideways", () => {
     expect(await row.locator("td[data-label]").count()).toBeGreaterThan(5);
     const sort = page.getByLabel("Sort by").first();
     await expect(sort).toBeVisible();
-    const before = await page.locator(".np-table tbody tr").first().innerText();
+    const table = () => page.locator(".np-table tbody").innerText(); // the whole order: the leader of one column can also lead another
+    const before = await table();
     const options = await sort.locator("option").allInnerTexts();
     await sort.selectOption({ index: Math.min(3, options.length - 1) });
-    await expect.poll(() => page.locator(".np-table tbody tr").first().innerText()).not.toBe(before);
+    await expect.poll(table).not.toBe(before);
   });
 });
 

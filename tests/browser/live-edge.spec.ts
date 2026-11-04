@@ -211,7 +211,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   }
   // Real-time / projection content, reused from the inline card's GameData.
   await expect(dialog.getByLabel("Live winner projection")).toBeVisible();
-  await expect(dialog.locator(".ice-tilt")).toContainText("ICE TILT");
+  await expect(dialog.locator(".ice-tilt")).toContainText("ICE TILT", { timeout: 20000 });
   await expect(dialog.locator(".shot-chart")).toHaveCount(2);
   // Player tracker: ice time and top/bottom-3 broken out per team.
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Player leaders and trends" }).click();

@@ -6,7 +6,7 @@
 .po-conf-logo { width: 84px; height: auto; flex: none; }
 /* The table always fits the screen: no sideways scrolling. On a phone the record and points move under the team name and the headings shorten. */
 .po-grid { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.po-table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: auto; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.po-table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
 .po-table th, .po-table td { padding: 6px 6px; text-align: center; border-bottom: 1px solid var(--surface-7); }
 .po-table thead th { color: var(--muted); font-weight: 600; font-size: 0.6875rem; background: var(--surface-4); }
 .po-table th.po-team, .po-table td.po-team { text-align: left; background: var(--surface-4); border-right: 1px solid var(--line); }
@@ -81,3 +81,10 @@
 .po-div-logo { height: 34px; width: auto; flex: none; }
 .po-divgroup:not(:first-of-type) .po-divrow th { border-top: 2px solid var(--line-3); }
 @media (max-width: 480px) { .po-div-logo { height: 28px; } }
+
+/* Fixed columns: the table is exactly as wide as its box, whatever fonts the device has (a wider system font used to push it a few pixels over). */
+.po-table th.po-team { width: 26%; }
+.po-table th.po-rec, .po-table th.po-proj { width: 64px; }
+.po-table .po-name { overflow: hidden; }
+.po-table .po-name > * { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) { .po-table th.po-team { width: 34%; } .po-table th.po-proj { width: 40px; } }

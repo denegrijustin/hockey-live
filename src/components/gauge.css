@@ -57,3 +57,7 @@
 .gauge.sm .gauge-side.home { align-items: flex-end; }
 .gauge.sm .gauge-side.home b { order: -1; }
 .gauge.sm .gauge-side.away b { order: -1; }
+/* The team logos live in the dial itself, so the captions carry only the numbers. */
+.gauge-side b { display: none; }
+.gauge svg .logo-chip { fill: #fff; stroke: none; }
+.gauge-side { align-items: baseline; }

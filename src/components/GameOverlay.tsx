@@ -196,7 +196,7 @@ function DeservedTop({ game, home, away, live, before, baseline }: { game: Game;
   const { data } = useFeed<GameFeed>(`/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}`, live ? 30000 : 3600000);
   const model = projectGame(game, before, baseline, data);
   // Side by side with the model's own win chance: one row, no empty space around a lone dial.
-  const beside = model ? <section className="gr-model" aria-label="Model win chance"><h4>{model.live ? "Model win chance" : "Final model odds"} <small>score, time and shots</small></h4><Gauge size="lg" {...modelGaugeProps(game, model)} /></section> : null;
+  const beside = model ? <section className="gr-model" aria-label="Model win chance"><h4>{model.score ? "Projected final score" : "Model win chance"} <small>{model.score ? "most likely result, win chance beneath" : "score, time and shots"}</small></h4><Gauge size="lg" {...modelGaugeProps(game, model)} /></section> : null;
   return <DeservedHero data={data} home={home} away={away} beside={beside} />;
 }
 

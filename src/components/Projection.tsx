@@ -4,8 +4,10 @@ import { Gauge } from './Gauge';
 import './gauge.css';
 import { projectGame } from '../lib/projection.mjs';
 export function modelGaugeProps(game: Game, p: NonNullable<ReturnType<typeof projectGame>>) {
-  const home = Math.round(p.homeWin * 100);
-  return { away: 100 - home, home, awayId: game.away, homeId: game.home, label: p.live ? 'Model win chance now' : 'Model win chance (pregame)', percent: true as const };
+  const home = Math.round(p.homeWin * 100), away = 100 - home;
+  // The projected final score leads; the win chance is the smaller line under it. (Without a projected score the percentages lead.)
+  if (p.score) return { away: p.score.away, home: p.score.home, awayId: game.away, homeId: game.home, label: p.live ? 'Projected final score' : 'Projected final score (pregame)', awaySub: `${away}%`, homeSub: `${home}%`, needle: away / 100 };
+  return { away, home, awayId: game.away, homeId: game.home, label: p.live ? 'Model win chance now' : 'Model win chance (pregame)', percent: true as const };
 }
 export function Projection({ game, before, baseline, feed, error, gauge = true }: { game: Game; before: any; baseline: any; feed?: GameFeed | null; error?: string | null; /** False when the Game Center shows this gauge up top beside the deserved-to-win one. */ gauge?: boolean }) {
   const p = projectGame(game, before, baseline, feed);

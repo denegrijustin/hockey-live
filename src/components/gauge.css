@@ -76,3 +76,15 @@
 .gauge-side:has(em) { flex-direction: column; align-items: flex-start; gap: 0; line-height: 1.1; }
 .gauge-side.home:has(em) { align-items: flex-end; }
 .gr-model .gauge.lg .gauge-side i { font-size: 2.4rem; }
+/* On a phone every dial stretches to the width it is given: a lone dial fills the screen, a row of three fills it between them. */
+@media (max-width: 700px) {
+  .gauge svg, .gauge.lg svg { max-width: none; width: 100%; }
+  .gauge-grid > * { max-width: none; }
+  .gauge.lg { max-width: none; width: 100%; }
+  .metric-gap .gauge { max-width: 140px; } /* the offense-vs-defense dial lives in a narrow column between two value cells */
+  .metric-gap .gauge svg { max-width: 100%; }
+  .gauge.lg .gauge-side i { font-size: 1.6rem; }
+  .gauge.lg .gauge-label { font-size: .9rem; }
+}
+.ice-tilt .gauge.lg svg { max-width: 260px; }
+@media (max-width: 700px) { .ice-tilt .gauge.lg svg { max-width: none; } }

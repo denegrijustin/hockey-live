@@ -6,14 +6,18 @@ import { gaugeColors } from "../lib/kits";
  * A gas-gauge dial for a two-sided number: the away side fills from the left, the home side from the right, and the needle points
  * at the split. Used for "deserved to win" and for every head-to-head stat, so they all read the same way.
  */
-export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "sm", span, lowerBetter = false, awayText, homeText }: {
+export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "sm", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle }: {
   away: number; home: number; awayId: string; homeId: string; label: string; format?: (v: number) => string; percent?: boolean; size?: "sm" | "lg";
   /** For numbers that are not shares of a total (a save percentage, goals against): the gap that swings the needle all the way. */
   span?: number; lowerBetter?: boolean; awayText?: string; homeText?: string;
+  /** A smaller second line under each side's number (the win chance under a projected score). */
+  awaySub?: string; homeSub?: string;
+  /** Where the needle points (the away side's share, 0..1) when it is not simply the split of the two numbers shown. */
+  needle?: number;
 }) {
   const total = away + home;
   // The away side's share, 0..1. Counts split by their total; rates by how far apart they are.
-  const share = span ? Math.min(0.95, Math.max(0.05, 0.5 + ((away - home) / span / 2) * (lowerBetter ? -1 : 1))) : total > 0 ? away / total : 0.5;
+  const share = needle != null ? needle : span ? Math.min(0.95, Math.max(0.05, 0.5 + ((away - home) / span / 2) * (lowerBetter ? -1 : 1))) : total > 0 ? away / total : 0.5;
   // The needle sweeps in from the middle once the dial is on screen (a transform transition, off for reduced motion in CSS).
   const [shown, setShown] = useState(0.5);
   useEffect(() => { const f = requestAnimationFrame(() => setShown(share)); return () => cancelAnimationFrame(f); }, [share]);
@@ -25,7 +29,7 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   const gap = 0.012;
   const awayEnd = Math.max(0, share - gap), homeStart = Math.min(1, share + gap);
   const shownA = awayText ?? (percent ? `${away}%` : format(away)), shownH = homeText ?? (percent ? `${home}%` : format(home));
-  const text = `${awayId} ${shownA}, ${homeId} ${shownH}`;
+  const text = `${awayId} ${shownA}${awaySub ? ` (${awaySub})` : ""}, ${homeId} ${shownH}${homeSub ? ` (${homeSub})` : ""}`;
   const colors = gaugeColors(awayId, homeId);
   const leader = share > 0.52 ? "away" : share < 0.48 ? "home" : "even";
   return (
@@ -49,9 +53,9 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
         <LogoImage id={homeId} x={C + R + 2 - L / 2} y={C + 6} size={L} />
       </svg>
       <figcaption>
-        <span className="gauge-side away"><b>{awayId}</b><i>{shownA}</i></span>
+        <span className="gauge-side away"><b>{awayId}</b><i>{shownA}</i>{awaySub && <em>{awaySub}</em>}</span>
         <span className="gauge-label">{label}</span>
-        <span className="gauge-side home"><i>{shownH}</i><b>{homeId}</b></span>
+        <span className="gauge-side home"><i>{shownH}</i>{homeSub && <em>{homeSub}</em>}<b>{homeId}</b></span>
       </figcaption>
     </figure>
   );

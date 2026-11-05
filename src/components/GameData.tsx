@@ -24,8 +24,8 @@ export function useVisible() {
   return { ref, visible };
 }
 /** One head-to-head number, drawn as a gas gauge. */
-export function ComparisonBar({ label, away, home, awayId, homeId, format }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; awayColor?: string; homeColor?: string }) {
-  return <Gauge away={away} home={home} awayId={awayId} homeId={homeId} label={label} format={format} />;
+export function ComparisonBar({ label, away, home, awayId, homeId, format, size = "sm" }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; size?: "sm" | "lg"; awayColor?: string; homeColor?: string }) {
+  return <Gauge size={size} away={away} home={home} awayId={awayId} homeId={homeId} label={label} format={format} />;
 }
 export function GameData({
   game,
@@ -121,25 +121,27 @@ export function GameData({
           <div className="mini-heading">SHOTS ON GOAL <span>Cumulative · same time scale</span></div>
           <ShotChart data={data} home={home} away={away} />
           <IceTilt data={data} />
+          <div className="gauge-grid game-stat-gauges">
           <ComparisonBar
-            label="Shots on goal"
-            away={data.awayShots ?? 0}
-            home={data.homeShots ?? 0}
-            awayId={away.id}
-            homeId={home.id}
-          />
-          {data.stats
-            .filter((s) => ["hit", "blocked-shot"].includes(s.label))
-            .map((s) => (
-              <ComparisonBar
-                key={s.label}
-                label={s.label === "hit" ? "Hits" : "Blocks"}
-                away={s.away}
-                home={s.home}
-                awayId={away.id}
-                homeId={home.id}
-              />
-            ))}
+              label="Shots on goal"
+              away={data.awayShots ?? 0}
+              home={data.homeShots ?? 0}
+              awayId={away.id}
+              homeId={home.id}
+            />
+            {data.stats
+              .filter((s) => ["hit", "blocked-shot"].includes(s.label))
+              .map((s) => (
+                <ComparisonBar
+                  key={s.label}
+                  label={s.label === "hit" ? "Hits" : "Blocks"}
+                  away={s.away}
+                  home={s.home}
+                  awayId={away.id}
+                  homeId={home.id}
+                />
+              ))}
+          </div>
           <p className="feed-time">
             {error ||
               `Received ${new Date(data.updatedAt).toLocaleTimeString()}${isLive(data) ? " · checks every 30s" : ""}`}
@@ -417,6 +419,6 @@ function IceTilt({data}:{data:GameFeed}) {
  const h=tilt.homeShare==null?null:Math.round(tilt.homeShare*100);
  return <div className="ice-tilt"><div className="mini-heading">ICE TILT <span>Shot-pressure proxy · all strengths</span></div>
  <div className="prediction-labels"><span>{data.away} {h==null?'—':`${100-h}%`}</span><span>{data.home} {h==null?'—':`${h}%`}</span></div>
- <ComparisonBar label="Unblocked attempts" away={tilt.away} home={tilt.home} awayId={data.away} homeId={data.home} />
+ <ComparisonBar size="lg" label="Unblocked attempts" away={tilt.away} home={tilt.home} awayId={data.away} homeId={data.home} />
  <p className="detail-note">{h==null?'No unblocked attempts in this window.':`${h===50?'Even pressure':`${h>50?data.home:data.away} has more shot pressure`}.`} Last {tilt.minutes.toFixed(1)} playing minutes: shots on goal + missed shots (goals counted once). Includes power plays. This estimates pressure, not measured offensive-zone possession or live NHL EDGE zone time.</p></div>;
 }

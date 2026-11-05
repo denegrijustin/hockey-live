@@ -32,3 +32,25 @@ export function markerColors(away: string, home: string): { away: { fill: string
   const ring = (k: { fill: number[]; trim: number[] }) => (dist(k.fill, k.trim) < 70 ? [17, 17, 17] : k.trim);
   return { away: { fill: toHex(a.fill), ring: toHex(ring(a)) }, home: { fill: toHex(h.fill), ring: toHex(ring(h)) } };
 }
+
+/** Brings a colour into a mid-brightness band so it reads on the dark and the light page alike. */
+const toBand = (c: number[], lo = 0.3, hi = 0.72) => {
+  let o = [...c];
+  for (let i = 0; i < 14 && lum(o) < lo; i++) o = o.map((v) => v + (255 - v) * 0.16);
+  for (let i = 0; i < 14 && lum(o) > hi; i++) o = o.map((v) => v * 0.9);
+  return o;
+};
+/**
+ * Gauge colours: each team's jersey colour (its trim when the jersey is black or navy, which would vanish on a dark page), lifted or
+ * deepened into a band that shows on both themes. If the two teams come out alike the home side switches to its other colour.
+ */
+export function gaugeColors(away: string, home: string): { away: string; home: string } {
+  const inBand = (c: number[]) => lum(c) >= 0.22 && lum(c) <= 0.78;
+  const pick = (t: string, skip?: number[]) => {
+    const k = kitFor(t), cands = [rgb(k.jersey), rgb(k.trim)];
+    const c = cands.find((x) => inBand(x) && (!skip || dist(x, skip) >= 80)) ?? toBand(cands.find((x) => !skip || dist(x, skip) >= 80) ?? cands[0]);
+    return toBand(c);
+  };
+  const a = pick(away), h = pick(home, a);
+  return { away: toHex(a), home: toHex(dist(a, h) < 80 ? [122, 63, 160] : h) };
+}

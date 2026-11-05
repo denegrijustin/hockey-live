@@ -4,7 +4,7 @@
 .gauge svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gauge-track { fill: none; stroke: var(--line-2, #8883); stroke-linecap: butt; opacity: .55; }
 .gauge-away, .gauge-home { fill: none; stroke-linecap: butt; }
-.gauge-away { stroke: var(--series-away); } .gauge-home { stroke: var(--series-home); }
+.gauge-away { stroke: var(--g-away, var(--series-away)); } .gauge-home { stroke: var(--g-home, var(--series-home)); }
 .gauge-tick { stroke: var(--text-3, #889); stroke-width: 1.4; } .gauge-tick.major { stroke: var(--text-2, #aab); stroke-width: 2.2; }
 .gauge-needle { transform-origin: 100px 100px; transform-box: view-box; transition: transform .9s cubic-bezier(.2, .9, .25, 1.15); }
 .gauge-needle path { fill: var(--text-5, #fff); stroke: var(--surface-5, #000); stroke-width: .8; paint-order: stroke; }
@@ -57,3 +57,17 @@
 .gauge.sm .gauge-side.home { align-items: flex-end; }
 .gauge.sm .gauge-side.home b { order: -1; }
 .gauge.sm .gauge-side.away b { order: -1; }
+/* The team logos live in the dial itself, so the captions carry only the numbers. */
+.gauge-side b { display: none; }
+.gauge svg .logo-chip { fill: #fff; stroke: none; }
+.gauge-side { align-items: baseline; }
+/* The two headline gauges fill their half of the box on a laptop and the whole width on a phone. */
+.gr-hero .gauge.lg { max-width: none; width: 100%; }
+.gr-hero .gauge.lg svg { max-width: 460px; width: 100%; }
+.gr-hero .gauge-label { display: none; } /* the heading above says it */
+.gr-hero .gauge.lg .gauge-side i { font-size: 1.6rem; }
+@media (max-width: 560px) {
+  .gr-hero { padding: 10px 6px 6px; gap: 10px; }
+  .gr-hero .gauge.lg svg { max-width: none; }
+}
+.gr-hero { column-gap: 40px; }

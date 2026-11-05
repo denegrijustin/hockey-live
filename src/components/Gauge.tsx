@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { LogoImage } from "./TeamLogo";
+import { gaugeColors } from "../lib/kits";
 
 /**
  * A gas-gauge dial for a two-sided number: the away side fills from the left, the home side from the right, and the needle points
@@ -19,14 +21,16 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
     const p = (s: number, r: number) => `${(C + r * Math.cos(Math.PI * (1 - s))).toFixed(2)} ${(C - r * Math.sin(Math.PI * (1 - s))).toFixed(2)}`;
     return `M${p(from, R)}A${R} ${R} 0 0 1 ${p(to, R)}`;
   };
+  const L = size === "lg" ? 30 : 38; // the headline dials are drawn much larger, so their logos are smaller in dial units
   const gap = 0.012;
   const awayEnd = Math.max(0, share - gap), homeStart = Math.min(1, share + gap);
   const shownA = awayText ?? (percent ? `${away}%` : format(away)), shownH = homeText ?? (percent ? `${home}%` : format(home));
   const text = `${awayId} ${shownA}, ${homeId} ${shownH}`;
+  const colors = gaugeColors(awayId, homeId);
   const leader = share > 0.52 ? "away" : share < 0.48 ? "home" : "even";
   return (
-    <figure className={`gauge ${size}`} data-leader={leader} role="img" aria-label={`${label}: ${text}`}>
-      <svg viewBox="0 0 200 116" aria-hidden="true">
+    <figure className={`gauge ${size}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
+      <svg viewBox="0 0 200 146" aria-hidden="true">
         <path d={arc(0, 1)} className="gauge-track" strokeWidth={W + 4} />
         {awayEnd > 0 && <path d={arc(0, awayEnd)} className="gauge-away" strokeWidth={W} />}
         {homeStart < 1 && <path d={arc(homeStart, 1)} className="gauge-home" strokeWidth={W} />}
@@ -40,6 +44,9 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
           <path d={`M${C - 2.6} ${C}L${C} ${C - R + 6}L${C + 2.6} ${C}Z`} />
         </g>
         <circle cx={C} cy={C} r="6" className="gauge-hub" />
+        {/* each team's logo sits at its own end of the dial */}
+        <LogoImage id={awayId} x={C - R - 2 - L / 2} y={C + 6} size={L} />
+        <LogoImage id={homeId} x={C + R + 2 - L / 2} y={C + 6} size={L} />
       </svg>
       <figcaption>
         <span className="gauge-side away"><b>{awayId}</b><i>{shownA}</i></span>

@@ -198,3 +198,17 @@ for (const width of [360, 1280]) {
     for (const o of off) expect(o).toBeLessThanOrEqual(3);
   });
 }
+
+test("gauges are drawn in the two teams' own colours, told apart and visible on dark and light", async ({ page }) => {
+  await open(page); // Boston (black and gold) at Toronto (navy and white)
+  await page.locator(`.sb-row[data-game="${live.id}"] .sb-main`).click();
+  const gauge = page.locator("dialog.game-dialog").getByTestId("game-recap").locator(".gauge").first();
+  await expect(gauge).toBeVisible();
+  const rgb = async (sel: string) => (await gauge.locator(sel).evaluate((e) => getComputedStyle(e).stroke)).match(/\d+/g)!.map(Number);
+  const [away, home] = [await rgb(".gauge-away"), await rgb(".gauge-home")];
+  expect(away[0]).toBeGreaterThan(180); // Boston: its gold, not the black jersey that would vanish on a dark page
+  expect(away[2]).toBeLessThan(120);
+  expect(home[2]).toBeGreaterThan(home[0]); // Toronto: its blue, lifted so it shows
+  const lum = (c: number[]) => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+  for (const c of [away, home]) { expect(lum(c)).toBeGreaterThan(0.2); expect(lum(c)).toBeLessThan(0.8); }
+});

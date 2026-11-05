@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { LogoImage } from "./TeamLogo";
+import { gaugeColors } from "../lib/kits";
 
 /**
  * A gas-gauge dial for a two-sided number: the away side fills from the left, the home side from the right, and the needle points
@@ -25,9 +26,10 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   const awayEnd = Math.max(0, share - gap), homeStart = Math.min(1, share + gap);
   const shownA = awayText ?? (percent ? `${away}%` : format(away)), shownH = homeText ?? (percent ? `${home}%` : format(home));
   const text = `${awayId} ${shownA}, ${homeId} ${shownH}`;
+  const colors = gaugeColors(awayId, homeId);
   const leader = share > 0.52 ? "away" : share < 0.48 ? "home" : "even";
   return (
-    <figure className={`gauge ${size}`} data-leader={leader} role="img" aria-label={`${label}: ${text}`}>
+    <figure className={`gauge ${size}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
       <svg viewBox="0 0 200 146" aria-hidden="true">
         <path d={arc(0, 1)} className="gauge-track" strokeWidth={W + 4} />
         {awayEnd > 0 && <path d={arc(0, awayEnd)} className="gauge-away" strokeWidth={W} />}

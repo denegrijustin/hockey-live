@@ -4,7 +4,7 @@
 .gauge svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gauge-track { fill: none; stroke: var(--line-2, #8883); stroke-linecap: butt; opacity: .55; }
 .gauge-away, .gauge-home { fill: none; stroke-linecap: butt; }
-.gauge-away { stroke: var(--series-away); } .gauge-home { stroke: var(--series-home); }
+.gauge-away { stroke: var(--g-away, var(--series-away)); } .gauge-home { stroke: var(--g-home, var(--series-home)); }
 .gauge-tick { stroke: var(--text-3, #889); stroke-width: 1.4; } .gauge-tick.major { stroke: var(--text-2, #aab); stroke-width: 2.2; }
 .gauge-needle { transform-origin: 100px 100px; transform-box: view-box; transition: transform .9s cubic-bezier(.2, .9, .25, 1.15); }
 .gauge-needle path { fill: var(--text-5, #fff); stroke: var(--surface-5, #000); stroke-width: .8; paint-order: stroke; }

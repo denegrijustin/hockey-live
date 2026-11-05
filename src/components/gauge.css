@@ -57,3 +57,13 @@
 .gauge.sm .gauge-side.home { align-items: flex-end; }
 .gauge.sm .gauge-side.home b { order: -1; }
 .gauge.sm .gauge-side.away b { order: -1; }
+/* The two headline gauges fill their half of the box on a laptop and the whole width on a phone. */
+.gr-hero .gauge.lg { max-width: none; width: 100%; }
+.gr-hero .gauge.lg svg { max-width: 460px; width: 100%; }
+.gr-hero .gauge-label { display: none; } /* the heading above says it */
+.gr-hero .gauge.lg .gauge-side i { font-size: 1.6rem; }
+@media (max-width: 560px) {
+  .gr-hero { padding: 10px 6px 6px; gap: 10px; }
+  .gr-hero .gauge.lg svg { max-width: none; }
+}
+.gr-hero { column-gap: 40px; }

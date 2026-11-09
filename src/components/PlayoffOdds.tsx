@@ -5,6 +5,7 @@ import "./playoff-odds.css";
 import { TeamLogo } from "./TeamLogo";
 import { TeamLink } from "./TeamProfile";
 import { PlayoffTracker } from "./PlayoffTracker";
+import { PageHeader } from "./PageHeader";
 
 const SIMS = 20000;
 const DIV_FILE: Record<string, string> = { Atlantic: "atlantic", Metropolitan: "metro", Central: "central", Pacific: "pacific" };
@@ -54,11 +55,11 @@ export function PlayoffOdds({
   const seasonLabel = s.length === 8 ? `${s.slice(0, 4)}–${s.slice(6)}` : s;
 
   return (
-    <section className="panel po-panel" aria-labelledby="po-title">
+    <>
+    <PageHeader title="Playoff odds" eyebrow="PLAYOFF PICTURE" />
+    <section className="panel po-panel" aria-label="Playoff odds">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">PLAYOFF PICTURE</p>
-          <h2 id="po-title">Playoff odds</h2>
           <p className="po-note">
             {result
               ? result.complete
@@ -139,5 +140,6 @@ export function PlayoffOdds({
           );
         })}
     </section>
+    </>
   );
 }

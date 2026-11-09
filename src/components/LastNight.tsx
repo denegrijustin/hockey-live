@@ -9,6 +9,7 @@ import { GameRecap } from "./GameRecap";
 import { CompactGameFlow } from "./GameData";
 import { TeamLogo } from "./TeamLogo";
 import "./last-night.css";
+import { PageHeader } from "./PageHeader";
 
 type Night = ReturnType<typeof nightsOf>[number];
 const signed = (v: number, d = 2) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(d)}`;
@@ -90,17 +91,14 @@ export function LastNight({ games, teams, season, current = true }: { games: Gam
   const goalie = useMemo(() => goalieOfTheNight(mp.data, finals.map((f) => f.id)), [mp.data, ids]); // eslint-disable-line react-hooks/exhaustive-deps
   const nameOf = (id: string) => teams.find((t) => t.id === id)?.short ?? id;
 
-  if (!date) return <section className="panel ln" aria-label="Last night in the NHL"><h2>Last night in the NHL</h2><p className="detail-note">No games have been finished before today yet.</p></section>;
+  if (!date) return <section className="panel ln" aria-label="Last night in the NHL"><PageHeader title="Last night in the NHL" /><p className="detail-note">No games have been finished before today yet.</p></section>;
   const label = new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const [open, setOpen] = useState<number | null>(null);
   const openFinal = finals.find((f) => f.id === open);
   if (openFinal) return <GameNight final={openFinal} box={boxes?.find((b) => b.id === openFinal.id) ?? null} loading={boxes === null} teams={teams} label={label} onBack={() => setOpen(null)} />;
   return (
-    <section className="panel ln" aria-labelledby="ln-title" data-testid="last-night">
-      <header className="ln-head">
-        <h2 id="ln-title">Last night in the NHL</h2>
-        <p>{label} · {finals.length} {finals.length === 1 ? "game" : "games"}</p>
-      </header>
+    <section className="panel ln" aria-label="Last night in the NHL" data-testid="last-night">
+      <PageHeader title="Last night in the NHL" eyebrow={`${label} · ${finals.length} ${finals.length === 1 ? "game" : "games"}`} />
       <div className="ln-top">
         <section className="ln-finals" aria-label="Final scores">
           <h3>Final scores <span>Tap a game</span></h3>
@@ -153,14 +151,13 @@ function GameNight({ final, box, loading, teams, label, onBack }: { final: Retur
   const nights = useMemo(() => (box ? nightsOf([box]) : []), [box]);
   const { best, worst } = useMemo(() => bestAndWorst(nights, 5), [nights]);
   return (
-    <section className="panel ln ln-game" aria-labelledby="lg-title" data-testid="last-night-game" data-game-id={final.id}>
-      <button type="button" className="ln-back" onClick={onBack}>← All of last night</button>
+    <section className="panel ln ln-game" aria-label={`${away.name} at ${home.name}`} data-testid="last-night-game" data-game-id={final.id}>
+      <PageHeader title={`${away.name} at ${home.name}`} eyebrow={label} back={{ label: "All of last night", onClick: onBack }} />
       <header className="ln-gamehead">
         <span className="ln-side"><TeamLogo id={away.id} size={44} /><b>{away.id}</b></span>
-        <h2 id="lg-title" className="ln-bigscore" aria-label={`${away.name} ${final.awayScore}, ${home.name} ${final.homeScore}`}><strong className={final.awayScore > final.homeScore ? "win" : ""}>{final.awayScore}</strong><i>–</i><strong className={final.homeScore > final.awayScore ? "win" : ""}>{final.homeScore}</strong><small>Final{final.end ? ` / ${final.end}` : ""}</small></h2>
+        <div role="img" className="ln-bigscore" aria-label={`${away.name} ${final.awayScore}, ${home.name} ${final.homeScore}`}><strong className={final.awayScore > final.homeScore ? "win" : ""}>{final.awayScore}</strong><i>–</i><strong className={final.homeScore > final.awayScore ? "win" : ""}>{final.homeScore}</strong><small>Final{final.end ? ` / ${final.end}` : ""}</small></div>
         <span className="ln-side home"><b>{home.id}</b><TeamLogo id={home.id} size={44} /></span>
       </header>
-      <p className="ln-gamedate">{away.name} at {home.name} · {label}</p>
       {loading ? <Skeleton rows={3} label="Loading the box score" /> : nights.length > 0 ? <NightsChart best={best} worst={worst} title="This game: best and worst nights" /> : <p className="detail-note">The box score for this game is not available yet.</p>}
       {feed?.plays?.length ? <div className="ln-flow"><CompactGameFlow data={feed} home={home} away={away} /></div> : null}
       <GameRecap data={feed ?? null} home={home} away={away} />

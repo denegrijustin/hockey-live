@@ -1,7 +1,5 @@
 /* Picks: this week's, the record, graded */
 .picks { width: 100%; max-width: 860px; margin: 0 auto; }
-.pk-head h1 { margin: 4px 0 4px; font-size: 1.5rem; }
-.pk-head p { margin: 0 0 12px; font-size: .8125rem; color: var(--text-1); max-width: 62ch; }
 .pk-honest { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface-5); font-size: .875rem; line-height: 1.5; color: var(--text-4); }
 .pk-h { margin: 22px 0 10px; font-size: .8125rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
 .pk-h .sb-count { margin-left: 6px; padding: 0 8px; border-radius: 999px; background: var(--surface-7); font-size: .6875rem; color: var(--text-3); letter-spacing: 0; }

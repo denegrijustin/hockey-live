@@ -6,6 +6,7 @@ import { useMoneyPuck, useMoneyPuckRefresh } from "../../lib/moneypuck-client";
 import { NHLPLUS_EVENT, useNhlPlusTarget } from "../../lib/nhlplus-nav";
 import type { NhlPlusTarget, NhlPlusView } from "../../lib/nhlplus-nav";
 import { refreshMessage } from "../../lib/nhlplus-view.mjs";
+import { PageHeader } from "../PageHeader";
 import { DataStatus } from "./shared/DataStatus";
 import "./shared/shared.css";
 import "./nhlplus.css";
@@ -65,7 +66,7 @@ export function NhlPlus({ games, season }: { games: Game[]; season: number; team
   const msg = refreshMessage(refresh.result, refresh.error);
   return (
     <section className="nhlplus" aria-label="NHL+">
-      <h2 className="sr-only">NHL+</h2>
+      <PageHeader title="NHL+" eyebrow="ADVANCED STATS · MONEYPUCK" />
       <div className="np-bar">
         {/* On a phone the seven views are one button showing the current view; tapping it opens the rest, so the header is one line instead of three. */}
         <nav ref={subnav} className={`np-subnav${phone ? " np-subnav-phone" : ""}${phone && menu ? " open" : ""}`} aria-label="NHL+ views">

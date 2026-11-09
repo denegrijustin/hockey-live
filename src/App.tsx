@@ -407,14 +407,11 @@ export default function App() {
             )}
             {view === "games" && (
               <>
-                {phone && <PageHeader title="Games" eyebrow="CIRCLE THESE ON THE CALENDAR" />}
-                {!phone && (
-                  <>
-                    <div className="section-heading">
-                      <div>
-                        <p className="eyebrow">CIRCLE THESE ON THE CALENDAR</p>
-                        <h2>Game center</h2>
-                      </div>
+                <PageHeader
+                  title="Games"
+                  eyebrow="CIRCLE THESE ON THE CALENDAR"
+                  actions={!phone && (
+                    <>
                       <PeriodSwitch period={period} setPeriod={setPeriod} relevant={relevant} type={type} />
                       <button
                         type="button"
@@ -435,7 +432,11 @@ export default function App() {
                       >
                         Filters <b>{games.length}</b> <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
                       </button>
-                    </div>
+                    </>
+                  )}
+                />
+                {!phone && (
+                  <>
                     <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>
                       <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} />
                     </div>

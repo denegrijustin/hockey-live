@@ -4,6 +4,7 @@ import { useFeed } from "../lib/polling";
 import { useChartUnit } from "../lib/chartUnit";
 import { calibratedChance, explainPick, impliedProb, priceText, summarize, verdict } from "../lib/picks.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { PageHeader } from "./PageHeader";
 
 type Pick = { id: string; gameId: number; date: string; start: string; away: string; home: string; kind: "ml" | "pl"; side: "home" | "away"; team: string; line: number | null; price: number; model: number; fair: number; edge: number; result?: "win" | "loss"; units?: number; final?: string; margin?: number };
 type Snapshot = { schema: number; season: number; startedAt: string | null; updatedAt: string | null; picks: Pick[] };
@@ -68,16 +69,15 @@ export function Picks({ season, games, teams }: { season: number; games: Game[];
   const done = useMemo(() => [...graded].sort((a, b) => b.start.localeCompare(a.start)), [graded]);
 
   if (!data && !error) {
-    return <section className="picks" aria-label="Picks"><div className="skel card" role="status" aria-label="Loading picks">{[0, 1, 2].map((i) => <div className="skel-item" key={i}><span className="skel-line w60" /><span className="skel-line w90" /><span className="skel-line w40" /></div>)}</div></section>;
+    return <section className="picks" aria-label="Picks"><PageHeader title="Picks" eyebrow="THE MODEL VS. THE MARKET" /><div className="skel card" role="status" aria-label="Loading picks">{[0, 1, 2].map((i) => <div className="skel-item" key={i}><span className="skel-line w60" /><span className="skel-line w90" /><span className="skel-line w40" /></div>)}</div></section>;
   }
-  if (!data) return <section className="picks" aria-label="Picks"><p className="empty">Picks are unavailable right now. Try again in a moment.</p></section>;
+  if (!data) return <section className="picks" aria-label="Picks"><PageHeader title="Picks" eyebrow="THE MODEL VS. THE MARKET" /><p className="empty">Picks are unavailable right now. Try again in a moment.</p></section>;
 
   return (
     <section className="picks" aria-label="Picks">
-      <header className="pk-head">
-        <h1>Picks</h1>
-        <p>Moneyline and puck-line picks from the model, set against the market price (DraftKings, via the NHL). Information only, not betting advice.</p>
-      </header>
+      <PageHeader title="Picks" eyebrow="THE MODEL VS. THE MARKET">
+        <p className="ph-sub">Moneyline and puck-line picks from the model, set against the market price (DraftKings, via the NHL). Information only, not betting advice.</p>
+      </PageHeader>
       <p className="pk-honest" data-testid="pk-honest">{summary.honest}</p>
 
       <h2 className="pk-h">This week’s picks <span className="sb-count">{open.length}</span></h2>

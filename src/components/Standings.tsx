@@ -5,6 +5,7 @@ import { signed, entryLine } from "../lib/model.mjs";
 import { TeamLogo } from "./TeamLogo";
 import { Resumes } from "./Resumes";
 import { TeamLink } from "./TeamProfile";
+import { PageHeader } from "./PageHeader";
 export function Standings({
   teams,
   table,
@@ -21,11 +22,11 @@ export function Standings({
   const groups=group==='league'?['League']:group==='conference'?['E','W']:['Atlantic','Metropolitan','Central','Pacific'];
   const score=(id:string)=>mode==='projected'?projected[id].projected:table[id].pts;
   return (
+    <>
+    <PageHeader title="Standings" eyebrow="THE BIGGER PICTURE" />
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">THE BIGGER PICTURE</p>
-          <h2>League standings</h2>
           <p className="st-intro">
             Rebuilt from completed regular-season results. Your selected teams
             are highlighted.
@@ -131,5 +132,6 @@ export function Standings({
       </p>
       </>}
     </section>
+    </>
   );
 }

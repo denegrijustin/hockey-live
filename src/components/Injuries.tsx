@@ -8,6 +8,7 @@ import { InjuryHeadshot } from "./InjuryHeadshot";
 import { Skeleton } from "./Skeleton";
 import { TeamLogo } from "./TeamLogo";
 import { TeamLink } from "./TeamProfile";
+import { PageHeader } from "./PageHeader";
 
 type Impact = { basis: "season" | "last" | "none"; small?: boolean; gp: number; perGame?: number; percentile: number | null; level: "high" | "medium" | "low" | null; label: string; goals?: number; assists?: number; toi?: number | null; savePct?: number | null; group?: string };
 type Item = { id: string; name: string; pos: string | null; team: string; headshot: string | null; status: string; kind: string; detail: string | null; side: string | null; updated: string | null; comment: string; severity: { level: "season" | "serious" | "moderate" | "minor" | "unknown"; label: string; days: number | null }; back: { text: string; days: number | null }; impact: Impact };
@@ -70,14 +71,13 @@ export function Injuries({ season, teams }: { season: number; teams: Team[] }) {
     return list;
   })();
 
-  if (!data && !error) return <section className="injuries" aria-label="Injury report"><Skeleton rows={4} label="Loading the injury report" /></section>;
-  if (!data) return <section className="injuries" aria-label="Injury report"><p className="empty">The injury report is unavailable right now. Try again in a moment.</p></section>;
+  if (!data && !error) return <section className="injuries" aria-label="Injury report"><PageHeader title="Injury report" eyebrow="WHO IS OUT" /><Skeleton rows={4} label="Loading the injury report" /></section>;
+  if (!data) return <section className="injuries" aria-label="Injury report"><PageHeader title="Injury report" eyebrow="WHO IS OUT" /><p className="empty">The injury report is unavailable right now. Try again in a moment.</p></section>;
   return (
     <section className="injuries" aria-label="Injury report">
-      <header className="inj-head-bar">
-        <h1>Injury report</h1>
-        <p>Who is hurt, how serious it looks, when they may be back, and how much their team misses them. Impact is judged by how the player produced in earlier games: this season once he has played a few, otherwise last season.</p>
-      </header>
+      <PageHeader title="Injury report" eyebrow="WHO IS OUT">
+        <p className="ph-sub">Who is hurt, how serious it looks, when they may be back, and how much their team misses them. Impact is judged by how the player produced in earlier games: this season once he has played a few, otherwise last season.</p>
+      </PageHeader>
       <ul className="inj-counts" data-testid="inj-counts">
         <li><b>{data.counts.total}</b> injured</li>
         <li><b>{data.counts.dayToDay}</b> day-to-day</li>

@@ -677,3 +677,4 @@
 .ph-back:focus-visible, .nav-item:focus-visible, .tab-item:focus-visible, .menu-item:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 main#main:focus { outline: none; }
 @media (max-width: 720px) { .ph-titles h1 { font-size: 1.25rem; } }
+.ph-sub { margin: 4px 0 0; font-size: .8125rem; line-height: 1.5; color: var(--text-1); max-width: 70ch; }

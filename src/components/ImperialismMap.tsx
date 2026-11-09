@@ -10,6 +10,7 @@ import type { Game, Team } from "../types";
 import "./imperialism.css";
 import { TeamLogo } from "./TeamLogo";
 import { logoUrl } from "../lib/logos";
+import { PageHeader } from "./PageHeader";
 
 type Pt = [number, number];
 type Geo = { cells: Pt[]; land: Topology };
@@ -265,10 +266,9 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
   const path = open != null && result ? conquestPath(result, open, week) : [];
 
   return (
-    <section className="imp-root" aria-labelledby={`${uid}-h`}>
+    <section className="imp-root" aria-label="Imperialism map">
+      <PageHeader title="Imperialism map" eyebrow="NHL CONQUEST MAP" />
       <div className="imp-head">
-        <p className="imp-eyebrow">IMPERIALISM MAP</p>
-        <h2 id={`${uid}-h`}>NHL conquest map</h2>
         <p className="imp-rules">Start from nearest-arena territories; each finished game hands the loser&apos;s entire land to the winner. {seasonLabel(season)}, regular season and playoffs.</p>
       </div>
 

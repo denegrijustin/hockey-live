@@ -68,7 +68,7 @@ test("on a computer the heading and filters still show as before", async ({ page
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
-  await expect(page.locator(".section-heading h2")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Games", level: 1 })).toBeVisible();
   await expect(page.locator(".results-line")).toBeVisible();
   await expect(page.locator(".refresh-mini")).toBeHidden();
 });

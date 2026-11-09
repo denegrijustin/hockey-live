@@ -3,6 +3,7 @@ import { useVisibleInterval } from "../lib/polling";
 import type { EdgeData, Team } from "../types";
 import { useVisible } from "./GameData";
 import { TeamLogo } from "./TeamLogo";
+import { PageHeader } from "./PageHeader";
 const pending = new Map<string, Promise<EdgeData>>();
 const fetchedAt = new Map<string, number>();
 export function loadEdge(season: number, team: string) {
@@ -186,11 +187,11 @@ export function EdgePanel({
   season: number;
 }) {
   return (
+    <>
+    <PageHeader title="NHL EDGE" eyebrow="PUCK & PLAYER TRACKING" />
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">PUCK & PLAYER TRACKING</p>
-          <h2>NHL EDGE</h2>
           <p>
             Speed, distance, shot location and zone time. Compare each team with
             the league.
@@ -204,5 +205,6 @@ export function EdgePanel({
       </div>
       {!teams.length && <p>Select a team above.</p>}
     </section>
+    </>
   );
 }

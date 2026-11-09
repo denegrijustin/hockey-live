@@ -1,8 +1,7 @@
 /* Team schedule: the whole season as a list of cards or a calendar */
 .team-schedule { width: 100%; max-width: 980px; margin: 0 auto; }
-.ts-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding: 8px 0 14px; }
+.ts-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
 .ts-team { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.ts-team h1 { margin: 0; font-size: 1.375rem; line-height: 1.2; }
 .ts-team p { margin: 2px 0 0; font-size: .8125rem; color: var(--text-1); }
 .ts-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .ts-pick select { min-height: 44px; max-width: 100%; }

@@ -6,6 +6,7 @@ import { defaultMonth, monthGrid, monthKey, monthLabel, nextIndex, recordOf, sea
 import { useEtToday } from "../hooks/useEtToday";
 import { Icon } from "./icons";
 import { TeamLogo } from "./TeamLogo";
+import { PageHeader } from "./PageHeader";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 type Item = ReturnType<typeof sideOf>;
@@ -79,13 +80,11 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
 
   return (
     <section ref={root} className="team-schedule" aria-label="Team schedule">
-      <header className="ts-head">
+      <PageHeader title={team.name} eyebrow="SCHEDULE">
+        <div className="ts-head">
         <div className="ts-team">
           <TeamLogo id={team.id} size={44} />
-          <div>
-            <h1>{team.name}</h1>
-            <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming</p>
-          </div>
+          <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming</p>
         </div>
         <div className="ts-tools">
           <label className="ts-pick"><span className="sr-only">Team</span>
@@ -98,7 +97,8 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
             <button type="button" aria-pressed={mode === "calendar"} onClick={() => setMode("calendar")}>Calendar</button>
           </div>
         </div>
-      </header>
+        </div>
+      </PageHeader>
 
       {mode === "list" ? (
         <>

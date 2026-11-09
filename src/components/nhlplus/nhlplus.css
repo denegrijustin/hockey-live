@@ -217,3 +217,8 @@
   .nhlplus .np-refresh-top { flex: none; }
   .nhlplus .mp-status.mp-compact { margin: 0; font-size: .6875rem; line-height: 1.35; display: flex; flex-wrap: wrap; gap: 0 8px; }
 }
+
+/* On a phone the NHL+ header is one line (view picker and Refresh), so its title is kept for screen readers rather than costing a row. */
+@media (max-width: 600px) {
+  .nhlplus > .page-header { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}

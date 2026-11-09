@@ -44,7 +44,7 @@ test("Last night lists yesterday's finals, away team first, with overtime marked
   await expect(box.locator(".ln-finals li").first()).toContainText("ANA");
   await expect(box.locator(".ln-finals li").first().locator(".ln-score small")).toHaveText("OT");
   await expect(box.locator(".ln-finals li").first().locator(".ln-score strong.win")).toHaveText("5");
-  await expect(box.locator("h2")).toHaveText("Last night in the NHL");
+  await expect(box.getByRole("heading", { level: 1 })).toHaveText("Last night in the NHL");
 });
 
 test("best nights, the goalie of the night, and best and worst with what built each score", async ({ page }) => {

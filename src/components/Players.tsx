@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { loadPlayers } from "../lib/api";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
 import type { Team, PlayerData, PlayerSeason } from "../types";
+import { PageHeader } from "./PageHeader";
 export function Players({ teams, season }: { teams: Team[]; season: number }) {
   const [data, setData] = useState<PlayerData[]>([]),
     [error, setError] = useState(""),
@@ -64,11 +65,11 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
     [data, minimum],
   );
   return (
+    <>
+    <PageHeader title="Players" eyebrow="WHO IS MOVING THE NEEDLE?" />
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">WHO IS MOVING THE NEEDLE?</p>
-          <h2>Player contributions</h2>
           <p>My three by default · choose any teams or All 32 above. Player selections are independent of the game board.</p>
           <p>
             {String(season).slice(0, 4)}–{String(season).slice(6)} regular
@@ -176,6 +177,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
         </div>
       )}
     </section>
+    </>
   );
 }
 function PlayerRow({ p, season }: { p: PlayerSeason; season:number }) {

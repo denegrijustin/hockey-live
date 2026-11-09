@@ -5,14 +5,16 @@ import { useStackedTables } from "./hooks/useStackedTables";
 import { TeamProfileProvider } from "./components/TeamProfile";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NHLPLUS_EVENT } from "./lib/nhlplus-nav";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
 import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
-import { MainNav, VIEW_IDS } from "./components/MainNav";
+import { MainNav, VIEW_IDS, VIEW_TITLES } from "./components/MainNav";
+import { Teams } from "./components/Teams";
+import { PageHeader } from "./components/PageHeader";
 import { Scoreboard as ScoreboardView } from "./components/Scoreboard";
 import { Sheet } from "./components/Sheet";
 import { GameFilterFields, PeriodSwitch } from "./components/GameFilters";
@@ -83,7 +85,8 @@ function dayHeading(dateStr: string) {
     day: "numeric",
   });
 }
-const initialView = () => {
+/** The view the address names: ?view=standings, with the bare address as Home. Unknown names open Home. */
+const viewFromAddress = () => {
   try {
     const v = new URLSearchParams(location.search).get("view");
     return v && VIEW_IDS.includes(v) ? v : "scoreboard";
@@ -91,11 +94,13 @@ const initialView = () => {
     return "scoreboard";
   }
 };
+const initialView = viewFromAddress;
+const addressFor = (view: string) => (view === "scoreboard" ? location.pathname : `?view=${view}`);
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry } = useSeason();
   const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
-  const [view, setView] = useState(initialView),
+  const [view, setViewState] = useState(initialView),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
     [sort, setSort] = useState("date"),
@@ -106,13 +111,43 @@ export default function App() {
     [teamsOpen, setTeamsOpen] = useState(false);
   const phone = useMedia("(max-width: 720px)");
   const home = view === "scoreboard";
-  // The view is kept in the address (?view=…) so a link opens the same screen; the scoreboard is the plain address.
+  // Every screen has its own address (?view=…; Home is the plain address) and its own history entry, so Back and Forward move between screens,
+  // a link opens the same screen, and a refresh stays put. Each entry remembers how far down it was scrolled.
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const setView = useCallback((next: string) => {
+    if (next === viewRef.current) return;
+    try {
+      history.replaceState({ ...history.state, view: viewRef.current, scroll: window.scrollY }, "");
+      history.pushState({ view: next, scroll: 0 }, "", addressFor(next));
+    } catch {}
+    setViewState(next);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
   useEffect(() => {
     try {
-      history.replaceState(null, "", home ? location.pathname : `?view=${view}`);
+      history.scrollRestoration = "manual";
+      history.replaceState({ ...history.state, view: viewRef.current, scroll: history.state?.scroll ?? 0 }, "", addressFor(viewRef.current));
     } catch {}
+    const pop = (e: PopStateEvent) => {
+      const next = e.state?.view && VIEW_IDS.includes(e.state.view) ? e.state.view : viewFromAddress();
+      setViewState(next);
+      const y = Number(e.state?.scroll) || 0;
+      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: y, left: 0, behavior: "instant" })));
+    };
+    window.addEventListener("popstate", pop);
+    return () => window.removeEventListener("popstate", pop);
+  }, []);
+  useEffect(() => {
     document.documentElement.toggleAttribute("data-home", home);
+    document.title = home ? "Iceboard · NHL game intelligence" : `${VIEW_TITLES[view] ?? "Iceboard"} · Iceboard`;
   }, [view, home]);
+  // After a screen change, move focus to the page so keyboard and screen-reader users start at the top of the new screen.
+  const firstView = useRef(true);
+  useEffect(() => {
+    if (firstView.current) { firstView.current = false; return; }
+    document.getElementById("main")?.focus({ preventScroll: true });
+  }, [view]);
   useStackedTables(view);
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
@@ -215,7 +250,7 @@ export default function App() {
         />
       )}
       <header className="site-header">
-        <a className="brand" href="/" aria-label="Iceboard home">
+        <a className="brand" href="/" aria-label="Iceboard home" onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); setView("scoreboard"); }}>
           <span className="brand-symbol">
             Ⅱ<span>↗</span>
           </span>
@@ -247,15 +282,15 @@ export default function App() {
           </label>
         </div>
       </header>
-      <main id="main" className="page">
-        <MainNav view={view} setView={setView} liveCount={liveCount} onRefresh={refresh} />
+      <main id="main" className="page" tabIndex={-1}>
+        <MainNav view={view} setView={setView} liveCount={liveCount} onRefresh={refresh} onChooseTeams={phone ? () => setTeamsOpen(true) : undefined} />
         {(pull > 0 || refreshing) && (
           <div className="ptr" role="status" style={{ opacity: refreshing ? 1 : Math.min(1, pull) }} data-ready={pull >= 1}>
             <Icon name="refresh" size={20} />
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && !(phone && view === "nhlplus") && (
+        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && view !== "teams" && !(phone && view === "nhlplus") && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">
@@ -372,6 +407,7 @@ export default function App() {
             )}
             {view === "games" && (
               <>
+                {phone && <PageHeader title="Games" eyebrow="CIRCLE THESE ON THE CALENDAR" />}
                 {!phone && (
                   <>
                     <div className="section-heading">
@@ -535,6 +571,7 @@ export default function App() {
                 )}
               </>
             )}
+            {view === "teams" && <Teams teams={teams} table={analysis.table} selected={selected} onSchedule={() => setView("teamschedule")} />}
             {view === "trends" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading team trends" />}>
                 <Trends

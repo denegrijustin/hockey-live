@@ -676,5 +676,10 @@
 .ph-chev { display: inline-flex; transform: rotate(180deg); }
 .ph-back:focus-visible, .nav-item:focus-visible, .tab-item:focus-visible, .menu-item:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 main#main:focus { outline: none; }
-@media (max-width: 720px) { .ph-titles h1 { font-size: 1.25rem; } }
+/* On a phone the header is one tight line: the eyebrow goes, so the content starts higher up the screen. */
+@media (max-width: 720px) {
+  .page-header { margin: 2px 0 8px; gap: 2px; }
+  .ph-titles h1 { font-size: 1.25rem; }
+  .ph-titles .eyebrow { display: none; }
+}
 .ph-sub { margin: 4px 0 0; font-size: .8125rem; line-height: 1.5; color: var(--text-1); max-width: 70ch; }

@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { DATA_DAY, DATA_NOW } from "./clock";
 
 // Dead space at the top of the page pushes the games below the fold; keep the first card well up the screen.
 test("on a phone the first game card starts high on the screen", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
-  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
+  await page.clock.setFixedTime(DATA_NOW);
+  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: DATA_NOW.toISOString(), date: DATA_DAY, games: [] } }));
   await page.goto("/?view=games");
   const card = page.locator(".game-card").first();
   await expect(card).toBeVisible();
@@ -23,7 +24,7 @@ test("on a phone the first game card starts high on the screen", async ({ page }
 
 test("on a phone the tab bar stays at the bottom while the page scrolls, and the picker scrolls away", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
+  await page.clock.setFixedTime(DATA_NOW);
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
@@ -39,8 +40,8 @@ test("on a phone the tab bar stays at the bottom while the page scrolls, and the
 // The board should open with games, not furniture: four cards visible on a phone without scrolling.
 test("on a phone the board opens with game cards showing (three above the fold, with the NHL+ line)", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 700 });
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
-  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
+  await page.clock.setFixedTime(DATA_NOW);
+  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: DATA_NOW.toISOString(), date: DATA_DAY, games: [] } }));
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
   const cards = await page.locator(".game-card").evaluateAll((els) => els.slice(0, 5).map((e) => { const b = e.getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom) }; }));
@@ -75,8 +76,8 @@ test("on a computer the heading and filters still show as before", async ({ page
 
 test("on a phone the GC tag is a square in line with the channel logos, the same size as each", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 700 });
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
-  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: "2026-10-10T17:00:00Z", date: "2026-10-10", games: [] } }));
+  await page.clock.setFixedTime(DATA_NOW);
+  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: DATA_NOW.toISOString(), date: DATA_DAY, games: [] } }));
   await page.goto("/?view=games");
   const card = page.locator(".game-card").filter({ has: page.locator(".network-logo") }).first();
   await expect(card).toBeVisible();

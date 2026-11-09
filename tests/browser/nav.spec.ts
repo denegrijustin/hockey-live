@@ -1,9 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { goTo, goToAllGames } from "./nav";
+import { DATA_DAY, DATA_NOW } from "./clock";
 
 async function open(page: Page, width: number, height: number) {
   await page.setViewportSize({ width, height });
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
+  await page.clock.setFixedTime(DATA_NOW);
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();

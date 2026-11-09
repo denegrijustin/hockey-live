@@ -1,11 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
+import { DATA_DAY, DATA_NOW } from "./clock";
 
 test.beforeEach(({ isMobile }) => test.skip(!isMobile, "phone layout"));
 
 async function open(page: Page, live: unknown = null) {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
+  await page.clock.setFixedTime(DATA_NOW);
   await page.route("**/api/live", (route) => (live ? route.fulfill({ json: live }) : route.fulfill({ status: 503, body: "{}" })));
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();

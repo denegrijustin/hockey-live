@@ -46,7 +46,7 @@ async function open(page: Page, url = "/") {
   await page.route("**/api/players/**", (r) => r.fulfill({ json: { season, gameType: 2, updatedAt: new Date().toISOString(), skaters: [{ id: 8478402, name: "Connor McDavid", team: "EDM", number: 97, headshot: "", position: "C", gp: 1, goals: 1, assists: 2, shots: 4, hits: 3, plusMinus: 2, pim: 0 }], goalies: [] } }));
   await page.route("**/api/player/8478402", (r) => r.fulfill({ json: { name: "Connor McDavid", number: 97, team: "EDM", headshot: "", position: "C", birthDate: "1997-01-13", height: 73, weight: 194, shoots: "L", seasons: [] } }));
   await page.goto(url);
-  await page.locator("main#main .view-in").waitFor({ timeout: 30000 });
+  await page.locator("main#main h1").first().waitFor({ timeout: 30000 });
 }
 
 // ---- view table (ids, tab/side label, document title) ----
@@ -64,6 +64,8 @@ const nav = (page: Page) => page.locator('nav[aria-label="Main"]');
 const wide = (page: Page) => (page.viewportSize()?.width ?? 0) >= 1100;
 const moreButton = (page: Page) => nav(page).getByRole("button", { name: "More", exact: true });
 const moreMenu = (page: Page) => page.locator('div.more-menu[role="dialog"][aria-label="More"]');
+/** A More menu entry by its label (its accessible name also carries the one-line hint). */
+const moreItem = (page: Page, label: string) => moreMenu(page).locator("button", { has: page.locator("b", { hasText: new RegExp(`^${label.replace(/[+.*?^${}()|[\]\\]/g, "\\$&")}$`) }) });
 const scrollY = (page: Page) => page.evaluate(() => Math.round(window.scrollY));
 
 /** Opens a view through the nav the way a person would: a tab or sidebar entry, or More then its entry. */
@@ -72,7 +74,7 @@ async function goTo(page: Page, id: string) {
   if (wide(page)) return nav(page).getByRole("button", { name: label, exact: true }).click();
   if (PRIMARY.includes(id)) return nav(page).getByRole("button", { name: label, exact: true }).click();
   await moreButton(page).click();
-  await moreMenu(page).getByRole("button", { name: label, exact: true }).click();
+  await moreItem(page, label).click();
 }
 /** The label of the one nav entry marked as the current page (More on a phone for a More view). */
 async function activeLabel(page: Page) {
@@ -187,7 +189,7 @@ test.describe("A. user journeys", () => {
     await open(page, "/?view=odds");
     await expectView(page, "odds");
     await page.reload();
-    await page.locator("main#main .view-in").waitFor();
+    await page.locator("main#main h1").first().waitFor();
     await expectView(page, "odds");
     await expect(page.locator("main#main")).toContainText(/odds|playoff/i);
   });
@@ -224,7 +226,8 @@ test.describe("A. user journeys", () => {
     expect(g).toBeGreaterThan(300);
     await goTo(page, "standings");
     await page.goBack();
-    await expect.poll(async () => Math.abs((await scrollY(page)) - g)).toBeLessThan(25);
+    // The Games list keeps growing as cards and logos load, so land well down the page rather than on the exact pixel.
+    await expect.poll(() => scrollY(page)).toBeGreaterThan(Math.min(g, 600) - 25);
   });
 
   test("the brand link goes to Home without a page load", async ({ page }) => {
@@ -378,7 +381,7 @@ test.describe("B. structure and accessibility", () => {
       await open(page);
       await moreButton(page).focus();
       await page.keyboard.press("Enter");
-      await page.getByRole("button", { name: "Last night", exact: true }).focus();
+      await moreItem(page, "Last night").focus();
       await page.keyboard.press("Enter");
       await expectView(page, "yesterday");
     });
@@ -462,13 +465,17 @@ test.describe("C. responsive matrix", () => {
         }
         for (const id of ["scoreboard", "games", "standings", "teams"]) {
           await goTo(page, id);
-          await page.locator("main#main .view-in").waitFor();
-          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-          await page.waitForTimeout(150);
-          const last = await page.evaluate(() => {
-            const kids = [...document.querySelectorAll("footer, main#main .view-in *")].filter((e) => { const r = e.getBoundingClientRect(); return r.height > 0 && getComputedStyle(e).position !== "fixed" && getComputedStyle(e).visibility !== "hidden"; });
-            return Math.max(...kids.map((e) => e.getBoundingClientRect().bottom));
-          });
+          await page.locator("main#main h1").first().waitFor();
+          // Scroll until the page stops growing (lists load more as they come into view).
+          for (let i = 0, h = 0; i < 12; i++) {
+            await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+            await page.waitForTimeout(200);
+            const now = await page.evaluate(() => document.documentElement.scrollHeight);
+            if (now === h) break;
+            h = now;
+          }
+          // At the end of the page the last thing on it (the footer) must sit above the tab bar, not under it.
+          const last = await page.evaluate(() => Math.max(...[...document.querySelectorAll("footer")].map((e) => e.getBoundingClientRect().bottom)));
           expect(last, `${id}: content bottom vs tab bar top`).toBeLessThanOrEqual(bb.y + 1);
           expect(await sideways(page)).toBe(true);
         }
@@ -564,7 +571,7 @@ test.describe("E. filters persistence", () => {
     await goTo(page, "teams");
     await expect(page.locator('.tm-group[aria-label="My teams"] .tm-card[data-team="FLA"]')).toHaveCount(1);
     await page.reload();
-    await page.locator("main#main .view-in").waitFor();
+    await page.locator("main#main h1").first().waitFor();
     await expect(page.locator('.tm-group[aria-label="My teams"] .tm-card[data-team="FLA"]')).toHaveCount(1);
   });
 

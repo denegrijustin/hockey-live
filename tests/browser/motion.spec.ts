@@ -71,7 +71,7 @@ test("cards fade up with a stagger, views slide in, and a press gives feedback",
 test("the tab underline is one element that slides to the chosen tab", async ({ page, isMobile }) => {
   await open(page);
   if (isMobile) {
-    const bar = page.getByRole("navigation", { name: "Dashboard views" });
+    const bar = page.getByRole("navigation", { name: "Main" });
     await expect(bar).toHaveAttribute("data-slide", "");
     const before = await bar.evaluate((e) => (e as HTMLElement).style.getPropertyValue("--ux"));
     await bar.getByRole("button", { name: "Standings" }).click();

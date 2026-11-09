@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const views = ["scoreboard", "games", "yesterday", "teamschedule", "injuries", "picks", "standings", "trends", "players", "nhlplus", "edge", "odds", "map"];
+const views = ["scoreboard", "games", "teams", "yesterday", "teamschedule", "injuries", "picks", "standings", "trends", "players", "nhlplus", "edge", "odds", "map"];
 
 /** Anything that scrolls sideways by itself: an element that is wider than its box and lets you scroll to the rest. */
 const sidewaysScrollers = () => [...document.querySelectorAll("*")].filter((e) => ["auto", "scroll"].includes(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).display !== "none").map((e) => `${e.tagName.toLowerCase()}.${String((e as HTMLElement).className).split(" ")[0]}`);

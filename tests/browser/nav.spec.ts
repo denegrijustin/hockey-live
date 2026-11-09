@@ -13,9 +13,10 @@ test.describe("wide screens", () => {
   test("a sidebar lists every view, marks the current one, and switches views", async ({ page, isMobile }) => {
     test.skip(!!isMobile, "desktop layout");
     await open(page, 1440, 900);
-    const nav = page.getByRole("navigation", { name: "Dashboard views" });
-    await expect(nav.getByRole("button")).toHaveCount(12);
-    await expect(nav.getByRole("button", { name: "Home", exact: true })).toHaveAttribute("aria-current", "page"); // the league-wide list belongs to Home
+    const nav = page.getByRole("navigation", { name: "Main" });
+    await expect(nav.getByRole("button")).toHaveCount(14); // every view: four primary plus ten in the groups
+    await expect(nav.getByRole("button", { name: "Games", exact: true })).toHaveAttribute("aria-current", "page"); // the league-wide list is the Games view
+    await expect(nav.getByRole("button", { name: "Home", exact: true })).not.toHaveAttribute("aria-current", "page");
     await expect(page.locator(".tab-bar")).toHaveCount(0);
     await nav.getByRole("button", { name: "Standings" }).click();
     await expect(nav.getByRole("button", { name: "Standings" })).toHaveAttribute("aria-current", "page");
@@ -26,6 +27,7 @@ test.describe("wide screens", () => {
     expect((await nav.boundingBox())!.y).toBeGreaterThanOrEqual(0);
     // Content sits to its right, and the Game Center is a window with Close, not a sheet.
     await goToAllGames(page);
+    await expect(page.locator(".control-dock")).toBeVisible();
     expect((await page.locator(".control-dock").boundingBox())!.x).toBeGreaterThan((await nav.boundingBox())!.x + (await nav.boundingBox())!.width);
     await page.locator(".game-card-summary").first().click();
     await page.locator(".primary-game-center").first().click();
@@ -39,19 +41,27 @@ test.describe("wide screens", () => {
 test.describe("phones", () => {
   test.beforeEach(({ isMobile }) => test.skip(!isMobile, "phone layout"));
 
-  test("a tab bar holds four views and More; More opens a menu with the rest", async ({ page }) => {
+  test("a tab bar holds four destinations and More; More opens a grouped menu with the rest", async ({ page }) => {
     await open(page, 390, 844);
-    const bar = page.getByRole("navigation", { name: "Dashboard views" });
+    const bar = page.getByRole("navigation", { name: "Main" });
     await expect(bar.getByRole("button")).toHaveCount(5);
-    await expect(bar.getByRole("button", { name: "Home" })).toHaveAttribute("aria-current", "page"); // the league-wide list belongs to Home
-    await bar.getByRole("button", { name: "Team trends" }).click();
-    await expect(page.locator(".chart-wrap svg")).toBeVisible();
-    await expect(bar.getByRole("button", { name: "Team trends" })).toHaveAttribute("aria-current", "page");
+    for (const name of ["Home", "Games", "Standings", "Teams", "More"]) await expect(bar.getByRole("button", { name, exact: true })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "Games", exact: true })).toHaveAttribute("aria-current", "page"); // the league-wide list is the Games tab
+    await expect(bar.getByRole("button", { name: "Team trends" })).toHaveCount(0); // Trends and Players live in More now
+    await bar.getByRole("button", { name: "Standings" }).click();
+    await expect(page.locator("tbody tr")).toHaveCount(32);
+    await expect(bar.getByRole("button", { name: "Standings" })).toHaveAttribute("aria-current", "page");
     await bar.getByRole("button", { name: "More" }).click();
     const sheet = page.getByRole("dialog", { name: "More" });
-    await expect(sheet.getByRole("button")).toHaveCount(9); // eight views + Refresh data
-    for (const name of ["Last night", "Schedule", "Injury report", "Picks", "NHL+", "NHL EDGE", "Playoff odds", "Imperialism map"]) await expect(sheet.getByRole("button", { name, exact: true })).toBeVisible();
-    await sheet.getByRole("button", { name: "NHL+", exact: true }).click();
+    await expect(sheet.getByRole("button")).toHaveCount(12); // ten views + My teams + Refresh data
+    for (const name of ["Last night", "Schedule", "Team trends", "Playoff odds", "Picks", "NHL+", "NHL EDGE", "Imperialism map", "Players", "Injury report", "My teams", "Refresh data"]) await expect(sheet.getByRole("button", { name: new RegExp(`^${name}`) })).toBeVisible();
+    for (const group of ["Games & schedule", "League intelligence", "Players & teams", "Application"]) await expect(sheet.getByRole("region", { name: group })).toBeVisible();
+    await sheet.getByRole("button", { name: /^Team trends/ }).click();
+    await expect(sheet).toBeHidden();
+    await expect(page.locator(".chart-wrap svg")).toBeVisible();
+    await expect(bar.getByRole("button", { name: "More" })).toHaveAttribute("aria-current", "page"); // Team trends is in More, so More is highlighted
+    await bar.getByRole("button", { name: "More" }).click();
+    await sheet.getByRole("button", { name: /^NHL\+/ }).click();
     await expect(sheet).toBeHidden();
     await expect(page.locator(".nhlplus").first()).toBeVisible();
     await expect(bar.getByRole("button", { name: "More" })).toHaveAttribute("aria-current", "page"); // a More view is showing
@@ -75,7 +85,7 @@ test.describe("phones", () => {
     let refreshed = false;
     await page.evaluate(() => window.addEventListener("iceboard:refresh", () => ((window as any).__refreshed = true)));
     await more.click();
-    await menu.getByRole("button", { name: "Refresh data" }).click();
+    await menu.getByRole("button", { name: /^Refresh data/ }).click();
     refreshed = await page.evaluate(() => !!(window as any).__refreshed);
     expect(refreshed).toBe(true);
     await expect(menu).toBeHidden();

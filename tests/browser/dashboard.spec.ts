@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { closeTeams, filterGames, isPhone, openTeams, filterValue, pickOnlyTeam, selectAllTeams, selectMyThree, teamCount } from "./controls";
-import { goToAllGames } from "./nav";
+import { goTo, goToAllGames } from "./nav";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
 test("default teams, league selection, graphs and season navigation", async ({
   page,
@@ -40,7 +40,7 @@ test("default teams, league selection, graphs and season navigation", async ({
     "32 selected teams",
   );
   await selectMyThree(page);
-  await page.getByRole("button", { name: "Team trends", exact: true }).click();
+  await goTo(page, "Team trends");
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
   await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
   await expect(page.locator(".trend-panel")).toContainText("Current season only");
@@ -48,13 +48,13 @@ test("default teams, league selection, graphs and season navigation", async ({
   await goToAllGames(page);
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
   await expect(page.locator(".game-card").first()).toContainText("FINAL");
-  await page.getByRole("button", { name: "Team trends", exact: true }).click();
+  await goTo(page, "Team trends");
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
   await expect(page.getByLabel("Metric")).toHaveValue("difference");
   await expect(page.getByLabel("Metric").locator('option[value="playoffs"]')).toHaveCount(0);
-  await page.getByRole("button", { name: "Standings", exact: true }).click();
+  await goTo(page, "Standings");
   await expect(page.locator("tbody tr")).toHaveCount(32);
-  await page.getByRole("button", { name: "Players", exact: true }).click();
+  await goTo(page, "Players");
   await expect(page.locator("tbody tr").first()).toBeVisible();
   expect(errors).toEqual([]);
   expect(

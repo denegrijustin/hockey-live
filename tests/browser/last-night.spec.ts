@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
+import { goTo } from "./nav";
 
 const season = manifest.current;
 const et = (offset: number) => new Date(Date.now() + offset * 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
@@ -65,8 +66,7 @@ test("best nights, the goalie of the night, and best and worst with what built e
 
 test("it has its own tab", async ({ page }) => {
   await open(page, "/");
-  if (page.viewportSize()!.width < 700) await page.getByRole("button", { name: "More" }).click();
-  await page.getByRole("button", { name: "Last night", exact: true }).click();
+  await goTo(page, "Last night");
   await expect(page.getByTestId("last-night")).toBeVisible({ timeout: 30000 });
 });
 

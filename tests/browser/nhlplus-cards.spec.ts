@@ -159,7 +159,7 @@ test("final game in the download: xG, goals, sparkline, timestamp; Confirmed sta
   await expect(g.locator("[data-row=xg]")).toContainText(log.teams.STL.all.xGF.toFixed(2));
   await expect(g.locator("[data-row=goals]")).toContainText(String(log.goals.away));
   await expect(g.getByTestId("flow-spark")).toBeVisible();
-  await expect(g).toContainText(/Completed game · (saved copy · )?updated/);
+  await expect(g).toContainText(/Completed game · (stale · last updated|saved copy · updated|updated)/); // the wording depends on how old the saved data is on the day the test runs
   await expect(g.getByRole("link", { name: "Data: MoneyPuck.com" })).toBeVisible();
   await expect(c.getByTestId("nhlp-strip").locator("[data-row=gsax]")).toContainText("Confirmed");
 });

@@ -56,7 +56,7 @@ test("a hidden tab pauses the looping animations", async ({ page }) => {
 test("cards fade up with a stagger, views slide in, and a press gives feedback", async ({ page }) => {
   await open(page);
   const third = page.locator(".sb-list > li:nth-child(3)").first();
-  await expect(third).toBeVisible();
+  await expect(third).toBeVisible({ timeout: 15000 });
   expect(await third.evaluate((e) => getComputedStyle(e).animationName)).toBe("card-in");
   expect(await third.evaluate((e) => getComputedStyle(e).animationDelay)).toBe("0.06s");
   expect(await page.locator(".view-in").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("view-in");

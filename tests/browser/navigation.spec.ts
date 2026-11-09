@@ -1,6 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
 import teams from "../../public/data/teams.json" with { type: "json" };
+import { readFileSync } from "node:fs";
+import leagueTeams from "../../src/data/teams.json" with { type: "json" };
+import { buildInjuryReport } from "../../src/lib/injuries.mjs";
 
 /**
  * End-to-end checks of the navigation foundation: tab bar / sidebar, More menu, history-based routing, deep links, scroll
@@ -32,13 +35,16 @@ function fixture() {
   return { season, updatedAt: new Date().toISOString(), source: "test fixture", games };
 }
 
+/** A real injury report built from the saved ESPN sample, the way the Worker builds it. */
+const injuryReport = () => buildInjuryReport({ espn: JSON.parse(readFileSync("tests/fixtures/espn-injuries.json", "utf8")), teams: leagueTeams as never, today: new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" }), season, skaters: [], prevSkaters: [] });
+
 async function open(page: Page, url = "/") {
   const snapshot = fixture();
   await page.route("**/api/live", (r) => r.fulfill({ status: 503, body: "{}" }));
   await page.route(`**/api/season/${season}`, (r) => r.fulfill({ json: snapshot }));
   await page.route(`**/data/seasons/${season}.json`, (r) => r.fulfill({ json: snapshot }));
   await page.route("**/api/game/*", (r) => r.fulfill({ status: 404, body: "{}" }));
-  await page.route("**/api/injuries/**", (r) => r.fulfill({ json: { season, updatedAt: new Date().toISOString(), teams: {} } }));
+  await page.route("**/api/injuries/**", (r) => r.fulfill({ json: injuryReport() }));
   await page.route("**/api/picks/**", (r) => r.fulfill({ status: 404, body: "{}" }));
   await page.route("**/api/moneypuck/**", (r) => r.fulfill({ status: 404, body: "{}" }));
   await page.route("**/data/moneypuck/**/shots/**", (r) => r.fulfill({ status: 404, body: "{}" }));

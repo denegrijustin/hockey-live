@@ -1,6 +1,6 @@
 name: Refresh saved fallback data
 # The live site reads fresh data from the Worker (KV). public/data is the saved copy the app falls back to when the
-# Worker or KV is unavailable, so this keeps it from going stale. Runs weekly and on demand; commits only public/data.
+# Worker or KV is unavailable, so this keeps it from going stale. Runs weekly and on demand; commits only public/data (it restores the hand-curated team file and logos the importer overwrites).
 on:
   schedule:
     - cron: "17 10 * * 1"
@@ -32,6 +32,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
           git add public/data
+          # The importer also rewrites src/data/teams.json and public/logos/*.svg with the plain NHL versions. Those are curated by hand
+          # (team colours, vintage logos), so drop that rewrite: leftover edits would also make `git pull --rebase` below refuse to run.
+          git checkout -- .
           git diff --cached --quiet && { echo "Nothing new"; exit 0; }
           git commit -q -m "Refresh saved fallback data $(date -u +%F)"
           git pull --rebase -q origin main

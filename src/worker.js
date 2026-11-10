@@ -391,6 +391,9 @@ async function handle(request, env, ctx) {
         const season = Number(match[1]),
           team = match[2];
         if (!ids.has(team)) return json({ error: "Unknown team" }, 400);
+        // Only seasons the app publishes: an arbitrary 8-digit season would otherwise create KV keys and upstream calls on demand.
+        if (!(await staticData(env, request, "/data/manifest.json"))?.seasons.includes(season))
+          return json({ error: "Season not supported" }, 400);
         const key = `dashboard-players-v3-${season}-${team}`,
           cached = await env.TEAM_STATS.get(key, { type: "json" });
         if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000)
@@ -454,7 +457,7 @@ async function handle(request, env, ctx) {
       if (url.pathname === "/api/team-stats") {
         const team = url.searchParams.get("team"),
           season = url.searchParams.get("season") ?? "20252026";
-        if (!ids.has(team)) return json({ error: "Unknown team" }, 400);
+        if (!ids.has(team) || !/^20\d{6}$/.test(season)) return json({ error: "Unknown team or season" }, 400);
         const existing = await env.TEAM_STATS.get(`${team}-${season}`, {
           type: "json",
         });

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { setPrefs, usePrefs } from "../lib/prefs";
+import { setPrefs, usePrefs } from "../lib/prefs.ts";
 import { isSaved, toggleSaved } from "../lib/prefs.mjs";
 import type { Game } from "../types";
 

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Game, Team } from "../../types";
-import { usePrefs } from "../../lib/prefs";
+import { usePrefs } from "../../lib/prefs.ts";
 import { hasContext, rankGames } from "../../lib/relevance.mjs";
 import { teamRanks } from "../../lib/ranks.mjs";
 import { openGame } from "../../lib/open-game";

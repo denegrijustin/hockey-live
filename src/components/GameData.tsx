@@ -80,13 +80,13 @@ export function GameFlowChart({ data, home, away, compact = false }: { data: Gam
   const x = (minute: number) => left + (minute / end) * (right - left);
   const y = (value: number) => center - (value / max) * amplitude;
   const selected = inspect == null ? flow.points.at(-1)! : flow.points.reduce((best: any, point: any) => Math.abs(point.minute - inspect) < Math.abs(best.minute - inspect) ? point : best);
-  const leader = Math.abs(selected.value) < 0.35 ? null : selected.value > 0 ? home : away;
+  const leader = Math.abs(selected.value) < 0.05 ? null : selected.value > 0 ? home : away;
   const windowEvents = (data.plays ?? []).filter((play: any) => {
     const minute = playMinute(play, data.type);
-    return minute != null && minute <= selected.minute && minute >= Math.max(0, selected.minute - flow.windowMinutes) && ["goal", "shot-on-goal", "missed-shot", "hit", "penalty"].includes(play.type);
+    return minute != null && minute <= selected.minute && minute >= Math.max(0, selected.minute - flow.windowMinutes) && ["goal", "shot-on-goal", "missed-shot", "blocked-shot"].includes(play.type);
   });
   const eventSummary = [
-    ["goal", "goal"], ["shot-on-goal", "SOG"], ["hit", "hit"], ["penalty", "penalty"],
+    ["goal", "goal"], ["shot-on-goal", "SOG"], ["missed-shot", "miss"], ["blocked-shot", "block"],
   ].map(([type, label]) => {
     const count = windowEvents.filter((event: any) => event.type === type).length;
     return count ? `${count} ${label}${count === 1 || label === "SOG" ? "" : "s"}` : null;
@@ -104,10 +104,10 @@ export function GameFlowChart({ data, home, away, compact = false }: { data: Gam
   if (end > 60) ticks.push(end);
   return <div className={compact ? "compact-game-flow" : "game-flow"} data-testid={compact ? "compact-game-flow" : "game-flow"}>
     <div className="flow-readout">
-      <span>{compact ? "MOMENTUM" : `${flowTimeLabel(selected.minute, data.type)} · ${inspect == null ? "Latest" : "Selected point"}`}</span>
-      <strong>{leader ? <><TeamLogo id={leader.id} /> {leader.id} +{Math.abs(selected.value).toFixed(1)}</> : "EVEN"}</strong>
+      <span title="Iceboard metric: shot-attempt pressure">{compact ? "MOMENTUM" : `${flowTimeLabel(selected.minute, data.type)} · ${inspect == null ? "Latest" : "Selected point"}`}</span>
+      <strong>{leader ? <><TeamLogo id={leader.id} /> {leader.id} +{Math.abs(selected.value).toFixed(2)}</> : "EVEN"}</strong>
     </div>
-    <svg ref={chartRef} className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" data-elapsed={elapsed.toFixed(2)} data-duration={end} data-progress={(elapsed / end).toFixed(3)} aria-label={`Full-game momentum through ${flowTimeLabel(elapsed, data.type)}: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(1)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
+    <svg ref={chartRef} className="game-flow-chart" viewBox={`0 0 ${width} ${height}`} role="img" data-elapsed={elapsed.toFixed(2)} data-duration={end} data-progress={(elapsed / end).toFixed(3)} aria-label={`Full-game momentum through ${flowTimeLabel(elapsed, data.type)}: ${leader ? `${leader.name} ${Math.abs(selected.value).toFixed(2)}` : "even"}`} onPointerMove={inspectAt} onPointerDown={inspectAt} onPointerLeave={(event) => { if (!compact && event.pointerType === "mouse") setInspect(null); }}>
       <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={home.color}/><stop offset="50%" stopColor="var(--text-2)"/><stop offset="100%" stopColor={away.color}/></linearGradient></defs>
       {ticks.map((minute) => <g key={minute} className="flow-time-mark"><line x1={x(minute)} x2={x(minute)} y1="7" y2={height - 19}/><text x={x(minute)} y={height - 5} textAnchor={minute === 0 ? "start" : minute === end ? "end" : "middle"}>{minute === 0 ? "START" : minute === end ? `END · ${minute}m` : `${minute}m`}</text></g>)}
       <line x1={left} x2={right} y1={center} y2={center} className="flow-zero" />
@@ -123,6 +123,6 @@ export function GameFlowChart({ data, home, away, compact = false }: { data: Gam
       <circle cx={x(elapsed)} cy={y(flow.current)} r={compact ? 3.5 : 4.5} className="flow-progress-dot" />
       {!compact && <><line x1={x(selected.minute)} x2={x(selected.minute)} y1="10" y2={height - 14} className="flow-cursor"/><LogoImage id={home.id} x={3} y={4} size={20} /><LogoImage id={away.id} x={3} y={height - 27} size={20} /></>}
     </svg>
-    {!compact && <><input className="pulse-scrubber" type="range" min="0" max={Math.max(1, Math.round(elapsed * 60))} value={Math.round(selected.minute * 60)} step="1" aria-label="Game momentum timeline" aria-valuetext={`${flowTimeLabel(selected.minute, data.type)}; ${leader ? `${leader.id} momentum ${Math.abs(selected.value).toFixed(1)}` : "even momentum"}`} onChange={(event) => setInspect(Number(event.target.value) / 60)} /><p className="detail-note">{eventSummary || "No weighted events in this five-minute window."} Momentum weights recent goals, shots, missed shots, hits and penalties; events fade across five minutes. The line fills the full-game timeline as play advances. Hover, tap or use the slider to inspect received data.</p></>}
+    {!compact && <><input className="pulse-scrubber" type="range" min="0" max={Math.max(1, Math.round(elapsed * 60))} value={Math.round(selected.minute * 60)} step="1" aria-label="Game momentum timeline" aria-valuetext={`${flowTimeLabel(selected.minute, data.type)}; ${leader ? `${leader.id} momentum ${Math.abs(selected.value).toFixed(2)}` : "even momentum"}`} onChange={(event) => setInspect(Number(event.target.value) / 60)} /><p className="detail-note">{eventSummary || "No shot attempts in this five-minute window."} Iceboard metric: shot-attempt pressure (goals, shots on goal, missed and blocked shots credited to the shooter, fading across five minutes; hits and penalties are not included). It is not possession, xG or win probability. The line fills the full-game timeline as play advances. Hover, tap or use the slider to inspect received data.</p></>}
   </div>;
 }

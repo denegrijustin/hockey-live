@@ -1,0 +1,42 @@
+/* Momentum pane (Phase 5): shot-attempt pressure timeline. No animation anywhere, so reduced motion needs no override. */
+.mo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; min-width: 0; max-width: 100%; overflow-x: clip; padding: 4px 0 12px; color: var(--text-1); }
+.mo-title { margin: 0; font-size: 1rem; }
+.mo-sub { font-size: 0.75rem; font-weight: 500; color: var(--text-3); margin-left: 6px; }
+.mo-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.mo-btn { min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-3); color: var(--text-1); font: inherit; cursor: pointer; }
+.mo-btn[aria-pressed="true"] { border-color: var(--mint-5); background: color-mix(in srgb, var(--mint-5) 18%, var(--surface-3)); font-weight: 700; }
+.mo-btn:focus-visible, .mo-scrub:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; }
+.mo-readout { margin: 0; font-size: 0.9375rem; font-variant-numeric: tabular-nums; min-height: 1.4em; overflow-wrap: anywhere; }
+.mo > * { min-width: 0; }
+.mo-svg { display: block; width: 100%; height: auto; max-width: 100%; touch-action: pan-y; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; }
+.mo-svg text { fill: var(--text-2); font-size: calc(0.6875rem * var(--u, 1)); }
+.mo-zero { stroke: var(--text-3); stroke-width: 1; }
+.mo-period line { stroke: var(--text-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.mo-side { font-weight: 700; fill: var(--text-1) !important; }
+.mo-future { fill: var(--surface-4); opacity: 0.55; }
+.mo-pp rect { opacity: 0.16; stroke: currentColor; }
+.mo-goal line { stroke: var(--text-2); stroke-width: 1; stroke-dasharray: 2 2; }
+.mo-goal circle { stroke: var(--text-1); stroke-width: 1.6; }
+.mo-pen path { fill: var(--amber-5); stroke: var(--surface-1); stroke-width: 0.6; }
+.mo-cursor { stroke: var(--text-1); stroke-width: 1.2; }
+.mo-dot { fill: var(--text-1); stroke: var(--surface-1); stroke-width: 1.5; }
+.mo-scrub { width: 100%; min-height: 44px; margin: 0; accent-color: var(--mint-5); }
+.mo-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; font-size: 0.75rem; color: var(--text-2); }
+.mo-key { display: inline-block; width: 14px; height: 10px; margin-right: 4px; vertical-align: -1px; border-radius: 2px; }
+.mo-key-away { border: 2px solid; background: repeating-linear-gradient(45deg, transparent 0 3px, currentColor 3px 4px); }
+.mo-key-goal { border-radius: 50%; width: 10px; background: var(--text-1); }
+.mo-key-pen { background: var(--amber-5); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.mo-key-pp { background: var(--text-3); opacity: 0.4; }
+.mo-label { margin: 0; font-size: 0.8125rem; overflow-wrap: anywhere; }
+.mo-badge { display: inline-block; padding: 1px 7px; margin-right: 6px; border: 1px solid var(--line); border-radius: 999px; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); }
+.mo-how, .mo-xg { border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; background: var(--surface-2); }
+.mo-how > summary, .mo-xg > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+.mo-how p { font-size: 0.8125rem; line-height: 1.5; margin: 0 0 8px; }
+.mo-text { margin: 0; font-size: 0.875rem; line-height: 1.5; overflow-wrap: anywhere; }
+.mo-table { white-space: normal; width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.mo-table caption { text-align: left; color: var(--text-3); padding: 6px 0; }
+.mo-table th, .mo-table td { text-align: left; white-space: normal; text-transform: none; letter-spacing: 0; font-size: inherit; padding: 6px 6px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.mo-total th, .mo-total td { font-weight: 700; }
+.mo-meta, .mo-note, .mo-empty { margin: 0; font-size: 0.8125rem; color: var(--text-2); }
+.mo-summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+@media (max-width: 420px) { .mo-table { font-size: 0.75rem; } .mo-table th, .mo-table td { padding: 6px 3px; } }

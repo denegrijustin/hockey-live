@@ -71,25 +71,57 @@ export function normalizeGameFeed(j) {
       `${value(p.firstName)} ${value(p.lastName)}`,
     ]),
   );
-  const plays = (j.plays ?? []).map((p) => ({
-    id: p.eventId,
-    period: p.periodDescriptor.number,
-    periodType: p.periodDescriptor.periodType,
-    time: p.timeInPeriod,
-    type: p.typeDescKey,
-    order: p.sortOrder ?? 0,
-    penalty: p.details?.descKey ?? null,
-    duration: p.details?.duration ?? null,
-    team: team(p.details?.eventOwnerTeamId),
-    x: p.details?.xCoord ?? null,
-    y: p.details?.yCoord ?? null,
-    player:
-      names[p.details?.scoringPlayerId ?? p.details?.shootingPlayerId ?? p.details?.committedByPlayerId] ?? null,
+  const roster = (j.rosterSpots ?? []).map((p) => ({
+    id: p.playerId,
+    name: `${value(p.firstName)} ${value(p.lastName)}`,
+    team: team(p.teamId),
+    number: p.sweaterNumber ?? null,
+    pos: p.positionCode ?? null,
+    headshot: p.headshot ?? null,
   }));
+  const who = (id) => (id != null && names[id] ? { id, name: names[id] } : null);
+  const plays = (j.plays ?? []).map((p) => {
+    const d = p.details ?? {};
+    const primary = d.scoringPlayerId ?? d.shootingPlayerId ?? d.committedByPlayerId;
+    const play = {
+      id: p.eventId,
+      period: p.periodDescriptor.number,
+      periodType: p.periodDescriptor.periodType,
+      time: p.timeInPeriod,
+      type: p.typeDescKey,
+      order: p.sortOrder ?? 0,
+      penalty: d.descKey ?? null,
+      duration: d.duration ?? null,
+      team: team(d.eventOwnerTeamId),
+      x: d.xCoord ?? null,
+      y: d.yCoord ?? null,
+      player: names[primary] ?? null,
+      // Additive detail (Phase 5): everything below is optional and never replaces a field above.
+      pid: primary ?? null,
+      left: p.timeRemaining ?? null,
+      sit: p.situationCode ?? null,
+      zone: d.zoneCode ?? null,
+      shotType: d.shotType ?? null,
+      reason: d.reason ?? null,
+      secondary: who(d.hitteePlayerId ?? d.blockingPlayerId ?? d.losingPlayerId ?? d.servedByPlayerId ?? d.drawnByPlayerId),
+      other: who(d.hittingPlayerId ?? d.playerId ?? d.winningPlayerId),
+    };
+    if (p.typeDescKey === "goal") {
+      play.assists = [d.assist1PlayerId, d.assist2PlayerId].map(who).filter(Boolean);
+      play.goalie = who(d.goalieInNetId);
+      play.score = d.homeScore != null && d.awayScore != null ? { home: d.homeScore, away: d.awayScore } : null;
+    }
+    return play;
+  });
   return {
     ...normalizeScoreboard({ games: [j] }).games[0],
     updatedAt: new Date().toISOString(),
     plays: plays.sort((a, b) => a.order - b.order),
+    roster,
+    clockRunning: j.clock?.running ?? null,
+    clockSeconds: j.clock?.secondsRemaining ?? null,
+    otInUse: j.otInUse ?? null,
+    shootoutInUse: j.shootoutInUse ?? null,
     situation: j.situation ? {
       home: j.situation.homeTeam?.strength ?? null,
       away: j.situation.awayTeam?.strength ?? null,

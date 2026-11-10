@@ -8,6 +8,7 @@ import { Icon } from "./icons";
 import { TeamLogo } from "./TeamLogo";
 import { LOGO_SIZE } from "./GameCardView";
 import { PageHeader } from "./PageHeader";
+import { TeamLink } from "./TeamProfile";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 type Item = ReturnType<typeof sideOf>;
@@ -85,7 +86,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
         <div className="ts-head">
         <div className="ts-team">
           <TeamLogo id={team.id} size={44} />
-          <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming</p>
+          <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming · <TeamLink id={team.id}>{team.short} profile</TeamLink></p>
         </div>
         <div className="ts-tools">
           <label className="ts-pick"><span className="sr-only">Team</span>

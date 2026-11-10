@@ -26,7 +26,6 @@ import { TeamsSheet } from "./components/TeamsSheet";
 import { StatusPill } from "./components/StatusPill";
 import { Icon } from "./components/icons";
 import { SearchPalette } from "./components/SearchPalette";
-import { useSearchIndex } from "./hooks/useSearchIndex";
 import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
@@ -214,7 +213,6 @@ export default function App() {
     window.addEventListener(OPEN_GAME_EVENT, onOpenGame);
     return () => window.removeEventListener(OPEN_GAME_EVENT, onOpenGame);
   }, [setView]);
-  const searchIndex = useSearchIndex({ teams, games: data?.games ?? [] });
   const changeTeams = (ids: string[]) => {
     setSelected(ids);
     try {
@@ -289,7 +287,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
-          <SearchPalette index={searchIndex} onTeam={openTeamPage} onView={setView} />
+          <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeamPage} onView={setView} />
           <StatusPill live={hasLive} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
             Season

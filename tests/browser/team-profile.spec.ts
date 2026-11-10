@@ -1,3 +1,4 @@
+import { seedPrefs, OLD_DEFAULT } from "./prefs";
 import { expect, test } from "@playwright/test";
 
 const dialog = (page: import("@playwright/test").Page) => page.getByRole("dialog", { name: /profile/ });
@@ -44,6 +45,7 @@ test("a tap on a game card's team name opens the full-screen Game Center, not th
 });
 
 test("a logo inside a team control still does its own job and does not open a profile", async ({ page }) => {
+  await seedPrefs(page, OLD_DEFAULT);
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.goto("/?view=games");
   const pill = page.locator(".quick-teams .team-pill").first();

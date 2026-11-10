@@ -1,3 +1,4 @@
+import { seedPrefs, OLD_DEFAULT } from "./prefs";
 import { expect, test, type Page } from "@playwright/test";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
 import teams from "../../public/data/teams.json" with { type: "json" };
@@ -140,6 +141,7 @@ test.describe("A. user journeys", () => {
   });
 
   test("3. Teams to a team page, Back to the directory; a player profile is not reachable from a team quick peek, so More to Players to player details to Back", async ({ page }) => {
+    await seedPrefs(page, OLD_DEFAULT);
     await open(page);
     await goTo(page, "teams");
     await expectView(page, "teams");
@@ -562,19 +564,10 @@ test.describe("E. filters persistence", () => {
     void info;
   });
 
-  test("picking a team in the picker is remembered across views and a reload", async ({ page }, info) => {
-    await open(page, "/?view=games");
-    if (info.project.name === "mobile") {
-      await page.getByRole("button", { name: "Choose teams" }).click();
-      await page.locator("dialog.sheet").getByRole("checkbox", { name: "Florida Panthers", exact: true }).check();
-      await page.locator("dialog.sheet").getByRole("button", { name: "Done" }).click();
-    } else {
-      await page.getByText("Choose teams", { exact: false }).click();
-      await page.getByRole("checkbox", { name: "Florida Panthers", exact: true }).check();
-      await page.getByText("Choose teams", { exact: false }).click();
-    }
-    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("iceboard-teams")!))).toContain("FLA");
-    await goTo(page, "teams");
+  test("a favorite starred in the directory is remembered across views and a reload", async ({ page }) => {
+    await open(page, "/?view=teams");
+    await page.getByRole("button", { name: "Add Florida Panthers to favorites" }).click();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("iceboard-prefs-v1")!).favorites)).toContain("FLA");
     await expect(page.locator('.tm-group[aria-label="My teams"] .tm-card[data-team="FLA"]')).toHaveCount(1);
     await page.reload();
     await page.locator("main#main h1").first().waitFor();

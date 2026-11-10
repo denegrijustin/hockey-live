@@ -1,7 +1,9 @@
+import { seedPrefs, OLD_DEFAULT } from "./prefs";
 import { expect, test, type Page } from "@playwright/test";
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 import { DATA_DAY, DATA_NOW } from "./clock";
 
+test.beforeEach(({ page, isMobile }) => seedPrefs(page, OLD_DEFAULT).then(() => undefined));
 test.beforeEach(({ isMobile }) => test.skip(!isMobile, "phone layout"));
 
 async function open(page: Page, live: unknown = null) {
@@ -55,7 +57,7 @@ test("a swipe down closes the Filters sheet", async ({ page }) => {
   await expect(sheet).toBeHidden();
 });
 
-test("the Teams sheet searches, picks All 32 and My three, and updates the count", async ({ page }) => {
+test("the Teams sheet searches, picks All 32 and My teams, and updates the count", async ({ page }) => {
   await open(page);
   const count = page.locator(".phone-controls .pc-button b").first();
   await expect(count).toHaveText("3");
@@ -67,8 +69,8 @@ test("the Teams sheet searches, picks All 32 and My three, and updates the count
   await sheet.getByLabel("Find a team").fill("");
   await sheet.getByRole("button", { name: "All 32", exact: true }).click();
   await expect(sheet.getByRole("button", { name: "All 32", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await sheet.getByRole("button", { name: "My three", exact: true }).click();
-  await expect(sheet.getByRole("button", { name: "My three", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await sheet.getByRole("button", { name: "My teams", exact: true }).click();
+  await expect(sheet.getByRole("button", { name: "My teams", exact: true })).toHaveAttribute("aria-pressed", "true");
   await sheet.getByRole("button", { name: "Clear" }).click();
   await sheet.getByRole("button", { name: "Done" }).click();
   await expect(count).toHaveText("0");

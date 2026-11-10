@@ -31,11 +31,11 @@ function merge<T>(base: T, over: unknown): T {
 /** The full record a partial one stands for (defaults filled in). */
 export const fullPrefs = (partial: PartialPrefs = {}): PrefsRecord => merge(defaultPrefsRecord(), partial);
 
-/** Writes iceboard-prefs-v1 before the page's scripts run, defaults filled in. Call before page.goto. */
+/** Writes iceboard-prefs-v1 before the page's scripts run, defaults filled in, only when no record exists yet (so a reload keeps the app's own later changes). Call before page.goto. */
 export async function seedPrefs(page: Page, partial: PartialPrefs = {}) {
   const record = JSON.stringify(fullPrefs(partial));
   await page.addInitScript(([key, value]) => {
-    try { localStorage.setItem(key, value); } catch { /* storage blocked */ }
+    try { if (localStorage.getItem(key) === null) localStorage.setItem(key, value); } catch { /* storage blocked */ }
   }, [PREFS_KEY, record]);
 }
 

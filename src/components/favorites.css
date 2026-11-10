@@ -21,3 +21,6 @@
 .ob-actions p { flex: 1; margin: 0; color: var(--text-3); font-size: .8125rem; }
 .gcv-team .fav-mark { margin-left: 0; margin-right: 2px; }
 .ts-opp .fav-mark { margin-left: 4px; }
+/* In the classic game card the mark sits on the logo's corner, so it never takes width from the team name. */
+.matchup-team { position: relative; }
+.matchup-team > .fav-mark { position: absolute; left: -3px; top: -3px; margin: 0; display: inline-flex; font-size: 0; }

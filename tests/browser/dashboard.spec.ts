@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import { closeTeams, filterGames, isPhone, openTeams, filterValue, pickOnlyTeam, selectAllTeams, selectMyThree, teamCount } from "./controls";
 import { goTo, goToAllGames } from "./nav";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
+import { seedPrefs, OLD_DEFAULT } from "./prefs";
+test.beforeEach(({ page }) => seedPrefs(page, OLD_DEFAULT));
 test("default teams, league selection, graphs and season navigation", async ({
   page,
 }) => {
@@ -13,7 +15,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   if (await isPhone(page)) {
     // The team shortcuts live in the Teams sheet on phones; the default is My three.
     await openTeams(page);
-    await expect(page.getByRole("button", { name: "My three", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "My teams", exact: true })).toHaveAttribute("aria-pressed", "true");
     await closeTeams(page);
   } else {
     for (const id of ["EDM", "CHI", "MIN"]) await expect(page.getByRole("button", { name: id, exact: true })).toHaveAttribute("aria-pressed", "true");

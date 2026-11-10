@@ -5,13 +5,30 @@ import { useSearchIndex, type SearchPlayer } from "../hooks/useSearchIndex";
 import { openGame } from "../lib/open-game";
 import { usePlayerProfile } from "./player/PlayerContext";
 import { Icon } from "./icons";
+import { FollowButton } from "./FollowButton";
+import { useFollowedPlayers } from "../hooks/useFollowedPlayers";
+import { useAllRosters, useCurrentSeason } from "../hooks/useAllRosters";
+import teamsJson from "../data/teams.json";
 import { TeamLogo } from "./TeamLogo";
 
 
 type Item = ReturnType<typeof search>["flat"][number];
 
 export default function SearchDialog({ teams, games, players, onClose, onTeam, onView }: { teams: Team[]; games: Game[]; players?: SearchPlayer[]; onClose: () => void; onTeam: (id: string) => void; onView: (id: string) => void }) {
-  const index = useSearchIndex({ teams, games, players });
+  // Players: those the caller passed, the followed ones (searchable at once) and every roster (loaded when search opens, shared with the rest of the app).
+  const season = useCurrentSeason();
+  const { data: rosters } = useAllRosters(season, (teamsJson as { id: string }[]).map((t) => t.id));
+  const { players: followed } = useFollowedPlayers();
+  const merged = useMemo<SearchPlayer[]>(() => {
+    const fol = new Set(followed.map((f) => f.id));
+    const seen = new Set<number>();
+    const out: SearchPlayer[] = [];
+    for (const f of followed) { seen.add(f.id); out.push({ id: f.id, name: f.name, team: f.team, pos: f.pos, number: f.number, headshot: f.headshot || null, followed: true }); }
+    for (const p of players ?? []) if (!seen.has(Number(p.id))) { seen.add(Number(p.id)); out.push({ ...p, followed: fol.has(Number(p.id)) }); }
+    for (const r of rosters) for (const p of [...r.skaters, ...r.goalies]) if (!seen.has(p.id)) { seen.add(p.id); out.push({ id: p.id, name: p.name, team: p.team, pos: p.position, number: p.number ?? null, headshot: p.headshot || null }); }
+    return out;
+  }, [followed, players, rosters]);
+  const index = useSearchIndex({ teams, games, players: merged });
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
@@ -76,6 +93,7 @@ export default function SearchDialog({ teams, games, players, onClose, onTeam, o
                         {it.kind === "team" ? <TeamLogo id={String(it.id)} size={22} /> : it.kind === "game" ? <Icon name="games" size={18} /> : it.kind === "player" ? <Icon name="players" size={18} /> : <Icon name="chevron" size={18} />}
                       </span>
                       <span className="search-text"><b>{it.title}</b>{it.subtitle && <small>{it.subtitle}</small>}</span>
+                      {it.kind === "player" && <FollowButton compact player={it.payload as any} />}
                     </li>
                   );
                 })}

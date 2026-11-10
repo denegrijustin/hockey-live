@@ -10,6 +10,7 @@ import { Skeleton } from "../Skeleton";
 import type { PlayerRef } from "./PlayerContext";
 import { StatGrid, type Stat } from "./StatGrid";
 import { RecentGames } from "./RecentGames";
+import { FollowButton } from "../FollowButton";
 
 type Line = NonNullable<ReturnType<typeof seasonLine>>;
 type InjuryItem = { name: string; team: string; status?: string; kind?: string; severity?: { label?: string } };
@@ -101,6 +102,7 @@ function Header({ data, ref0, name, season, goalie, onLeave }: { data: PlayerPro
           </p>
         )}
         {bio && <p className="pp-bio">{bio}</p>}
+        <p><FollowButton player={{ id: data.id ?? ref0.id, name, team: data.team, pos: data.position, number: jersey ?? null, headshot: src }} /></p>
         <p>
           {hurt ? <span className="pp-badge out" data-testid="player-injury">{[hurt.status, hurt.kind].filter(Boolean).join(" · ")}</span>
             : injuries.data ? <span className="pp-badge" data-testid="player-injury">No injury reported</span> : null}

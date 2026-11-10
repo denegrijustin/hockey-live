@@ -37,7 +37,7 @@ const key = (text, abbr = false) => ({ text: normalize(text), abbr });
 
 /**
  * Build the index. `today` (YYYY-MM-DD, Eastern) selects which games are searchable: games on that day, plus anything live.
- * players: [{id, name, team?, headshot?, number?}] only from data already fetched. views: [{id,label,hint?,short?}].
+ * players: [{id, name, team?, pos?, headshot?, number?, followed?}] (followed ones rank one match tier higher) only from data already fetched. views: [{id,label,hint?,short?}].
  * @param {{ teams?: any[], games?: any[], players?: any[], views?: any[], today?: string | null }} [input]
  */
 export function buildIndex({ teams = [], games = [], players = [], views = [], today = null } = {}) {
@@ -71,7 +71,8 @@ export function buildIndex({ teams = [], games = [], players = [], views = [], t
     items.push({
       kind: "player", id: String(p.id), title: p.name, subtitle: [p.team, p.number != null ? `#${p.number}` : ""].filter(Boolean).join(" · "),
       keys: [key(p.name), key(p.team ?? "", true)].filter((k) => k.text),
-      payload: { id: p.id, name: p.name, team: p.team, headshot: p.headshot ?? null, number: p.number ?? null },
+      payload: { id: p.id, name: p.name, team: p.team, pos: p.pos, headshot: p.headshot ?? null, number: p.number ?? null },
+      followed: !!p.followed,
     });
   }
   for (const v of views) {
@@ -109,7 +110,7 @@ export function search(index, query, { limit = 6 } = {}) {
   for (const { kind, label } of KINDS) {
     const items = scored
       .filter((s) => s.it.kind === kind)
-      .sort((a, b) => a.score - b.score || a.it.order - b.it.order)
+      .sort((a, b) => a.score - (a.it.followed ? 1 : 0) - (b.score - (b.it.followed ? 1 : 0)) || a.it.order - b.it.order)
       .slice(0, limit)
       .map((s) => s.it);
     if (items.length) groups.push({ kind, label, items });

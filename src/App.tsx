@@ -4,6 +4,7 @@ import { searchFor } from "./lib/date-nav.mjs";
 import { GameDayStrip, hasDateParam, clearDateParam } from "./components/GameDayStrip";
 import { useEtToday } from "./hooks/useEtToday";
 import { useSeason } from "./hooks/useSeason";
+import { useGameAlerts } from "./hooks/useGameAlerts";
 import { useGameLists } from "./hooks/useGameLists";
 import { useStackedTables } from "./hooks/useStackedTables";
 import { TeamProfileProvider } from "./components/TeamProfile";
@@ -123,6 +124,7 @@ export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
   const online = useOnline();
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry, reloadLive, source } = useSeason();
+  useGameAlerts(scoreboard?.games);
   const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
   const [view, setViewState] = useState(initialView),
     [period, setPeriod] = useState("future"),

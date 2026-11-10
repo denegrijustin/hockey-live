@@ -48,13 +48,13 @@ test("goalie and skater layouts are separate; stats and missing values", async (
   await expect(sk.getByTestId("pw-card")).toHaveCount(2);
   await expect(gl.getByTestId("pw-card")).toHaveCount(1);
   const a = sk.getByTestId("pw-card").filter({ hasText: "Alpha Forward" });
-  for (const k of ["GP", "G", "A", "PTS", "+/−", "Shots", "TOI"]) await expect(a.locator("dt", { hasText: new RegExp(`^${k}$`) })).toBeVisible();
+  for (const k of ["GP", "G", "A", "PTS", "+/−", "Shots", "TOI"]) await expect(a.locator("dt", { hasText: new RegExp(`^${k.replace("+", "\\+")}$`) })).toBeVisible();
   await expect(a).toContainText("19:30");
   await expect(gl).toContainText(".917");
   await expect(gl.locator("dt", { hasText: /^GA$/ })).toBeVisible();
   await expect(gl.locator("dt", { hasText: /^TOI$/ })).toHaveCount(0);
   const sparse = sk.getByTestId("pw-card").filter({ hasText: "Sparse Stats" });
-  await expect(sparse.locator("dd", { hasText: "—" })).toHaveCount(4);
+  await expect(sparse.locator("dd", { hasText: "—" })).toHaveCount(5);
   await expect(a.getByTestId("pw-injury")).toHaveText("No injury reported");
 });
 

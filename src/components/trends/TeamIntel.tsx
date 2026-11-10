@@ -41,7 +41,7 @@ export function TeamIntel({ teamId, games, matchups, onNavigate }: TeamIntelProp
             <div className="tr-line">
               <FormStrip chips={f5.value.chips} label={`Results, ${f5.label}`} />
               <TrendChip label={f5.label} value={rec(f5.value)} />
-              {f5.value.streak.n >= 2 && <TrendChip label="Streak" value={`${f5.value.streak.kind}${f5.value.streak.n}`} tone={f5.value.streak.kind === "W" ? "up" : "down"} title={f5.value.streak.kind === "L" ? "Games without a win, overtime losses included" : "Consecutive wins"} />}
+              {f5.value.streak.n >= 2 && <TrendChip label={f5.value.streak.kind === "L" ? "Without a win" : "Streak"} value={f5.value.streak.kind === "L" ? `${f5.value.streak.n} games` : `W${f5.value.streak.n}`} tone={f5.value.streak.kind === "W" ? "up" : "down"} title={f5.value.streak.kind === "L" ? "Games without a win, overtime losses included. The Overview streak counts regulation losses and overtime losses as separate runs." : "Consecutive wins"} />}
             </div>
           </div>
         )}

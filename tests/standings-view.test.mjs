@@ -113,7 +113,7 @@ test("clinchStatus is null without a schedule and when a team has no row", () =>
 });
 
 test("clinchStatus clinches when at most four others can still reach the points, eliminates when out of reach", () => {
-  // season over for everyone except one postponed game (ignored): E conference
+  // season over for everyone except one postponed game (still to be played, so it counts as remaining): E conference
   const table = mk({ A1: 90, A2: 85, A3: 80, A4: 75, A5: 70, M1: 88, M2: 60, M3: 50, M4: 40, M5: 30 });
   const sched = [game("A1", "M1", "OFF"), game("A5", "M5", "PPD", { scheduleState: "PPD" })];
   const s = clinchStatus(table, sched, teams);
@@ -156,4 +156,12 @@ test("teamRanks keeps points-percentage ordering with regulation wins as the tie
   const tie = teamRanks({ A: row("A"), B: row("B") }, ts);
   assert.equal(tie.A.league, 1);
   assert.equal(tie.B.league, 1);
+});
+
+test("clinchStatus: a postponed or suspended game still counts as remaining (no early clinch); a canceled one does not", () => {
+  const table = mk({ A1: 90, A2: 85, A3: 80, A4: 75, A5: 73, M1: 88, M2: 10, M3: 10, M4: 10, M5: 10 });
+  const base = [game("A1", "M1", "OFF")];
+  assert.equal(clinchStatus(table, [...base, game("A5", "M5", "FUT", { scheduleState: "PPD" })], teams).A4.status, null);
+  assert.equal(clinchStatus(table, [...base, game("A5", "M5", "FUT", { scheduleState: "SUSP" })], teams).A4.status, null);
+  assert.equal(clinchStatus(table, [...base, game("A5", "M5", "FUT", { scheduleState: "CNCL" })], teams).A4.status, "clinched");
 });

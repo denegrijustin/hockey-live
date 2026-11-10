@@ -4,7 +4,6 @@
  * here is an official clinch or seed. Null-safe: missing rows or empty histories yield null/neutral values.
  * Head-to-head and the NHL's remaining tiebreakers beyond ROW are NOT applied.
  */
-import { isCalledOff } from "./game-data.mjs";
 
 const finishedState = (g) => g?.state === "OFF" || g?.state === "FINAL";
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
@@ -126,7 +125,7 @@ export function gapToLine(table, id, teams) {
 /**
  * COMPUTED clinch / elimination from points arithmetic only (tiebreakers NOT applied, ties count against
  * the team). Conservative: returns null when unsure. Only regular-season (type 2) games that are not finished
- * and not postponed/canceled/suspended count as remaining; with no schedule at all every status is null.
+ * and not canceled count as remaining (postponed and suspended games still have to be played); with no schedule at all every status is null.
  * Clinched: at most 4 other conference teams can still reach the team's points (a team that misses
  * has 3 division teams and 2 wild cards ahead, so it needs at least 5), or at most 2 in its division.
  * Eliminated: at least 3 division teams are already strictly above its maximum and at least 2 more
@@ -139,7 +138,7 @@ export function clinchStatus(table, games, teams) {
   if (!sched.length || !table || (teams ?? []).some((t) => !table[t.id])) return res;
   const remaining = Object.fromEntries(teams.map((t) => [t.id, 0]));
   for (const g of sched) {
-    if (finishedState(g) || isCalledOff(g)) continue;
+    if (finishedState(g) || String(g.scheduleState ?? "").toUpperCase() === "CNCL") continue; // postponed/suspended games still have to be played, so they stay remaining (understating a team's maximum would claim a clinch or elimination too early)
     if (g.home in remaining) remaining[g.home]++;
     if (g.away in remaining) remaining[g.away]++;
   }

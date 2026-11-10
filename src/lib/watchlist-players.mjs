@@ -92,6 +92,9 @@ export const injuryText = (i) => [i?.status, i?.kind].filter(Boolean).join(" · 
  * Fields: id, name, headshot, number, pos, goalie, team (current), storedTeam, onRoster, changed ({from,to} when the roster team differs from the stored one),
  * lines [{k,text,missing}], injury (item | null), injuryKnown (the report was loaded), update ({id,team,pos,number,headshot} to store when the snapshot is stale, else null).
  */
+/**
+ * @param {any[]} followed @param {any[]} rosters @param {any[] | null} [injuries] @param {{ currentTeams?: Record<number, string> }} [opts]
+ */
 export function followedSummaries(followed, rosters, injuries = null, opts = {}) {
   const index = indexRosters(rosters);
   const byTeam = new Map();

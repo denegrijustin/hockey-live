@@ -37,7 +37,7 @@ export type Rosters = { data: PlayerData[]; loading: boolean; error: boolean; re
  * `refreshKey` changes force a refetch of copies older than the cache lifetime.
  */
 export function useAllRosters(season: number | null, teams: string[], enabled = true, refreshKey = 0): Rosters {
-  const [state, setState] = useState<{ data: PlayerData[]; loading: boolean; error: boolean }>({ data: [], loading: false, error: false });
+  const [state, setState] = useState<{ data: PlayerData[]; loading: boolean; error: boolean }>({ data: [], loading: enabled && !!season && teams.length > 0, error: false });
   const [attempt, setAttempt] = useState(0);
   const key = teams.join(",");
   useEffect(() => {

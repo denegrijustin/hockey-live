@@ -26,7 +26,7 @@ export const defaultPrefs = () => ({
     density: "comfortable", defaultView: "scoreboard", homeOrder: "favorites",
     sections: { myTeams: true, myPlayers: true, worth: true, pulse: true },
   },
-  alerts: { enabled: false, start: true, period: false, final: true, schedule: true, scope: { teams: true, players: true, saved: true } },
+  alerts: { enabled: false, start: true, period: false, final: true, schedule: true, goal: true, ot: true, scope: { teams: true, players: true, saved: true } },
 });
 
 const pick = (v, list, d) => (list.includes(v) ? v : d);
@@ -76,7 +76,7 @@ export function sanitize(raw, teamIds) {
       sections: { myTeams: bool(s.myTeams, true), myPlayers: bool(s.myPlayers, true), worth: bool(s.worth, true), pulse: bool(s.pulse, true) },
     },
     alerts: {
-      enabled: bool(a.enabled, false), start: bool(a.start, true), period: bool(a.period, false), final: bool(a.final, true), schedule: bool(a.schedule, true),
+      enabled: bool(a.enabled, false), start: bool(a.start, true), period: bool(a.period, false), final: bool(a.final, true), schedule: bool(a.schedule, true), goal: bool(a.goal, true), ot: bool(a.ot, true),
       scope: { teams: bool(sc.teams, true), players: bool(sc.players, true), saved: bool(sc.saved, true) },
     },
   };

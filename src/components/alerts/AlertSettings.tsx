@@ -4,6 +4,8 @@ import "./alerts.css";
 
 type Alerts = ReturnType<typeof usePrefs>["alerts"];
 const CATS: [keyof Alerts, string, string][] = [
+  ["goal", "Goals", "A goal by your team or either team in a saved game, with the scorer when the play-by-play is available; a goal later disallowed is marked"],
+  ["ot", "Overtime", "When a game goes to overtime"],
   ["start", "Puck drop", "When a game starts"],
   ["period", "Period breaks", "End and start of each period, overtime and shootout"],
   ["final", "Finals", "Final score, tagged OT or SO"],

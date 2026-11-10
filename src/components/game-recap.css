@@ -49,9 +49,14 @@
 .gr-toggle { display: inline-flex; border: 1px solid var(--line-3); border-radius: 8px; overflow: hidden; }
 .gr-toggle button { min-height: 32px; padding: 0 10px; border: 0; border-radius: 0; background: transparent; color: var(--text-3); font: inherit; font-size: .75rem; font-weight: 600; cursor: pointer; text-transform: none; letter-spacing: 0; }
 .gr-toggle button[aria-pressed="true"] { background: var(--surface-8); color: var(--mint-6); }
-.gr-pgrid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-.gr-period { display: grid; gap: 4px; padding: 8px 10px; border-radius: 10px; background: var(--surface-3); font-variant-numeric: tabular-nums; }
+.gr-pgrid { display: grid; gap: 6px 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.gr-period { display: grid; grid-template-columns: 5.2rem minmax(3rem, auto) minmax(40px, 1fr) minmax(3rem, auto); align-items: center; gap: 4px 8px; min-height: 44px; padding: 4px 10px; border-radius: 10px; background: var(--surface-3); font-variant-numeric: tabular-nums; min-width: 0; }
 .gr-period small { color: var(--muted); font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; }
+.gr-period b { font-size: .9375rem; font-weight: 600; color: var(--text-3); white-space: nowrap; } .gr-period b.lead { color: var(--text-6); font-weight: 800; } .gr-period b:last-child { text-align: right; }
+.gr-period em { font-style: normal; font-size: .625rem; font-weight: 600; letter-spacing: .04em; color: var(--text-2); }
+.gr-psplit { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: var(--g-home, var(--series-home)); } .gr-psplit i { background: var(--g-away, var(--series-away)); }
+/* Comparison dials: compact, three across on phones, centred (the last short row too). */
+.gr-cgrid.gauge-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr)); max-width: 640px; margin-inline: auto; width: 100%; }
 .gr-prow { display: flex; justify-content: space-between; font-size: .875rem; } .gr-prow b { color: var(--text-3); font-weight: 600; } .gr-prow b.lead { color: var(--text-6); font-weight: 800; }
 
 .gr-map h4 .gr-key { display: inline-block; width: 10px; height: 10px; margin-left: 6px; border-radius: 50%; border: 2px solid; vertical-align: -1px; }

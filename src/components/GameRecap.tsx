@@ -6,7 +6,7 @@ import { buildRecap, HIGH_XG } from "../lib/game-recap.mjs";
 /** The colour that marks a high-chance shot, on the white ice and on the dark charts. */
 export const CHANCE_COLOR = "#c026d3";
 import { TeamLogo } from "./TeamLogo";
-import { markerColors } from "../lib/kits";
+import { markerColors, gaugeColors } from "../lib/kits";
 import { Gauge } from "./Gauge";
 import "./game-recap.css";
 import "./gauge.css";
@@ -100,8 +100,8 @@ function Compare({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   ];
   return (
     <section className="gr-compare" aria-label={`Team numbers, ${away.id} against ${home.id}`}>
-      <div className="gauge-grid">
-        {rows.filter((x) => x.a != null && x.h != null).map((x) => <Gauge key={x.label} away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} />)}
+      <div className="gauge-grid gr-cgrid">
+        {rows.filter((x) => x.a != null && x.h != null).map((x) => <div key={x.label} className="gauge-item"><Gauge size="compact" away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} /></div>)}
       </div>
     </section>
   );
@@ -122,12 +122,19 @@ function Periods({ r, home, away }: { r: Recap; home: Team; away: Team }) {
           <button type="button" aria-pressed={by === "xg"} onClick={() => setBy("xg")}>xG</button>
         </span>
       </h4>
-      <div className="gr-pgrid gauge-grid">
-        {periods.map((p) => (
-          <div key={p} className="gr-period" data-period={p}>
-            <Gauge away={val(p, false)} home={val(p, true)} awayId={away.id} homeId={home.id} label={`${name(p)} period`} format={by === "xg" ? f2 : String} />
-          </div>
-        ))}
+      <div className="gr-pgrid">
+        {periods.map((p) => {
+          // One number per side: a split bar says the same as a dial, in a third of the height.
+          const a = val(p, false), h = val(p, true), fmt = by === "xg" ? f2 : String, colors = gaugeColors(away.id, home.id), share = a + h > 0 ? (a / (a + h)) * 100 : 50;
+          return (
+            <div key={p} className="gr-period" data-period={p} role="img" aria-label={`${name(p)} period: ${away.id} ${fmt(a)}, ${home.id} ${fmt(h)}`} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties}>
+              <small>{name(p)} period</small>
+              <b className={a > h ? "lead" : ""}><em>{away.id}</em> {fmt(a)}</b>
+              <span className="gr-psplit" aria-hidden="true"><i style={{ width: `${share}%` }} /></span>
+              <b className={h > a ? "lead" : ""}>{fmt(h)} <em>{home.id}</em></b>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

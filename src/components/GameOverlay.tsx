@@ -1,4 +1,6 @@
 import { Suspense, lazy, useLayoutEffect, useMemo, useRef } from "react";
+import { fmtDay, fmtTime } from "../lib/dates.mjs";
+import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
@@ -61,6 +63,7 @@ export function GameOverlay({
   returnTo?: number;
   onClose: () => void;
 }) {
+  useTimeKey();
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const pageScroll = useRef(0);
@@ -152,21 +155,13 @@ export function GameOverlay({
         ))}
       </div>
       <p className="detail-note dialog-status">
-        {new Date(game.start).toLocaleDateString("en-US", {
-          weekday: "long",
-          month: "short",
-          day: "numeric",
-        })}{" "}
+        {fmtDay(game.start, { long: true })}{" "}
         ·{" "}
         {past
           ? `FINAL${game.end !== "REG" ? " / " + game.end : ""}`
           : live
             ? `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`
-            : new Date(game.start).toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                timeZoneName: "short",
-              })}
+            : fmtTime(game.start, { withZone: true })}
         {" · "}
         {analysis.kind} · {analysis.score}/100 overall importance · Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}
       </p>

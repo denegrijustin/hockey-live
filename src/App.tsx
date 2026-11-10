@@ -8,6 +8,7 @@ import { useGameLists } from "./hooks/useGameLists";
 import { useStackedTables } from "./hooks/useStackedTables";
 import { TeamProfileProvider } from "./components/TeamProfile";
 import { PlayerProfileProvider } from "./components/player/PlayerContext";
+import { getPrefs } from "./lib/prefs";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -92,8 +93,10 @@ function dayHeading(dateStr: string, today: string) {
 /** The view the address names: ?view=standings, with the bare address as Home. Unknown names open Home. */
 const viewFromAddress = () => {
   try {
-    const v = new URLSearchParams(location.search).get("view");
-    return v && VIEW_IDS.includes(v) ? v : "scoreboard";
+    const q = new URLSearchParams(location.search), v = q.get("view");
+    if (v && VIEW_IDS.includes(v)) return v;
+    const d = getPrefs().display.defaultView; // the plain address opens the view chosen in Settings (never for shared links with other params)
+    return !q.toString() && d !== "settings" && VIEW_IDS.includes(d) ? d : "scoreboard";
   } catch {
     return "scoreboard";
   }

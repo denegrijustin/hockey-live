@@ -1,4 +1,5 @@
 import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
@@ -59,6 +60,7 @@ export const GameCard = memo(function GameCard({
     return () => document.removeEventListener("pointerdown", outside);
   }, [expanded, gameCenterOpen]);
 
+  useTimeKey();
   const scrollAtOpen = useRef(0);
   const openGameCenter = () => {
     scrollAtOpen.current = window.scrollY;

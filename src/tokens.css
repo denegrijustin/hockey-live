@@ -1,6 +1,9 @@
 /* Semantic colour tokens. Generated from the original palette: neutrals form three ramps by use (surface, line, text),
    accents (mint, red, amber) form one ramp each. Higher numbers are lighter in the dark theme; the light theme mirrors
-   the lightness, so every token keeps its job (surface-1 is always the page background, text-7 the strongest text). */
+   the lightness, so every token keeps its job (surface-1 is always the page background, text-7 the strongest text).
+   Theme: the device setting (prefers-color-scheme / prefers-contrast) applies unless the user chose in Settings, which sets
+   <html data-theme="light|dark"> and <html data-contrast="more"> (see src/lib/display.ts). Each @set block repeats its values. */
+/* @set dark */
 :root {
     color-scheme: dark;
     --overlay: #fff;
@@ -46,8 +49,56 @@
     --logo-chip-fallback: #17243a;
     --series-blue: #8fb8e8;
 }
+/* @set light */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
+      color-scheme: light;
+      --overlay: #000;
+      --amber-1: #fefefe;
+      --amber-2: #ba9341;
+      --amber-3: #6d5015;
+      --amber-4: #47360b;
+      --amber-5: #3e2d10;
+      --mint-1: #fafcfc;
+      --mint-2: #4ca08a;
+      --mint-3: #467f74;
+      --mint-4: #1f483e;
+      --mint-5: #11362b;
+      --mint-6: #081d16;
+      --surface-1: #d6e6f0;
+      --surface-2: #dfeaf3;
+      --surface-3: #e7eff6;
+      --surface-4: #eef4f8;
+      --surface-5: #f4f8fa;
+      --surface-6: #fcfcfd;
+      --surface-7: #fdfefe;
+      --surface-8: #fefefe;
+      --line-1: #9bb6c3;
+      --line-2: #81a2b0;
+      --line-3: #6c8c9b;
+      --line-4: #52757b;
+      --line-5: #4c657d;
+      --text-1: #3c4f5a;
+      --text-2: #2f434b;
+      --text-3: #22333b;
+      --text-4: #18252a;
+      --text-5: #111a1e;
+      --text-6: #091115;
+      --red-1: #fefdfd;
+      --red-2: #cf9f9b;
+      --red-3: #c82e34;
+      --red-4: #8b1a19;
+      --red-5: #69120b;
+      --series-away: #0f6e5a;
+      --series-home: #8f5400;
+      --logo-chip: #f7f9fb;
+      --logo-chip-line: #0000001f;
+      --logo-chip-fallback: #17243a;
+      --series-blue: #245a94;
+  }
+}
+/* @set light */
+:root[data-theme="light"] {
     color-scheme: light;
     --overlay: #000;
     --amber-1: #fefefe;
@@ -91,10 +142,147 @@
     --logo-chip-line: #0000001f;
     --logo-chip-fallback: #17243a;
     --series-blue: #245a94;
+}
+/* @set darkMore */
+@media (prefers-contrast: more) {
+  :root:not([data-theme="light"]) {
+      --amber-1: #453e2b;
+      --amber-2: #c0943a;
+      --amber-3: #e7b552;
+      --amber-4: #f0cf7a;
+      --amber-5: #efd8af;
+      --mint-1: #14332b;
+      --mint-2: #4db197;
+      --mint-3: #6db4a6;
+      --mint-4: #95d6c6;
+      --mint-5: #a5e8d4;
+      --mint-6: #d9f7ed;
+      --surface-1: #040a0e;
+      --surface-2: #071017;
+      --surface-3: #0a161f;
+      --surface-4: #0d1c26;
+      --surface-5: #11222c;
+      --surface-6: #152934;
+      --surface-7: #1b313c;
+      --surface-8: #283c45;
+      --line-1: #608ea6;
+      --line-2: #6e98a9;
+      --line-3: #82a0ae;
+      --line-4: #8eb1b7;
+      --line-5: #9fb4c8;
+      --text-1: #c6d3da;
+      --text-2: #cfdce3;
+      --text-3: #dce7ec;
+      --text-4: #e8f0f3;
+      --text-5: #f0f5f7;
+      --text-6: #f6fafb;
+      --red-1: #45221f;
+      --red-2: #b45e57;
+      --red-3: #e98387;
+      --red-4: #f5b2b1;
+      --red-5: #fccbc7;
+      --series-away: #9ff0d9;
+      --series-home: #ffd78f;
+      --logo-chip: #f7f9fb;
+      --logo-chip-line: #00000066;
+      --logo-chip-fallback: #17243a;
+      --series-blue: #b8d4f5;
   }
 }
+/* @set lightMore */
+@media (prefers-color-scheme: light) and (prefers-contrast: more) {
+  :root:not([data-theme="dark"]) {
+      --amber-1: #fefefe;
+      --amber-2: #82672d;
+      --amber-3: #4d380f;
+      --amber-4: #312608;
+      --amber-5: #2b200b;
+      --mint-1: #fafcfc;
+      --mint-2: #357061;
+      --mint-3: #315951;
+      --mint-4: #16332c;
+      --mint-5: #0c261e;
+      --mint-6: #05140f;
+      --surface-1: #d6e6f0;
+      --surface-2: #dfeaf3;
+      --surface-3: #e7eff6;
+      --surface-4: #eef4f8;
+      --surface-5: #f4f8fa;
+      --surface-6: #fcfcfd;
+      --surface-7: #fdfefe;
+      --surface-8: #fefefe;
+      --line-1: #557b8f;
+      --line-2: #4c6c7a;
+      --line-3: #455b66;
+      --line-4: #364c50;
+      --line-5: #324251;
+      --text-1: #1e282d;
+      --text-2: #182126;
+      --text-3: #11191d;
+      --text-4: #0c1315;
+      --text-5: #080d0f;
+      --text-6: #04090b;
+      --red-1: #fefdfd;
+      --red-2: #ab5953;
+      --red-3: #8c2025;
+      --red-4: #621211;
+      --red-5: #490d07;
+      --series-away: #07443a;
+      --series-home: #5f3600;
+      --logo-chip: #f7f9fb;
+      --logo-chip-line: #00000066;
+      --logo-chip-fallback: #17243a;
+      --series-blue: #123a68;
+  }
+}
+/* @set lightMore */
 @media (prefers-contrast: more) {
-  :root {
+  :root[data-theme="light"] {
+      --amber-1: #fefefe;
+      --amber-2: #82672d;
+      --amber-3: #4d380f;
+      --amber-4: #312608;
+      --amber-5: #2b200b;
+      --mint-1: #fafcfc;
+      --mint-2: #357061;
+      --mint-3: #315951;
+      --mint-4: #16332c;
+      --mint-5: #0c261e;
+      --mint-6: #05140f;
+      --surface-1: #d6e6f0;
+      --surface-2: #dfeaf3;
+      --surface-3: #e7eff6;
+      --surface-4: #eef4f8;
+      --surface-5: #f4f8fa;
+      --surface-6: #fcfcfd;
+      --surface-7: #fdfefe;
+      --surface-8: #fefefe;
+      --line-1: #557b8f;
+      --line-2: #4c6c7a;
+      --line-3: #455b66;
+      --line-4: #364c50;
+      --line-5: #324251;
+      --text-1: #1e282d;
+      --text-2: #182126;
+      --text-3: #11191d;
+      --text-4: #0c1315;
+      --text-5: #080d0f;
+      --text-6: #04090b;
+      --red-1: #fefdfd;
+      --red-2: #ab5953;
+      --red-3: #8c2025;
+      --red-4: #621211;
+      --red-5: #490d07;
+      --series-away: #07443a;
+      --series-home: #5f3600;
+      --logo-chip: #f7f9fb;
+      --logo-chip-line: #00000066;
+      --logo-chip-fallback: #17243a;
+      --series-blue: #123a68;
+  }
+}
+/* @set darkMore */
+:root[data-contrast="more"]:not([data-theme="light"]) {
     --amber-1: #453e2b;
     --amber-2: #c0943a;
     --amber-3: #e7b552;
@@ -136,10 +324,55 @@
     --logo-chip-line: #00000066;
     --logo-chip-fallback: #17243a;
     --series-blue: #b8d4f5;
+}
+/* @set lightMore */
+@media (prefers-color-scheme: light) {
+  :root[data-contrast="more"]:not([data-theme="dark"]) {
+      --amber-1: #fefefe;
+      --amber-2: #82672d;
+      --amber-3: #4d380f;
+      --amber-4: #312608;
+      --amber-5: #2b200b;
+      --mint-1: #fafcfc;
+      --mint-2: #357061;
+      --mint-3: #315951;
+      --mint-4: #16332c;
+      --mint-5: #0c261e;
+      --mint-6: #05140f;
+      --surface-1: #d6e6f0;
+      --surface-2: #dfeaf3;
+      --surface-3: #e7eff6;
+      --surface-4: #eef4f8;
+      --surface-5: #f4f8fa;
+      --surface-6: #fcfcfd;
+      --surface-7: #fdfefe;
+      --surface-8: #fefefe;
+      --line-1: #557b8f;
+      --line-2: #4c6c7a;
+      --line-3: #455b66;
+      --line-4: #364c50;
+      --line-5: #324251;
+      --text-1: #1e282d;
+      --text-2: #182126;
+      --text-3: #11191d;
+      --text-4: #0c1315;
+      --text-5: #080d0f;
+      --text-6: #04090b;
+      --red-1: #fefdfd;
+      --red-2: #ab5953;
+      --red-3: #8c2025;
+      --red-4: #621211;
+      --red-5: #490d07;
+      --series-away: #07443a;
+      --series-home: #5f3600;
+      --logo-chip: #f7f9fb;
+      --logo-chip-line: #00000066;
+      --logo-chip-fallback: #17243a;
+      --series-blue: #123a68;
   }
 }
-@media (prefers-color-scheme: light) and (prefers-contrast: more) {
-  :root {
+/* @set lightMore */
+:root[data-contrast="more"][data-theme="light"] {
     --amber-1: #fefefe;
     --amber-2: #82672d;
     --amber-3: #4d380f;
@@ -181,7 +414,6 @@
     --logo-chip-line: #00000066;
     --logo-chip-fallback: #17243a;
     --series-blue: #123a68;
-  }
 }
 
 /* Team logos: every vintage logo sits on the same light chip, in both themes, so each one reads the same and none disappears into the page. A current-logo fallback (drawn for dark pages) gets a dark chip. */

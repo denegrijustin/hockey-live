@@ -33,3 +33,24 @@ export function relativeDay(day, today = etDay()) {
   if (diff === -1) return "Yesterday";
   return new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
 }
+
+/* ---- Display formatters honouring the user's time zone / 12-24 h preference (Settings > Display) ---- */
+let shared = { timeZone: "auto", hour12: "auto" };
+/** The app-wide default for fmtTime/fmtDay/fmtDateTime, set by applyDisplay(). "auto" = the device's own zone / locale clock. */
+export function setTimePrefs(p = {}) { shared = { timeZone: p.timeZone ?? "auto", hour12: p.hour12 ?? "auto" }; }
+export const getTimePrefs = () => shared;
+const zoneOf = (p) => (p.timeZone === "ET" ? ET : p.timeZone && p.timeZone !== "auto" ? p.timeZone : undefined);
+const clockOf = (p) => (p.hour12 === "12" ? true : p.hour12 === "24" ? false : undefined);
+function fmt(when, o, p) {
+  const d = new Date(when);
+  if (Number.isNaN(d.getTime())) return "";
+  const prefs = p ?? shared, timeZone = zoneOf(prefs);
+  try { return d.toLocaleString("en-US", { ...o, ...(timeZone ? { timeZone } : {}), ...(o.hour ? { hour12: clockOf(prefs) } : {}) }); }
+  catch { return d.toLocaleString("en-US", o); }
+}
+/** "7:00 PM" (or "19:00" with the 24-hour setting) in the chosen zone; `withZone` appends the zone name. */
+export const fmtTime = (when, { withZone = false } = {}, prefs) => fmt(when, { hour: "numeric", minute: "2-digit", ...(withZone ? { timeZoneName: "short" } : {}) }, prefs);
+/** "Tue, Nov 10" in the chosen zone (`long` gives the weekday in full). */
+export const fmtDay = (when, { long = false } = {}, prefs) => fmt(when, { weekday: long ? "long" : "short", month: "short", day: "numeric" }, prefs);
+/** "Nov 10, 7:00 PM" in the chosen zone. */
+export const fmtDateTime = (when, { withZone = false } = {}, prefs) => fmt(when, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", ...(withZone ? { timeZoneName: "short" } : {}) }, prefs);

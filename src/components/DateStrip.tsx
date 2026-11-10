@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motionOff } from "../motion";
 import { Icon } from "./icons";
 import { stepDay, stepWeek } from "../lib/date-nav.mjs";
 import { relativeDay } from "../lib/dates.mjs";
@@ -44,7 +45,7 @@ export function DateStrip({ value, onChange, today, days, min, max, counts, labe
   const list = useMemo(() => (days.includes(value) ? days : [...days, value].sort()), [days, value]);
   const rail = useRef<HTMLDivElement>(null);
   const [focusNext, setFocusNext] = useState(false);
-  const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = motionOff;
 
   // Keep the selected chip in view: scroll the chip row itself (never the page), instantly when motion is reduced.
   useEffect(() => {

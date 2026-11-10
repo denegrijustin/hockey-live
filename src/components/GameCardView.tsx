@@ -146,8 +146,10 @@ export function GameCardView(p: GameCardViewProps) {
         </span>
         <span className="sb-actions">
           {p.actions}
-          <Suspense fallback={null}><SaveGameButton game={game} awayName={away.name} homeName={home.name} /></Suspense>
-          {p.gcIcon !== false && <button type="button" className="gc-icon" onClick={() => onOpen(game)} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>}
+          <span className="gcv-acts">
+            <Suspense fallback={null}><SaveGameButton game={game} awayName={away.name} homeName={home.name} /></Suspense>
+            {p.gcIcon !== false && <button type="button" className="gc-icon" onClick={() => onOpen(game)} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>}
+          </span>
         </span>
       </div>
       <div className="sb-body">

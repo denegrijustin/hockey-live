@@ -105,3 +105,5 @@
 
 /* Live dot on the Games-list card date line (same dot as the other cards) */
 .gc-live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--red-3); vertical-align: 0.06em; }
+.gcv-acts { display: inline-flex; align-items: center; gap: 8px; }
+@media (min-width: 1100px) and (max-width: 1399px) { .scoreboard .sb-actions .gcv-acts { grid-column: 4; grid-row: 1; justify-self: end; } }

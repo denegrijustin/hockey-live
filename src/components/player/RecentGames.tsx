@@ -36,7 +36,7 @@ export function RecentGames({ games, goalie, n, setN, pending, failed, unavailab
                   return (
                     <tr key={g.gameId ?? `${g.gameDate}-${i}`}>
                       <th scope="row">{g.gameId ? <button type="button" className="pp-game" aria-label={`Open Game Center: ${label}`} onClick={() => { onLeave(); openGame(g.gameId!); }}>{label}</button> : label}</th>
-                      {goalie ? <><td>{dash(g.decision)}</td><td>{dash(g.shotsAgainst)}</td><td>{dash(g.goalsAgainst)}</td><td>{(g.shotsAgainst ?? 0) > 0 ? fmtRatio(g.savePctg, "sv") : "—"}</td></> : <><td>{dash(g.goals)}</td><td>{dash(g.assists)}</td><td>{dash(pts(g))}</td><td>{dash(g.plusMinus)}</td><td>{dash(g.shots)}</td><td>{dash(g.toi)}</td></>}
+                      {goalie ? <><td>{g.decision === "O" ? "OTL" : dash(g.decision)}</td><td>{dash(g.shotsAgainst)}</td><td>{dash(g.goalsAgainst)}</td><td>{(g.shotsAgainst ?? 0) > 0 ? fmtRatio(g.savePctg, "sv") : "—"}</td></> : <><td>{dash(g.goals)}</td><td>{dash(g.assists)}</td><td>{dash(pts(g))}</td><td>{dash(g.plusMinus)}</td><td>{dash(g.shots)}</td><td>{dash(g.toi)}</td></>}
                     </tr>
                   );
                 })}

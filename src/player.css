@@ -22,7 +22,7 @@
 .pp-recent-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .pp-recent-head h3 { margin: 18px 0 8px; }
 .pp-spark { margin: 6px 0 10px; }
-.pp-spark svg { display: block; width: 100%; max-width: 360px; height: 56px; }
+.pp-spark svg { display: block; height: 56px; width: auto; max-width: 100%; }
 .pp-spark figcaption { color: var(--text-2); font-size: 0.6875rem; margin-top: 2px; }
 .pp-axis { stroke: var(--line-3); stroke-width: 1; }
 .pp-bar { fill: var(--mint-5); }

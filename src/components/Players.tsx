@@ -1,4 +1,5 @@
 import { PlayerIdentity } from "./PlayerIdentity";
+import { TeamLink } from "./TeamProfile";
 import { useVisibleInterval } from "../lib/polling";
 import { useEffect, useMemo, useState } from "react";
 import { loadPlayers } from "../lib/api";
@@ -159,7 +160,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
                 ? keepers.map((p) => (
                     <tr key={`${p.team}-${p.id}`}>
                       <td><PlayerIdentity p={p} season={season} /></td>
-                      <td>{p.team}</td>
+                      <td><TeamLink id={p.team}>{p.team}</TeamLink></td>
                       <td>{p.gp}</td>
                       <td>{p.savePct != null ? p.savePct.toFixed(3) : "—"}</td>
                       <td>
@@ -187,7 +188,7 @@ function PlayerRow({ p, season }: { p: PlayerSeason; season:number }) {
       <td>
         <PlayerIdentity p={p} season={season} />
       </td>
-      <td>{p.team}</td>
+      <td><TeamLink id={p.team}>{p.team}</TeamLink></td>
       <td>{p.position}</td>
       <td>{p.gp}</td>
       <td>{p.goals}</td>

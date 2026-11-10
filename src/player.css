@@ -1,0 +1,42 @@
+/* Player profile dialog (one for the whole app). Colours come from tokens only. */
+.player-dialog { overflow-x: hidden; }
+.player-dialog h2 { margin: 0 0 4px; overflow-wrap: anywhere; }
+.player-dialog h3 { margin: 18px 0 8px; font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); }
+.player-dialog .pp-ext { min-height: 44px; display: inline-flex; align-items: center; }
+.pp-head { align-items: flex-start; }
+.pp-head > img, .pp-initials { width: 96px; height: 96px; flex-shrink: 0; border-radius: 50%; object-fit: cover; background: var(--surface-8); }
+.pp-initials { display: grid; place-items: center; font-size: 1.5rem; font-weight: 800; color: var(--text-3); }
+.pp-who { min-width: 0; flex: 1 1 200px; }
+.pp-who p { margin: 3px 0; color: var(--text-3); font-size: 0.875rem; }
+.pp-who .pp-bio { color: var(--text-2); font-size: 0.8125rem; }
+.pp-team { min-height: 44px; display: inline-flex; align-items: center; color: var(--mint-6); font-weight: 700; }
+.pp-badge { display: inline-block; padding: 3px 10px; border: 1px solid var(--line-3); border-radius: 999px; background: var(--surface-7); color: var(--text-4); font-size: 0.75rem; font-weight: 700; }
+.pp-badge.out { border-color: var(--red-3); background: var(--red-1); color: var(--red-5); }
+.pp-src, .pp-derived { color: var(--text-2); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.pp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0; }
+.pp-grid > div { padding: 8px 10px; border: 1px solid var(--line-1); border-radius: 8px; background: var(--surface-4); }
+.pp-grid dt { color: var(--text-2); font-size: 0.6875rem; }
+.pp-grid dd { margin: 2px 0 0; color: var(--text-6); font-size: 1.125rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pp-d { text-decoration: none; }
+.pp-note { margin: 8px 0; color: var(--text-2); font-size: 0.75rem; line-height: 1.5; }
+.pp-recent-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pp-recent-head h3 { margin: 18px 0 8px; }
+.pp-spark { margin: 6px 0 10px; }
+.pp-spark svg { display: block; height: 56px; width: auto; max-width: 100%; }
+.pp-spark figcaption { color: var(--text-2); font-size: 0.6875rem; margin-top: 2px; }
+.pp-axis { stroke: var(--line-3); stroke-width: 1; }
+.pp-bar { fill: var(--mint-5); }
+.pp-line { stroke: var(--mint-5); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.pp-dot { fill: var(--mint-6); }
+.pp-table th[scope="row"] { text-align: left; font-weight: 600; }
+.pp-table td, .pp-table th { white-space: nowrap; }
+.pp-game { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--mint-6); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; }
+.pp-ctx-list { margin: 0; display: grid; gap: 6px; }
+.pp-ctx-list > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 10px; border: 1px solid var(--line-1); border-radius: 8px; background: var(--surface-4); font-size: 0.8125rem; }
+.pp-ctx-list dt { color: var(--text-3); }
+.pp-ctx-list dd { margin: 0; font-weight: 800; color: var(--text-6); }
+.pp-actions { display: flex; gap: 8px; }
+.pp-actions button, .pp-recent .segmented button { min-height: 44px; }
+.pp-status { margin: 12px 0; }
+@media (prefers-reduced-motion: reduce) { .player-dialog * { animation: none !important; transition: none !important; } }
+@media (max-width: 420px) { .player-dialog { padding: 16px; } .pp-head > img, .pp-initials { width: 72px; height: 72px; } .pp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

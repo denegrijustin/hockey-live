@@ -7,6 +7,7 @@ import { useSeason } from "./hooks/useSeason";
 import { useGameLists } from "./hooks/useGameLists";
 import { useStackedTables } from "./hooks/useStackedTables";
 import { TeamProfileProvider } from "./components/TeamProfile";
+import { PlayerProfileProvider } from "./components/player/PlayerContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -95,7 +96,9 @@ const initialView = viewFromAddress;
 const addressFor = (view: string) => {
   let date: string | null = null;
   try { date = new URLSearchParams(location.search).get("date"); } catch {}
-  return `${location.pathname}${searchFor(view, date)}`;
+  let player: string | undefined;
+  try { player = new URLSearchParams(location.search).get("player") ?? undefined; } catch {}
+  return `${location.pathname}${searchFor(view, date, { player })}`;
 };
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
@@ -248,6 +251,7 @@ export default function App() {
   };
   return (
     <TeamProfileProvider teams={teams} table={analysis?.table ?? null} games={data?.games ?? []} season={season}>
+    <PlayerProfileProvider>
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
@@ -666,6 +670,7 @@ export default function App() {
           onClose={() => setTeamsOpen(false)}
         />
       )}
+    </PlayerProfileProvider>
     </TeamProfileProvider>
   );
 }

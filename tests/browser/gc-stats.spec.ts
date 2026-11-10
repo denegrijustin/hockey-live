@@ -16,11 +16,12 @@ async function openStats(page: Page, id: number, tab: "Team Stats" | "Players", 
   await page.route(/\/api\/player\/\d{7}$/, (r) => r.fulfill({ status: 404, body: "{}" }));
   await page.route(/\/api\/player\/\d{7}\/log\//, (r) => r.fulfill({ status: 404, body: "{}" }));
   await page.goto("/");
-  await page.locator(`.sb-row[data-game="${id}"] .sb-main`).click();
+  await openCard(page, id);
   const t = page.getByRole("tab", { name: tab });
   if (await t.count()) await t.click(); // once the Game Center tabs are integrated
   return page.getByTestId(tab === "Team Stats" ? "gc-team-stats" : "gc-players");
 }
+const openCard = (page: Page, id: number) => page.getByRole("button", { name: id === LIVE_ID ? /CAR 1, VGK 1, live.*Open the full game view/ : /CAR 3, VGK 0, final\. Open the full game view/ }).first().click();
 const noOverflow = async (page: Page) => expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 
 test("team stats: comparison table, gauges and period table from the real sample", async ({ page }) => {
@@ -35,8 +36,8 @@ test("team stats: comparison table, gauges and period table from the real sample
   await expect(pane.getByTestId("gc-gauge-hits").getByRole("img")).toHaveAttribute("aria-label", /Hits: CAR 32, VGK 39/);
   const per = pane.getByTestId("gc-period-table");
   await expect(per).toContainText("Official");
-  await expect(per.locator('tr[data-period="1"]')).toHaveText(/1\s*0\s*0\s*8\s*11/); // away goals, home goals, away shots, home shots
-  await expect(per.locator('tr[data-period="total"]')).toHaveText(/Total\s*3\s*0\s*23\s*22/);
+  await expect(per.locator('tr[data-period="1"]')).toHaveText("110811"); // away goals, home goals, away shots, home shots
+  await expect(per.locator('tr[data-period="total"]')).toHaveText("Total302322");
 });
 
 test("team stats without the NHL team table: derived rows are labelled, missing numbers show a dash", async ({ page }) => {
@@ -68,6 +69,7 @@ test("players: skater and goalie tables, computed points and save %, bench goali
 test("players: sortable headers set aria-sort and reorder without duplicating rows", async ({ page }) => {
   const pane = await openStats(page, FINAL_ID, "Players", realBox);
   const sk = pane.getByTestId("gc-skaters-CAR");
+  await expect(sk.locator("tbody tr").first()).toBeVisible();
   const before = await sk.locator("tbody tr").count();
   const head = sk.getByRole("columnheader", { name: "SOG" });
   await expect(head).toHaveAttribute("aria-sort", "none");
@@ -133,11 +135,12 @@ test("live: refresh changes numbers in place without duplicating rows", async ({
     return b;
   }, (n) => { calls = n; });
   const sk = pane.getByTestId("gc-skaters-CAR");
+  await expect(sk.locator("tbody tr").first()).toBeVisible();
   const rows = await sk.locator("tbody tr").count();
   const card = pane.getByTestId("gc-notable-card");
   const before = await card.count();
   await page.clock.runFor(31_000);
-  await expect(pane.getByTestId("gc-notable-card").first()).toContainText(/Hat trick: 4 goals/);
+  await expect(pane.getByTestId("gc-notable-card").filter({ hasText: "Hat trick: 4 goals" })).toHaveCount(1);
   expect(await sk.locator("tbody tr").count()).toBe(rows);
   expect(await page.locator(`[data-testid="gc-skaters-CAR"] tr[data-player-id]`).count()).toBe(rows);
   expect(before).toBeLessThanOrEqual(2); // live games show at most two cards
@@ -148,7 +151,7 @@ test("box score not published yet: a clear message, no crash", async ({ page }) 
   await mockApis(page, { games: [mk.final(FINAL_ID, "CAR", "VGK", { score: [3, 0] })] });
   await page.route(/\/api\/boxscore\/\d+$/, (r) => r.fulfill({ status: 404, json: { error: "No box score published yet" } }));
   await page.goto("/");
-  await page.locator(`.sb-row[data-game="${FINAL_ID}"] .sb-main`).click();
+  await openCard(page, FINAL_ID);
   const t = page.getByRole("tab", { name: "Players" });
   if (await t.count()) await t.click();
   await expect(page.getByTestId("gc-players")).toContainText("not published yet");

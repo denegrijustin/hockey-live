@@ -139,17 +139,17 @@ test.describe("A. user journeys", () => {
     await expectView(page, "standings");
   });
 
-  test("3. Teams to a Team profile to close; a player profile is not reachable from a team profile, so More to Players to player details to Back", async ({ page }) => {
+  test("3. Teams to a team page, Back to the directory; a player profile is not reachable from a team quick peek, so More to Players to player details to Back", async ({ page }) => {
     await open(page);
     await goTo(page, "teams");
     await expectView(page, "teams");
-    await page.locator(".tm-card [data-team-link]").first().click();
-    const d = page.locator("dialog.team-dialog");
-    await expect(d).toBeVisible();
-    // Team profiles list results and injuries only: no player-details button inside.
-    await expect(d.getByRole("button", { name: /View .* details/ })).toHaveCount(0);
-    await d.getByRole("button", { name: "Close team profile" }).click();
-    await expect(d).toBeHidden();
+    // A directory card opens the full team page (Phase 3); the quick-peek dialog stays for logos and names elsewhere.
+    await page.locator(".tm-card [data-team-open]").first().click();
+    await expect(page.locator("section.team-page")).toBeVisible();
+    await expect(page.locator("dialog.team-dialog[open]")).toHaveCount(0);
+    await page.goBack();
+    await expectView(page, "teams");
+    await expect(page.getByRole("heading", { level: 1, name: "Teams" })).toBeVisible();
     await goTo(page, "players");
     await expectView(page, "players");
     const who = page.getByRole("button", { name: "View Connor McDavid details" }).first();

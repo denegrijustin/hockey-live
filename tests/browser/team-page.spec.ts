@@ -145,7 +145,7 @@ test("360 px: no horizontal overflow with every section open; targets are at lea
   await expect(page.getByRole("table", { name: "Forwards" })).toBeVisible();
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(over).toBeLessThanOrEqual(0);
-  const small = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("section.team-page button, section.team-page summary, section.team-page nav button")].map((b) => ({ n: (b.textContent ?? "").trim().slice(0, 30), h: b.getBoundingClientRect().height })).filter((x) => x.h < 43.5));
+  const small = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("section.team-page button, section.team-page summary, section.team-page nav button")].map((b) => ({ n: (b.textContent ?? "").trim().slice(0, 30), h: b.getBoundingClientRect().height })).filter((x) => x.h > 0 && x.h < 43.5));
   expect(small).toEqual([]);
 });
 

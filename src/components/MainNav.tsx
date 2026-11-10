@@ -27,6 +27,8 @@ const NHLPLUS = V("nhlplus", "NHL+", "nhlplus", "NHL+", "Advanced team, goalie a
 const EDGE = V("edge", "NHL EDGE", "edge", "NHL EDGE", "Skating speed and shot tracking from NHL EDGE");
 const MAP = V("map", "Imperialism map", "map", "Imperialism map", "Which team has beaten the most of the league");
 const PLAYERS = V("players", "Players", "players", "Players", "Skater impact and goalie leaders");
+const FOLLOWING = V("following", "Following", "star", "Following", "Your followed players and saved games");
+const SETTINGS = V("settings", "Settings", "settings", "Settings", "Favorites, display, notifications and privacy");
 const INJURIES = V("injuries", "Injury report", "injury", "Injuries", "Who is out, how long and how much it matters");
 
 /** The four everyday destinations; the fifth, More, holds the groups below. Same on a phone's tab bar and at the top of the desktop sidebar. */
@@ -36,6 +38,7 @@ export const MORE_GROUPS: { title: string; items: ViewDef[] }[] = [
   { title: "Games & schedule", items: [YESTERDAY, TEAMSCHED] },
   { title: "League intelligence", items: [TRENDS, ODDS, PICKS, NHLPLUS, EDGE, MAP] },
   { title: "Players & teams", items: [PLAYERS, INJURIES] },
+  { title: "My Iceboard", items: [FOLLOWING, SETTINGS] },
 ];
 const MORE = MORE_GROUPS.flatMap((g) => g.items);
 /** Every screen with its label and hint, in nav order: the search palette lists these as pages. */

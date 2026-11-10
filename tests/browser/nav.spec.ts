@@ -15,7 +15,7 @@ test.describe("wide screens", () => {
     test.skip(!!isMobile, "desktop layout");
     await open(page, 1440, 900);
     const nav = page.getByRole("navigation", { name: "Main" });
-    await expect(nav.getByRole("button")).toHaveCount(14); // every view: four primary plus ten in the groups
+    await expect(nav.getByRole("button")).toHaveCount(16); // every view: four primary plus twelve in the groups
     await expect(nav.getByRole("button", { name: "Games", exact: true })).toHaveAttribute("aria-current", "page"); // the league-wide list is the Games view
     await expect(nav.getByRole("button", { name: "Home", exact: true })).not.toHaveAttribute("aria-current", "page");
     await expect(page.locator(".tab-bar")).toHaveCount(0);
@@ -54,8 +54,8 @@ test.describe("phones", () => {
     await expect(bar.getByRole("button", { name: "Standings" })).toHaveAttribute("aria-current", "page");
     await bar.getByRole("button", { name: "More" }).click();
     const sheet = page.getByRole("dialog", { name: "More" });
-    await expect(sheet.getByRole("button")).toHaveCount(12); // ten views + My teams + Refresh data
-    for (const name of ["Last night", "Schedule", "Team trends", "Playoff odds", "Picks", "NHL+", "NHL EDGE", "Imperialism map", "Players", "Injury report", "My teams", "Refresh data"]) await expect(sheet.getByRole("button", { name: new RegExp(`^${name.replace(/[+]/g, "\\+")}`) })).toBeVisible();
+    await expect(sheet.getByRole("button")).toHaveCount(14); // twelve views + My teams + Refresh data
+    for (const name of ["Last night", "Schedule", "Team trends", "Playoff odds", "Picks", "NHL+", "NHL EDGE", "Imperialism map", "Players", "Injury report", "Following", "Settings", "My teams", "Refresh data"]) await expect(sheet.getByRole("button", { name: new RegExp(`^${name.replace(/[+]/g, "\\+")}`) })).toBeVisible();
     for (const group of ["Games & schedule", "League intelligence", "Players & teams", "Application"]) await expect(sheet.getByRole("region", { name: group })).toBeVisible();
     await sheet.getByRole("button", { name: /^Team trends/ }).click();
     await expect(sheet).toBeHidden();

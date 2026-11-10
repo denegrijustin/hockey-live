@@ -59,7 +59,7 @@ async function open(page: Page, url = "/") {
 const PRIMARY = ["scoreboard", "games", "standings", "teams"];
 const LABEL: Record<string, string> = {
   scoreboard: "Home", games: "Games", standings: "Standings", teams: "Teams", yesterday: "Last night", teamschedule: "Schedule", trends: "Team trends", odds: "Playoff odds",
-  picks: "Picks", nhlplus: "NHL+", edge: "NHL EDGE", map: "Imperialism map", players: "Players", injuries: "Injury report",
+  picks: "Picks", nhlplus: "NHL+", edge: "NHL EDGE", map: "Imperialism map", players: "Players", injuries: "Injury report", following: "Following", settings: "Settings",
 };
 const ALL = Object.keys(LABEL);
 const MORE_ITEMS = ALL.filter((id) => !PRIMARY.includes(id));
@@ -340,7 +340,7 @@ test.describe("B. structure and accessibility", () => {
       await expect(more).toHaveAttribute("aria-expanded", "true");
       const menu = moreMenu(page);
       await expect(menu).toBeVisible();
-      await expect(menu.locator("h2")).toHaveText(["Games & schedule", "League intelligence", "Players & teams", "Application"]);
+      await expect(menu.locator("h2")).toHaveText(["Games & schedule", "League intelligence", "Players & teams", "My Iceboard", "Application"]);
       for (const id of MORE_ITEMS) await expect(menu.locator(".menu-item b", { hasText: new RegExp(`^${LABEL[id].replace(/[+]/g, "\\+")}$`) })).toHaveCount(1);
       await expect(menu.locator(".menu-item small").first()).not.toBeEmpty();
       await expect(menu.getByRole("button", { name: /My teams/ })).toBeVisible();
@@ -418,7 +418,7 @@ test.describe("B. structure and accessibility", () => {
       const side = nav(page);
       await expect(side).toHaveClass(/side-nav/);
       await expect(side.locator("ul").first().getByRole("button")).toHaveText(["Home", "Games", "Standings", "Teams"]);
-      await expect(side.locator("h2")).toHaveText(["Games & schedule", "League intelligence", "Players & teams"]);
+      await expect(side.locator("h2")).toHaveText(["Games & schedule", "League intelligence", "Players & teams", "My Iceboard"]);
       for (const id of MORE_ITEMS) await expect(side.getByRole("button", { name: LABEL[id], exact: true })).toHaveCount(1);
       await expect(page.locator(".tab-bar")).toHaveCount(0);
     });

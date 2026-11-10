@@ -27,6 +27,7 @@ import { GameFilterFields, PeriodSwitch } from "./components/GameFilters";
 import { TeamsSheet } from "./components/TeamsSheet";
 import { StatusPill } from "./components/StatusPill";
 import { Icon } from "./components/icons";
+import { NotificationBell } from "./components/alerts/NotificationBell";
 import { SearchPalette } from "./components/SearchPalette";
 import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
@@ -56,6 +57,8 @@ const ImperialismMap = lazy(() =>
   import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
 );
 const TeamSchedule = lazy(() => import("./components/TeamSchedule").then((m) => ({ default: m.TeamSchedule })));
+const Settings = lazy(() => import("./components/settings/Settings").then((m) => ({ default: m.Settings })));
+const Following = lazy(() => import("./components/following/Following").then((m) => ({ default: m.Following })));
 const Injuries = lazy(() => import("./components/Injuries").then((m) => ({ default: m.Injuries })));
 const LastNight = lazy(() => import("./components/LastNight").then((m) => ({ default: m.LastNight })));
 const Picks = lazy(() => import("./components/Picks").then((m) => ({ default: m.Picks })));
@@ -292,7 +295,7 @@ export default function App() {
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
-      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && (
+      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && view !== "settings" && view !== "following" && (
         <ScoreTicker
           games={data.games}
           teams={teams}
@@ -312,6 +315,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
+          <NotificationBell onNavigate={setView} />
           <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeam} onView={setView} />
           <StatusPill live={hasLive} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
@@ -344,7 +348,7 @@ export default function App() {
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && view !== "teams" && !(phone && view === "nhlplus") && (
+        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && view !== "settings" && view !== "following" && view !== "teams" && !(phone && view === "nhlplus") && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">
@@ -440,6 +444,12 @@ export default function App() {
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the team schedule" />}>
                 <TeamSchedule games={data.games} teams={teams} defaultTeam={selected[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
               </Suspense></ErrorBoundary>
+            )}
+            {view === "settings" && (
+              <ErrorBoundary resetKey="settings"><Suspense fallback={<Skeleton rows={3} label="Loading settings" />}><Settings /></Suspense></ErrorBoundary>
+            )}
+            {view === "following" && (
+              <ErrorBoundary resetKey="following"><Suspense fallback={<Skeleton rows={3} label="Loading what you follow" />}><Following /></Suspense></ErrorBoundary>
             )}
             {view === "injuries" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the injury report" />}>

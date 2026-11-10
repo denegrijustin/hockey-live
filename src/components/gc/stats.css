@@ -6,7 +6,9 @@
 .gcs-src { display: inline-block; margin-left: 6px; padding: 1px 6px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 0.7rem; color: var(--text-3); white-space: nowrap; }
 .gcs-src[data-src="official"] { border-color: var(--mint-3); color: var(--mint-5); }
 .gcs-src[data-src="derived"] { border-color: var(--amber-3); color: var(--amber-4); }
-.gcs-gauges { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+/* Compact dials, three or more per row on phones; cells top-aligned so the Src chip never unbalances a row; centred (not stretched) on wide panes. */
+.gcs-gauges.gauge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr)); width: 100%; max-width: 760px; margin-inline: auto; align-items: start; justify-items: center; gap: 12px 10px; }
+.gcs-gauges .gauge-item { width: 100%; min-width: 0; max-width: 180px; text-align: center; }
 .gcs-gauges .gauge { margin: 0; }
 .gcs table { width: 100%; border-collapse: collapse; table-layout: fixed; font-variant-numeric: tabular-nums; }
 .gcs caption { text-align: left; padding: 0 0 6px; font-weight: 600; color: var(--text-5); }

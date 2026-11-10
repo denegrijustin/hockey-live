@@ -127,3 +127,29 @@ export function useVisibleInterval(fn: () => void, ms: number, enabled = true) {
     };
   }, [ms, enabled]);
 }
+
+/**
+ * One fresh read of a feed through the SAME shared cache as subscribers of that URL (so an open Game Center and the alert engine never
+ * double-fetch): a copy at most `maxAge` ms old is returned at once; otherwise this subscribes briefly (which polls, or joins the poll
+ * already in flight) and resolves with the first response. Never rejects: `{ data: null, error }` on failure, hidden tab or timeout.
+ */
+export function fetchFeedOnce<T>(url: string, maxAge = SHARE_MS, timeout = 8000): Promise<{ data: T | null; error: string }> {
+  const have = feeds.get(url);
+  if (have && have.data !== null && !have.error && Date.now() - have.at <= maxAge) return Promise.resolve({ data: have.data as T, error: "" });
+  return new Promise((resolve) => {
+    let sync = true;
+    let done = false;
+    let off: (() => void) | null = null;
+    const finish = (data: unknown, error: string) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      setTimeout(() => off?.(), 0);
+      resolve({ data: error ? null : (data as T | null), error });
+    };
+    const timer = setTimeout(() => finish(null, "timeout"), timeout);
+    // A long interval keeps this a one-off for the shared timer; the call made while subscribing is the cached copy, which is not fresh.
+    off = subscribeFeed(url, 3_600_000, (data, error) => { if (!sync) finish(data, error); });
+    sync = false;
+  });
+}

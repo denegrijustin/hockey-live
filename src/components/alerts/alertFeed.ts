@@ -4,6 +4,8 @@ import { useSyncExternalStore } from "react";
 export type AlertItem = {
   id: string; kind: string; gameId: number | null; teams: string[]; title: string; body: string; at: number; read: boolean;
   why: "team" | "saved" | "player"; players: { id: number; name: string }[];
+  /** Goal alerts: the NHL event id, the deep link into Play-by-Play, and the retraction fields (retracted = this goal was later disallowed; retracts = id of the goal a "Goal disallowed" item refers to). */
+  eventId?: number | null; retracted?: boolean; retracts?: string; link?: { gameId: number; eventId: number | null; tab: "overview" | "pbp" | "stats" | "players" | "intel" } | null;
 };
 
 /**

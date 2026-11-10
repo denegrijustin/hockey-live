@@ -22,3 +22,7 @@
 .alert-row span { display: grid; gap: 1px; min-width: 0; }
 .alert-row small, .alert-note, .alert-device p { color: var(--text-3); font-size: .8125rem; margin: 0; }
 .alert-device { display: grid; gap: 8px; justify-items: start; }
+
+.alert-struck { text-decoration: line-through; text-decoration-thickness: 1px; }
+.alert-item[data-retracted] { border-style: dashed; }
+.alert-text .alert-retracted { color: var(--amber-5); font-weight: 650; }

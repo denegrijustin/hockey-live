@@ -3,8 +3,10 @@
  *
  * diffGames(prev, games, now) compares the previous snapshot with the live games and returns events with deterministic ids:
  *   `${id}:start`, `${id}:p${n}${type}:begin`, `${id}:p${n}${type}:end`, `${id}:final`, `${id}:${PPD|CNCL|SUSP}`.
- * Score changes are NOT alerted: the scoreboard feed only gives running totals every poll, which cannot say who scored or
- * whether a goal was later disallowed, so those events would not be reliable.
+ * Score changes are NOT alerted by diffGames: the scoreboard feed only gives running totals every poll, which cannot say who scored or
+ * whether a goal was later disallowed. Goals come from diffGoals (below), driven by the play-by-play feed, with scoreFallback
+ * (a scorer-less "score changed" line) only when that feed could not be fetched.
+ * Overtime beginning is its own kind `ot` (category toggle `ot`); other period boundaries stay kind `period`.
  * The first snapshot is a silent baseline (prev === null), stale-live games never alert, and a score that goes down is treated
  * as a feed glitch for that tick.
  */
@@ -12,8 +14,13 @@ import { isFreshLive, isLive } from "./game-data.mjs";
 
 export const ALERTS_KEY = "iceboard-alerts-v1";
 export const LOCK_KEY = "iceboard-alerts-lock";
-export const SEEN_CAP = 300;
+/** Goal ids add up (about 12 per game, plus a void id now and then), so the seen-set is large; a finished game's goal ids are pruned (see claim). */
+export const SEEN_CAP = 1200;
 export const ITEM_CAP = 60;
+/** Goal items live outside the ITEM_CAP squeeze: a busy night of goals must not push puck-drop and final items out of the list. */
+export const GOAL_ITEM_CAP = 120;
+/** A goal missing from the play feed is only treated as disallowed after this many consecutive fetches without it (the debounce). */
+export const VOID_AFTER = 2;
 export const TTL_MS = 3 * 24 * 3600_000;
 /** More events than this in one tick (a tab coming back after a long time away) collapse into a single "N updates" item. */
 export const COALESCE_OVER = 3;
@@ -97,11 +104,120 @@ export function diffGames(prev, games, now = Date.now()) {
       // Beginning of a later period (never period 1: that is the puck drop).
       if (changed && p.period !== null && !c.intermission && !(c.period === 1 && c.type === "REG")) {
         const what = periodLabel(c.period, c.type);
-        events.push(ev(g, `p${periodTag(c.period, c.type)}:begin`, "period", c.type === "SO" ? "Shootout begins" : `${what[0].toUpperCase()}${what.slice(1)} begins`, `${score(g)}.`, now));
+        events.push(ev(g, `p${periodTag(c.period, c.type)}:begin`, c.type === "OT" ? "ot" : "period", c.type === "SO" ? "Shootout begins" : `${what[0].toUpperCase()}${what.slice(1)} begins`, `${score(g)}.`, now));
       }
     }
   }
   return { events, next };
+}
+
+/* ----- goals (play-by-play driven) ----- */
+
+/** A goal's identity across event-id changes: the NHL sometimes re-publishes the same goal under a new eventId. Same rule as the Phase 5 event store. */
+export const goalFingerprint = (p) => `${p.period}:${p.time}:${p.team}:${p.pid ?? p.player ?? ""}`;
+const GOAL_TABS = ["overview", "pbp", "stats", "players", "intel"];
+const goalsOf = (plays) => (Array.isArray(plays) ? plays : []).filter((p) => p && p.type === "goal" && p.periodType !== "SO" && Number.isFinite(p.id));
+const total = (g) => (num(g.homeScore) !== null && num(g.awayScore) !== null ? g.homeScore + g.awayScore : null);
+const shapeTotal = (s) => (s && num(s.home) !== null && num(s.away) !== null ? s.home + s.away : null);
+const scoreAfter = (g, p) => (p.score && num(p.score.home) !== null && num(p.score.away) !== null ? `${g.away} ${p.score.away}, ${g.home} ${p.score.home}` : score(g));
+const whenOf = (p) => `${periodLabel(p.period, p.periodType)} ${p.time ?? ""}`.trim();
+
+/**
+ * Goal events for one game from its play-by-play feed.
+ *   prev   Map eventId -> { fp, miss, label } from the previous call for this game, or null when this tab has no goal state yet.
+ *   plays  the feed's plays (normalizeGameFeed shape: type "goal", id = eventId, team, player, pid, period, time, score {home,away}).
+ *   game   the scoreboard row (id, home, away, scores).
+ *   opts   { prevTotal } scoreboard total (home+away) before this change: with no `prev`, goals past that count are new and the rest are
+ *          the baseline (without it the first call is a silent baseline); { quiet } new goals to record silently (already announced by
+ *          scoreFallback); { stale } true = say nothing and keep `prev`.
+ * Returns { events, next, pending }: `next` is the state for the following call; `pending` says a goal is missing and a re-fetch is
+ * needed to decide whether it was disallowed. Shootout goals are not alerted (the shootout has its own begin/final events).
+ * New goal: `${gameId}:goal:${eventId}` (kind goal; eventId, team, scorer, scorerId, period, time, link).
+ * Disallowed goal: one absent for VOID_AFTER consecutive fetches emits `${gameId}:goal:${eventId}:void` (kind goal, `retracts` = the original id).
+ * A goal that reappears under a new eventId with the same fingerprint is the same goal and says nothing.
+ * TODO(phase5): switch the debounce to event-store.mjs reconcile(...).voided once Agent 2's store is merged; the rule here is the contract's.
+ * An empty or unreadable play list changes nothing (a feed glitch must not retract goals).
+ */
+export function diffGoals(prev, plays, game, now = Date.now(), opts = {}) {
+  const keep = prev instanceof Map ? prev : null;
+  if (opts.stale || !Array.isArray(plays) || !plays.length) return { events: [], next: keep, pending: !!keep && [...keep.values()].some((v) => v.miss > 0) };
+  const goals = goalsOf(plays).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const byId = new Map(goals.map((p) => [p.id, p]));
+  const next = new Map();
+  const events = [];
+  const stateOf = (p) => ({ fp: goalFingerprint(p), miss: 0, label: `${p.team ?? ""} ${p.player ?? "goal"}, ${whenOf(p)}`.trim() });
+  const announce = (p) => {
+    const lead = p.player ? `Goal${p.team ? ` ${p.team}` : ""}: ${p.player}` : `Goal${p.team ? ` ${p.team}` : ""}`;
+    const assists = Array.isArray(p.assists) && p.assists.length ? ` Assists: ${p.assists.map((a) => a.name).join(", ")}.` : "";
+    return {
+      id: `${game.id}:goal:${p.id}`, kind: "goal", gameId: game.id, teams: teamsOf(game), at: now, eventId: p.id, team: p.team ?? null,
+      scorer: p.player ?? null, scorerId: p.pid ?? null, period: p.period, time: p.time, title: lead,
+      body: `${scoreAfter(game, p)}. ${whenOf(p)}.${assists}`, link: { gameId: game.id, eventId: p.id, tab: "pbp" },
+    };
+  };
+  if (!keep) {
+    const base = opts.prevTotal;
+    goals.forEach((p, i) => {
+      next.set(p.id, stateOf(p));
+      if (Number.isFinite(base) && i >= base) events.push(announce(p));
+    });
+    return { events, next, pending: false };
+  }
+  let quiet = Number.isFinite(opts.quiet) ? opts.quiet : 0;
+  const claimed = new Set();
+  const missing = new Map([...keep].filter(([id]) => !byId.has(id)).map(([id, v]) => [v.fp, id]));
+  for (const p of goals) {
+    if (keep.has(p.id)) { next.set(p.id, stateOf(p)); continue; }
+    const fp = goalFingerprint(p);
+    if (missing.has(fp) && !claimed.has(fp)) { claimed.add(fp); next.set(p.id, stateOf(p)); continue; } // same goal, new eventId
+    next.set(p.id, stateOf(p));
+    if (quiet > 0) quiet -= 1; else events.push(announce(p));
+  }
+  let pending = false;
+  for (const [id, v] of keep) {
+    if (byId.has(id) || claimed.has(v.fp)) continue;
+    const miss = v.miss + 1;
+    if (miss >= VOID_AFTER) {
+      events.push({
+        id: `${game.id}:goal:${id}:void`, kind: "goal", gameId: game.id, teams: teamsOf(game), at: now, eventId: id, retracts: `${game.id}:goal:${id}`,
+        title: "Goal disallowed", body: `${v.label} is no longer in the NHL play-by-play.`, link: { gameId: game.id, eventId: id, tab: "pbp" },
+      });
+    } else { next.set(id, { ...v, miss }); pending = true; }
+  }
+  return { events, next, pending };
+}
+
+/**
+ * A scorer-less line for when a goal is known only from the scoreboard (the play-by-play fetch failed): the total went up.
+ * Id `${gameId}:goalscore:${away}-${home}` so the same score is never announced twice. `delta` = goals gained (the caller tells diffGoals
+ * to record that many new goals quietly later). Returns null when the total did not go up.
+ */
+export function scoreFallback(prevShape, g, now = Date.now()) {
+  const pt = shapeTotal(prevShape);
+  const ct = total(g);
+  if (pt === null || ct === null || ct <= pt) return null;
+  return { ...ev(g, `goalscore:${g.awayScore}-${g.homeScore}`, "goal", "Goal scored", `${score(g)}. The scorer is not available right now.`, now), delta: ct - pt, link: { gameId: g.id, eventId: null, tab: "overview" } };
+}
+
+/**
+ * Which live games need their play-by-play fetched this tick: fresh live, followed through the person's own scope (favorite team or saved
+ * game), and (event-driven) the scoreboard total or period changed since the previous snapshot, or a goal awaits its debounce re-check
+ * (`pendingIds`). Returns [{ game, prevTotal, prevShape }]. Nothing while alerts or the goal category are off.
+ */
+export function goalFetchPlan(prev, games, prefs, pendingIds = new Set(), now = Date.now()) {
+  const a = prefs?.alerts;
+  if (!prev || typeof prev.get !== "function" || !a || a.enabled !== true || a.goal !== true) return [];
+  const fav = new Set(prefs.favorites ?? []);
+  const saved = new Set((prefs.games ?? []).map((x) => Number(x.id)));
+  const out = [];
+  for (const g of games ?? []) {
+    if (!isLive(g) || !isFreshLive(g, now)) continue;
+    if (!((a.scope?.teams && teamsOf(g).some((t) => fav.has(t))) || (a.scope?.saved && saved.has(Number(g.id))))) continue;
+    const p = prev.get(g.id);
+    if (!p || p.stale) continue;
+    if (total(g) !== shapeTotal(p) || num(g.period) !== p.period || pendingIds.has(g.id)) out.push({ game: g, prevTotal: shapeTotal(p), prevShape: p });
+  }
+  return out;
 }
 
 /* ----- relevance ----- */
@@ -147,7 +263,10 @@ export function coalesce(events, now) {
 const emptyState = () => ({ v: 1, seen: {}, items: [] });
 function prune(s, now) {
   const seen = Object.entries(s.seen).filter(([, at]) => Number.isFinite(at) && now - at < TTL_MS).sort((a, b) => b[1] - a[1]).slice(0, SEEN_CAP);
-  const items = s.items.filter((i) => i && typeof i.id === "string" && now - i.at < TTL_MS).sort((a, b) => b.at - a.at).slice(0, ITEM_CAP);
+  const live = s.items.filter((i) => i && typeof i.id === "string" && now - i.at < TTL_MS).sort((a, b) => b.at - a.at);
+  const isGoal = (i) => i.kind === "goal";
+  // Goal items have their own cap, so they never squeeze out the other kinds (and vice versa).
+  const items = [...live.filter((i) => !isGoal(i)).slice(0, ITEM_CAP), ...live.filter(isGoal).slice(0, GOAL_ITEM_CAP)].sort((a, b) => b.at - a.at);
   return { v: 1, seen: Object.fromEntries(seen), items };
 }
 export function parseState(text, now = Date.now()) {
@@ -158,6 +277,9 @@ export function parseState(text, now = Date.now()) {
   const items = (Array.isArray(raw.items) ? raw.items : []).filter((i) => i && typeof i === "object" && typeof i.id === "string" && typeof i.title === "string" && Number.isFinite(i.at)).map((i) => ({
     id: i.id.slice(0, 80), kind: String(i.kind ?? "").slice(0, 12), gameId: Number.isFinite(i.gameId) ? i.gameId : null, teams: Array.isArray(i.teams) ? i.teams.filter((t) => typeof t === "string").slice(0, 2) : [],
     title: i.title.slice(0, 200), body: typeof i.body === "string" ? i.body.slice(0, 300) : "", at: i.at, read: i.read === true, why: ["team", "saved", "player"].includes(i.why) ? i.why : "team",
+    eventId: Number.isInteger(i.eventId) ? i.eventId : null, retracted: i.retracted === true,
+    retracts: typeof i.retracts === "string" ? i.retracts.slice(0, 80) : "",
+    link: i.link && typeof i.link === "object" && Number.isFinite(i.link.gameId) ? { gameId: i.link.gameId, eventId: Number.isInteger(i.link.eventId) ? i.link.eventId : null, tab: GOAL_TABS.includes(i.link.tab) ? i.link.tab : "overview" } : null,
     players: Array.isArray(i.players) ? i.players.filter((p) => p && /^\d{7}$/.test(String(p.id))).slice(0, 3).map((p) => ({ id: Number(p.id), name: String(p.name ?? "").slice(0, 60) })) : [],
   }));
   return prune({ v: 1, seen, items }, now);
@@ -212,11 +334,33 @@ export function createAlertStore(storage, { tab = Math.random().toString(36).sli
         const fresh = events.filter((e) => !(e.id in s.seen));
         if (!fresh.length) return [];
         for (const e of fresh) s.seen[e.id] = now;
-        const summary = coalesce(fresh, now);
-        const added = summary ? [summary] : fresh.map((e) => ({ ...e, at: now, read: false }));
-        s.items = [...added.map((i) => ({ ...i, read: false })), ...s.items];
+        // A retraction only shows when the goal it retracts was alerted here; it strikes that item through.
+        const shown = [];
+        for (const e of fresh) {
+          if (!e.retracts) { shown.push(e); continue; }
+          if (!(e.retracts in s.seen) || !s.items.some((i) => i.id === e.retracts)) continue;
+          s.items = s.items.map((i) => (i.id === e.retracts ? { ...i, retracted: true } : i));
+          shown.push(e);
+        }
+        // Goals are exempt from the tick-wide summary; only one game with a pile of new goals collapses (a tab back after a long time).
+        const goals = shown.filter((e) => e.kind === "goal" && !e.retracts);
+        const rest = shown.filter((e) => !goals.includes(e));
+        const added = [];
+        const byGame = new Map();
+        for (const e of goals) byGame.set(e.gameId, [...(byGame.get(e.gameId) ?? []), e]);
+        for (const list of byGame.values()) {
+          if (list.length <= COALESCE_OVER) { added.push(...list); continue; }
+          const last = list[list.length - 1];
+          added.push({ ...last, id: `${last.gameId}:goals:${list[0].eventId}-${last.eventId}:${list.length}`, eventId: last.eventId, title: `${list.length} goals: ${last.teams?.join(" at ") ?? ""}`, body: list.map((e) => e.title).join("; ").slice(0, 280), scorer: null, scorerId: null });
+        }
+        const summary = coalesce(rest, now);
+        added.push(...(summary ? [summary] : rest));
+        const out = added.map((e) => ({ ...e, at: now, read: false }));
+        // A final closes the game's goal ids: no more goals can arrive, so they stop taking seen-set room.
+        for (const e of fresh) if (e.kind === "final" && e.gameId != null) for (const k of Object.keys(s.seen)) if (k.startsWith(`${e.gameId}:goal`)) delete s.seen[k];
+        s.items = [...out, ...s.items];
         write(s);
-        return added;
+        return out;
       }) ?? [];
     },
     markAllRead() { const s = read(); if (s.items.some((i) => !i.read)) { s.items = s.items.map((i) => ({ ...i, read: true })); write(s); } },

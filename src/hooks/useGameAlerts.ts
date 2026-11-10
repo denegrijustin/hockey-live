@@ -19,7 +19,7 @@ export function useGameAlerts(games: Game[] | undefined) {
       try {
         const rt = await loadRuntime();
         if (!getPrefs().alerts.enabled) return;
-        if (games) prev.current = rt.tick(prev.current, games, getPrefs());
+        if (games) prev.current = await rt.tick(prev.current, games, getPrefs());
         else rt.refresh();
       } catch {}
     });

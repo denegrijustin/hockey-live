@@ -26,13 +26,15 @@ export function NotificationCenter({ onClose, onNavigate }: { onClose: () => voi
       ) : (
         <ul className="alert-list">
           {sorted.map((i) => (
-            <li key={i.id} className="alert-item" data-new={fresh.current!.has(i.id) || undefined}>
+            <li key={i.id} className="alert-item" data-new={fresh.current!.has(i.id) || undefined} data-retracted={i.retracted || undefined} data-kind={i.kind}>
               <div className="alert-text">
-                <strong>{fresh.current!.has(i.id) && <span className="alert-new">New </span>}{i.title}</strong>
-                {i.body && <span>{i.body}</span>}
+                <strong className={i.retracted ? "alert-struck" : undefined}>{fresh.current!.has(i.id) && <span className="alert-new">New </span>}{i.title}</strong>
+                {i.retracted && <span className="alert-retracted">Goal disallowed. This goal is no longer in the NHL play-by-play.</span>}
+                {i.body && <span className={i.retracted ? "alert-struck" : undefined}>{i.body}</span>}
                 <time>{when(i.at)}</time>
               </div>
               <div className="alert-actions">
+                {i.gameId !== null && i.link?.eventId != null && !i.retracted && !i.retracts && <button type="button" onClick={() => { onClose(); openGame(i.link!.gameId, { tab: "pbp", event: i.link!.eventId! }); }}>Open play</button>}
                 {i.gameId !== null && <button type="button" onClick={() => { onClose(); openGame(i.gameId!); }}>Open game</button>}
                 {i.teams.map((t) => <TeamLink key={t} id={t} className="alert-team">{t}</TeamLink>)}
                 {i.players.map((p) => <button key={p.id} type="button" onClick={() => { onClose(); openPlayer({ id: p.id, name: p.name }); }}>{p.name || "Player"}</button>)}

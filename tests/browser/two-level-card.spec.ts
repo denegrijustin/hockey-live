@@ -19,7 +19,7 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   await expect(card.locator(".lineup-brief")).toBeVisible();
   await expect(card.locator(".matchup-comparison")).toHaveCount(0);
 
-  await page.locator(".site-header").click();
+  await page.locator(".site-header").click({ position: { x: 4, y: 4 } });
   await expect(card.locator(".card-expanded")).toHaveCount(0);
 
   await card.getByRole("button", { name: /Open Game Center for/ }).click();

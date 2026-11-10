@@ -22,6 +22,12 @@
   .search-trigger { width: 44px; height: 44px; }
   .search-box input { height: 44px; }
   .search-close { min-height: 44px; min-width: 44px; }
-  .header-right { gap: 6px; min-width: 0; }
-  .header-right .season-label select { max-width: 92px; }
+  .header-right { gap: 6px; min-width: 0; flex: 0 1 auto; }
+  .header-right .season-label { min-width: 0; flex: 0 1 auto; }
+  .header-right .season-label select { min-width: 0; max-width: 92px; width: 100%; text-overflow: ellipsis; }
+  .site-header .brand { flex: 0 0 auto; }
+}
+/* Very narrow phones: the wordmark gives way to the logo mark (the link keeps its "Iceboard home" name), so the season, status, bell and search all fit. */
+@media (max-width: 380px) {
+  .site-header .brand > span:last-child { display: none; }
 }

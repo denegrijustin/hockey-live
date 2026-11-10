@@ -60,3 +60,14 @@ test("address helpers keep other params and only carry the date where it means s
   assert.equal(searchFor("standings", "2026-10-10"), "?view=standings");
   assert.equal(searchFor("games", "garbage"), "?view=games");
 });
+
+test("searchFor keeps a team only on the Teams view and a player anywhere, and rejects malformed ids", async () => {
+  const { searchFor } = await import("../src/lib/date-nav.mjs");
+  assert.equal(searchFor("teams", null, { team: "EDM" }), "?view=teams&team=EDM");
+  assert.equal(searchFor("standings", null, { team: "EDM" }), "?view=standings");
+  assert.equal(searchFor("teams", null, { team: "edm" }), "?view=teams");
+  assert.equal(searchFor("players", null, { player: 8478402 }), "?view=players&player=8478402");
+  assert.equal(searchFor("scoreboard", "2026-11-10", { player: "8478402" }), "?date=2026-11-10&player=8478402");
+  assert.equal(searchFor("players", null, { player: "12" }), "?view=players");
+  assert.equal(searchFor("teams", null, {}), "?view=teams");
+});

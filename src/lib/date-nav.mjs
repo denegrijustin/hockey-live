@@ -50,11 +50,14 @@ export function withDateParam(search, date, key = "date") {
 }
 /** Which views keep the date in their address. */
 export const DATE_VIEWS = ["scoreboard", "games"];
-/** The search string for a view: `?view=` for everything but Home, plus the date only where the date means something. */
-export function searchFor(view, date) {
+/** The search string for a view (extra: {team, player}): `?view=` for everything but Home, plus the date only where the date means something. */
+export function searchFor(view, date, extra = {}) {
   const p = new URLSearchParams();
   if (view !== "scoreboard") p.set("view", view);
   if (date && DATE_VIEWS.includes(view) && isDay(date)) p.set("date", date);
+  // A team page (?view=teams&team=EDM) and an open player profile (&player=8478402) have their own addresses; both ids are validated here so a bad link cannot reach the app.
+  if (extra.team && view === "teams" && /^[A-Z]{3}$/.test(extra.team)) p.set("team", extra.team);
+  if (extra.player && /^\d{7}$/.test(String(extra.player))) p.set("player", String(extra.player));
   const s = p.toString();
   return s ? `?${s}` : "";
 }

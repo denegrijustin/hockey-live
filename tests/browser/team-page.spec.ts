@@ -123,16 +123,24 @@ test("the roster is requested once, only when its section opens; a player row as
 test("schedule rows and the next game ask to open that game (iceboard:open-game)", async ({ page }) => {
   await setup(page);
   await page.goto("/?view=teams&team=EDM");
+  // The app listens for this event and switches to Home to show the Game Center; Back returns to the team page.
   await page.evaluate(() => { (window as any).__opened = []; window.addEventListener("iceboard:open-game", (e) => (window as any).__opened.push((e as CustomEvent).detail.id)); });
   await page.locator(".tpg-next .tpg-game").click();
+  await expect(page.getByRole("heading", { level: 1, name: "Tomorrow" })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("heading", { level: 1, name: "Edmonton Oilers" })).toBeVisible();
   const sched = page.locator("details.tpg-details", { has: page.getByRole("heading", { name: "Schedule & results" }) });
   await sched.locator("summary").click();
   await expect(sched.getByRole("heading", { name: "Recent results" })).toBeVisible();
   await sched.locator(".tpg-games button").last().click();
   const opened = await page.evaluate(() => (window as any).__opened as number[]);
+  await page.goBack();
+  await expect(page.getByRole("heading", { level: 1, name: "Edmonton Oilers" })).toBeVisible();
   expect(opened).toHaveLength(2);
   expect(opened.every((id) => Number.isInteger(id) && id > 8000)).toBe(true);
-  await sched.getByRole("button", { name: "Open the full schedule" }).click();
+  const again = page.locator("details.tpg-details", { has: page.getByRole("heading", { name: "Schedule & results" }) });
+  await again.locator("summary").click();
+  await again.getByRole("button", { name: "Open the full schedule" }).click();
   await expect(page).toHaveURL(/view=teamschedule/);
 });
 

@@ -52,3 +52,4 @@
 .tpg-links ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .tpg-links button { min-height: 44px; padding: 0 16px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface-2); color: var(--text-5); font: inherit; font-weight: 600; cursor: pointer; }
 .tpg-links button:hover { background: var(--surface-6); }
+.team-page .tpg-links button { min-height: 44px; box-sizing: border-box; }

@@ -22,6 +22,6 @@
 .tr-split-val{text-align:right;overflow-wrap:anywhere}.tr-split-val b{color:var(--text-6)}
 .tr-muted{margin:0;color:var(--text-1);font-size:0.6875rem;line-height:1.5}
 .tr-note{margin:0;color:var(--text-1);font-size:0.6875rem;line-height:1.55}
-.tr-link{padding:0;border:0;background:none;color:var(--mint-5);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
+.tr-link{min-height:44px;padding:0;border:0;background:none;color:var(--mint-5);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
 .tr-lens ul{display:grid;gap:8px;margin:0;padding:0;list-style:none}
 .tr-lens li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line-1);border-left:3px solid var(--mint-3);border-radius:8px;background:var(--surface-3);color:var(--text-4);font-size:0.75rem;line-height:1.5;overflow-wrap:anywhere}

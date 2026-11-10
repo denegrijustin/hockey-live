@@ -40,3 +40,4 @@
 .pp-status { margin: 12px 0; }
 @media (prefers-reduced-motion: reduce) { .player-dialog * { animation: none !important; transition: none !important; } }
 @media (max-width: 420px) { .player-dialog { padding: 16px; } .pp-head > img, .pp-initials { width: 72px; height: 72px; } .pp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.player-dialog .pp-team { min-height: 44px; box-sizing: border-box; }

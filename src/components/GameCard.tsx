@@ -11,6 +11,8 @@ import { IntermissionRink } from "./IntermissionRink";
 import { CardExpanded, CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 import { TeamLogo } from "./TeamLogo";
+import { gameStatus } from "../lib/game-status.mjs";
+import { LOGO_SIZE } from "./GameCardView";
 import { GameInjuries } from "./GameInjuries";
 import { usePauseOffscreen } from "../motion";
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
@@ -46,6 +48,7 @@ export const GameCard = memo(function GameCard({
   const broadcasts = [...new Set(game.broadcasts)];
   const scoreClass = analysis.score >= 75 ? "high" : analysis.score >= 50 ? "medium" : "low";
   const day = new Date(game.start);
+  const status = gameStatus(game, { withZone: true });
   const importanceSummary = analysis.reasons?.[0] ?? (analysis.score >= 50 ? "A matchup with meaningful standings weight." : "Lower stakes for the teams and league table.");
 
   useEffect(() => {
@@ -71,11 +74,7 @@ export const GameCard = memo(function GameCard({
     >
       <div className="game-card-top">
         <span className="game-date">
-          {day.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {past
-            ? `FINAL${game.end !== "REG" ? ` / ${game.end}` : ""}`
-            : live
-              ? `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`
-              : day.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" })}
+          {day.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {status.live && !status.stale && <i className="gc-live-dot" aria-hidden="true" />}{status.label}
         </span>
         <div className="card-top-actions">
           <button type="button" className="gc-icon" onClick={openGameCenter} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>
@@ -92,7 +91,7 @@ export const GameCard = memo(function GameCard({
           <div className="matchup-teams">
             {[away, home].map((team, index) => (
               <div className="matchup-team" key={team.id}>
-                <TeamLogo id={team.id} size={40} />
+                <TeamLogo id={team.id} size={LOGO_SIZE.row} />
                 <div>
                   <span>{team.city}</span><h3>{team.short}</h3>
                   <small className="team-record">

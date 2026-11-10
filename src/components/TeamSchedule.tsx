@@ -6,6 +6,7 @@ import { defaultMonth, monthGrid, monthKey, monthLabel, nextIndex, recordOf, sea
 import { useEtToday } from "../hooks/useEtToday";
 import { Icon } from "./icons";
 import { TeamLogo } from "./TeamLogo";
+import { LOGO_SIZE } from "./GameCardView";
 import { PageHeader } from "./PageHeader";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
@@ -65,7 +66,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
         <button type="button" className={`ts-card ${i.status}${i.result ? ` r-${i.result}` : ""}${first ? " is-next" : ""}`} onClick={() => open(i.game)}
           aria-label={`${wd} ${md}: ${i.home ? "home against" : "at"} ${opp.name}, ${i.status === "upcoming" ? `${time(i.start)}` : i.status === "live" ? `live, ${i.us} to ${i.them}` : `${i.result === "W" ? "won" : i.result === "OTL" ? "lost in overtime" : "lost"} ${i.us} to ${i.them}${i.ot ? ` in ${i.ot === "SO" ? "a shootout" : "overtime"}` : ""}`}. Open Game Center`}>
           <span className="ts-date"><b>{wd}</b><span>{md}</span></span>
-          <span className="ts-opp"><TeamLogo id={opp.id} size={36} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}</b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
+          <span className="ts-opp"><TeamLogo id={opp.id} size={LOGO_SIZE.row} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}</b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
           <span className="ts-res">
             {i.status === "final" ? <><b className={`ts-badge ${i.result ?? ""}`}>{i.result ?? "–"}</b><span>{resultText(i)}</span></> : i.status === "live" ? <><b className="ts-badge live">LIVE</b><span>{i.us}–{i.them}</span></> : <span className="ts-time">{resultText(i)}</span>}
           </span>
@@ -126,7 +127,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
                 {d.games.map((i: Item) => (
                   <button key={i.id} type="button" className={`ts-gchip ${i.status}${i.result ? ` r-${i.result}` : ""}`} onClick={() => open(i.game)}
                     aria-label={`${i.home ? "Home against" : "At"} ${teamOf(i.opp).name}, ${i.status === "upcoming" ? time(i.start) : i.status === "live" ? "live" : `${i.result ?? ""} ${i.us} to ${i.them}`}. Open Game Center`}>
-                    <TeamLogo id={i.opp} size={20} />
+                    <TeamLogo id={i.opp} size={LOGO_SIZE.compact} />
                     <span className="ts-gtext"><span className="ts-oppline"><em data-venue={i.home ? "home" : "away"}>{i.home ? "vs" : "@"}</em> <b className="ts-abbr">{i.opp}</b></span> <span className="ts-gres">{i.status === "upcoming" ? time(i.start).replace(" ", "").toLowerCase() : `${i.result ?? ""} ${i.us}–${i.them}`}</span></span>
                   </button>
                 ))}

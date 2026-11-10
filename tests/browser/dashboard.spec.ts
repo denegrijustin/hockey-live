@@ -47,7 +47,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   await expect(page.locator(".chart-wrap image")).toHaveCount(3);
   await goToAllGames(page);
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
-  await expect(page.locator(".game-card").first()).toContainText("FINAL");
+  await expect(page.locator(".game-card").first()).toContainText(/final/i);
   await goTo(page, "Team trends");
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
   await expect(page.getByLabel("Metric")).toHaveValue("difference");

@@ -231,7 +231,7 @@ export function GameOverlay({
                   {(past || live) && <RecapSection game={game} home={home} away={away} live={live} />}
                 </>
               ),
-              pbp: <Suspense fallback={null}><PlayByPlay /></Suspense>,
+              pbp: <Suspense fallback={null}><PlayByPlay focusEvent={focusEvent ?? undefined} /></Suspense>,
               stats: (
                 <>
                   <details className="game-center-section" open>
@@ -288,7 +288,7 @@ export function GameOverlay({
                     <ul className="model-reasons">{analysis.reasons.map((reason: string) => <li key={reason}>{reason}</li>)}</ul>
                     <p className="detail-note">These are model inputs and rank comparisons, not guarantees or isolated causal claims.</p>
                   </details>
-                  <Suspense fallback={null}><IntelPane /></Suspense>
+                  <Suspense fallback={null}><IntelPane before={before} teams={teams} allGames={allGames} exclude={insights.map((i: any) => i.id)} /></Suspense>
                 </>
               ),
             }}

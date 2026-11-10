@@ -16,7 +16,8 @@ for (const f of list("assets/", ".js")) {
   totalJs += size;
   limits.push([`assets/${f}`, size, 135 * KB]);
 }
-limits.push(["all JavaScript", totalJs, 300 * KB]);
+// Total JS counts every lazy chunk (a visitor downloads only the views they open). Raised 300 -> 350 KB for Phase 5 (Game Center play-by-play, stats, momentum, intelligence, live-data engine); the per-file 135 KB limit is unchanged.
+limits.push(["all JavaScript", totalJs, 350 * KB]);
 for (const f of list("assets/", ".css")) limits.push([`assets/${f}`, gz(new URL(`assets/${f}`, dist)), 32 * KB]);
 // Fetched data: the season files grow all season, so they get the most room.
 const dataFiles = (dir) => list(dir, ".json");

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getPrefs, usePrefs } from "../lib/prefs";
+import { getPrefs, usePrefs } from "../lib/prefs.ts";
 import { loadRuntime } from "../components/alerts/alertFeed";
 import type { Game } from "../types";
 

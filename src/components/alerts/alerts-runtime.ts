@@ -1,5 +1,5 @@
 import { ALERTS_KEY, createAlertStore, diffGames, memoryStorage, relevantEvents } from "../../lib/alerts.mjs";
-import type { Prefs } from "../../lib/prefs";
+import type { Prefs } from "../../lib/prefs.ts";
 import type { Game } from "../../types";
 import { feed, type AlertItem } from "./alertFeed";
 

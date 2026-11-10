@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { setPrefs, usePrefs } from "../../lib/prefs";
+import { setPrefs, usePrefs } from "../../lib/prefs.ts";
 import "./alerts.css";
 
 type Alerts = ReturnType<typeof usePrefs>["alerts"];

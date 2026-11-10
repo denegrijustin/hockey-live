@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { usePrefs } from "../../lib/prefs";
+import { usePrefs } from "../../lib/prefs.ts";
 import { Icon } from "../icons";
 import { useAddedAlerts, useAlertItems, type AlertItem } from "./alertFeed";
 import "./alerts.css";

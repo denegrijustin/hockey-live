@@ -423,11 +423,30 @@ async function handle(request, env, ctx) {
         return json(data);
       }
       if ((match = url.pathname.match(/^\/api\/player\/(\d{7})$/))) {
-        const key = `profile-${match[1]}`;
+        const key = `profile-v2-${match[1]}`;
         const cached = await env.TEAM_STATS.get(key, {type: "json"});
         if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000) return json(cached);
         const raw = await get(`/player/${match[1]}/landing`);
         const data = { id:raw.playerId, name:`${value(raw.firstName)} ${value(raw.lastName)}`, number:raw.sweaterNumber, headshot:raw.headshot, position:raw.position, team:raw.currentTeamAbbrev, birthDate:raw.birthDate, height:raw.heightInInches, weight:raw.weightInPounds, shoots:raw.shootsCatches, seasons:(raw.seasonTotals ?? []).filter(s=>s.leagueAbbrev === 'NHL'), updatedAt:new Date().toISOString() };
+        // Additive (Phase 3): fields the NHL landing page already returns, passed through only when present.
+        if (raw.last5Games) data.last5Games = raw.last5Games;
+        if (raw.featuredStats) data.featuredStats = raw.featuredStats;
+        if (raw.careerTotals) data.careerTotals = raw.careerTotals;
+        if (raw.isActive !== undefined) data.isActive = raw.isActive;
+        if (raw.birthCity) data.birthCity = raw.birthCity;
+        if (raw.birthCountry) data.birthCountry = raw.birthCountry;
+        ctx.waitUntil(env.TEAM_STATS.put(key,JSON.stringify(data),{expirationTtl:3600}));
+        return json(data);
+      }
+      // A player's regular-season game log (NHL api-web /player/{id}/game-log/{season}/2), reduced to the fields the profile uses and tolerant of a missing list.
+      if ((match = url.pathname.match(/^\/api\/player\/(\d{7})\/log\/(20\d{6})$/))) {
+        const key = `playerlog-${match[1]}-${match[2]}`;
+        const cached = await env.TEAM_STATS.get(key, {type: "json"});
+        if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000) return json(cached);
+        const raw = await get(`/player/${match[1]}/game-log/${match[2]}/2`);
+        const KEEP = ["gameId","gameDate","teamAbbrev","opponentAbbrev","homeRoadFlag","goals","assists","points","plusMinus","shots","toi","pim","powerPlayPoints","decision","gamesStarted","shotsAgainst","goalsAgainst","savePctg","shutouts"];
+        const games = (Array.isArray(raw?.gameLog) ? raw.gameLog : []).map((g) => Object.fromEntries(KEEP.filter((k) => g?.[k] !== undefined).map((k) => [k, g[k]])));
+        const data = { id:Number(match[1]), season:Number(match[2]), games, updatedAt:new Date().toISOString() };
         ctx.waitUntil(env.TEAM_STATS.put(key,JSON.stringify(data),{expirationTtl:3600}));
         return json(data);
       }

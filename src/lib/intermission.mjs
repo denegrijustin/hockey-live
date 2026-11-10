@@ -115,3 +115,34 @@ export function zamboniColors(teamColor) {
   const body = luma(base) < 0.22 ? shade(base, 0.35) : base;
   return { body, cab: shade(body, -0.22), edge: shade(body, -0.55), sign: shade(base, -0.78), signText: luma(body) > 0.6 ? "#ffffff" : "#ffffff", accent: shade(body, 0.55) };
 }
+
+/**
+ * When this intermission was first seen, kept in storage so a reload doesn't restart the fallback clock. Safe with blocked or full storage
+ * (counts from now), ignores a stored value that is junk, in the future or older than 3 h, and drops every stale `iceboard-int-*` key.
+ */
+export const SEEN_PREFIX = "iceboard-int-";
+export const SEEN_TTL_MS = 3 * 3_600_000;
+export function firstSeenAt(getStorage, key, now) {
+  let store;
+  try { store = getStorage(); } catch { return now; }
+  if (!store) return now;
+  let saved = 0;
+  try {
+    const stamp = Number(store.getItem(key));
+    if (Number.isFinite(stamp) && stamp > 0 && stamp <= now && now - stamp < SEEN_TTL_MS) saved = stamp;
+  } catch { /* unreadable */ }
+  try {
+    const stale = [];
+    for (let i = 0; i < store.length; i++) {
+      const k = store.key(i);
+      if (k && k.startsWith(SEEN_PREFIX) && k !== key) {
+        const stamp = Number(store.getItem(k));
+        if (!(Number.isFinite(stamp) && stamp > 0 && stamp <= now && now - stamp < SEEN_TTL_MS)) stale.push(k);
+      }
+    }
+    stale.forEach((k) => store.removeItem(k));
+  } catch { /* pruning is best effort */ }
+  if (saved) return saved;
+  try { store.setItem(key, String(now)); } catch { /* full or blocked: count from this visit */ }
+  return now;
+}

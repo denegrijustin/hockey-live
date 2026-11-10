@@ -41,6 +41,17 @@ export async function serveGame(page: Page, steps: Raw | Raw[], opts: { status?:
   return handle;
 }
 
+/** Mocks the schedule: the season snapshot holds the rows as first served (live-only games are ignored by the app), /api/live serves `rows()` each time it is polled. */
+export async function mockSchedule(page: Page, rows: (snapshot?: boolean) => any[], opts: { liveStatus?: number } = {}) {
+  const day = etDay(new Date());
+  const snapshot = { season: SEASON, updatedAt: new Date().toISOString(), source: "fixture", games: rows(true) };
+  await page.route("**/api/live", (route) => (opts.liveStatus ? route.fulfill({ status: opts.liveStatus, body: "{}" }) : route.fulfill({ json: liveBody(rows(), day) })));
+  await page.route(`**/api/season/${SEASON}`, (route) => route.fulfill({ json: snapshot }));
+  await page.route(`**/data/seasons/${SEASON}.json`, (route) => route.fulfill({ json: snapshot }));
+  await page.route("**/data/moneypuck/**/shots/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+  await page.route("**/api/moneypuck/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+}
+
 /**
  * Whole setup for a spec: the real recorded game becomes "today's" row (state/period/clock from the raw envelope), the season snapshot holds that row,
  * /api/live serves it (or fails with `liveStatus`), the feed is served from `steps`, and the Game Center is opened by clicking the row.
@@ -52,16 +63,10 @@ export async function openFromHome(page: Page, steps: Raw | Raw[], opts: { rowSt
   const day = etDay(new Date());
   const finished = ["OFF", "FINAL"].includes(first.gameState);
   const row = B.gameOf(first, { date: day, start: new Date(Date.now() - (finished ? 4 * 3600_000 : 3600_000)).toISOString(), ...opts.rowState });
-  const season = SEASON;
-  const snapshot = { season, updatedAt: new Date().toISOString(), source: "fixture", games: [row] };
-  await page.route("**/api/live", (route) => (opts.liveStatus ? route.fulfill({ status: opts.liveStatus, body: "{}" }) : route.fulfill({ json: liveBody([row], day) })));
-  await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
-  await page.route(`**/data/seasons/${season}.json`, (route) => route.fulfill({ json: snapshot }));
-  await page.route("**/data/moneypuck/**/shots/**", (route) => route.fulfill({ status: 404, body: "{}" }));
-  await page.route("**/api/moneypuck/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+  await mockSchedule(page, () => [row], { liveStatus: opts.liveStatus });
   const feed = await serveGame(page, seq);
   await page.goto("/");
-  await page.locator(`.sb-row[data-game="${row.id}"] .sb-main`).click();
+  await page.locator(`[data-game="${row.id}"] .sb-main`).click();
   const dialog = page.locator(GAME_DIALOG);
   await dialog.waitFor({ state: "visible" });
   return { dialog, feed, row };

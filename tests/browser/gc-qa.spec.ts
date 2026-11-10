@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { countRequests, watchErrors } from "./qa-harness";
-import { REAL, openFromHome, pollSequence, relabelShotAsGoal, removeEvent, replicate, scoringGoals, slice, withState, GAME_DIALOG } from "./gc-qa-fixtures";
+import { REAL, gameOf, mockSchedule, openFromHome, pollSequence, relabelShotAsGoal, removeEvent, replicate, scoringGoals, slice, withState, GAME_DIALOG } from "./gc-qa-fixtures";
 
 // Game Center guard rails that hold on the CURRENT app and keep guarding after the Phase 5 changes. Data: real recorded plays
 // (tests/fixtures/gc, docs/phase5-qa-fixtures.md); states/derived variants are labelled in raw._provenance.
@@ -67,7 +67,7 @@ test.describe("focus, scroll and live updates", () => {
     await expect(dialog.getByRole("button", { name: "Close full game view" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.locator(GAME_DIALOG)).toHaveCount(0);
-    await expect(page.locator(`.sb-row[data-game="${row.id}"] .sb-main`)).toBeFocused();
+    await expect(page.locator(`[data-game="${row.id}"] .sb-main`)).toBeFocused();
   });
 
   test("a poll update does not steal focus from where the user is", async ({ page }) => {
@@ -161,11 +161,9 @@ test.describe("motion, console and CSP", () => {
     const seq = [slice(full, g.sortOrder - 1), slice(full, g.sortOrder)].map((r) => withState(r, "live"));
     let n = 0;
     const day = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-    const { gameOf } = await import("./gc-qa-fixtures");
-    await page.route("**/api/live", (route) => {
-      const r = gameOf(seq[Math.min(n++, 1)], { date: day, start: new Date(Date.now() - 3600_000).toISOString() });
-      return route.fulfill({ json: { updatedAt: new Date().toISOString(), date: day, games: [r] } });
-    });
+    const start = new Date(Date.now() - 3600_000).toISOString();
+    const rows = (snapshot?: boolean) => [gameOf(seq[snapshot ? 0 : Math.min(n++, 1)], { date: day, start })];
+    await mockSchedule(page, rows);
     await page.route("**/api/game/*", (route) => route.fulfill({ status: 503, body: "{}" }));
     await page.goto("/?view=games");
     const { selectAllTeams, filterGames } = await import("./controls");

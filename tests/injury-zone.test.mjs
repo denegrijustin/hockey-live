@@ -39,3 +39,18 @@ import { readFileSync } from "node:fs";
 test("the page's security policy lets the player pictures load", () => {
   assert.match(readFileSync(new URL("../public/_headers", import.meta.url), "utf8"), /img-src[^;]*https:\/\/a\.espncdn\.com/);
 });
+
+test("a side comes from the report or sits right next to a body part, never from 'right wing' or 'left the game'", () => {
+  assert.equal(z("Knee", "Smith (left knee) is day-to-day").side, "left");
+  assert.equal(z("Shoulder", "Smith (shoulder (right)) out").side, "right");
+  assert.equal(z("Knee", "Right wing Smith left the game with a knee injury").side, null);
+  assert.equal(z("Lower Body", "Right wing Jones (knee) left the game").side, null);
+  assert.equal(z("Hand", "Left winger Doe (hand) is out").side, null);
+  assert.equal(z("Knee", "Right wing Smith (knee)", "Left").side, "left"); // the report's own side field wins
+});
+
+test("vague lower or upper body is a region in words and never a spot (the figure shows the shrug)", () => {
+  for (const k of ["Lower Body", "Upper Body"]) assert.equal(z(k).general, true);
+  assert.equal(z("Lower Body").label, "Lower body (not specified)");
+  assert.equal(z("Upper Body").label, "Upper body (not specified)");
+});

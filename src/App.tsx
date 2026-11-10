@@ -33,7 +33,7 @@ import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { Skeleton } from "./components/Skeleton";
-import { setPrefs, usePrefs } from "./lib/prefs";
+import { setPrefs, usePrefs } from "./lib/prefs.ts";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs

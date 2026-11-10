@@ -34,7 +34,7 @@ interface Props {
   renderLive: (g: Game) => ReactNode;
   onOpen: (g: Game) => void;
   phone: boolean;
-  density: "compact" | "comfortable";
+  density: string;
 }
 
 /**

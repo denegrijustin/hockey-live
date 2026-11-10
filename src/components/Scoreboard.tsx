@@ -73,9 +73,9 @@ interface Props {
   /** Followed players (prefs.players). */
   followedPlayers?: { id: number | string; name: string; team: string }[];
   /** Card detail: "compact" drops the venue line and the insight line from the rows (no extra fetches either way). */
-  density?: "compact" | "comfortable";
+  density?: string;
   /** "favorites": My teams / My players first. "league": Live and Upcoming first, My teams after. */
-  homeOrder?: "favorites" | "league";
+  homeOrder?: string;
   sections?: { myTeams?: boolean; myPlayers?: boolean; worth?: boolean; pulse?: boolean };
   onDensity?: (d: "compact" | "comfortable") => void;
 }

@@ -292,10 +292,10 @@ const registry = new Map();
  * The shared poller for a game id (one per tab). release() when done; the poller stops with its last subscriber and is dropped
  * once nobody holds it.
  */
-export function acquireGamePoller(game) {
+export function acquireGamePoller(game, env) {
   let entry = registry.get(game.id);
   if (!entry) {
-    entry = { poller: createGamePoller(game), refs: 0 };
+    entry = { poller: createGamePoller(game, env), refs: 0 };
     registry.set(game.id, entry);
   }
   entry.refs += 1;

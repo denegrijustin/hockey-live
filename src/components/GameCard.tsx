@@ -2,19 +2,18 @@ import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "reac
 import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
-import { CompactGameFlow, CompactGameProjection, useCardFeed } from "./GameData";
+import { CompactGameFlow, useCardFeed } from "./GameData";
 import { IceView } from "./IceView";
 import { GoalFlash, useGoalFlash } from "./GoalFlash";
 import { NetworkLogos } from "./NetworkLogos";
-import { GoalieComparison } from "./TeamComparison";
-import { IntermissionRink } from "./IntermissionRink";
-import { CardExpanded, CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
+import { CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 import { TeamLogo } from "./TeamLogo";
 import { gameStatus } from "../lib/game-status.mjs";
 import { LOGO_SIZE } from "./GameCardView";
-import { GameInjuries } from "./GameInjuries";
 import { usePauseOffscreen } from "../motion";
+const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
+const GameCardExpanded = lazy(() => import("./GameCardExpanded"));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
 export const GameCard = memo(function GameCard({
@@ -112,7 +111,7 @@ export const GameCard = memo(function GameCard({
         <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span className="tv-network"><NetworkLogos broadcasts={broadcasts} game={game} /></span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
-      {live && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
+      {live && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
       <div ref={feedRef} className="card-ice">
         {/* At intermission the animated Zamboni rink is the only rink on the card; the shot-map ice view returns when play does. */}
         {(live || past) && !(live && game.intermission) && <IceView data={feed} home={home} away={away} />}
@@ -123,12 +122,7 @@ export const GameCard = memo(function GameCard({
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">
         <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>
-        <CardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} />
-        <div className="why-watch"><span>WHY IT MATTERS</span><p>{importanceSummary}</p></div>
-        <CompactGameProjection game={game} before={before} baseline={baseline} />
-        <GoalieComparison game={game} away={away} home={home} compact />
-        <GameInjuries away={away} home={home} season={game.season} />
-        <button type="button" className="card-collapse" onClick={() => setExpanded(false)}>Collapse game card</button>
+        <Suspense fallback={null}><GameCardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} before={before} baseline={baseline} summary={importanceSummary} onCollapse={() => setExpanded(false)} /></Suspense>
       </div>}
 
       {gameCenterOpen && <Suspense fallback={null}>

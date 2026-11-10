@@ -2,7 +2,7 @@ import { Suspense, lazy, useLayoutEffect, useMemo, useRef } from "react";
 import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
-import { GameData } from "./GameData";
+import { GameData } from "./GameDataPanel";
 import { GameRecap, DeservedHero } from "./GameRecap";
 import { Gauge } from "./Gauge";
 import { modelGaugeProps } from "./Projection";

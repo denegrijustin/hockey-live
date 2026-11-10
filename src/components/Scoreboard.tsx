@@ -9,7 +9,6 @@ import { matchupInsights } from "../lib/insights.mjs";
 import { closeAndLate, liveHeat, pregameHomeWin, recap, slotLabel, slotOf, tierOf, upsetBrewing, upsetWon, watchBreakdown, watchability } from "../lib/watchability.mjs";
 import { gameStatus } from "../lib/game-status.mjs";
 import { Icon } from "./icons";
-import { IntermissionRink } from "./IntermissionRink";
 import { NetworkLogos } from "./NetworkLogos";
 import { ScoreRing } from "./ScoreRing";
 import { CompactGameFlow, useCardFeed } from "./GameData";
@@ -32,6 +31,7 @@ import { OPEN_GAME_EVENT } from "../lib/open-game";
 let pendingOpen: { id: number; at: number } | null = null;
 if (typeof window !== "undefined") window.addEventListener(OPEN_GAME_EVENT, (e) => { const id = (e as CustomEvent).detail?.id; if (Number.isFinite(id)) pendingOpen = { id, at: Date.now() }; });
 
+const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
 const RowDetails = lazy(() => import("./home/RowDetails"));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -337,7 +337,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
         </div>
       ) : null}
       below={<>
-        {kind === "live" && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
+        {kind === "live" && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
         <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
         {open && <Suspense fallback={null}><RowDetails game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} feed={feed} recapText={recapText} showFlow={kind !== "soon"} onFull={onFull} /></Suspense>}
       </>}

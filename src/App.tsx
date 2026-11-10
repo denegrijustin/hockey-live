@@ -34,10 +34,10 @@ import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { Skeleton } from "./components/Skeleton";
 import { GameCard } from "./components/GameCard";
-import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs
 // (and their per-team API calls) load on demand when a visitor switches
 // to them, keeping the initial bundle smaller.
+const Methodology = lazy(() => import("./components/Methodology").then((m) => ({ default: m.Methodology })));
 const EdgePanel = lazy(() =>
   import("./components/EdgeStats").then((m) => ({ default: m.EdgePanel })),
 );
@@ -693,7 +693,7 @@ export default function App() {
             <ImperialismMap teams={teams} games={data.games} season={season} />
           </Suspense></ErrorBoundary>
         )}
-        {!home && <Methodology />}
+        {!home && <Suspense fallback={null}><Methodology /></Suspense>}
         <footer>
           <span>
             ICEBOARD <b aria-hidden="true"> / </b> Built for the games that matter.

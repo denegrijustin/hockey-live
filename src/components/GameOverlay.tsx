@@ -11,6 +11,7 @@ import { useFeed } from "../lib/polling";
 import type { GameFeed } from "../types";
 import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
+import { MatchupLens } from "./trends/MatchupLens";
 import { GameInjuries } from "./GameInjuries";
 import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IntermissionRink } from "./IntermissionRink";
@@ -185,6 +186,10 @@ export function GameOverlay({
         <section className="dialog-comparison" aria-label="Season team comparison">
           <TeamComparison away={away} home={home} season={game.season} table={before} ranks={ranks} />
         </section>
+      </details>
+      <details className="game-center-section">
+        <summary>Form and matchup lens <span>+</span></summary>
+        <div className="dialog-comparison"><MatchupLens away={away} home={home} table={before} games={allGames} season={game.season} /></div>
       </details>
       <details className="game-center-section" open>
         <summary>Starting goalies <span>+</span></summary>

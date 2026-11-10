@@ -21,3 +21,5 @@ img.team-logo[data-team] { cursor: pointer; }
 .tp-list li em { margin-left: auto; font-style: normal; color: var(--text-3); font-variant-numeric: tabular-nums; }
 .tp-inj li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding: 6px 0; border-bottom: 1px solid var(--surface-7); font-size: .8125rem; }
 .tp-inj li em { flex-basis: 100%; font-style: normal; color: var(--text-3); font-size: .75rem; }
+.tp-open { margin-top: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--mint-2); border-radius: 999px; background: var(--surface-3); color: var(--mint); font: inherit; font-weight: 650; cursor: pointer; }
+.tp-open:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }

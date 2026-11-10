@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import type { Team } from "../types";
 import { PageHeader } from "./PageHeader";
 import { TeamLogo } from "./TeamLogo";
-import { TeamLink } from "./TeamProfile";
 import { Icon } from "./icons";
 import "./teams.css";
 
@@ -12,10 +11,10 @@ const CONFERENCES: [string, string, string[]][] = [
 ];
 
 /**
- * The team directory: every team, by conference and division, each one a tap away from its profile (record, ranks, best wins, recent games, injuries).
+ * The team directory: every team, by conference and division, each one a tap away from its team page (record, form, schedule, roster, injuries).
  * Teams you follow (the My teams choice) come first and are marked.
  */
-export function Teams({ teams, table, selected, onSchedule }: { teams: Team[]; table: Record<string, any> | null; selected: string[]; onSchedule: () => void }) {
+export function Teams({ teams, table, selected, onSchedule, onOpenTeam }: { teams: Team[]; table: Record<string, any> | null; selected: string[]; onSchedule: () => void; onOpenTeam: (id: string) => void }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const matches = (t: Team) => !q || `${t.name} ${t.city} ${t.short} ${t.id}`.toLowerCase().includes(q);
@@ -23,14 +22,14 @@ export function Teams({ teams, table, selected, onSchedule }: { teams: Team[]; t
   const record = (t: Team) => { const s = table?.[t.id]; return s?.gp ? `${s.w}–${s.l}–${s.ot} · ${s.pts} pts` : "No games yet"; };
   const card = (t: Team) => (
     <li key={t.id} className="tm-card" data-team={t.id} data-mine={selected.includes(t.id) ? "1" : undefined}>
-      <TeamLink id={t.id} className="tm-link">
+      <button type="button" className="tm-link" data-team-open={t.id} onClick={() => onOpenTeam(t.id)}>
         <TeamLogo id={t.id} size={44} />
         <span className="tm-name">
           <b>{t.name}</b>
           <small>{record(t)}</small>
         </span>
         <span className="tm-chev" aria-hidden="true"><Icon name="chevron" size={18} /></span>
-      </TeamLink>
+      </button>
     </li>
   );
   const shown = teams.filter(matches);

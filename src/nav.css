@@ -610,7 +610,7 @@
 }
 
 /* Very narrow phones: the status pill shrinks to its dot (the text stays for screen readers). */
-@media (max-width: 370px) {
+@media (max-width: 430px) {
   .status-pill {
     padding: 9px;
   }

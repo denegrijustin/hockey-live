@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import type { Game, GameFeed, Team } from "../types";
-import { useFeed } from "../lib/polling";
+import { useGameFeedData } from "../lib/use-game-feed";
 import { Projection } from "./Projection";
 import { isLive } from "../lib/game-data.mjs";
 import { LogoImage, TeamLogo } from "./TeamLogo";
@@ -32,10 +32,7 @@ export function GameData({
   const { ref, visible: seen } = useVisible();
   const visible = eager || seen;
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
-  const { data, error } = useFeed<GameFeed>(
-    visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
-    isLive(game) ? 30000 : 3600000,
-  );
+  const { data, error } = useGameFeedData(visible && played ? game : null);
   if (!played)
     return (
       <div ref={ref} className="form-chart">

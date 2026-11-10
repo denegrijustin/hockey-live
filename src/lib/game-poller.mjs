@@ -25,6 +25,7 @@ import { joinLeaderChannel } from "./tab-leader.mjs";
 
 export const BACKOFF_BASE_MS = 5000;
 export const BACKOFF_CAP_MS = 60_000;
+export const PASSIVE_MIN_MS = 30_000;
 const FINAL_CHECKS = 2; // the first fetch of a finished game and one recheck
 
 /** Backoff with jitter: 5 s, 10 s, 20 s, 40 s, 60 s..., each scaled by a random 0.5-1.0. */
@@ -48,7 +49,7 @@ function patchFeed(raw, events) {
 }
 
 /**
- * createGamePoller(game, env?) -> {subscribe(listener) -> unsubscribe, getSnapshot(), setGame(game), retry()}
+ * createGamePoller(game, env?) -> {subscribe(listener, {passive}?) -> unsubscribe, getSnapshot(), setGame(game), retry()}
  * env (tests): fetch, now, setTimeout, clearTimeout, random, doc, joinChannel (replaces the BroadcastChannel election).
  */
 export function createGamePoller(initialGame, env = {}) {
@@ -84,7 +85,14 @@ export function createGamePoller(initialGame, env = {}) {
     // A finished game stays finished even if a lagging response still says live; otherwise the newest feed wins.
     return g.final && !f.final ? g : f;
   };
-  const planNow = () => pollPlan(currentInfo(), feed ?? game, { now: now() });
+  /** Subscribers that asked for the full cadence (the Game Center). Passive ones (small cards) never get the 3-minute final recheck and poll live games at most every 30 s. */
+  let active = 0;
+  const planNow = () => {
+    const p = pollPlan(currentInfo(), feed ?? game, { now: now() });
+    if (active) return p;
+    const every = p.every ? Math.max(p.every, PASSIVE_MIN_MS) : 0;
+    return { every, recheck: 0, expected: every };
+  };
 
   function isStale() {
     if (hidden() || catchingUp || !lastOkAt) return false;
@@ -261,12 +269,21 @@ export function createGamePoller(initialGame, env = {}) {
   build();
   return {
     getSnapshot: () => snapshot,
-    subscribe(listener) {
+    subscribe(listener, { passive = false } = {}) {
       listeners.add(listener);
+      if (!passive) {
+        active += 1;
+        if (active === 1 && listeners.size > 1) schedule();
+      }
       if (listeners.size === 1) start();
+      let done = false;
       return () => {
+        if (done) return;
+        done = true;
         listeners.delete(listener);
+        if (!passive) active -= 1;
         if (!listeners.size) stop();
+        else schedule();
       };
     },
     /** The scoreboard row changed (score, state, clock): the plan may change; never triggers a fetch by itself. */

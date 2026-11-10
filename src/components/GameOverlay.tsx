@@ -9,7 +9,7 @@ import { GameRecap, DeservedHero } from "./GameRecap";
 import { Gauge } from "./Gauge";
 import { modelGaugeProps } from "./Projection";
 import { projectGame } from "../lib/projection.mjs";
-import { useFeed } from "../lib/polling";
+import { useGameFeedData } from "../lib/use-game-feed";
 import type { GameFeed } from "../types";
 import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
@@ -229,7 +229,7 @@ export function GameOverlay({
 
 /** The deserved-to-win gauge first thing in the Game Center: stats and game flow, not the pregame odds. */
 function DeservedTop({ game, home, away, live, before, baseline }: { game: Game; home: Team; away: Team; live: boolean; before: any; baseline: any }) {
-  const { data } = useFeed<GameFeed>(`/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}`, live ? 30000 : 3600000);
+  const { data } = useGameFeedData(game);
   const model = projectGame(game, before, baseline, data);
   // Side by side with the model's own win chance: one row, no empty space around a lone dial.
   const beside = model ? <section className="gr-model" aria-label="Model win chance"><h4>{model.score ? "Projected final score" : "Model win chance"} <small>{model.score ? "most likely result, win chance beneath" : "score, time and shots"}</small></h4><Gauge size="lg" {...modelGaugeProps(game, model)} /></section> : null;
@@ -238,7 +238,7 @@ function DeservedTop({ game, home, away, live, before, baseline }: { game: Game;
 
 /** The game recap with the shot charts, in its own section: it reads the live feed, so it is here while a game is on as well as after it. */
 function RecapSection({ game, home, away, live }: { game: Game; home: Team; away: Team; live: boolean }) {
-  const { data } = useFeed<GameFeed>(`/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}`, live ? 30000 : 3600000);
+  const { data } = useGameFeedData(game);
   return (
     <details className="game-center-section game-center-recap" open data-testid="gc-recap-section">
       <summary>Game recap and shot chart <span>+</span></summary>

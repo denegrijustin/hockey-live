@@ -2,7 +2,7 @@ import { useChartUnit } from "../lib/chartUnit";
 import { gameFlow, playMinute } from "../lib/pulse.mjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Game, GameFeed, Team } from "../types";
-import { useFeed } from "../lib/polling";
+import { useGameFeedData } from "../lib/use-game-feed";
 import { isLive } from "../lib/game-data.mjs";
 import { LogoImage, TeamLogo } from "./TeamLogo";
 import { useGameShots } from "../lib/moneypuck-client";
@@ -24,10 +24,7 @@ export function useVisible() {
 export function useCardFeed(game: Game, enabled = true) {
   const { ref, visible } = useVisible();
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
-  const { data } = useFeed<GameFeed>(
-    enabled && visible && played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null,
-    isLive(game) ? 30000 : 3600000,
-  );
+  const { data } = useGameFeedData(enabled && visible && played ? game : null);
   return { ref, data };
 }
 

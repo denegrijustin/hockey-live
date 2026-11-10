@@ -43,7 +43,7 @@ test.describe("home personal", () => {
     await seedPrefs(page, { favorites: ["EDM", "LAK"] });
     await mockApis(page, { games: [...games, mk.upcoming(9810, "LAK", "SJS", { offset: 3 })] });
     await page.goto("/");
-    await expect(page.locator(`${sec("myteams")} li[data-team=LAK]`)).toContainText(/Next: at SJS|Next: vs SJS/);
+    await expect(page.locator(`${sec("myteams")} li[data-team=LAK]`)).toContainText(/Next: at Sharks/);
   });
 
   test("section toggles remove My teams (and its dedupe) and Worth watching", async ({ page }) => {

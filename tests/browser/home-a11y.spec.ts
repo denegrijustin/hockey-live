@@ -49,7 +49,6 @@ test.describe("home accessibility", () => {
   });
 
   test("closing the Game Center returns focus to the game that opened it", async ({ page }) => {
-    test.fail(true, "DEFECT: GameOverlay unmounts its <dialog> on close and never refocuses the opener, so focus falls back to <body> (keyboard and screen-reader users lose their place)");
     await open(page);
     const main = page.locator('.sb-row[data-game="9701"] .sb-main');
     await main.focus();

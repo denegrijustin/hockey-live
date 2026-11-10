@@ -1,10 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { etDay, mk, mockApis } from "./fixtures-games";
 
-// Written against docs/phase2-contracts.md (DateStrip + useSelectedDate). fixme until Agent 3's DateStrip is integrated into Home.
-const WAIT = "needs Phase 2 DateStrip + useSelectedDate (Agent 3: data-testid date-strip, date-today, date-picker, URL &date=)";
 const games = [
   mk.final(9951, "BOS", "TOR", { offset: -2 }),
+  mk.final(9955, "NJD", "NYR", { offset: -1 }), // Previous day steps game days, so yesterday needs a game
   mk.upcoming(9952, "CHI", "EDM"),
   mk.upcoming(9953, "SEA", "VAN", { offset: 1 }),
   mk.upcoming(9954, "MIN", "DAL", { offset: 4 }),
@@ -13,7 +12,6 @@ const heading = (p: import("@playwright/test").Page) => p.locator(".sb-day h1");
 
 test.describe("home date strip", () => {
   test("previous / next step the day, Today returns, and the strip is present", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games });
     await page.goto("/");
     await expect(page.getByTestId("date-strip")).toBeVisible();
@@ -26,7 +24,6 @@ test.describe("home date strip", () => {
   });
 
   test("the picker jumps to a chosen date and puts it in the URL as &date=", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games });
     await page.goto("/");
     const target = etDay(4);
@@ -36,7 +33,6 @@ test.describe("home date strip", () => {
   });
 
   test("the URL carries no date while the person is on the automatic day, and Today clears it", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games });
     await page.goto("/");
     expect(page.url()).not.toContain("date=");
@@ -47,7 +43,6 @@ test.describe("home date strip", () => {
   });
 
   test("a link with ?date= opens that day, and browser Back returns to the previous day", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games });
     await page.goto(`/?view=scoreboard&date=${etDay(1)}`);
     await expect(heading(page)).toHaveText("Tomorrow");
@@ -57,7 +52,6 @@ test.describe("home date strip", () => {
   });
 
   test("an invalid ?date= falls back to the automatic day without an error", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games });
     await page.goto("/?date=2026-13-45");
     await expect(heading(page)).toHaveText("Today");
@@ -65,7 +59,6 @@ test.describe("home date strip", () => {
   });
 
   test("the selected date survives opening and closing the Game Center", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games });
     await page.goto(`/?date=${etDay(1)}`);
     await expect(heading(page)).toHaveText("Tomorrow");
@@ -78,7 +71,6 @@ test.describe("home date strip", () => {
   });
 
   test("midnight Eastern rolls the automatic day over but not a day the person picked", async ({ page }) => {
-    test.fixme(true, WAIT);
     const start = new Date("2026-11-10T23:59:00-05:00");
     await page.clock.install({ time: start });
     await mockApis(page, { games: [mk.upcoming(9961, "CHI", "EDM", { date: "2026-11-10" }), mk.upcoming(9962, "SEA", "VAN", { date: "2026-11-11" })] });
@@ -90,7 +82,6 @@ test.describe("home date strip", () => {
   });
 
   test("an empty day shows the empty state with the strip still usable; stepping out of it works", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games });
     await page.goto(`/?date=${etDay(2)}`); // no games two days from now
     await expect(page.getByTestId("home-empty")).toBeVisible();

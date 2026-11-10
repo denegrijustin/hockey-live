@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { lastSeasonSource, loadSeason, type DataSource } from "../lib/api";
 import { isFreshLive, mergeScores } from "../lib/game-data.mjs";
-import { useFeed, useVisibleInterval } from "../lib/polling";
+import { refreshFeed, useFeed, useVisibleInterval } from "../lib/polling";
 import type { Scoreboard, Snapshot } from "../types";
 
 type Manifest = { current: number; seasons: number[] };
@@ -105,5 +105,7 @@ export function useSeason() {
     error,
     loading,
     retry: () => setRetry((x) => x + 1),
+    /** Fetches the live scores again now (Retry), so the saved-data notice clears as soon as they are back. */
+    reloadLive: () => refreshFeed("/api/live"),
   };
 }

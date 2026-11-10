@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { SEASON, mk, mockApis, type FxGame } from "./fixtures-games";
 
-// Written against docs/phase2-contracts.md (matchupInsights + InsightLine on GameCardView). fixme until Agents 2 and 4 are integrated.
-const WAIT = "needs Phase 2 matchupInsights (Agent 4) rendered by GameCardView/InsightLine (Agent 2)";
-const insight = '[data-testid="insight-line"], .insight-line';
+const insight = '.insight[data-insight-id]';
 
 /** A season of past finals so teams have 12+ games played (insights need a sample), then today's game CHI at EDM. */
 function history(n: number, type = 2): FxGame[] {
@@ -17,7 +15,6 @@ function history(n: number, type = 2): FxGame[] {
 
 test.describe("home insights", () => {
   test("a card shows a reason line only when it is substantiated (gp >= 10)", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games: [...history(14), mk.upcoming(9990, "CHI", "EDM")] });
     await page.goto("/");
     const card = page.locator('.sb-row[data-game="9990"]');
@@ -28,7 +25,6 @@ test.describe("home insights", () => {
   });
 
   test("no reason line for a team with fewer than 10 games played", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games: [...history(4), mk.upcoming(9990, "CHI", "EDM")] });
     await page.goto("/");
     await expect(page.locator('.sb-row[data-game="9990"]')).toBeVisible();
@@ -36,7 +32,6 @@ test.describe("home insights", () => {
   });
 
   test("no reason line in preseason, even with many games", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games: [...history(14, 1), { ...mk.upcoming(9990, "CHI", "EDM"), type: 1 }] });
     await page.goto("/");
     await expect(page.locator('.sb-row[data-game="9990"]')).toBeVisible();
@@ -44,7 +39,6 @@ test.describe("home insights", () => {
   });
 
   test("insight links point at a real view or open the Game Center", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games: [...history(14), mk.upcoming(9990, "CHI", "EDM")] });
     await page.goto("/");
     const links = page.locator(`.sb-row[data-game="9990"] ${insight} a[href]`);
@@ -53,7 +47,6 @@ test.describe("home insights", () => {
   });
 
   test("only the first insight is on the card; the rest live in the why popover or Game Center", async ({ page }) => {
-    test.fixme(true, WAIT);
     await mockApis(page, { games: [...history(14), mk.upcoming(9990, "CHI", "EDM")] });
     await page.goto("/");
     await expect(page.locator('.sb-row[data-game="9990"]').locator(insight)).toHaveCount(1);

@@ -33,6 +33,12 @@ async function poll(url: string, feed: Feed) {
   feed.listeners.forEach((_, listener) => listener(feed.data, feed.error));
 }
 
+/** Fetches a feed that someone is subscribed to right now (Retry), without waiting for its next tick. */
+export function refreshFeed(url: string) {
+  const feed = feeds.get(url);
+  if (feed) void poll(url, feed);
+}
+
 /** An interval of 0, Infinity or less means "fetch once, no timer" (for data that never changes, like a final game). */
 const repeats = (ms: number) => Number.isFinite(ms) && ms > 0;
 

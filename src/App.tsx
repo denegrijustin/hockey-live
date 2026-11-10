@@ -99,7 +99,7 @@ const addressFor = (view: string) => {
 };
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
-  const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry } = useSeason();
+  const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry, reloadLive, source } = useSeason();
   const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
   const [view, setViewState] = useState(initialView),
     [period, setPeriod] = useState("future"),
@@ -219,9 +219,10 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const refresh = useCallback(() => {
     retry();
+    reloadLive();
     window.dispatchEvent(new Event("iceboard:refresh"));
     setManualRefresh(true);
-  }, [retry]);
+  }, [retry, reloadLive]);
   // "Updated just now" once a refresh the viewer asked for (pull, Retry, Refresh data) has finished.
   useEffect(() => {
     if (!manualRefresh || loading) return;
@@ -270,7 +271,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
-          <StatusPill live={hasLive} offline={!!liveError} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
+          <StatusPill live={hasLive} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
             Season
             <select
@@ -355,7 +356,9 @@ export default function App() {
           </button>
         </div>
         )}
-        {error ? (
+        {error && home ? (
+          <ScoreboardView games={[]} teams={teams} analysis={null} baseline={null} sourceSeason={sourceSeason} error={error} onRetry={() => (season ? refresh() : location.reload())} />
+        ) : error ? (
           <div className="empty error">
             <h2>Unable to load data</h2>
             <p>{error}</p>
@@ -384,7 +387,7 @@ export default function App() {
               </p>
             )}
             {view === "scoreboard" && (
-              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} onBrowse={() => setView("games")} />
+              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} sim={playoff} onNavigate={setView} onBrowse={() => setView("games")} />
             )}
             {view === "yesterday" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading last night" />}>

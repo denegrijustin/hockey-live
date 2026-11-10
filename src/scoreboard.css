@@ -8,42 +8,10 @@ html[data-home] {
   margin: 0 auto;
   padding-bottom: 24px;
 }
-.sb-days {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 0 4px;
-}
-.sb-day {
-  text-align: center;
-}
-.sb-day h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  line-height: 1.2;
-}
-.sb-day span {
-  color: var(--text-1);
-  font-size: 0.8125rem;
-}
-.sb-step {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  padding: 0;
-  border-radius: 12px;
-}
-.sb-flip {
-  display: inline-grid;
-  transform: scaleX(-1);
-}
-.sb-step:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
+.sb-days { display: grid; gap: 0; padding: 6px 0 0; min-width: 0; }
+.sb-day { display: flex; align-items: baseline; gap: 10px; text-align: left; }
+.sb-day h1 { margin: 0; font-size: 1.5rem; line-height: 1.2; }
+.sb-day span { color: var(--text-1); font-size: 0.8125rem; }
 .sb-empty {
   padding: 48px 0;
   color: var(--text-1);
@@ -303,28 +271,25 @@ html[data-home] {
 .scoreboard .sb-why-heat { margin: 10px 0 0; font-size: .8125rem; line-height: 1.45; color: var(--text-3); }
 .scoreboard .sb-why-heat b { color: var(--amber-5); }
 
-/* Layout order: the day switcher, Watch now, then the status filters (the toolbar only groups them on a wide screen). */
+/* The first section starts close to the controls, so the first game is on the first screen of a phone. */
+.scoreboard > .sb-group:first-of-type > .sb-title { margin-top: 6px; }
+.scoreboard .sb-filters { margin: 0 0 4px; }
+
+/* Layout: the DOM order is the visual order (date, status filter, Live, Upcoming, Worth watching, Completed, Postponed, League intelligence). */
 .scoreboard { display: flex; flex-direction: column; }
-.scoreboard .sb-toolbar { display: contents; }
-.scoreboard .sb-days { order: 1; }
-.scoreboard .watch-now { order: 2; }
-.scoreboard .sb-filters { order: 3; }
-.scoreboard .sb-done { order: 3; margin: 6px 0 2px; }
-.scoreboard > .sb-group, .scoreboard > .sb-empty, .scoreboard > .skel { order: 4; }
+.scoreboard .sb-toolbar { display: grid; gap: 0; min-width: 0; }
+.scoreboard .sb-done { margin: 6px 0 2px; }
 
 /* A wide screen is a desktop, not a phone: one toolbar, dense two-line rows with every column visible, and pointer-sized controls. */
 @media (min-width: 1100px) {
   .scoreboard { max-width: 1280px; }
-  .scoreboard .sb-toolbar { display: flex; order: 1; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0 14px; }
-  .scoreboard .sb-days { order: 0; padding: 0; justify-content: flex-start; gap: 10px; }
-  .scoreboard .sb-filters { order: 0; margin: 0; }
+  .scoreboard .sb-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0 6px; }
+  .scoreboard .sb-days { display: flex; align-items: center; flex: 1 1 auto; gap: 20px; padding: 0; }
+  .scoreboard .sb-days .date-strip { flex: 1 1 auto; width: auto; max-width: 640px; }
+  .scoreboard .sb-filters { margin: 0; flex: none; }
   .scoreboard .sb-day { text-align: left; display: flex; align-items: baseline; gap: 12px; }
   .scoreboard .sb-day h1 { font-size: 1.375rem; }
-  .scoreboard .sb-step { width: 34px; min-width: 34px; height: 34px; border-radius: 8px; }
   .scoreboard .sb-chip { min-height: 34px; padding: 0 12px; font-size: .8125rem; }
-  .scoreboard .watch-now { order: 2; }
-  .scoreboard .watch-now h2 { display: none; }
-  .scoreboard .wn-tile { min-height: 0; padding: 8px 12px; }
   .scoreboard .sb-title { margin: 22px 0 8px; }
   .scoreboard .sb-list { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .scoreboard .sb-row { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) 4.75rem auto; align-items: center; column-gap: 16px; padding: 8px 16px; border-radius: 10px; }
@@ -332,8 +297,7 @@ html[data-home] {
   .scoreboard .sb-top .sb-status { grid-column: 1; grid-row: 1; padding: 0; flex-wrap: wrap; row-gap: 4px; align-content: center; }
   .scoreboard .sb-actions { grid-column: 4; grid-row: 1; }
   .scoreboard .sb-body .sb-main { grid-column: 2; grid-row: 1; padding: 4px 0; display: grid; grid-template-columns: minmax(220px, 340px) minmax(180px, 1fr); column-gap: 32px; row-gap: 4px; justify-content: start; }
-  .scoreboard .sb-body .sb-main .sb-team { grid-column: 1; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; }
-  .scoreboard .sb-main .sb-team .team-logo { width: 26px; height: 26px; }
+  .scoreboard .sb-body .sb-main .sb-team { grid-column: 1; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; }
   .scoreboard .sb-main .sb-name { font-size: .9375rem; }
   .scoreboard .sb-main .sb-score { font-size: 1.125rem; min-width: 1.5ch; text-align: right; }
   .scoreboard .sb-body .sb-main .sb-prob { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
@@ -368,25 +332,44 @@ html[data-home] {
 }
 
 /* The way to the league-wide list of all games (it has no tab of its own) */
-.scoreboard .sb-browse { order: 5; align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: 4px 0 8px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-3); background: transparent; color: var(--mint-5); font: inherit; font-size: .8125rem; font-weight: 650; cursor: pointer; }
+.scoreboard .sb-browse { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: 4px 0 8px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-3); background: transparent; color: var(--mint-5); font: inherit; font-size: .8125rem; font-weight: 650; cursor: pointer; }
 @media (min-width: 1100px) { .scoreboard .sb-browse { min-height: 34px; } }
 
-/* Completed games: one small chip each, in a compact grid at the top of the board */
+/* Completed: compact cards in a grid */
 .scoreboard .sb-done .sb-title { margin: 10px 0 6px; }
 .scoreboard .sb-done ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 6px; }
-.scoreboard .sb-done-chip { position: relative; display: grid; gap: 2px; width: 100%; min-height: 44px; padding: 5px 62px 5px 10px; text-align: left; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-5); color: var(--text-4); font: inherit; font-size: .8125rem; cursor: pointer; }
-.scoreboard .sb-done-t { display: flex; align-items: center; gap: 6px; min-width: 0; line-height: 1.25; }
-.scoreboard .sb-done-t b { font-weight: 600; }
-.scoreboard .sb-done-t i { margin-left: auto; font-style: normal; font-variant-numeric: tabular-nums; }
-.scoreboard .sb-done-t.win b, .scoreboard .sb-done-t.win i { color: var(--text-6); font-weight: 800; }
-.scoreboard .sb-done-end { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: grid; justify-items: end; gap: 2px; }
-.scoreboard .sb-done-chip em { font-style: normal; font-size: .6875rem; font-weight: 700; color: var(--text-1); letter-spacing: .04em; }
-@media (min-width: 1100px) { .scoreboard .sb-done ul { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } .scoreboard .sb-done-chip { min-height: 38px; padding-top: 3px; padding-bottom: 3px; } }
+.scoreboard .sb-done li { min-width: 0; }
+.scoreboard .sb-done .gcv-compact { height: 100%; }
+@media (max-width: 460px) { .scoreboard .sb-done ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .scoreboard .sb-done ul { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } }
 
 /* League rank beside each team, and the upset flag: the underdog won, so the chip and card stand out in amber */
 .scoreboard .sb-rank { margin-left: 4px; color: var(--text-1); font-size: .6875rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.scoreboard .sb-done-t .sb-rank { margin-left: 0; }
 .scoreboard .sb-upset-tag { padding: 1px 6px; border-radius: 999px; background: var(--amber-5); color: var(--surface-1); font-size: .625rem; font-weight: 800; letter-spacing: .06em; line-height: 1.4; }
 .scoreboard .sb-row .sb-upset-tag { margin-left: 8px; }
-.scoreboard .sb-done-chip.upset { border-color: var(--amber-5); background: color-mix(in srgb, var(--amber-5) 14%, var(--surface-5)); box-shadow: inset 3px 0 0 var(--amber-5); }
 .scoreboard .sb-row.upset-won { border-color: var(--amber-5); box-shadow: inset 3px 0 0 var(--amber-5); }
+
+/* Live: the underdog is ahead late */
+.scoreboard .sb-brew { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--amber-5) 55%, var(--line-2)); color: var(--amber-5); font-size: .6875rem; font-weight: 700; }
+
+/* Worth watching: tiles in a row (three on a phone, five on a desktop) */
+.scoreboard .home-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.scoreboard .home-tiles li { min-width: 0; }
+.scoreboard .home-tiles .gcv-tile { height: 100%; }
+.scoreboard .home-tiles .gcv-insight { padding: 0 12px 10px; font-size: .75rem; }
+
+/* League intelligence: real links, then the way to the full list */
+.scoreboard .home-intel { list-style: none; margin: 0 0 6px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+.scoreboard .home-intel a { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-5); color: var(--text-4); text-decoration: none; }
+.scoreboard .home-intel a b { font-size: .875rem; color: var(--text-6); }
+.scoreboard .home-intel a span { grid-column: 1; font-size: .75rem; color: var(--text-1); }
+.scoreboard .home-intel a svg { grid-column: 2; grid-row: 1 / span 2; color: var(--mint-5); }
+.scoreboard .home-intel a:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; }
+@media (hover: hover) { .scoreboard .home-intel a:hover { background: var(--surface-6); } }
+
+/* Empty day and load error */
+.scoreboard .home-empty { padding: 36px 0 24px; }
+.scoreboard .home-empty p { margin: 0 0 12px; }
+.scoreboard .home-empty-go { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.scoreboard .home-empty-go button, .scoreboard .home-error button { min-height: 44px; padding: 0 16px; border-radius: 999px; }
+.scoreboard .home-error { margin-top: 12px; }

@@ -30,7 +30,6 @@ test.describe("home failure modes", () => {
   });
 
   test("/api/live recovering clears the pill on Retry", async ({ page }) => {
-    test.fail(true, "DEFECT: Retry (App.refresh) only reloads the season snapshot and dispatches iceboard:refresh; useFeed('/api/live') does not listen, so the saved-data pill stays up until the next 30 s poll");
     const m = await mockApis(page, { games, live: 503 });
     await page.goto("/");
     await expect(page.locator(".status-banner")).toBeVisible();

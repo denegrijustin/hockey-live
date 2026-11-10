@@ -85,6 +85,8 @@ export function GameOverlay({
     }),
     [game, before, baseline, teams, away, home, allGames, ranks, sim],
   );
+  // The control that opened the Game Center gets focus back when it closes.
+  const opener = useRef<HTMLElement | null>(document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null);
   useLayoutEffect(() => {
     const element = dialog.current;
     if (!element) return;
@@ -107,9 +109,12 @@ export function GameOverlay({
   const closeOverlay = () => {
     const returnTo = pageScroll.current;
     onClose();
-    requestAnimationFrame(() =>
-      window.scrollTo({ top: returnTo, left: 0, behavior: "instant" }),
-    );
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: returnTo, left: 0, behavior: "instant" });
+      // The same control if it is still on the page, else the opening game's main button.
+      const back = opener.current?.isConnected ? opener.current : document.querySelector<HTMLElement>(`[data-game="${game.id}"] .sb-main`);
+      back?.focus({ preventScroll: true });
+    });
   };
   const node = (
     <dialog

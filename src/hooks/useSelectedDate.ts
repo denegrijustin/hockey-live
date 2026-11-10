@@ -11,11 +11,13 @@ const readUrl = (key: string): string | null => {
   }
 };
 /** Writes (or removes) the date in the address without adding a history entry; the other parameters and the history state stay as they are. */
-export function writeDateParam(date: string | null, key = "date") {
+export function writeDateParam(date: string | null, key = "date", push = false) {
   try {
     const next = withDateParam(location.search, date, key);
     if (next === location.search) return;
-    history.replaceState(history.state, "", `${location.pathname}${next}${location.hash}`);
+    const url = `${location.pathname}${next}${location.hash}`;
+    if (push) history.pushState(history.state, "", url);
+    else history.replaceState(history.state, "", url);
   } catch {}
 }
 
@@ -24,7 +26,7 @@ export function writeDateParam(date: string | null, key = "date") {
  * Until a day is picked the screen follows the automatic day (today, else the next game day, else the last), so it rolls over at midnight.
  * A picked day that is not the automatic one is kept in the address as `&date=YYYY-MM-DD`; a day outside the season's range in the address is ignored.
  */
-export function useSelectedDate({ days, today, urlKey = "date" }: { days: string[]; today: string; urlKey?: string }) {
+export function useSelectedDate({ days, today, urlKey = "date", push = false }: { days: string[]; today: string; urlKey?: string; /** Each picked day is a history entry (Back returns to the day before). Home does; Games keeps replacing. */ push?: boolean }) {
   const [picked, setPicked] = useState<string | null>(() => readUrl(urlKey));
   useEffect(() => {
     const pop = () => setPicked(readUrl(urlKey));
@@ -38,8 +40,8 @@ export function useSelectedDate({ days, today, urlKey = "date" }: { days: string
     const v = resolveDate({ picked: d, days, today, urlDate: null });
     const follow = v === auto;
     setPicked(follow ? null : v);
-    writeDateParam(follow ? null : v, urlKey);
-  }, [days, today, auto, urlKey]);
+    writeDateParam(follow ? null : v, urlKey, push);
+  }, [days, today, auto, urlKey, push]);
   const step = useCallback((n: number) => setDate(stepDay(days, date, n)), [days, date, setDate]);
   const goToday = useCallback(() => setDate(today), [today, setDate]);
   return {

@@ -1,60 +1,45 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Game, Team } from "../types";
-import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
-import { isLive } from "../lib/game-data.mjs";
+import { finished, seasonSeriesBeforeGame } from "../lib/model.mjs";
+import { byStartThenId, isCalledOff, isLive, isUpcoming } from "../lib/game-data.mjs";
+import { shiftDay } from "../lib/dates.mjs";
 import { projectGame } from "../lib/projection.mjs";
-import { teamRanks, rankTitle } from "../lib/ranks.mjs";
-import { closeAndLate, liveHeat, pregameHomeWin, recap, slotOf, tierOf, upsetBrewing, upsetWon, watchBreakdown, watchability } from "../lib/watchability.mjs";
+import { teamRanks } from "../lib/ranks.mjs";
+import { matchupInsights } from "../lib/insights.mjs";
+import { closeAndLate, liveHeat, pregameHomeWin, recap, slotLabel, slotOf, tierOf, upsetBrewing, upsetWon, watchBreakdown, watchability } from "../lib/watchability.mjs";
+import { gameStatus } from "../lib/game-status.mjs";
 import { Icon } from "./icons";
 import { IntermissionRink } from "./IntermissionRink";
-import { TeamLogo } from "./TeamLogo";
 import { NetworkLogos } from "./NetworkLogos";
 import { ScoreRing } from "./ScoreRing";
-import { WatchNow } from "./WatchNow";
-import { GameRecap } from "./GameRecap";
-import { GameInjuries } from "./GameInjuries";
 import { CompactGameFlow, useCardFeed } from "./GameData";
+import { GameCardView } from "./GameCardView";
+import { DateStrip, DayHeading, fullDate } from "./DateStrip";
+import { InsightLine } from "./InsightLine";
+import { CompletedStrip } from "./home/CompletedStrip";
+import { FeaturedStrip } from "./home/FeaturedStrip";
+import { HomeSection } from "./home/HomeSection";
+import { LeagueIntel, type IntelLink } from "./home/LeagueIntel";
 import { useMedia } from "../hooks/useMedia";
 import { useEtToday } from "../hooks/useEtToday";
-import { haptic, useChanged, useFlip, usePauseOffscreen } from "../motion";
+import { useSelectedDate } from "../hooks/useSelectedDate";
+import { haptic, useChanged, useFlip } from "../motion";
 import { Skeleton } from "./Skeleton";
 
+const RowDetails = lazy(() => import("./home/RowDetails"));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
-const dayLabel = (day: string, today: string) => {
-  const diff = Math.round((Date.parse(`${day}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000);
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  if (diff === -1) return "Yesterday";
-  return new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-};
-const fullDate = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-
-function statusOf(g: Game) {
-  if (finished(g)) return { text: `Final${g.end && g.end !== "REG" ? ` / ${g.end}` : ""}`, kind: "final" };
-  if (isLive(g)) {
-    const period = g.periodType === "SO" ? "SO" : g.periodType === "OT" ? "OT" : `P${g.period ?? "–"}`;
-    return { text: g.intermission ? `${period} · Intermission` : `${period} · ${g.clock ?? "Updating"}`, kind: "live" };
-  }
-  return { text: new Date(g.start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), kind: "soon" };
-}
-
 type Status = "all" | "live" | "final" | "soon";
-type Section = { key: "upset" | "live" | "soon" | "final"; title: string; note?: string; games: Game[]; slots: boolean; live?: boolean };
+type Rated = { score: number; heat: number; upset: boolean; upsetWon: number | null; pre: number | null; importance?: number; before: any; base: any };
 
-const slotLabel = (iso: string) => {
-  const from = new Date(iso), to = new Date(from.getTime() + 3600000);
-  const t = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  return `${t(from)}–${t(to)}`;
-};
-/** Puck-drop slots in time order, the most watchable game first within each slot. */
-function slotsOf(games: Game[], rated: Map<number, { score: number; heat: number }>) {
+/** Puck-drop slots in time order (half-hour slots in the viewer's clock), the most watchable game first within each slot. */
+function slotsOf(games: Game[], rated: Map<number, Rated>) {
   const by = new Map<string, Game[]>();
-  for (const g of [...games].sort((a, b) => a.start.localeCompare(b.start))) {
+  for (const g of [...games].sort(byStartThenId)) {
     const k = slotOf(g.start);
     by.set(k, [...(by.get(k) ?? []), g]);
   }
-  return [...by].map(([key, list]) => ({ key, label: slotLabel(key), games: list.sort((a, b) => (rated.get(b.id)?.heat ?? 0) - (rated.get(a.id)?.heat ?? 0) || a.start.localeCompare(b.start)) }));
+  return [...by].map(([key, list]) => ({ key, label: slotLabel(key), games: list.sort((a, b) => (rated.get(b.id)?.heat ?? 0) - (rated.get(a.id)?.heat ?? 0) || byStartThenId(a, b)) }));
 }
 
 interface Props {
@@ -65,22 +50,27 @@ interface Props {
   baselineTable?: any;
   sourceSeason: number;
   loading?: boolean;
+  /** The season could not be loaded: Home keeps its date controls and says so, with Retry. */
+  error?: string;
+  onRetry?: () => void;
   /** Opens the league-wide list of all games with its filters and search. */
   onBrowse?: () => void;
+  /** Opens another app view (a VIEW_IDS id). */
+  onNavigate?: (view: string) => void;
+  /** Playoff chances by team id, `{ [id]: { chance } }`, as `chancesForCards` returns them: the same numbers as the Playoff odds tab. */
+  sim?: any;
 }
 
 /**
- * The home screen: the league's games for a day with win probability and nothing else. Tap a game for a few key stats;
- * from there, "Full game center" opens everything.
+ * A list of games whose members slide to their new places when the order changes (a game getting hotter, a filter applied).
  */
-/** A list of games whose members slide to their new places when the order changes (a game getting hotter, a filter applied). */
 function FlipList({ games, children }: { games: Game[]; children: React.ReactNode }) {
   const ref = useRef<HTMLUListElement>(null);
   useFlip(ref, games.map((g) => g.id).join("|"));
   return <ul ref={ref} className="sb-list">{children}</ul>;
 }
 
-/** The current time, refreshed every `ms`, so "starts in 20 min" and the Watch-now strip stay current. */
+/** The current time, refreshed every `ms`, so "In 20 min" and the Worth-watching strip stay current. */
 function useTick(ms: number) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -90,18 +80,24 @@ function useTick(ms: number) {
   return now;
 }
 
-export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading, onBrowse }: Props) {
+/**
+ * The home screen. Top to bottom: the day (heading and schedule strip), the status filter, then only the sections that have games for that day:
+ * Live, Upcoming (by puck-drop slot), Worth watching, Completed, Postponed, League intelligence. A game is in exactly one of Live / Upcoming / Completed.
+ */
+export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading, error, onRetry, onBrowse, onNavigate, sim }: Props) {
   const today = useEtToday();
   const days = useMemo(() => [...new Set(games.filter((g) => g.type !== 0).map((g) => g.date))].sort(), [games]);
-  // Open on today; on an off day, the next day with games (or the last one, at the end of the season).
-  const auto = days.includes(today) ? today : (days.find((d) => d > today) ?? days.at(-1) ?? today);
-  const [picked, setPicked] = useState<string | null>(null);
-  const day = picked ?? auto;
-  const index = days.indexOf(day);
-  const dayGames = useMemo(() => games.filter((g) => g.date === day), [games, day]);
+  const counts = useMemo(() => {
+    const by: Record<string, number> = {};
+    for (const g of games) if (g.type !== 0) by[g.date] = (by[g.date] ?? 0) + 1;
+    return by;
+  }, [games]);
+  const { date: day, setDate, min, max } = useSelectedDate({ days, today, push: true });
+  const dayGames = useMemo(() => games.filter((g) => g.date === day && g.type !== 0), [games, day]);
   const [status, setStatus] = useState<Status>("all");
+  const [openId, setOpenId] = useState<number | null>(null);
   // Watchability, heat and upset flags, from the same model the win-probability bars use.
-  const rate = useCallback((g: Game) => {
+  const rate = useCallback((g: Game): Rated => {
     const before = analysis?.before[g.id];
     const base = baseline && baseline.season < g.season ? baselineTable : undefined;
     const pre = before ? pregameHomeWin(g, before, base) : null;
@@ -120,108 +116,154 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
     if (before && [...now].some(([id, live]) => live && before.get(id) === false)) haptic();
   }, [games]);
   const now = useTick(30_000);
-  const counts = useMemo(() => ({
-    live: dayGames.filter(isLive).length,
-    final: dayGames.filter(finished).length,
-    soon: dayGames.filter((g) => !isLive(g) && !finished(g)).length,
-  }), [dayGames]);
-  const sections = useMemo(() => {
-    const hot = (a: Game, b: Game) => (rated.get(b.id)?.heat ?? 0) - (rated.get(a.id)?.heat ?? 0) || a.start.localeCompare(b.start);
-    const live = dayGames.filter(isLive);
-    const all: Section[] = [
-      { key: "upset", title: "Upset brewing", note: "The underdog is ahead late.", games: live.filter((g) => rated.get(g.id)?.upset).sort(hot), slots: false, live: true },
-      { key: "live", title: "In progress", games: live.filter((g) => !rated.get(g.id)?.upset).sort(hot), slots: true, live: true },
-      { key: "soon", title: "Upcoming", games: dayGames.filter((g) => !isLive(g) && !finished(g)), slots: true },
-      { key: "final", title: "Completed", games: dayGames.filter(finished), slots: true },
-    ];
-    const show = (x: Section) => status === "all" || (status === "live" ? x.key === "upset" || x.key === "live" : x.key === status);
-    // With every game showing, the finished ones sit in a compact strip at the top instead of full cards at the bottom.
-    return all.filter((x) => x.games.length && show(x) && !(status === "all" && x.key === "final"));
-  }, [dayGames, rated, status]);
-  const [openId, setOpenId] = useState<number | null>(null);
+  const ranksFor = useMemo(() => (analysis ? (id: number) => teamRanks(analysis.before[id], teams) : null), [analysis, teams]);
+  const teamOf = useCallback((id: string) => teams.find((t) => t.id === id)!, [teams]);
+
+  // Each game lands in exactly one list. The order of the tests is the rule: live, then finished, then called off, else upcoming.
+  const lists = useMemo(() => {
+    const hot = (a: Game, b: Game) => (rated.get(b.id)?.heat ?? 0) - (rated.get(a.id)?.heat ?? 0) || byStartThenId(a, b);
+    const live = dayGames.filter(isLive).sort(hot);
+    const done = dayGames.filter((g) => !isLive(g) && finished(g));
+    const rest = dayGames.filter((g) => !isLive(g) && !finished(g));
+    const off = rest.filter(isCalledOff);
+    const soon = rest.filter((g) => !isCalledOff(g) && isUpcoming(g)).sort(byStartThenId);
+    return { live, soon, done: done.sort((a, b) => byStartThenId(b, a)), off: off.sort(byStartThenId) };
+  }, [dayGames, rated]);
+
+  // One true reason per game, from the same standings snapshot and playoff simulation the rest of the app uses.
+  const insights = useMemo(() => {
+    const out = new Map<number, ReturnType<typeof matchupInsights>[number]>();
+    if (!analysis) return out;
+    for (const g of dayGames) {
+      const r = rated.get(g.id);
+      const list = matchupInsights(g, analysis.before[g.id], null, { teams, allGames: games, ranks: ranksFor?.(g.id), sim, pregameHome: r?.pre ?? null });
+      if (list[0]) out.set(g.id, list[0]);
+    }
+    return out;
+  }, [dayGames, rated, analysis, teams, games, ranksFor, sim]);
+  const insightFor = (g: Game): ReactNode => { const i = insights.get(g.id); return i ? <InsightLine insight={i} variant="card" /> : undefined; };
+
+  const featured = useMemo(() => {
+    if (lists.soon.length < 2) return [];
+    return [...lists.soon].sort((a, b) => (rated.get(b.id)?.score ?? 0) - (rated.get(a.id)?.score ?? 0) || byStartThenId(a, b)).slice(0, phone ? 3 : 5);
+  }, [lists.soon, rated, phone]);
+
+  const intel = useMemo<IntelLink[]>(() => {
+    const out: IntelLink[] = [];
+    const lastNight = shiftDay(today, -1);
+    if (games.some((g) => g.date === lastNight && g.type !== 0 && finished(g))) out.push({ view: "yesterday", label: "Last night", hint: "Final scores and the best and worst nights" });
+    if (sim && Object.keys(sim).length) out.push({ view: "odds", label: "Playoff odds", hint: "Simulated chances and the playoff tracker" });
+    if (lists.soon.length || lists.live.length) out.push({ view: "picks", label: "Picks", hint: "Win picks and how they have done" });
+    if (lists.soon.length || lists.live.length) out.push({ view: "injuries", label: "Injury report", hint: "Who is out, how long and how much it matters" });
+    if (analysis && Object.values(analysis.table ?? {}).some((r: any) => r?.gp >= 10)) out.push({ view: "trends", label: "Team trends", hint: "Momentum, playoff outlook and goals saved above expected" });
+    return out;
+  }, [games, today, sim, lists.soon.length, lists.live.length, analysis]);
+
+  const chip = useMemo(() => ({ live: lists.live.length, final: lists.done.length, soon: lists.soon.length }), [lists]);
   const [centerId, setCenterId] = useState<number | null>(null);
   const scrollAtOpen = useRef(0);
-  const ranksFor = useMemo(() => (analysis ? (id: number) => teamRanks(analysis.before[id], teams) : null), [analysis, teams]);
-  const teamOf = (id: string) => teams.find((t) => t.id === id)!;
+  const openCenter = (g: Game) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); };
   const centerGame = centerId != null ? games.find((g) => g.id === centerId) : undefined;
+  const goDay = (d: string) => { setDate(d); setOpenId(null); };
+  const prevDay = days.filter((d) => d < day).at(-1), nextDay = days.find((d) => d > day);
+
+  const row = (g: Game, expanded: boolean) => (
+    <li key={g.id} data-game-id={g.id}>
+      <ScoreRow
+        game={g}
+        away={teamOf(g.away)}
+        home={teamOf(g.home)}
+        before={analysis?.before[g.id]}
+        baseline={baseline && baseline.season < g.season ? baselineTable : undefined}
+        allGames={games}
+        rating={rated.get(g.id)}
+        ranks={ranksFor?.(g.id)}
+        analysisRow={analysis?.analysis[g.id]}
+        insight={insightFor(g)}
+        open={openId === g.id || expanded}
+        onFull={() => openCenter(g)}
+      />
+    </li>
+  );
+  const list = (gs: Game[], expanded = false) => <FlipList games={gs}>{gs.map((g) => row(g, expanded))}</FlipList>;
+  const show = (k: Status) => status === "all" || status === k;
+  const nothing = !dayGames.length;
+  const emptyFilter = !nothing && ((status === "live" && !lists.live.length) || (status === "soon" && !lists.soon.length) || (status === "final" && !lists.done.length));
 
   return (
     <section className="scoreboard" aria-label="Scoreboard">
       <div className="sb-toolbar">
-      <div className="sb-days">
-        <button className="sb-step" aria-label="Previous day" disabled={index <= 0 && days.length > 0 && day <= days[0]} onClick={() => { setPicked(days[Math.max(0, index - 1)] ?? day); setOpenId(null); }}>
-          <span className="sb-flip"><Icon name="chevron" size={20} /></span>
-        </button>
-        <div className="sb-day">
-          <h1>{dayLabel(day, today)}</h1>
-          <span>{fullDate(day)}</span>
+        <div className="sb-days" data-testid="home-date">
+          <DayHeading day={day} today={today} />
+          <DateStrip value={day} onChange={goDay} today={today} days={days} min={min} max={max} counts={counts} />
         </div>
-        <button className="sb-step" aria-label="Next day" disabled={index >= days.length - 1} onClick={() => { setPicked(days[Math.min(days.length - 1, index + 1)] ?? day); setOpenId(null); }}>
-          <Icon name="chevron" size={20} />
-        </button>
+        {!error && (
+          <div className="sb-filters" role="group" aria-label="Show games by status">
+            {([["live", chip.live, "in progress"], ["final", chip.final, "completed"], ["soon", chip.soon, "upcoming"]] as const).map(([key, n, label]) => (
+              <button key={key} type="button" className={`sb-chip ${key}`} aria-pressed={status === key} disabled={!n && status !== key} onClick={() => { setStatus(status === key ? "all" : key); setOpenId(null); }}>
+                {key === "live" && n > 0 && <i aria-hidden="true" />}<b>{n}</b> {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      <div className="sb-filters" role="group" aria-label="Show games by status">
-        {([["live", counts.live, "in progress"], ["final", counts.final, "completed"], ["soon", counts.soon, "upcoming"]] as const).map(([key, n, label]) => (
-          <button key={key} type="button" className={`sb-chip ${key}`} aria-pressed={status === key} disabled={!n && status !== key} onClick={() => { setStatus(status === key ? "all" : key); setOpenId(null); }}>
-            {key === "live" && n > 0 && <i aria-hidden="true" />}<b>{n}</b> {label}
-          </button>
-        ))}
-      </div>
-      </div>
-      {onBrowse && <button type="button" className="sb-browse" onClick={onBrowse}>All games, filters &amp; search <Icon name="chevron" size={16} /></button>}
-      <WatchNow games={games} teams={teams} rate={rate} now={now} max={phone ? 3 : 5} onOpen={(g) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }} />
-      {status === "all" && counts.final > 0 && (
-        <div className="sb-done" role="region" aria-label="Completed" data-testid="sb-done">
-          <h2 className="sb-title">Completed <span className="sb-count">{counts.final}</span></h2>
-          <ul>
-            {dayGames.filter(finished).sort((a, b) => b.start.localeCompare(a.start)).map((g) => {
-              const hs = g.homeScore ?? 0, as = g.awayScore ?? 0, tag = g.end && g.end !== "REG" ? `F/${g.end}` : "F";
-              const rk = ranksFor?.(g.id), upset = rated.get(g.id)?.upsetWon ?? null;
-              const rank = (id: string) => (rk?.[id] ? <small className="sb-rank" title={rankTitle(rk[id])}>#{rk[id].league}</small> : null);
-              return (
-                <li key={g.id}>
-                  <button type="button" className={`sb-done-chip${upset != null ? " upset" : ""}`} data-game-id={g.id} data-upset={upset != null ? "1" : "0"} aria-label={`${teamOf(g.away).name}${rk?.[g.away] ? ` (ranked ${rk[g.away].league})` : ""} ${as}, ${teamOf(g.home).name}${rk?.[g.home] ? ` (ranked ${rk[g.home].league})` : ""} ${hs}, final${g.end && g.end !== "REG" ? ` in ${g.end}` : ""}.${upset != null ? ` An upset: the winner had a ${Math.round(upset * 100)} percent chance.` : ""} Open the game center.`} onClick={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}>
-                    <span className={`sb-done-t${as > hs ? " win" : ""}`}><TeamLogo id={g.away} size={18} /><b>{g.away}</b>{rank(g.away)}<i>{as}</i></span>
-                    <span className={`sb-done-t${hs > as ? " win" : ""}`}><TeamLogo id={g.home} size={18} /><b>{g.home}</b>{rank(g.home)}<i>{hs}</i></span>
-                    <span className="sb-done-end"><em>{tag}</em>{upset != null && <strong className="sb-upset-tag" title={`The winner had a ${Math.round(upset * 100)}% chance before the game`}>UPSET</strong>}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+      {error && (
+        <div className="empty error home-error" data-testid="home-error" role="alert">
+          <h2>Unable to load data</h2>
+          <p>{error}</p>
+          {onRetry && <button type="button" onClick={onRetry}>Retry</button>}
         </div>
       )}
-      {loading && !games.length && <Skeleton rows={4} label="Loading the scoreboard" />}
-      {!loading && !sections.length && <p className="sb-empty">{status === "all" ? "No games on this day." : "Nothing here on this day."}</p>}
-      {sections.map((section) => (
-        <div className={`sb-group ${section.key}`} key={section.key} aria-label={section.title} role="region">
-          <h2 className="sb-title">{section.live && <i className="sb-livedot" aria-hidden="true" />}{section.title} <span className="sb-count">{section.games.length}</span>{section.note && <small>{section.note}</small>}</h2>
-          {(section.slots ? slotsOf(section.games, rated) : [{ key: "all", label: "", games: section.games }]).map((slot) => (
-            <div className="sb-slot" key={slot.key} data-slot={slot.key}>
-              {slot.label && <h3 className="sb-slot-h">{slot.label}</h3>}
-              <FlipList games={slot.games}>
-                {slot.games.map((g) => (
-                  <li key={g.id} data-game-id={g.id}>
-                    <ScoreRow
-                      game={g}
-                      away={teamOf(g.away)}
-                      home={teamOf(g.home)}
-                      before={analysis?.before[g.id]}
-                      baseline={baseline && baseline.season < g.season ? baselineTable : undefined}
-                      allGames={games}
-                      rating={rated.get(g.id)}
-                      ranks={ranksFor?.(g.id)}
-                      analysisRow={analysis?.analysis[g.id]}
-                      open={openId === g.id || (status === "final" && section.key === "final")}
-                      onFull={() => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); }}
-                    />
-                  </li>
-                ))}
-              </FlipList>
-            </div>
-          ))}
+      {!error && loading && !games.length && <Skeleton rows={4} label="Loading the scoreboard" />}
+      {!error && !loading && nothing && (
+        <div className="sb-empty home-empty" data-testid="home-empty">
+          <p>No games on {fullDate(day)}.</p>
+          <div className="home-empty-go">
+            {prevDay && <button type="button" onClick={() => goDay(prevDay)}>Previous game day</button>}
+            {nextDay && <button type="button" onClick={() => goDay(nextDay)}>Next game day</button>}
+          </div>
         </div>
+      )}
+      {!error && emptyFilter && <p className="sb-empty">Nothing here on this day.</p>}
+      {!error && show("live") && lists.live.length > 0 && (
+        <HomeSection id="live" label="Live" count={lists.live.length} live className="live">
+          {list(lists.live)}
+        </HomeSection>
+      )}
+      {!error && show("soon") && lists.soon.length > 0 && (
+        <HomeSection id="upcoming" label="Upcoming" count={lists.soon.length} className="soon">
+          {(() => {
+            const slots = slotsOf(lists.soon, rated);
+            return slots.map((slot) => (
+              <div className="sb-slot" key={slot.key} data-slot={slot.key}>
+                {slots.length > 1 && <h3 className="sb-slot-h">{slot.label}</h3>}
+                {list(slot.games)}
+              </div>
+            ));
+          })()}
+        </HomeSection>
+      )}
+      {!error && status === "all" && (
+        <FeaturedStrip games={featured} teamOf={teamOf} now={now} ranksFor={ranksFor} insightFor={insightFor} onOpen={openCenter} />
+      )}
+      {!error && show("final") && lists.done.length > 0 && (status === "all" ? (
+        <CompletedStrip games={lists.done} teamOf={teamOf} ranksFor={ranksFor} upsetOf={(g) => rated.get(g.id)?.upsetWon} onOpen={openCenter} />
+      ) : (
+        <HomeSection id="completed" label="Completed" count={lists.done.length} className="completed">
+          {list(lists.done, true)}
+        </HomeSection>
       ))}
+      {!error && status === "all" && lists.off.length > 0 && (
+        <HomeSection id="postponed" label="Postponed / canceled" count={lists.off.length} className="postponed">
+          {list(lists.off)}
+        </HomeSection>
+      )}
+      {!error && status === "all" && !nothing && onNavigate && (
+        <LeagueIntel links={intel} onNavigate={onNavigate} onBrowse={onBrowse} />
+      )}
+      {!error && (status !== "all" || nothing || !onNavigate) && onBrowse && (
+        <button type="button" className="sb-browse" onClick={onBrowse}>All games, filters &amp; search <Icon name="chevron" size={16} /></button>
+      )}
       {centerGame && analysis && (
         <Suspense fallback={null}>
           <GameOverlay
@@ -235,6 +277,9 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
             analysis={analysis.analysis[centerGame.id]}
             allGames={games}
             series={seasonSeriesBeforeGame(games, centerGame)}
+            teams={teams}
+            sim={sim}
+            onNavigate={onNavigate}
             returnTo={scrollAtOpen.current}
             onClose={() => setCenterId(null)}
           />
@@ -244,69 +289,44 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   );
 }
 
-function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, open, onFull }: {
-  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: { score: number; pre: number | null; importance?: number; upsetWon?: number | null }; ranks?: Record<string, any> | null; analysisRow?: any; open: boolean; onFull: () => void;
+function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, insight, open, onFull }: {
+  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: Rated; ranks?: Record<string, any> | null; analysisRow?: any; insight?: ReactNode; open: boolean; onFull: () => void;
 }) {
-  const ref = useRef<HTMLElement>(null);
-  usePauseOffscreen(ref);
-  const status = statusOf(game);
-  const showScore = status.kind !== "soon" && game.awayScore != null && game.homeScore != null;
+  const gs = gameStatus(game);
+  const kind = gs.final ? "final" : gs.live ? "live" : "soon";
+  const showScore = kind !== "soon" && game.awayScore != null && game.homeScore != null;
   const projection = useMemo(() => (before ? projectGame(game, before, baseline) : null), [game, before, baseline]);
   const homePct = projection ? Math.round(projection.homeWin * 100) : null;
-  const awayPct = homePct != null ? 100 - homePct : null;
-  const winner = status.kind === "final" && showScore ? (game.homeScore! > game.awayScore! ? "home" : "away") : null;
   const cl = closeAndLate(game);
   const awayScored = useChanged(game.awayScore ?? undefined), homeScored = useChanged(game.homeScore ?? undefined);
-  const label = `${away.name} at ${home.name}, ${status.text}${showScore ? `, ${game.awayScore} to ${game.homeScore}` : ""}${homePct != null ? `, win probability ${away.id} ${awayPct} percent, ${home.id} ${homePct} percent` : ""}`;
   // The feed (for the momentum chart) is fetched while a live game is on screen, and for a finished one only once it is opened.
-  const { ref: feedRef, data: feed } = useCardFeed(game, status.kind === "live" || open);
+  const { ref: feedRef, data: feed } = useCardFeed(game, kind === "live" || open);
   const score = rating?.score ?? 50, tier = tierOf(score);
   const why = rating ? watchBreakdown(rating.importance, rating.pre, game) : null;
   const names = { away: away.short, home: home.short };
-  const recapText = status.kind === "final" ? recap(game, rating?.pre ?? null, names) : "";
-  const flowShown = (status.kind === "live" && !game.intermission) || (open && status.kind !== "soon");
+  const recapText = kind === "final" ? recap(game, rating?.pre ?? null, names) : "";
+  const flowShown = (kind === "live" && !game.intermission) || (open && kind !== "soon");
   return (
-    <article ref={ref} className={`sb-row ${status.kind}${rating?.upsetWon != null ? " upset-won" : ""}${open ? " open" : ""}${cl.both ? " hot" : ""} tier-${tier.key}`} data-game={game.id}>
-      {(awayScored || homeScored) && <span className="pulse-ring" aria-hidden="true" />}
-      <div className="sb-top">
-        <span className="sb-status">{status.kind === "live" && <i aria-hidden="true" />}{status.text}{rating?.upsetWon != null && <strong className="sb-upset-tag">UPSET</strong>}{cl.both && <span className="late-flag" title={cl.label}><i aria-hidden="true" />Close &amp; late</span>}</span>
-        <span className="sb-actions">
-          <span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>
-          <button type="button" className="gc-icon" onClick={onFull} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>
-        </span>
-      </div>
-      <div className="sb-body">
-        <button className="sb-main" aria-haspopup="dialog" aria-label={`${label}. Open the full game view.`} onClick={onFull}>
-          {([[away, game.awayScore, "away"], [home, game.homeScore, "home"]] as const).map(([team, score, side]) => (
-            <span className={`sb-team${winner && winner !== side ? " lost" : ""}`} key={team.id}>
-              <TeamLogo id={team.id} size={32} />
-              <span className="sb-name">{team.name.endsWith(team.short) ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}{ranks?.[team.id] && <small className="sb-rank" title={rankTitle(ranks[team.id])}>#{ranks[team.id].league}</small>}</span>
-              <span className={`sb-score${(side === "away" ? awayScored : homeScored) ? " scored" : ""}`}><span className="ts-num">{showScore ? score : ""}</span></span>
-            </span>
-          ))}
-          {homePct != null && awayPct != null && (
-            <span className="sb-prob" role="img" aria-label={`Win probability: ${away.id} ${awayPct} percent, ${home.id} ${homePct} percent`}>
-              <span className="sb-pct">{away.id} {awayPct}%</span>
-              <span className="sb-bar"><i style={{ width: `${awayPct}%` }} /><i /></span>
-              <span className="sb-pct">{homePct}% {home.id}</span>
-            </span>
-          )}
-        </button>
-        {before && (status.kind !== "final" || open) ? (
-          <div className="sb-rate">
-            <ScoreRing score={score} label={`Watchability ${score} out of 100, ${tier.label}`}>
-              {why && <WhyScore why={why} tier={tier.label} reason={analysisRow?.reasons?.[0]} />}
-            </ScoreRing>
-            <span className="sb-tier">{tier.label}</span>
-          </div>
-        ) : null}
-      </div>
-      <p className="sb-venue"><span aria-hidden="true">📍 </span>{game.venue || "Venue unavailable"}</p>
-      {status.kind === "live" && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
-      <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}{open && status.kind !== "soon" && <GameRecap data={feed} home={home} away={away} />}</div>
-      {open && recapText && <p className="sb-recap" data-testid="recap"><b>What happened</b> {recapText}</p>}
-      {open && <KeyStats game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} onFull={onFull}><GameInjuries away={away} home={home} season={game.season} /></KeyStats>}
-    </article>
+    <GameCardView
+      variant="row" game={game} away={away} home={home} ranks={ranks} rating={rating} homePct={homePct} open={open} state={`tier-${tier.key}`}
+      hot={cl.both ? { label: cl.label } : null} scored={{ away: awayScored, home: homeScored }} onOpen={() => onFull()}
+      ariaExtra={cl.both ? "close and late" : undefined}
+      actions={<span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
+      context={kind === "live" && rating?.upset ? <span className="sb-brew">Upset brewing: the underdog is ahead late</span> : undefined}
+      insight={insight}
+      ring={before && (kind !== "final" || open) ? (
+        <div className="sb-rate">
+          <ScoreRing score={score} label={`Watchability ${score} out of 100, ${tier.label}`}>
+            {why && <WhyScore why={why} tier={tier.label} reason={analysisRow?.reasons?.[0]} />}
+          </ScoreRing>
+        </div>
+      ) : null}
+      below={<>
+        {kind === "live" && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
+        <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
+        {open && <Suspense fallback={null}><RowDetails game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} feed={feed} recapText={recapText} showFlow={kind !== "soon"} onFull={onFull} /></Suspense>}
+      </>}
+    />
   );
 }
 
@@ -317,36 +337,6 @@ function WhyScore({ why, tier, reason }: { why: ReturnType<typeof watchBreakdown
       <ul>{why.parts.map((p) => <li key={p.key}><b>{p.label}</b> <span>+{p.points}</span><small>{p.note}</small></li>)}</ul>
       {why.bonus > 0 && <p className="sb-why-heat"><b>Hotter right now: +{why.bonus} → {why.total}.</b> A close score late in the game is worth watching more than its forecast.</p>}
       {reason && <p className="sb-why-reason">{reason}</p>}
-    </div>
-  );
-}
-
-function KeyStats({ game, away, home, before, allGames, projection, onFull, children }: { game: Game; away: Team; home: Team; before: any; allGames: Game[]; projection: any; onFull: () => void; children?: React.ReactNode }) {
-  const rec = (t: Team) => { const r = recordBeforeGame(allGames, game, t.id); return `${r.w}-${r.l}-${r.ot}`; };
-  const per = (t: Team, k: "gf" | "ga") => { const row = before?.[t.id]; return row?.gp ? (row[k] / row.gp).toFixed(1) : "–"; };
-  const form = (t: Team) => (before?.[t.id]?.results ?? []).slice(-5);
-  const shots = game.homeShots != null && game.awayShots != null;
-  return (
-    <div className="sb-stats" data-testid="key-stats">
-      <div className="sb-heads" aria-hidden="true"><span /><span>{away.id}</span><span>{home.id}</span></div>
-      <dl>
-        <div><dt>Record</dt><dd>{rec(away)}</dd><dd>{rec(home)}</dd></div>
-        <div><dt>Goals for / against per game</dt><dd>{per(away, "gf")} / {per(away, "ga")}</dd><dd>{per(home, "gf")} / {per(home, "ga")}</dd></div>
-        <div>
-          <dt>Last 5</dt>
-          {[away, home].map((t) => (
-            <dd key={t.id} className="sb-form" aria-label={`${t.id} last five: ${form(t).map((r: any) => r.outcome).join(" ") || "none yet"}`}>
-              {form(t).length ? form(t).map((r: any, i: number) => <em key={i} data-o={r.outcome} aria-hidden="true">{r.outcome}</em>) : "–"}
-            </dd>
-          ))}
-        </div>
-        {shots && <div><dt>Shots on goal</dt><dd>{game.awayShots}</dd><dd>{game.homeShots}</dd></div>}
-        {projection?.score && <div><dt>Projected final</dt><dd>{projection.score.away}</dd><dd>{projection.score.home}</dd></div>}
-      </dl>
-      {children}
-      <button className="sb-full" onClick={onFull}>
-        Full game center <Icon name="chevron" size={18} />
-      </button>
     </div>
   );
 }

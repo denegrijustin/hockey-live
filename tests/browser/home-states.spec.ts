@@ -32,7 +32,7 @@ test.describe("home card states", () => {
     await expect(row).toHaveClass(/live/);
     await expect(row.locator(".sb-status")).toContainText("P3 · 04:10");
     await expect(row.locator(".ts-num")).toHaveText(["2", "2"]);
-    await expect(row.locator(".sb-main")).toHaveAttribute("aria-label", /Colorado Avalanche at Winnipeg Jets, P3 · 04:10, 2 to 2/);
+    await expect(row.locator(".sb-main")).toHaveAttribute("aria-label", /Colorado Avalanche at Winnipeg Jets\. COL 2, WPG 2, live, period 3, 04:10 left/);
   });
 
   test("intermission, overtime and shootout read as such", async ({ page }) => {
@@ -47,16 +47,16 @@ test.describe("home card states", () => {
     await expect(done.locator('[data-game-id="9304"] em')).toHaveText("F");
     await expect(done.locator('[data-game-id="9305"] em')).toHaveText("F/OT");
     await expect(done.locator('[data-game-id="9306"] em')).toHaveText("F/SO");
-    await expect(done.locator('[data-game-id="9305"]')).toHaveAttribute("aria-label", /final in OT/);
-    await expect(done.locator('[data-game-id="9306"]')).toHaveAttribute("aria-label", /final in SO/);
+    await expect(done.locator('[data-game-id="9305"] .sb-main')).toHaveAttribute("aria-label", /final in OT/i);
+    await expect(done.locator('[data-game-id="9306"] .sb-main')).toHaveAttribute("aria-label", /final in SO/i);
   });
 
   test("the Completed filter shows each final as a row with its final label", async ({ page }) => {
     await page.getByRole("button", { name: /3 completed/ }).click();
     await expect(page.locator(".sb-row")).toHaveCount(3);
     await expect(page.locator('.sb-row[data-game="9304"] .sb-status')).toHaveText(/^Final$/);
-    await expect(page.locator('.sb-row[data-game="9305"] .sb-status')).toHaveText(/^Final\s?\/\s?OT$/);
-    await expect(page.locator('.sb-row[data-game="9306"] .sb-status')).toHaveText(/^Final\s?\/\s?SO$/);
+    await expect(page.locator('.sb-row[data-game="9305"] .sb-status')).toHaveText(/^Final\/OT$/);
+    await expect(page.locator('.sb-row[data-game="9306"] .sb-status')).toHaveText(/^Final\/SO$/);
     // The winner is marked: the loser's team block is dimmed (.lost) on the 3-2 home win.
     await expect(page.locator('.sb-row[data-game="9304"] .sb-team.lost')).toHaveCount(1);
   });
@@ -76,7 +76,6 @@ test.describe("home card states", () => {
 
 test.describe("home card states: exact shared status text", () => {
   test("every row's status equals gameStatus().label (Final/OT, Final/SO)", async ({ page }) => {
-    test.fixme(true, "needs GameCardView (Agent 2) to take status text from src/lib/game-status.mjs: today ScoreRow.statusOf renders 'Final / OT' with spaces");
     await mockApis(page, { games });
     await page.goto("/");
     await page.getByRole("button", { name: /3 completed/ }).click();
@@ -87,7 +86,6 @@ test.describe("home card states: exact shared status text", () => {
 
 test.describe("home card states: postponed", () => {
   test("a postponed game says Postponed instead of a start time", async ({ page }) => {
-    test.fail(true, "DEFECT: Scoreboard.statusOf ignores scheduleState, so a postponed game renders as an upcoming game with a puck-drop time (gameStatus() has kind 'postponed')");
     const g = [mk.postponed(9310, "CHI", "EDM"), mk.upcoming(9311, "MIN", "DAL")];
     const m = await mockApis(page, { games: g });
     await page.goto("/");

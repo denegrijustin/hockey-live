@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { usePrefs, setPrefs } from "../lib/prefs";
+import { usePrefs, setPrefs } from "../lib/prefs.ts";
 import { isFollowing, toggleFollow, LIMITS } from "../lib/prefs.mjs";
 import { applySnapshots } from "../lib/watchlist-players.mjs";
 

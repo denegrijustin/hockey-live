@@ -17,6 +17,19 @@
   --positive: var(--mint-5);
   --negative: var(--red-4);
   --amber: var(--amber-5);
+  /* Gauge sizes (UI optimization): a dial is as wide as its content needs and never stretches to a wide parent. Use the Gauge `size` prop. */
+  --gauge-compact: 120px;
+  --gauge-standard: 190px;
+  --gauge-expanded: 280px;
+  /* Floating controls (the Game Center close button): translucent over content, theme-aware through surface tokens. */
+  --float-btn-size: 44px;
+  --float-btn-radius: 12px;
+  --float-btn-bg: color-mix(in srgb, var(--surface-1) 72%, transparent);
+  --float-btn-fg: var(--text-6);
+  --float-btn-line: var(--line-3);
+  --z-float: 10;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 /* Text size (Settings > Display): every rem length scales with the root size. */
 html[data-text="s"] { font-size: 90%; }

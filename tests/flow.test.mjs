@@ -208,3 +208,10 @@ test("goal markers carry score after; overtime window follows game type; text al
 test("pressure is a pure function of the data: same plays, same series", () => {
   assert.deepEqual(computeFlow(feed.plays, opts), computeFlow([...feed.plays].reverse(), opts));
 });
+
+test("the latest point at a period boundary reads as the end of that period", () => {
+  assert.equal(clockAt(2400, 2), "P3 00:00");
+  assert.equal(clockAt(2400, 2, true), "P2 20:00");
+  const s = computeFlow(feed.plays.filter((p) => p.period === 1), opts);
+  assert.match(readoutText(s, s.latest), /^P1 20:00 — /);
+});

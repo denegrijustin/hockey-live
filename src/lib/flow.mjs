@@ -75,10 +75,10 @@ export function playSecond(play, gameType = 2) {
   if (inPeriod > periodLen(p, gameType)) return null;
   return periodStart(p, gameType) + inPeriod;
 }
-/** "P2 08:20" for a game second. */
-export function clockAt(t, gameType = 2) {
+/** "P2 08:20" for a game second. A boundary second belongs to the period that starts there, unless `endOfPeriod` (the latest data point) asks for the one that ends there. */
+export function clockAt(t, gameType = 2, endOfPeriod = false) {
   let p = 1;
-  while (p < 12 && t >= periodStart(p + 1, gameType)) p++;
+  while (p < 12 && (endOfPeriod ? t > periodStart(p + 1, gameType) : t >= periodStart(p + 1, gameType))) p++;
   const inP = Math.max(0, t - periodStart(p, gameType));
   const mm = Math.floor(inP / 60), ss = Math.floor(inP % 60);
   return `${p <= 3 ? `P${p}` : p === 4 ? "OT" : `${p - 3}OT`} ${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
@@ -301,7 +301,7 @@ export function readoutText(series, point) {
   if (!series || !point) return "";
   const v = point.value;
   const who = Math.abs(v) < 0.05 ? null : v > 0 ? series.home : series.away;
-  return `${clockAt(point.t, series.gameType)} — ${who ? `${who} +${Math.abs(v).toFixed(2)} pressure` : "even pressure (0.00)"}`;
+  return `${clockAt(point.t, series.gameType, point.t === series.elapsed)} — ${who ? `${who} +${Math.abs(v).toFixed(2)} pressure` : "even pressure (0.00)"}`;
 }
 
 const fmtMmSs = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;

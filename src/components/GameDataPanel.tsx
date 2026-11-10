@@ -4,13 +4,13 @@ import { useGameFeedData } from "../lib/use-game-feed";
 import { Projection } from "./Projection";
 import { isLive } from "../lib/game-data.mjs";
 import { LogoImage, TeamLogo } from "./TeamLogo";
-import { Gauge } from "./Gauge";
+import { Gauge, type GaugeSize } from "./Gauge";
 import { gameFlow, iceTilt, playMinute, pulseMinute } from "../lib/pulse.mjs";
 import { useChartUnit } from "../lib/chartUnit";
 import { useVisible, GameFlowChart } from "./GameData";
 import "./gauge.css";
 /** One head-to-head number, drawn as a gas gauge. */
-export function ComparisonBar({ label, away, home, awayId, homeId, format, size = "sm" }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; size?: "sm" | "lg"; awayColor?: string; homeColor?: string }) {
+export function ComparisonBar({ label, away, home, awayId, homeId, format, size = "sm" }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; size?: GaugeSize; awayColor?: string; homeColor?: string }) {
   return <Gauge size={size} away={away} home={home} awayId={awayId} homeId={homeId} label={label} format={format} />;
 }
 export function GameData({

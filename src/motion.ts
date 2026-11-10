@@ -29,7 +29,7 @@ export function initMotion() {
 // The user's Settings choice: "system" (the logic above), "reduce" (always off) or "full" (always on). Set by applyDisplay().
 let override = "system";
 let apply: () => void = () => {};
-export function setMotionPref(m: string) { override = m; apply(); }
+export function setMotionPref(m: string) { override = m; if (typeof document !== "undefined") document.documentElement.dataset.motionPref = m; apply(); }
 
 /** True when movement is off (the Settings choice, else reduced-motion, data-saver or low power). Use instead of reading matchMedia directly. */
 export const reducedMotion = motionOff;

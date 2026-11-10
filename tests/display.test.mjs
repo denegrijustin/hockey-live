@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { displayAttrs, themeColor } from "../src/lib/display.mjs";
+import { displayAttrs, themeColor } from "../src/lib/display-attrs.mjs";
 import { fmtTime, fmtDay, fmtDateTime, setTimePrefs } from "../src/lib/dates.mjs";
 import { localTime } from "../src/lib/game-status.mjs";
 import { defaultPrefs, parsePrefs } from "../src/lib/prefs.mjs";

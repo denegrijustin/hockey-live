@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { setTimePrefs } from "./dates.mjs";
-import { displayAttrs, themeColor } from "./display.mjs";
+import { displayAttrs, themeColor } from "./display-attrs.mjs";
 import { getPrefs, subscribePrefs, type Prefs } from "./prefs";
 import { setMotionPref } from "../motion";
 

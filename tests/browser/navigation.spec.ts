@@ -315,8 +315,8 @@ test.describe("B. structure and accessibility", () => {
   });
 
   test("no second navigation appears with a dialog open", async ({ page }) => {
-    await open(page, "/?view=teams");
-    await page.locator(".tm-card [data-team-link]").first().click();
+    await open(page, "/?view=standings"); // the directory cards open the full page now; a team name in the standings still opens the quick peek
+    await page.locator("tbody tr").first().locator("button.team-link").click();
     await expect(page.locator("dialog.team-dialog")).toBeVisible();
     await expect(page.locator('nav[aria-label="Main"]')).toHaveCount(1);
     expect(await page.locator("dialog.team-dialog nav").count()).toBe(0);

@@ -113,7 +113,7 @@ export default function PlayByPlay({ focusEvent }: { focusEvent?: number }) {
     let frames = 0, raf = 0;
     const go = () => {
       const el = document.getElementById(`ev-${target}`);
-      if (el && el.offsetParent !== null) { el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" }); el.focus({ preventScroll: true }); return; }
+      if (el && el.offsetParent !== null) { el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" }); el.focus({ preventScroll: true }); if (reduced()) setTimeout(() => el.scrollIntoView({ block: "center", behavior: "auto" }), 120); return; }
       if (frames++ < 30) raf = requestAnimationFrame(go); // the pane may be hidden (inactive tab) or not laid out yet
     };
     raf = requestAnimationFrame(go);
@@ -123,7 +123,8 @@ export default function PlayByPlay({ focusEvent }: { focusEvent?: number }) {
   const toggle = useCallback((k: string) => setGroups((g) => (g.includes(k) ? g.filter((x) => x !== k) : [...g, k])), []);
   const goTo = (id: number | null) => { if (id != null) setJump((j) => ({ id, n: (j?.n ?? 0) + 1 })); };
   const nextGoal = (dir: 1 | -1) => goTo(jumpToGoals(all, jump?.id ?? focusEvent ?? urlFocus ?? null, dir));
-  const scrollPeriod = (key: string) => { const el = document.getElementById(`pbp-period-${key.replace(/\W/g, "_")}`); el?.scrollIntoView({ block: "start", behavior: reduced() ? "auto" : "smooth" }); };
+  // Rows use content-visibility:auto, so heights above the target settle as they render: scroll again once they have.
+  const scrollPeriod = (key: string) => { const el = document.getElementById(`pbp-period-${key.replace(/\W/g, "_")}`); el?.scrollIntoView({ block: "start", behavior: "auto" }); setTimeout(() => el?.scrollIntoView({ block: "start", behavior: "auto" }), 120); };
   const teams = [game.away, game.home];
 
   if (!feed && !error) return <section className="pbp" data-testid="pbp" aria-busy="true"><p className="pbp-state">Loading play-by-play…</p></section>;

@@ -1,0 +1,42 @@
+/* Game Center Team Stats and Players panes (Phase 5). Tokens only; no sideways scroll at 360px. */
+.gcs { display: grid; gap: 16px; min-width: 0; }
+.gcs h3 { margin: 0; font-size: 1rem; color: var(--text-6); }
+.gcs-note { margin: 0; color: var(--text-2); font-size: 0.85rem; }
+.gcs-note.warn { color: var(--amber-4); }
+.gcs-src { display: inline-block; margin-left: 6px; padding: 1px 6px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 0.7rem; color: var(--text-3); white-space: nowrap; }
+.gcs-src[data-src="official"] { border-color: var(--mint-3); color: var(--mint-5); }
+.gcs-src[data-src="derived"] { border-color: var(--amber-3); color: var(--amber-4); }
+.gcs-gauges { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.gcs-gauges .gauge { margin: 0; }
+.gcs table { width: 100%; border-collapse: collapse; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.gcs caption { text-align: left; padding: 0 0 6px; font-weight: 600; color: var(--text-5); }
+.gcs th, .gcs td { padding: 4px 4px; text-align: right; border-bottom: 1px solid var(--line-1); overflow-wrap: anywhere; }
+.gcs td { height: 44px; }
+.gcs th:first-child, .gcs td:first-child { text-align: left; }
+.gcs th { font-weight: 600; font-size: 0.78rem; color: var(--text-2); }
+.gcs th button { all: unset; box-sizing: border-box; cursor: pointer; min-height: 44px; min-width: 32px; display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 2px; color: inherit; font: inherit; }
+.gcs th:first-child button { justify-content: flex-start; }
+.gcs th button:focus-visible, .gcs-name:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 1px; }
+.gcs th[aria-sort="ascending"] button::after { content: "▲"; font-size: 0.6rem; }
+.gcs th[aria-sort="descending"] button::after { content: "▼"; font-size: 0.6rem; }
+.gcs th[aria-sort="ascending"], .gcs th[aria-sort="descending"] { color: var(--text-6); }
+.gcs td.lead { color: var(--mint-5); font-weight: 600; }
+.gcs-cmp td:first-child, .gcs-cmp th:first-child { width: 22%; }
+.gcs-cmp td.label, .gcs-cmp th.label { text-align: center; }
+.gcs-cmp td:last-child, .gcs-cmp th:last-child { text-align: right; width: 22%; }
+.gcs-per td, .gcs-per th { text-align: center; }
+.gcs-per td:first-child, .gcs-per th:first-child { text-align: left; }
+.gcs-name { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; justify-content: center; min-height: 44px; width: 100%; color: var(--text-6); text-align: left; }
+.gcs-name strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gcs-name small { color: var(--text-2); font-size: 0.72rem; font-weight: 400; overflow-wrap: anywhere; }
+.gcs .sub { display: none; }
+.gcs-notable { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.gcs-notable li { border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 10px; background: var(--surface-3); min-width: 0; }
+.gcs-notable p { margin: 0; color: var(--text-4); }
+.gcs-team { display: grid; gap: 10px; min-width: 0; }
+@media (max-width: 520px) {
+  .gcs th, .gcs td { padding: 2px 2px; font-size: 0.82rem; }
+  .gcs .col-hits, .gcs .col-blocks, .gcs .col-pim, .gcs .col-plusMinus { display: none; }
+  .gcs .sub { display: block; }
+  .gcs-sk td:first-child, .gcs-sk th:first-child { width: 36%; }
+}

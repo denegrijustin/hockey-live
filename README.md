@@ -50,6 +50,8 @@ The scenario controls have been removed from cards in favor of recent form and g
 
 Skater impact = goals + 0.7×assists + 0.1×shots + 0.25×plus/minus − 0.1×penalty minutes. Goalies use saves minus 90% of shots faced, a fixed .900 benchmark. These are box-score indexes, not WAR, expected goals, causal impact or a reproduction of HockeyStats' proprietary model. Upcoming players show historical season context, not projected lineups. Player context always uses the selected season; unpublished stats remain empty. Traded players may appear for multiple team stints.
 
+Two box-score indexes exist on purpose and are never merged: the impact index above, and the game score of Last night in the NHL (`src/lib/last-night.mjs`, which also counts blocks, hits, takeaways and giveaways). Game Center Notable performances are display filters on real stats (3+ points, hat trick, 6+ SOG, 25+ saves, shutout on 15+ shots, .950+ SV% on 15+ shots) that quote the numbers that triggered them; the two indexes only set the order. See `docs/phase5-stats.md`.
+
 ## NHL+ (MoneyPuck data)
 
 The NHL+ tab, the comparison strip on game cards and the Game Center analytics read one shared MoneyPuck snapshot. Credit: **Data: MoneyPuck.com** (https://moneypuck.com/), shown wherever the data appears.

@@ -66,7 +66,19 @@ export type Boxscore = {
   homeShots: number | null;
   awayShots: number | null;
   players: Player[];
+  /** Team totals (additive; absent on old cached responses). */
+  teams?: { home: TeamBox; away: TeamBox };
+  /** Per field: "official" (NHL team stats) or "derived" (summed from player lines). */
+  teamSource?: Partial<Record<keyof TeamBox, "official" | "derived">>;
+  /** Goals and shots by period when the NHL right-rail was available, else null. */
+  periods?: BoxPeriod[] | null;
 };
+export type TeamBox = {
+  sog: number | null; faceoffPct: number | null; faceoffWins: string | null;
+  powerPlay: { goals: number; opportunities: number; pct: number | null } | null;
+  pim: number | null; hits: number | null; blocks: number | null; giveaways: number | null; takeaways: number | null;
+};
+export type BoxPeriod = { number: number; type: string; goals: { home: number | null; away: number | null } | null; shots: { home: number | null; away: number | null } | null };
 export type PlayerSeason = {
   hits?: number | null;
   number?: number | null;

@@ -62,6 +62,12 @@ export function Methodology() {
             cards show season contributors as context, never a confirmed lineup
             or injury adjustment.
           </p>
+          <p>
+            Two different box-score indexes exist on purpose: the impact index above (player pages, matchup tables) and the game score used by Last night in the
+            NHL (it also weighs blocks, hits, takeaways and giveaways). In the Game Center, Notable performances are plain filters on real stats (3+ points, a hat
+            trick, 6+ shots, 25+ saves, a shutout on 15+ shots, a .950+ save % on 15+ shots); each card lists the numbers that triggered it, and the existing
+            indexes only set the order. Points = goals + assists; save % = saves ÷ shots against.
+          </p>
         </section>
         <section>
           <h3>Playoff chance</h3>

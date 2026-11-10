@@ -3,6 +3,7 @@ import {
   normalizeScoreboard,
   normalizeGameFeed,
   normalizeEdge,
+  isFreshLive,
 } from "./lib/game-data.mjs";
 import teams from "./data/teams.json";
 import { parseEspnScoreboard } from "./lib/espn-links.mjs";
@@ -36,7 +37,7 @@ async function get(path) {
   const r = await fetch(`${API}${path}`, {
     signal: AbortSignal.timeout(18000),
   });
-  if (!r.ok) throw Error(`NHL returned ${r.status}`);
+  if (!r.ok) throw Object.assign(Error(`NHL returned ${r.status}`), { status: r.status });
   return r.json();
 }
 async function statsGet(report, season, limit = 100) {
@@ -218,18 +219,24 @@ async function handle(request, env, ctx) {
         const hit = await caches.default.match(cacheKey);
         if (hit) return hit;
         const live = url.pathname === "/api/live";
-        const data = live
-          ? normalizeScoreboard(await get("/score/now"))
-          : normalizeGameFeed(
-              await get(
-                `/gamecenter/${url.pathname.split("/").pop()}/play-by-play`,
-              ),
-            );
-        const response = json(
-          data,
-          200,
-          live || !["OFF", "FINAL"].includes(data.state) ? 15 : 3600,
-        );
+        let data;
+        try {
+          data = live
+            ? normalizeScoreboard(await get("/score/now"))
+            : normalizeGameFeed(
+                await get(
+                  `/gamecenter/${url.pathname.split("/").pop()}/play-by-play`,
+                ),
+              );
+        } catch (e) {
+          // A game the NHL has not published yet is "not found", not an outage (the client keeps its normal cadence instead of backing off).
+          if (!live && e?.status === 404) return json({ error: "Play-by-play is not published for this game yet" }, 404, 15);
+          throw e;
+        }
+        // Edge TTL by game state (Phase 5): 15 s while live (the NHL feed's own cache), 120 s for FINAL (late corrections still arrive),
+        // an hour only once the game is OFF.
+        const ttl = live ? 15 : data.state === "OFF" ? 3600 : data.state === "FINAL" ? 120 : 15;
+        const response = json(data, 200, ttl);
         ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
         return response;
       }
@@ -352,12 +359,8 @@ async function handle(request, env, ctx) {
         const snapshot = newerSnapshot(cached, asset);
         // While any game is live, refresh far more often than the normal
         // 15-minute window so scores keep pace with play.
-        // A game "live" more than 8h after puck drop is stuck data (same rule as game-status.mjs), not a reason to poll fast.
-        const live = cached?.games?.some(
-          (g) =>
-            ["LIVE", "CRIT"].includes(g.state) &&
-            !(g.start && Date.now() - Date.parse(g.start) > 8 * 3600_000),
-        );
+        // A game "live" more than STALE_LIVE_MS after puck drop is stuck data (one shared rule: game-state.mjs), not a reason to poll fast.
+        const live = cached?.games?.some((g) => isFreshLive(g));
         const staleAfter = live ? 45000 : 900000;
         if (
           season === manifest.current &&

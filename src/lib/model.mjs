@@ -3,7 +3,7 @@ import { isCalledOff } from "./game-data.mjs";
 import { projectGame } from "./projection.mjs";
 export const finished = (g) => ["OFF", "FINAL"].includes(g.state);
 export const signed = (n, digits = 0) =>
-  `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
+  Number.isFinite(n) ? `${n > 0 ? "+" : ""}${n.toFixed(digits)}` : "—"; // a stat the feed left out shows a dash, never a crash
 const gamesBefore = (games, game) =>
   games.filter(
     (candidate) =>

@@ -25,8 +25,5 @@ test("Home load requests each URL a bounded number of times", async ({ page }) =
   expect(rows.reduce((t, [, n]) => t + n, 0), "total same-origin requests").toBeLessThanOrEqual(60);
 });
 
-// Placeholder for the final wave: personalization (relevance scoring, Home dedupe) cost with a large follow list.
-test.fixme("personalization calculation stays within budget with 32 favorites, 100 players, 100 saved games", async () => {
-  // Needs src/lib/relevance.mjs and src/lib/home-pulse.mjs (unmerged). Measure relevance() over a full day's slate x 100 saved games
-  // with performance.now() in node, budget TBD from the first real number (suggest < 10 ms per Home render).
-});
+// Personalization cost is measured in tests/relevance-perf.test.mjs (node: 0.05 ms median for 16 games, 32 favorites, 100 saved);
+// the personalised Home request count is in p4-validation.spec.ts.

@@ -339,3 +339,14 @@ test('game flow represents recent momentum and fades older events', () => {
  const afterOldGoal=gameFlow({...game,clock:'06:00'});
  assert.ok(afterOldGoal.current>=0,'the early away goal has faded out of the momentum window');
 });
+
+import { signed as signedFmt } from "../src/lib/model.mjs";
+test("signed() shows a dash for a missing stat and signs the rest", () => {
+  assert.equal(signedFmt(null), "—");
+  assert.equal(signedFmt(undefined), "—");
+  assert.equal(signedFmt(NaN), "—");
+  assert.equal(signedFmt(3), "+3");
+  assert.equal(signedFmt(-2), "-2");
+  assert.equal(signedFmt(0), "0");
+  assert.equal(signedFmt(1.234, 2), "+1.23");
+});

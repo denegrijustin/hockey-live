@@ -38,6 +38,8 @@ import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { Skeleton } from "./components/Skeleton";
 import { setPrefs, usePrefs } from "./lib/prefs.ts";
+// Not lazy: the first-visit banner renders with the board, so a late chunk would push the whole board down (layout shift).
+import Onboarding from "./components/Onboarding";
 import { GameCard } from "./components/GameCard";
 // Only the "games" tab is needed for first paint; the rest of the tabs
 // (and their per-team API calls) load on demand when a visitor switches
@@ -62,7 +64,6 @@ const ImperialismMap = lazy(() =>
   import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
 );
 const TeamSchedule = lazy(() => import("./components/TeamSchedule").then((m) => ({ default: m.TeamSchedule })));
-const Onboarding = lazy(() => import("./components/Onboarding"));
 const Settings = lazy(() => import("./components/settings/Settings").then((m) => ({ default: m.Settings })));
 const Recommended = lazy(() => import("./components/following/Recommended"));
 const Following = lazy(() => import("./components/following/Following").then((m) => ({ default: m.Following })));
@@ -444,7 +445,7 @@ export default function App() {
               </p>
             )}
             {((view === "scoreboard" && !onboarded && !favorites.length) || pickOpen) && (
-              <Suspense fallback={null}><Onboarding teams={teams} banner={view === "scoreboard" && !onboarded} open={pickOpen} onOpen={() => setPickOpen(true)} onClose={() => setPickOpen(false)} /></Suspense>
+              <Onboarding teams={teams} banner={view === "scoreboard" && !onboarded} open={pickOpen} onOpen={() => setPickOpen(true)} onClose={() => setPickOpen(false)} />
             )}
             {view === "scoreboard" && (
               <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} sim={playoff} onNavigate={setView} onBrowse={() => setView("games")} favorites={prefs.favorites} followedPlayers={prefs.players} density={prefs.display.density} homeOrder={prefs.display.homeOrder} sections={prefs.display.sections} onDensity={(density) => setPrefs((p) => ({ ...p, display: { ...p.display, density } }))} />

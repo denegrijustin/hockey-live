@@ -1,8 +1,7 @@
 import { fmtTime } from "./dates.mjs";
-import { isLive, isCalledOff, STALE_LIVE_MS } from "./game-data.mjs";
+import { STALE_LIVE_MS } from "./game-data.mjs";
+import { phaseOf } from "./game-state.mjs";
 export { STALE_LIVE_MS };
-
-const finished = (g) => g.state === "OFF" || g.state === "FINAL";
 
 /** Local start time, e.g. "7:00 PM"; `withZone` adds the zone name ("7:00 PM PST"). Uses the viewer's own time zone. */
 export function localTime(start, { withZone = false } = {}) {
@@ -18,18 +17,19 @@ export function gameStatus(g, { now = Date.now(), withZone = false } = {}) {
   const away = g.away, home = g.home;
   const has = g.awayScore != null && g.homeScore != null;
   const score = has ? `${away} ${g.awayScore}, ${home} ${g.homeScore}` : `${away} at ${home}`;
-  const sched = String(g.scheduleState ?? "OK").toUpperCase();
-  if (isCalledOff(g)) {
-    const kind = sched === "PPD" ? "postponed" : sched === "CNCL" ? "cancelled" : "suspended";
+  const info = phaseOf(g, { now });
+  const p = info.phase;
+  if (p === "postponed" || p === "cancelled" || p === "suspended") {
+    const kind = p;
     const label = kind === "postponed" ? "Postponed" : kind === "cancelled" ? "Canceled" : "Suspended";
     return { kind, label, short: label, aria: `${away} at ${home}, ${label.toLowerCase()}`, live: false, final: false, upcoming: false, stale: false };
   }
-  if (finished(g)) {
-    const tag = g.end === "OT" ? "Final/OT" : g.end === "SO" ? "Final/SO" : "Final";
-    return { kind: "final", label: tag, short: g.end && g.end !== "REG" ? `F/${g.end}` : "F", aria: `${score}, ${tag.toLowerCase().replace("/", " in ")}`, live: false, final: true, upcoming: false, stale: false };
+  if (info.final) {
+    const tag = info.label;
+    return { kind: "final", label: tag, short: p === "final-ot" ? "F/OT" : p === "final-so" ? "F/SO" : "F", aria: `${score}, ${tag.toLowerCase().replace("/", " in ")}`, live: false, final: true, upcoming: false, stale: false };
   }
-  if (isLive(g)) {
-    const stale = now - Date.parse(g.start) > STALE_LIVE_MS;
+  if (info.live) {
+    const stale = info.stale;
     const so = g.periodType === "SO";
     const ot = g.periodType === "OT";
     const period = so ? "SO" : ot ? "OT" : `P${g.period ?? "–"}`;

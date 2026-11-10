@@ -1,13 +1,16 @@
 import { normalizeGame, value } from "./normalize.mjs";
-export const isLive = (g) => ["LIVE", "CRIT"].includes(g.state);
-/** A live game this long after its puck drop with no word from the feed is stale (no NHL game lasts this long). */
-export const STALE_LIVE_MS = 8 * 3600_000;
+import { phaseName, phaseOf, isLivePhase, STALE_LIVE_MS } from "./game-state.mjs";
+// The helpers below are thin views of game-state.mjs phaseOf(), the one place that decides where a game stands.
+export { STALE_LIVE_MS };
+export const isLive = (g) => isLivePhase(phaseName(g));
 /** Live and not stale: the only kind of game that should keep fast refresh modes on. */
-export const isFreshLive = (g, now = Date.now()) => isLive(g) && !(g.start && now - Date.parse(g.start) > STALE_LIVE_MS);
+export const isFreshLive = (g, now = Date.now()) => isLivePhase(phaseName(g)) && !phaseOf(g, { now }).stale;
 const isFinished = (g) => g.state === "OFF" || g.state === "FINAL";
 /** A game that is not live or finished and whose schedule state says it is postponed, canceled or suspended. */
-export const isCalledOff = (g) =>
-  !isFinished(g) && !isLive(g) && ["PPD", "CNCL", "SUSP"].includes(String(g.scheduleState ?? "OK").toUpperCase());
+export const isCalledOff = (g) => {
+  const p = phaseName(g);
+  return p === "postponed" || p === "cancelled" || p === "suspended";
+};
 /** Still to be played as scheduled: not live, not finished, not postponed/canceled/suspended. Same rule as gameStatus().upcoming. */
 export const isUpcoming = (g) => !isFinished(g) && !isLive(g) && !isCalledOff(g);
 /** Deterministic game order: puck drop, then id (identical start times are common). */
@@ -22,6 +25,9 @@ export function normalizeScoreboard(j) {
       periodType: g.periodDescriptor?.periodType ?? null,
       clock: g.clock?.timeRemaining ?? null,
       intermission: g.clock?.inIntermission ?? false,
+      // Additive (Phase 5): the NHL's own clock state. Not in LIVE_FIELDS on purpose: they change every poll and must not defeat mergeScores' referential stability.
+      clockRunning: g.clock?.running ?? null,
+      clockSeconds: g.clock?.secondsRemaining ?? null,
       homeShots: g.homeTeam.sog ?? null,
       awayShots: g.awayTeam.sog ?? null,
     })),

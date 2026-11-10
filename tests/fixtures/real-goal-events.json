@@ -1,0 +1,318 @@
+{
+ "_provenance": "Trimmed from the real NHL api-web response https://api-web.nhle.com/v1/gamecenter/2025020500/play-by-play (MTL at NYR, 2025-26 regular season, final in OT), fetched 2026-11-10. Only 3 goal events, the roster rows they reference and the envelope fields normalizeGameFeed needs are kept; values untouched except two highlight URLs dropped.",
+ "id": 2025020500,
+ "season": 20252026,
+ "gameType": 2,
+ "gameDate": "2025-12-13",
+ "startTimeUTC": "2025-12-14T00:00:00Z",
+ "gameState": "OFF",
+ "gameScheduleState": "OK",
+ "periodDescriptor": {
+  "number": 4,
+  "periodType": "OT",
+  "maxRegulationPeriods": 3
+ },
+ "awayTeam": {
+  "id": 8,
+  "commonName": {
+   "default": "Canadiens"
+  },
+  "abbrev": "MTL",
+  "score": 4,
+  "sog": 18,
+  "logo": "https://assets.nhle.com/logos/nhl/svg/MTL_light.svg",
+  "darkLogo": "https://assets.nhle.com/logos/nhl/svg/MTL_dark.svg",
+  "placeName": {
+   "default": "Montr\u00e9al"
+  },
+  "placeNameWithPreposition": {
+   "default": "Montr\u00e9al",
+   "fr": "de Montr\u00e9al"
+  }
+ },
+ "homeTeam": {
+  "id": 3,
+  "commonName": {
+   "default": "Rangers"
+  },
+  "abbrev": "NYR",
+  "score": 5,
+  "sog": 29,
+  "logo": "https://assets.nhle.com/logos/nhl/svg/NYR_light.svg",
+  "darkLogo": "https://assets.nhle.com/logos/nhl/svg/NYR_dark.svg",
+  "placeName": {
+   "default": "New York"
+  },
+  "placeNameWithPreposition": {
+   "default": "New York",
+   "fr": "de New York"
+  }
+ },
+ "shootoutInUse": true,
+ "otInUse": true,
+ "clock": {
+  "timeRemaining": "02:04",
+  "secondsRemaining": 124,
+  "running": false,
+  "inIntermission": false
+ },
+ "plays": [
+  {
+   "eventId": 261,
+   "periodDescriptor": {
+    "number": 1,
+    "periodType": "REG",
+    "maxRegulationPeriods": 3
+   },
+   "timeInPeriod": "12:41",
+   "timeRemaining": "07:19",
+   "situationCode": "1551",
+   "homeTeamDefendingSide": "right",
+   "typeCode": 505,
+   "typeDescKey": "goal",
+   "sortOrder": 175,
+   "details": {
+    "xCoord": 83,
+    "yCoord": 1,
+    "zoneCode": "O",
+    "shotType": "wrist",
+    "scoringPlayerId": 8482737,
+    "scoringPlayerTotal": 7,
+    "assist1PlayerId": 8480018,
+    "assist1PlayerTotal": 27,
+    "assist2PlayerId": 8481540,
+    "assist2PlayerTotal": 16,
+    "eventOwnerTeamId": 8,
+    "goalieInNetId": 8478048,
+    "awayScore": 1,
+    "homeScore": 0,
+    "highlightClip": 6386454736112,
+    "highlightClipFr": 6386454627112,
+    "discreteClip": 6386453859112,
+    "discreteClipFr": 6386453664112
+   },
+   "pptReplayUrl": "https://wsr.nhle.com/sprites/20252026/2025020500/ev261.json"
+  },
+  {
+   "eventId": 281,
+   "periodDescriptor": {
+    "number": 1,
+    "periodType": "REG",
+    "maxRegulationPeriods": 3
+   },
+   "timeInPeriod": "14:10",
+   "timeRemaining": "05:50",
+   "situationCode": "1551",
+   "homeTeamDefendingSide": "right",
+   "typeCode": 505,
+   "typeDescKey": "goal",
+   "sortOrder": 191,
+   "details": {
+    "xCoord": 42,
+    "yCoord": 13,
+    "zoneCode": "O",
+    "shotType": "wrist",
+    "scoringPlayerId": 8482964,
+    "scoringPlayerTotal": 1,
+    "assist1PlayerId": 8478851,
+    "assist1PlayerTotal": 8,
+    "assist2PlayerId": 8480074,
+    "assist2PlayerTotal": 4,
+    "eventOwnerTeamId": 8,
+    "goalieInNetId": 8478048,
+    "awayScore": 2,
+    "homeScore": 0,
+    "highlightClip": 6386453069112,
+    "highlightClipFr": 6386453872112,
+    "discreteClip": 6386452398112,
+    "discreteClipFr": 6386453870112
+   },
+   "pptReplayUrl": "https://wsr.nhle.com/sprites/20252026/2025020500/ev281.json"
+  },
+  {
+   "eventId": 1104,
+   "periodDescriptor": {
+    "number": 4,
+    "periodType": "OT",
+    "maxRegulationPeriods": 3
+   },
+   "timeInPeriod": "02:56",
+   "timeRemaining": "02:04",
+   "situationCode": "1341",
+   "homeTeamDefendingSide": "left",
+   "typeCode": 505,
+   "typeDescKey": "goal",
+   "sortOrder": 866,
+   "details": {
+    "xCoord": 63,
+    "yCoord": -20,
+    "zoneCode": "O",
+    "shotType": "slap",
+    "scoringPlayerId": 8476468,
+    "scoringPlayerTotal": 9,
+    "goalInGame": 2,
+    "assist1PlayerId": 8476459,
+    "assist1PlayerTotal": 14,
+    "assist2PlayerId": 8476389,
+    "assist2PlayerTotal": 10,
+    "eventOwnerTeamId": 3,
+    "goalieInNetId": 8484170,
+    "awayScore": 4,
+    "homeScore": 5,
+    "highlightClip": 6386460492112,
+    "highlightClipFr": 6386458637112,
+    "discreteClip": 6386459515112,
+    "discreteClipFr": 6386459512112
+   },
+   "pptReplayUrl": "https://wsr.nhle.com/sprites/20252026/2025020500/ev1104.json"
+  }
+ ],
+ "rosterSpots": [
+  {
+   "teamId": 3,
+   "playerId": 8476389,
+   "firstName": {
+    "default": "Vincent"
+   },
+   "lastName": {
+    "default": "Trocheck"
+   },
+   "sweaterNumber": 16,
+   "positionCode": "C",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/NYR/8476389.png"
+  },
+  {
+   "teamId": 3,
+   "playerId": 8476459,
+   "firstName": {
+    "default": "Mika"
+   },
+   "lastName": {
+    "default": "Zibanejad"
+   },
+   "sweaterNumber": 93,
+   "positionCode": "C",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/NYR/8476459.png"
+  },
+  {
+   "teamId": 3,
+   "playerId": 8476468,
+   "firstName": {
+    "default": "J.T."
+   },
+   "lastName": {
+    "default": "Miller"
+   },
+   "sweaterNumber": 8,
+   "positionCode": "C",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/NYR/8476468.png"
+  },
+  {
+   "teamId": 3,
+   "playerId": 8478048,
+   "firstName": {
+    "default": "Igor"
+   },
+   "lastName": {
+    "default": "Shesterkin",
+    "cs": "\u0160es\u0165orkin",
+    "fi": "Shestjorkin",
+    "sk": "\u0160es\u0165orkin"
+   },
+   "sweaterNumber": 31,
+   "positionCode": "G",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/NYR/8478048.png"
+  },
+  {
+   "teamId": 8,
+   "playerId": 8478851,
+   "firstName": {
+    "default": "Alexandre"
+   },
+   "lastName": {
+    "default": "Carrier"
+   },
+   "sweaterNumber": 45,
+   "positionCode": "D",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/MTL/8478851.png"
+  },
+  {
+   "teamId": 8,
+   "playerId": 8480018,
+   "firstName": {
+    "default": "Nick"
+   },
+   "lastName": {
+    "default": "Suzuki"
+   },
+   "sweaterNumber": 14,
+   "positionCode": "C",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/MTL/8480018.png"
+  },
+  {
+   "teamId": 8,
+   "playerId": 8480074,
+   "firstName": {
+    "default": "Alexandre"
+   },
+   "lastName": {
+    "default": "Texier"
+   },
+   "sweaterNumber": 85,
+   "positionCode": "L",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/MTL/8480074.png"
+  },
+  {
+   "teamId": 8,
+   "playerId": 8481540,
+   "firstName": {
+    "default": "Cole"
+   },
+   "lastName": {
+    "default": "Caufield"
+   },
+   "sweaterNumber": 13,
+   "positionCode": "R",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/MTL/8481540.png"
+  },
+  {
+   "teamId": 8,
+   "playerId": 8482737,
+   "firstName": {
+    "default": "Zachary"
+   },
+   "lastName": {
+    "default": "Bolduc"
+   },
+   "sweaterNumber": 76,
+   "positionCode": "R",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/MTL/8482737.png"
+  },
+  {
+   "teamId": 8,
+   "playerId": 8482964,
+   "firstName": {
+    "default": "Arber"
+   },
+   "lastName": {
+    "default": "Xhekaj"
+   },
+   "sweaterNumber": 72,
+   "positionCode": "D",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/MTL/8482964.png"
+  },
+  {
+   "teamId": 8,
+   "playerId": 8484170,
+   "firstName": {
+    "default": "Jacob"
+   },
+   "lastName": {
+    "default": "Fowler"
+   },
+   "sweaterNumber": 32,
+   "positionCode": "G",
+   "headshot": "https://assets.nhle.com/mugs/nhl/20252026/MTL/8484170.png"
+  }
+ ]
+}

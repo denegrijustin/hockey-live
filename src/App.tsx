@@ -61,6 +61,7 @@ const ImperialismMap = lazy(() =>
 );
 const TeamSchedule = lazy(() => import("./components/TeamSchedule").then((m) => ({ default: m.TeamSchedule })));
 const Settings = lazy(() => import("./components/settings/Settings").then((m) => ({ default: m.Settings })));
+const Recommended = lazy(() => import("./components/following/Recommended"));
 const Following = lazy(() => import("./components/following/Following").then((m) => ({ default: m.Following })));
 const Injuries = lazy(() => import("./components/Injuries").then((m) => ({ default: m.Injuries })));
 const LastNight = lazy(() => import("./components/LastNight").then((m) => ({ default: m.LastNight })));
@@ -461,7 +462,7 @@ export default function App() {
               <ErrorBoundary resetKey="settings"><Suspense fallback={<Skeleton rows={3} label="Loading settings" />}><Settings /></Suspense></ErrorBoundary>
             )}
             {view === "following" && (
-              <ErrorBoundary resetKey="following"><Suspense fallback={<Skeleton rows={3} label="Loading what you follow" />}><Following /></Suspense></ErrorBoundary>
+              <ErrorBoundary resetKey="following"><Suspense fallback={<Skeleton rows={3} label="Loading what you follow" />}><Following games={data.games} teams={teams} analysis={analysis} /></Suspense></ErrorBoundary>
             )}
             {view === "injuries" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the injury report" />}>
@@ -513,6 +514,7 @@ export default function App() {
                     </>
                   )}
                 />
+                <Suspense fallback={null}><Recommended games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sim={playoff} /></Suspense>
                 {!phone && (
                   <>
                     <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>

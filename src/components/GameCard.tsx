@@ -15,6 +15,7 @@ import { LOGO_SIZE } from "./GameCardView";
 import { usePauseOffscreen } from "../motion";
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
 const GameCardExpanded = lazy(() => import("./GameCardExpanded"));
+const SaveGameButton = lazy(() => import("./SaveGameButton").then((m) => ({ default: m.SaveGameButton })));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
 export const GameCard = memo(function GameCard({
@@ -78,6 +79,7 @@ export const GameCard = memo(function GameCard({
           {day.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {status.live && !status.stale && <i className="gc-live-dot" aria-hidden="true" />}{status.label}
         </span>
         <div className="card-top-actions">
+          <Suspense fallback={null}><SaveGameButton game={game} awayName={away.name} homeName={home.name} /></Suspense>
           <button type="button" className="gc-icon" onClick={openGameCenter} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>
         </div>
       </div>

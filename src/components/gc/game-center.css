@@ -24,7 +24,7 @@
 .gc-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-1); }
 .gc-pill[data-state="live"] { color: var(--mint-6, var(--mint)); border-color: var(--mint); }
 .gc-pill[data-state="live"] i { background: var(--mint); }
-.gc-pill[data-state="stale"] { color: var(--rating, #d9a441); border-color: var(--rating, #d9a441); }
+.gc-pill[data-state="stale"] { color: color-mix(in srgb, var(--rating, #d9a441) 22%, var(--text-1)); border-color: var(--rating, #d9a441); }
 .gc-pill[data-state="stale"] i { background: var(--rating, #d9a441); }
 .gc-clock { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text-5); font-size: 0.9375rem; }
 .gc-stale-note { color: var(--text-2); }

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeftRight, Circle, CircleDot, Crosshair, Flag, Goal, Pause, Shield, Zap, type LucideIcon } from "lucide-react";
 import { useGameCenter } from "./GameCenterContext";
 import { usePlayerProfile } from "../player/PlayerContext";
@@ -119,6 +119,36 @@ export default function PlayByPlay({ focusEvent }: { focusEvent?: number }) {
     raf = requestAnimationFrame(go);
     return () => cancelAnimationFrame(raf);
   }, [targetKey, target, all.length, shown.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the reader's place: the browser's own scroll anchoring does not hold when a live poll adds rows above (newest first), so the row first in view
+  // is remembered while scrolling and restored after the list changes. Not applied at the very top (the newest rows should show there).
+  const place = useRef<{ id: string; top: number } | null>(null);
+  const scroller = () => root.current?.closest("dialog") as HTMLElement | null;
+  const ownScroll = useRef(false); // set when this component moved the scroll itself, so its scroll event is not taken as the reader moving
+  const rememberPlace = useCallback(() => {
+    const sc = scroller();
+    if (!sc || !root.current || root.current.offsetParent === null) return;
+    const edge = sc.getBoundingClientRect().top + 90;
+    const row = [...root.current.querySelectorAll<HTMLElement>(".pbp-event")].find((e) => e.getBoundingClientRect().bottom > edge);
+    place.current = row ? { id: row.id, top: row.getBoundingClientRect().top } : null;
+  }, []);
+  useEffect(() => { const sc = scroller(); const onScroll = () => { if (ownScroll.current) { ownScroll.current = false; return; } rememberPlace(); }; sc?.addEventListener("scroll", onScroll, { passive: true }); return () => sc?.removeEventListener("scroll", onScroll); }, [rememberPlace, feed]);
+  useLayoutEffect(() => {
+    const p = place.current;
+    const restore = () => {
+      const sc = scroller();
+      if (!sc || !p || sc.scrollTop <= 1 || !root.current || root.current.offsetParent === null) return;
+      const el = document.getElementById(p.id);
+      const d = el ? el.getBoundingClientRect().top - p.top : 0;
+      if (Math.abs(d) > 1) { ownScroll.current = true; sc.scrollTop += d; }
+    };
+    restore();
+    // Rows are content-visibility:auto: heights settle a frame later, so check once more (only if the reader has not scrolled meanwhile).
+    rememberPlace();
+    const mine = place.current;
+    const raf = requestAnimationFrame(() => { if (place.current === mine) { restore(); rememberPlace(); } });
+    return () => cancelAnimationFrame(raf);
+  }, [shown, newest, rememberPlace]);
 
   const toggle = useCallback((k: string) => setGroups((g) => (g.includes(k) ? g.filter((x) => x !== k) : [...g, k])), []);
   const goTo = (id: number | null) => { if (id != null) setJump((j) => ({ id, n: (j?.n ?? 0) + 1 })); };

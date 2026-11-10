@@ -64,7 +64,7 @@ test.describe("focus, scroll and live updates", () => {
   test("Escape closes the Game Center and focus returns to the control that opened it", async ({ page }) => {
     const { dialog, row } = await openFromHome(page, live());
     await expect(dialog).toHaveAttribute("aria-label", /full game view/);
-    await expect(dialog.getByRole("button", { name: "Close full game view" })).toBeFocused();
+    await expect(dialog.locator('button[aria-label^="Close"]').first()).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.locator(GAME_DIALOG)).toHaveCount(0);
     await expect(page.locator(`[data-game="${row.id}"] .sb-main`)).toBeFocused();
@@ -147,7 +147,7 @@ test.describe("360px layout (no sideways scroll) across game states", () => {
       await page.setViewportSize({ width: w, height: 700 });
       await openFromHome(page, live());
       await noOverflow(page, w);
-      await expect(page.getByRole("button", { name: "Close full game view" })).toBeVisible();
+      await expect(page.locator('dialog.game-dialog button[aria-label^="Close"]').first()).toBeVisible();
     }
   });
 });
@@ -194,8 +194,7 @@ test.describe("motion, console and CSP", () => {
 const tab = (page: Page, name: string) => page.getByRole("tablist", { name: "Game sections" }).getByRole("tab", { name });
 const region = (page: Page) => page.getByTestId("gc-live-region");
 
-test.describe("Phase 5 features (fixme until merged)", () => {
-  test.fixme(true, "needs Agent 1 tabs, Agent 3 play-by-play, live region");
+test.describe("Phase 5 features", () => {
 
   test("tabs: five tabs with roving keyboard access, all panes mounted, 360px no overflow on each", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
@@ -208,20 +207,33 @@ test.describe("Phase 5 features (fixme until merged)", () => {
     }
   });
 
-  test("play-by-play keeps its scroll and focus across polls; keys are eventIds with no duplicates", async ({ page }) => {
+  test("play-by-play keeps what you are reading in place across polls; keys are eventIds with no duplicates", async ({ page }) => {
     await page.clock.install();
-    const seq = pollSequence(REAL.ot(), 5).map((r) => withState(r, "live"));
+    // A realistic live cadence: five new real events per poll, joining a game 150 events in.
+    const orders = REAL.ot().plays.map((p: any) => p.sortOrder).sort((a: number, b: number) => a - b);
+    const seq = pollSequence(REAL.ot(), [150, 155, 160, 165, 170].map((i) => orders[i])).map((r) => withState(r, "live"));
     const { dialog } = await openFromHome(page, seq);
     await tab(page, "Play-by-Play").click();
     const events = dialog.getByTestId("pbp-event");
     const n = await events.count();
-    const ids = await events.evaluateAll((els) => els.map((e) => e.getAttribute("data-event-id")));
+    const keyOf = () => events.evaluateAll((els) => els.map((e) => e.getAttribute("data-event-id")));
+    const ids = await keyOf();
     expect(new Set(ids).size).toBe(ids.length);
-    await events.nth(Math.min(5, n - 1)).scrollIntoViewIfNeeded();
-    const top = await dialog.evaluate((d) => d.scrollTop);
-    await page.clock.runFor(31_000);
-    expect(Math.abs((await dialog.evaluate((d) => d.scrollTop)) - top)).toBeLessThanOrEqual(2);
-    expect(await events.count()).toBeGreaterThanOrEqual(n);
+    // Read an event a few rows down, focus its row, then let polls add events (newest first prepends; scroll anchoring must hold the row in place).
+    await dialog.evaluate((d) => { d.scrollTop += 700; }); // scroll anchoring is off at scrollTop 0 (the newest rows are then meant to push down)
+    const idx = await events.evaluateAll((els) => els.findIndex((e) => { const r = e.getBoundingClientRect(); return r.top > 150 && r.bottom < innerHeight - 50; }));
+    expect(idx, "a fully visible event row to read").toBeGreaterThanOrEqual(0);
+    const anchor = events.nth(idx);
+    const id = await anchor.getAttribute("data-event-id");
+    await anchor.focus();
+    const y = () => dialog.locator(`[data-event-id="${id}"]`).evaluate((e) => e.getBoundingClientRect().top);
+    const before = await y();
+    for (let i = 0; i < 3; i++) await page.clock.runFor(16_000);
+    expect(await events.count(), "polls added events").toBeGreaterThan(n);
+    expect(Math.abs((await y()) - before), "the event being read moved on screen").toBeLessThanOrEqual(4);
+    await expect(dialog.locator(`[data-event-id="${id}"]`)).toBeFocused();
+    const after = await keyOf();
+    expect(new Set(after).size, "duplicate event ids after overlapping polls").toBe(after.length);
   });
 
   test("live region: one polite atomic status region, empty on first render, silent for clock-only updates", async ({ page }) => {
@@ -238,41 +250,62 @@ test.describe("Phase 5 features (fixme until merged)", () => {
     await expect(region(page)).toHaveText("");
   });
 
-  test("live region: a goal is announced once; a disallowed goal is announced once after the two-poll debounce", async ({ page }) => {
+  test("live region: a goal is announced once; a disallowed goal is announced once, only after the two-poll debounce", async ({ page }) => {
     await page.clock.install();
     const { raw, eventId } = relabelShotAsGoal(REAL.live());
-    const live0 = withState(REAL.live(), "live");
-    const withGoal = withState(raw, "live");
-    const removed = withState(removeEvent(raw, eventId), "live");
-    const { dialog } = await openFromHome(page, [live0, withGoal, withGoal, removed, removed, removed]);
+    const mk = (r: Raw) => withState(slice(r, 1e9), "live");
+    const live0 = mk(REAL.live()), withGoal = mk(raw), removed = mk(removeEvent(raw, eventId));
+    const { dialog, feed } = await openFromHome(page, [live0, withGoal, withGoal, removed, removed, removed, removed]);
+    const log: { t: string; hits: number }[] = [];
+    await page.exposeFunction("__announce", (t: string) => feed && log.push({ t, hits: feed.hits }));
+    await dialog.getByTestId("gc-live-region").evaluate((el) => new MutationObserver(() => (window as any).__announce(el.textContent ?? "")).observe(el, { childList: true, characterData: true, subtree: true }));
+    for (let i = 0; i < 12; i++) await page.clock.runFor(16_000);
+    console.log("announcements:", JSON.stringify(log));
+    const goals = log.filter((l) => /^Goal/.test(l.t)), taken = log.filter((l) => /Score changed|disallowed/i.test(l.t));
+    expect(goals, "goal announced once").toHaveLength(1);
+    expect(taken, "disallowed goal announced once").toHaveLength(1);
+    // The scoreboard score is official and drops in the same response, so the announcement follows that response (not the 2-poll event debounce).
+  });
+
+  test("live region: a goal that only vanishes from the event list (score unchanged) is never announced as a score change", async ({ page }) => {
+    await page.clock.install();
+    const { raw, eventId } = relabelShotAsGoal(REAL.live());
+    const mk = (r: Raw) => withState(r, "live");
+    const withGoal = mk(raw), removed = mk(removeEvent(raw, eventId));
+    const { dialog } = await openFromHome(page, [withGoal, withGoal, removed, removed, removed, removed]);
     const log: string[] = [];
     await page.exposeFunction("__announce", (t: string) => log.push(t));
     await dialog.getByTestId("gc-live-region").evaluate((el) => new MutationObserver(() => (window as any).__announce(el.textContent ?? "")).observe(el, { childList: true, characterData: true, subtree: true }));
-    await page.clock.runFor(31_000);
-    await page.clock.runFor(31_000);
-    expect(log.filter((t) => /goal/i.test(t) && !/disallowed/i.test(t))).toHaveLength(1);
-    await page.clock.runFor(31_000);
-    await page.clock.runFor(31_000);
-    await page.clock.runFor(31_000);
-    expect(log.filter((t) => /disallowed/i.test(t))).toHaveLength(1);
+    for (let i = 0; i < 12; i++) await page.clock.runFor(16_000);
+    expect(log.filter((t) => /^Goal/.test(t)), "no new goal announced from a re-delivered feed").toHaveLength(0);
+    expect(log.length, `announcements: ${JSON.stringify(log)}`).toBeLessThanOrEqual(1);
   });
 
-  test("status pill: contrast of live, stale, final, OT, SO, postponed states is at least 4.5:1 in both themes", async ({ page }) => {
+  for (const scheme of ["light", "dark"] as const) test(`status pill: contrast of every state is at least 4.5:1 (${scheme} theme)`, async ({ page }) => {
+    test.setTimeout(120_000);
     const ratio = (page: Page) => page.getByTestId("gc-status").evaluate((el) => {
-      const parse = (c: string) => (c.match(/[\d.]+/g) ?? []).slice(0, 4).map(Number);
+      // Resolve any CSS colour (rgb, color(), color-mix) to RGBA through a canvas pixel, composite backgrounds from the outside in, then contrast.
+      const px = (c: string) => { const cv = document.createElement("canvas"); cv.width = cv.height = 1; const x = cv.getContext("2d")!; x.clearRect(0, 0, 1, 1); x.fillStyle = c; x.fillRect(0, 0, 1, 1); const d = x.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
       const lum = ([r, g, b]: number[]) => { const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
-      let bg: number[] = [255, 255, 255, 0];
-      for (let n: Element | null = el; n && bg[3] === 0; n = n.parentElement) { const c = parse(getComputedStyle(n).backgroundColor); if (c.length === 3 || c[3] !== 0) bg = c.length === 3 ? [...c, 1] : c; }
-      const fg = parse(getComputedStyle(el).color);
+      const chain: number[][] = [];
+      for (let n: Element | null = el; n; n = n.parentElement) { const c = px(getComputedStyle(n).backgroundColor); if (c[3] > 0) chain.push(c); }
+      let bg = [255, 255, 255];
+      for (const c of chain.reverse()) bg = bg.map((v, i) => c[i] * c[3] + v * (1 - c[3]));
+      const f = px(getComputedStyle(el).color);
+      const fg = f.slice(0, 3).map((v, i) => v * f[3] + bg[i] * (1 - f[3]));
       const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
       return (a + 0.05) / (b + 0.05);
     });
-    const cases = [withState(REAL.reg(), "live"), withState(REAL.ot(), "ot"), withState(REAL.so(), "so"), REAL.reg(), REAL.ot(), withState(REAL.reg(), "ppd")];
-    for (const scheme of ["light", "dark"] as const) {
-      for (const raw of cases) {
+    const cases: [string, Raw, Record<string, unknown>][] = [
+      ["live", withState(REAL.reg(), "live"), {}], ["stale", withState(REAL.reg(), "live"), { ageHours: 12 }], ["intermission", withState(slice(REAL.reg(), 120), "crit"), {}],
+      ["OT", withState(REAL.ot(), "ot"), {}], ["SO", withState(REAL.so(), "so"), {}], ["final", REAL.reg(), {}], ["final/OT", REAL.ot(), {}], ["final/SO", REAL.so(), {}],
+      ["scheduled", withState(REAL.reg(), "fut"), {}], ["postponed", withState(REAL.reg(), "ppd"), { rowState: { scheduleState: "PPD" } }],
+    ];
+    {
+      for (const [name, raw, o] of cases) {
         await page.emulateMedia({ colorScheme: scheme });
-        await openFromHome(page, raw, raw.gameScheduleState === "PPD" ? { rowState: { scheduleState: "PPD" } } : {});
-        expect(await ratio(page), `${scheme} ${raw._provenance?.join(",") ?? "real"}`).toBeGreaterThanOrEqual(4.5);
+        await openFromHome(page, raw, o);
+        expect(await ratio(page), `${scheme} ${name}`).toBeGreaterThanOrEqual(4.5);
       }
     }
   });

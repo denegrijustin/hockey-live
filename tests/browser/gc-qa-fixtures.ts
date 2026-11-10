@@ -20,7 +20,7 @@ const etDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Ne
  * Serves /api/game/:id from a sequence of raw responses: the Nth request gets step N (the last repeats). Returns a handle with the request log.
  * Does not touch /api/live; use openFromHome for the whole scoreboard + dialog setup.
  */
-export async function serveGame(page: Page, steps: Raw | Raw[], opts: { status?: number } = {}) {
+export async function serveGame(page: Page, steps: Raw | Raw[], opts: { status?: number; start?: string } = {}) {
   const seq: Raw[] = Array.isArray(steps) ? steps : [steps];
   const log: { url: string; at: number; step: number }[] = [];
   let n = 0;
@@ -36,7 +36,7 @@ export async function serveGame(page: Page, steps: Raw | Raw[], opts: { status?:
     const i = Math.min(n++, seq.length - 1);
     log.push({ url: route.request().url(), at: Date.now(), step: i });
     if (opts.status && opts.status !== 200) return route.fulfill({ status: opts.status, json: { error: "mock" } });
-    return route.fulfill({ json: B.feedOf(seq[i]) });
+    return route.fulfill({ json: B.feedOf(opts.start ? { ...seq[i], startTimeUTC: opts.start } : seq[i]) });
   });
   return handle;
 }
@@ -57,14 +57,15 @@ export async function mockSchedule(page: Page, rows: (snapshot?: boolean) => any
  * /api/live serves it (or fails with `liveStatus`), the feed is served from `steps`, and the Game Center is opened by clicking the row.
  * `rowState` overrides the scoreboard row (e.g. {scheduleState:"PPD"}); `reload` is not needed.
  */
-export async function openFromHome(page: Page, steps: Raw | Raw[], opts: { rowState?: Record<string, unknown>; liveStatus?: number } = {}) {
+export async function openFromHome(page: Page, steps: Raw | Raw[], opts: { rowState?: Record<string, unknown>; liveStatus?: number; ageHours?: number } = {}) {
   const seq: Raw[] = Array.isArray(steps) ? steps : [steps];
   const first = seq[0];
   const day = etDay(new Date());
   const finished = ["OFF", "FINAL"].includes(first.gameState);
-  const row = B.gameOf(first, { date: day, start: new Date(Date.now() - (finished ? 4 * 3600_000 : 3600_000)).toISOString(), ...opts.rowState });
+  const start = new Date(Date.now() - (opts.ageHours ?? (finished ? 4 : 1)) * 3600_000).toISOString();
+  const row = B.gameOf(first, { date: day, start, ...opts.rowState });
   await mockSchedule(page, () => [row], { liveStatus: opts.liveStatus });
-  const feed = await serveGame(page, seq);
+  const feed = await serveGame(page, seq, { start });
   await page.goto("/");
   await page.locator(`[data-game="${row.id}"] .sb-main`).click();
   const dialog = page.locator(GAME_DIALOG);

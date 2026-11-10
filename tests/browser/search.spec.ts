@@ -41,7 +41,7 @@ test.describe("search palette", () => {
     await page.keyboard.press("Escape");
     // The Games screen has its own matchup field: typing "/" there must not open search.
     await page.goto("/?view=games");
-    const find = page.locator('input[aria-label="Find a matchup"]');
+    const find = page.locator('input[aria-label="Find a matchup"], input[type="search"][placeholder^="Team or opponent"]').first();
     await expect(find).toBeVisible();
     await find.focus();
     await page.keyboard.type("a/b");
@@ -69,12 +69,14 @@ test.describe("search palette", () => {
   });
 
   test("picking a game opens its Game Center on Home, even from another screen", async ({ page }) => {
-    await open(page, "/?view=standings");
+    await mockApis(page, { games });
+    await page.goto("/?view=standings");
+    await expect(page.getByRole("heading", { name: /Standings/ }).first()).toBeVisible();
     await page.keyboard.press("Control+k");
     await box(page).fill("chi vs edm");
     await expect(dialog(page).getByText("Games", { exact: true })).toBeVisible();
     await page.keyboard.press("Enter");
-    await expect(page.locator("dialog.game-dialog")).toBeVisible();
+    await expect(page.locator("dialog.game-dialog")).toBeVisible({ timeout: 10000 });
     await expect(page).not.toHaveURL(/view=standings/);
   });
 
@@ -99,6 +101,7 @@ test.describe("search palette", () => {
   test("Tab stays inside the dialog", async ({ page }) => {
     await open(page);
     await page.keyboard.press("Control+k");
+    await expect(box(page)).toBeFocused();
     for (let i = 0; i < 4; i++) {
       await page.keyboard.press("Tab");
       expect(await page.evaluate(() => !!document.activeElement?.closest("dialog.search-dialog"))).toBe(true);

@@ -33,6 +33,9 @@ let pendingOpen: { id: number; at: number } | null = null;
 if (typeof window !== "undefined") window.addEventListener(OPEN_GAME_EVENT, (e) => { const id = (e as CustomEvent).detail?.id; if (Number.isFinite(id)) pendingOpen = { id, at: Date.now() }; });
 
 const RowDetails = lazy(() => import("./home/RowDetails"));
+const MyTeamsStrip = lazy(() => import("./home/MyTeamsStrip"));
+const MyPlayersStrip = lazy(() => import("./home/MyPlayersStrip"));
+const LeaguePulse = lazy(() => import("./home/LeaguePulse"));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
 type Status = "all" | "live" | "final" | "soon";
@@ -65,6 +68,16 @@ interface Props {
   onNavigate?: (view: string) => void;
   /** Playoff chances by team id, `{ [id]: { chance } }`, as `chancesForCards` returns them: the same numbers as the Playoff odds tab. */
   sim?: any;
+  /** Favorite team ids (prefs.favorites). None: Home is the league-wide board. Their games on the day move into My teams and leave the other sections. */
+  favorites?: string[];
+  /** Followed players (prefs.players). */
+  followedPlayers?: { id: number | string; name: string; team: string }[];
+  /** Card detail: "compact" drops the venue line and the insight line from the rows (no extra fetches either way). */
+  density?: "compact" | "comfortable";
+  /** "favorites": My teams / My players first. "league": Live and Upcoming first, My teams after. */
+  homeOrder?: "favorites" | "league";
+  sections?: { myTeams?: boolean; myPlayers?: boolean; worth?: boolean; pulse?: boolean };
+  onDensity?: (d: "compact" | "comfortable") => void;
 }
 
 /**
@@ -90,7 +103,7 @@ function useTick(ms: number) {
  * The home screen. Top to bottom: the day (heading and schedule strip), the status filter, then only the sections that have games for that day:
  * Live, Upcoming (by puck-drop slot), Worth watching, Completed, Postponed, League intelligence. A game is in exactly one of Live / Upcoming / Completed.
  */
-export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading, error, onRetry, onBrowse, onNavigate, sim }: Props) {
+export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading, error, onRetry, onBrowse, onNavigate, sim, favorites = [], followedPlayers = [], density = "comfortable", homeOrder = "favorites", sections, onDensity }: Props) {
   const today = useEtToday();
   const days = useMemo(() => [...new Set(games.filter((g) => g.type !== 0).map((g) => g.date))].sort(), [games]);
   const counts = useMemo(() => {
@@ -126,15 +139,20 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   const teamOf = useCallback((id: string) => teams.find((t) => t.id === id)!, [teams]);
 
   // Each game lands in exactly one list. The order of the tests is the rule: live, then finished, then called off, else upcoming.
+  const sec = { myTeams: sections?.myTeams !== false, myPlayers: sections?.myPlayers !== false, worth: sections?.worth !== false, pulse: sections?.pulse !== false };
+  const personal = favorites.length > 0;
+  const showTeams = personal && sec.myTeams;
+  // Dedupe: while My teams is on, a favorite team's games appear only there (the counts below are computed after removal).
+  const listGames = useMemo(() => (showTeams ? dayGames.filter((g) => !favorites.includes(g.home) && !favorites.includes(g.away)) : dayGames), [dayGames, favorites, showTeams]);
   const lists = useMemo(() => {
     const hot = (a: Game, b: Game) => (rated.get(b.id)?.heat ?? 0) - (rated.get(a.id)?.heat ?? 0) || byStartThenId(a, b);
-    const live = dayGames.filter(isLive).sort(hot);
-    const done = dayGames.filter((g) => !isLive(g) && finished(g));
-    const rest = dayGames.filter((g) => !isLive(g) && !finished(g));
+    const live = listGames.filter(isLive).sort(hot);
+    const done = listGames.filter((g) => !isLive(g) && finished(g));
+    const rest = listGames.filter((g) => !isLive(g) && !finished(g));
     const off = rest.filter(isCalledOff);
     const soon = rest.filter((g) => !isCalledOff(g) && isUpcoming(g)).sort(byStartThenId);
     return { live, soon, done: done.sort((a, b) => byStartThenId(b, a)), off: off.sort(byStartThenId) };
-  }, [dayGames, rated]);
+  }, [listGames, rated]);
 
   // One true reason per game, from the same standings snapshot and playoff simulation the rest of the app uses.
   const insights = useMemo(() => {
@@ -154,6 +172,10 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
     return [...lists.soon].sort((a, b) => (rated.get(b.id)?.score ?? 0) - (rated.get(a.id)?.score ?? 0) || byStartThenId(a, b)).slice(0, phone ? 3 : 5);
   }, [lists.soon, rated, phone]);
 
+  const playerRows = useMemo(() => followedPlayers.map((p) => {
+    const g = dayGames.find((x) => x.home === p.team || x.away === p.team);
+    return { id: p.id, name: p.name, team: p.team, line: g ? `${g.away} at ${g.home} · ${gameStatus(g).label}` : "No game on this day" };
+  }), [followedPlayers, dayGames]);
   const intel = useMemo<IntelLink[]>(() => {
     const out: IntelLink[] = [];
     const lastNight = shiftDay(today, -1);
@@ -182,6 +204,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   const goDay = (d: string) => { setDate(d); setOpenId(null); };
   const prevDay = days.filter((d) => d < day).at(-1), nextDay = days.find((d) => d > day);
 
+  const compact = density === "compact";
   const row = (g: Game, expanded: boolean) => (
     <li key={g.id} data-game-id={g.id}>
       <ScoreRow
@@ -194,7 +217,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
         rating={rated.get(g.id)}
         ranks={ranksFor?.(g.id)}
         analysisRow={analysis?.analysis[g.id]}
-        insight={insightFor(g)}
+        insight={compact ? undefined : insightFor(g)}
+        compact={compact}
         open={openId === g.id || expanded}
         onFull={() => openCenter(g)}
       />
@@ -205,20 +229,77 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   const nothing = !dayGames.length;
   const emptyFilter = !nothing && ((status === "live" && !lists.live.length) || (status === "soon" && !lists.soon.length) || (status === "final" && !lists.done.length));
 
+  const fallback = null;
+  const bLive = !error && show("live") && lists.live.length > 0 && (
+    <HomeSection key="live" id="live" label="Live" count={lists.live.length} live className="live">
+      {list(lists.live)}
+    </HomeSection>
+  );
+  const bSoon = !error && show("soon") && lists.soon.length > 0 && (
+    <HomeSection key="upcoming" id="upcoming" label="Upcoming" count={lists.soon.length} className="soon">
+      {(() => {
+        const slots = slotsOf(lists.soon, rated);
+        return slots.map((slot) => (
+          <div className="sb-slot" key={slot.key} data-slot={slot.key}>
+            {slots.length > 1 && <h3 className="sb-slot-h">{slot.label}</h3>}
+            {list(slot.games)}
+          </div>
+        ));
+      })()}
+    </HomeSection>
+  );
+  const bFeatured = !error && status === "all" && sec.worth && (
+    <FeaturedStrip key="featured" games={featured} teamOf={teamOf} now={now} ranksFor={ranksFor} insightFor={insightFor} onOpen={openCenter} />
+  );
+  const bDone = !error && show("final") && lists.done.length > 0 && (status === "all" ? (
+    <CompletedStrip key="done" games={lists.done} teamOf={teamOf} ranksFor={ranksFor} upsetOf={(g) => rated.get(g.id)?.upsetWon} onOpen={openCenter} />
+  ) : (
+    <HomeSection key="done" id="completed" label="Completed" count={lists.done.length} className="completed">
+      {list(lists.done, true)}
+    </HomeSection>
+  ));
+  const bOff = !error && status === "all" && lists.off.length > 0 && (
+    <HomeSection key="off" id="postponed" label="Postponed / canceled" count={lists.off.length} className="postponed">
+      {list(lists.off)}
+    </HomeSection>
+  );
+  const bTeams = !error && showTeams && (
+    <Suspense key="teams" fallback={fallback}>
+      <MyTeamsStrip favorites={favorites} teams={teams} table={analysis?.table} games={games} dayGames={dayGames} today={today} teamOf={teamOf} ranksFor={ranksFor} renderLive={(g) => <ul className="sb-list">{row(g, false)}</ul>} onOpen={openCenter} phone={phone} density={density} />
+    </Suspense>
+  );
+  const bPlayers = !error && sec.myPlayers && playerRows.length > 0 && (
+    <Suspense key="players" fallback={fallback}><MyPlayersStrip players={playerRows} phone={phone} onSeeAll={onNavigate ? () => onNavigate("following") : undefined} /></Suspense>
+  );
+  const bPulse = !error && personal && sec.pulse && status === "all" && !nothing && analysis && (
+    <Suspense key="pulse" fallback={fallback}><LeaguePulse table={analysis.table} teams={teams} games={games} sim={sim} phone={phone} /></Suspense>
+  );
+  // Order: with favorites first (the default) My teams and My players lead; league-first puts Live and Upcoming ahead of them.
+  const ordered = homeOrder === "league" && personal
+    ? [bLive, bSoon, bTeams, bPlayers, bFeatured, bPulse, bDone, bOff]
+    : [bTeams, bPlayers, bLive, bSoon, bFeatured, bPulse, bDone, bOff];
+
   return (
-    <section className="scoreboard" aria-label="Scoreboard">
+    <section className={`scoreboard${compact ? " density-compact" : ""}`} aria-label="Scoreboard">
       <div className="sb-toolbar">
         <div className="sb-days" data-testid="home-date">
           <DayHeading day={day} today={today} />
           <DateStrip value={day} onChange={goDay} today={today} days={days} min={min} max={max} counts={counts} />
         </div>
         {!error && (
+          <div className={`sb-tools${onDensity && (personal || compact) ? " has-density" : ""}`}>
+        {onDensity && (personal || compact) && (
+            <button type="button" className="sb-density" aria-pressed={compact} aria-label="Compact game cards" title={compact ? "Compact cards (on)" : "Compact cards"} onClick={() => onDensity(compact ? "comfortable" : "compact")}>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </button>
+          )}
           <div className="sb-filters" role="group" aria-label="Show games by status">
             {([["live", chip.live, "in progress"], ["final", chip.final, "completed"], ["soon", chip.soon, "upcoming"]] as const).map(([key, n, label]) => (
               <button key={key} type="button" className={`sb-chip ${key}`} aria-pressed={status === key} disabled={!n && status !== key} onClick={() => { setStatus(status === key ? "all" : key); setOpenId(null); }}>
                 {key === "live" && n > 0 && <i aria-hidden="true" />}<b>{n}</b> {label}
               </button>
             ))}
+          </div>
           </div>
         )}
       </div>
@@ -240,41 +321,9 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
         </div>
       )}
       {!error && emptyFilter && <p className="sb-empty">Nothing here on this day.</p>}
-      {!error && show("live") && lists.live.length > 0 && (
-        <HomeSection id="live" label="Live" count={lists.live.length} live className="live">
-          {list(lists.live)}
-        </HomeSection>
-      )}
-      {!error && show("soon") && lists.soon.length > 0 && (
-        <HomeSection id="upcoming" label="Upcoming" count={lists.soon.length} className="soon">
-          {(() => {
-            const slots = slotsOf(lists.soon, rated);
-            return slots.map((slot) => (
-              <div className="sb-slot" key={slot.key} data-slot={slot.key}>
-                {slots.length > 1 && <h3 className="sb-slot-h">{slot.label}</h3>}
-                {list(slot.games)}
-              </div>
-            ));
-          })()}
-        </HomeSection>
-      )}
-      {!error && status === "all" && (
-        <FeaturedStrip games={featured} teamOf={teamOf} now={now} ranksFor={ranksFor} insightFor={insightFor} onOpen={openCenter} />
-      )}
-      {!error && show("final") && lists.done.length > 0 && (status === "all" ? (
-        <CompletedStrip games={lists.done} teamOf={teamOf} ranksFor={ranksFor} upsetOf={(g) => rated.get(g.id)?.upsetWon} onOpen={openCenter} />
-      ) : (
-        <HomeSection id="completed" label="Completed" count={lists.done.length} className="completed">
-          {list(lists.done, true)}
-        </HomeSection>
-      ))}
-      {!error && status === "all" && lists.off.length > 0 && (
-        <HomeSection id="postponed" label="Postponed / canceled" count={lists.off.length} className="postponed">
-          {list(lists.off)}
-        </HomeSection>
-      )}
+      {ordered}
       {!error && status === "all" && !nothing && onNavigate && (
-        <LeagueIntel links={intel} onNavigate={onNavigate} onBrowse={onBrowse} />
+        <LeagueIntel links={intel} onNavigate={onNavigate} onBrowse={onBrowse} chips={personal && phone} />
       )}
       {!error && (status !== "all" || nothing || !onNavigate) && onBrowse && (
         <button type="button" className="sb-browse" onClick={onBrowse}>All games, filters &amp; search <Icon name="chevron" size={16} /></button>
@@ -304,8 +353,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   );
 }
 
-function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, insight, open, onFull }: {
-  game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: Rated; ranks?: Record<string, any> | null; analysisRow?: any; insight?: ReactNode; open: boolean; onFull: () => void;
+function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, insight, open, onFull, compact }: {
+  compact?: boolean; game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: Rated; ranks?: Record<string, any> | null; analysisRow?: any; insight?: ReactNode; open: boolean; onFull: () => void;
 }) {
   const gs = gameStatus(game);
   const kind = gs.final ? "final" : gs.live ? "live" : "soon";
@@ -323,7 +372,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
   const flowShown = (kind === "live" && !game.intermission) || (open && kind !== "soon");
   return (
     <GameCardView
-      variant="row" game={game} away={away} home={home} ranks={ranks} rating={rating} homePct={homePct} open={open} state={`tier-${tier.key}`}
+      variant="row" venue={!compact} game={game} away={away} home={home} ranks={ranks} rating={rating} homePct={homePct} open={open} state={`tier-${tier.key}`}
       hot={cl.both ? { label: cl.label } : null} scored={{ away: awayScored, home: homeScored }} onOpen={() => onFull()}
       ariaExtra={cl.both ? "close and late" : undefined}
       actions={<span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}

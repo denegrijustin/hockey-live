@@ -33,6 +33,7 @@ import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { Skeleton } from "./components/Skeleton";
+import { setPrefs, usePrefs } from "./lib/prefs";
 import { GameCard } from "./components/GameCard";
 import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs
@@ -116,6 +117,7 @@ const addressFor = (view: string, team: string | null = null) => {
   return `${location.pathname}${searchFor(view, date, { team, player })}`;
 };
 export default function App() {
+  const prefs = usePrefs();
   const [selected, setSelected] = useState<string[]>(initialTeams);
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry, reloadLive, source } = useSeason();
   const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
@@ -433,7 +435,7 @@ export default function App() {
               </p>
             )}
             {view === "scoreboard" && (
-              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} sim={playoff} onNavigate={setView} onBrowse={() => setView("games")} />
+              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} sim={playoff} onNavigate={setView} onBrowse={() => setView("games")} favorites={prefs.favorites} followedPlayers={prefs.players} density={prefs.display.density} homeOrder={prefs.display.homeOrder} sections={prefs.display.sections} onDensity={(density) => setPrefs((p) => ({ ...p, display: { ...p.display, density } }))} />
             )}
             {view === "yesterday" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading last night" />}>

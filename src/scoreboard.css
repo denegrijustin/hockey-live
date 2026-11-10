@@ -373,3 +373,17 @@ html[data-home] {
 .scoreboard .home-empty-go { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .scoreboard .home-empty-go button, .scoreboard .home-error button { min-height: 44px; padding: 0 16px; border-radius: 999px; }
 .scoreboard .home-error { margin-top: 12px; }
+
+/* Personal Home: the density toggle sits beside the status chips; the League intelligence links become a chip row on a phone. */
+.scoreboard .sb-tools { display: contents; }
+.scoreboard .sb-tools.has-density { display: flex; align-items: center; gap: 6px; flex-direction: row-reverse; justify-content: flex-end; }
+.scoreboard .sb-tools.has-density .sb-filters { flex: 1 1 auto; min-width: 0; }
+.scoreboard .sb-density { flex: none; display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: 10px; border: 1px solid var(--line-3); background: transparent; color: var(--text-4); cursor: pointer; }
+.scoreboard .sb-density[aria-pressed="true"] { color: var(--mint-5); border-color: var(--mint-5); }
+.scoreboard .sb-density:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; }
+@media (min-width: 1100px) { .scoreboard .sb-density { min-width: 34px; min-height: 34px; } .scoreboard .sb-tools.has-density { flex: none; } }
+@media (max-width: 720px) {
+  .scoreboard .home-intel.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .scoreboard .home-intel.chips a { display: inline-flex; min-height: 44px; padding: 0 14px; border-radius: 999px; }
+  .scoreboard .home-intel.chips a span, .scoreboard .home-intel.chips a svg { display: none; }
+}

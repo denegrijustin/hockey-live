@@ -1,3 +1,4 @@
+import { FavoriteMark } from "./FavoriteStar";
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { projectedStandings } from "../lib/standings-projection.mjs";
 import type { Game, Team } from "../types";
@@ -114,7 +115,7 @@ export function Standings({
         <td>
           <div className="table-team">
             <TeamLogo id={t.id} size={28} />
-            <b><TeamLink id={t.id}><span className="st-full">{t.name}</span><span className="st-abbr" title={t.name}>{t.id}</span></TeamLink>{s.gp ? <small className="st-sub">{spots[t.id] ? <span className="st-sub-spot">{SPOT_LABEL[spots[t.id]!.status]}{(mode === "current" && clinch[t.id]?.status) ? (clinch[t.id].status === "clinched" ? " ✓" : " ✗") : ""} · </span> : null}{signed(s.pts - entryLine(table, t.id, teams))} line</small> : null}</b>
+            <b><TeamLink id={t.id}><span className="st-full">{t.name}</span><span className="st-abbr" title={t.name}>{t.id}</span></TeamLink><FavoriteMark id={t.id} sr />{s.gp ? <small className="st-sub">{spots[t.id] ? <span className="st-sub-spot">{SPOT_LABEL[spots[t.id]!.status]}{(mode === "current" && clinch[t.id]?.status) ? (clinch[t.id].status === "clinched" ? " ✓" : " ✗") : ""} · </span> : null}{signed(s.pts - entryLine(table, t.id, teams))} line</small> : null}</b>
           </div>
         </td>
         <td className="st-div">{t.division}</td>

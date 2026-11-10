@@ -1,3 +1,4 @@
+import { FavoriteStar } from "./FavoriteStar";
 import { useMemo } from "react";
 import type { Game, Team } from "../types";
 import { useFeed } from "../lib/polling";
@@ -28,7 +29,7 @@ export default function TeamProfileBody({ team, teams, table, games, season, onC
       <div className="tp-head">
         <TeamLogo id={team.id} size={72} />
         <div>
-          <h2>{team.name}</h2>
+          <h2>{team.name} <FavoriteStar id={team.id} name={team.name} /></h2>
           <p className="tp-sub">
             <img src={`/logos/league/${team.conference === "E" ? "east" : "west"}.webp`} alt={team.conference === "E" ? "Eastern Conference" : "Western Conference"} width="48" height="35" />
             <img src={`/logos/league/${DIV_FILE[team.division] ?? "atlantic"}.webp`} alt={`${team.division} Division`} width="40" height="26" />

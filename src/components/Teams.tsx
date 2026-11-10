@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import type { Team } from "../types";
 import { PageHeader } from "./PageHeader";
+import { useFavorites } from "../hooks/useFavorites";
+import { FavoriteStar } from "./FavoriteStar";
 import { TeamLogo } from "./TeamLogo";
 import { Icon } from "./icons";
 import "./teams.css";
@@ -14,7 +16,8 @@ const CONFERENCES: [string, string, string[]][] = [
  * The team directory: every team, by conference and division, each one a tap away from its team page (record, form, schedule, roster, injuries).
  * Teams you follow (the My teams choice) come first and are marked.
  */
-export function Teams({ teams, table, selected, onSchedule, onOpenTeam }: { teams: Team[]; table: Record<string, any> | null; selected: string[]; onSchedule: () => void; onOpenTeam: (id: string) => void }) {
+export function Teams({ teams, table, onSchedule, onOpenTeam }: { teams: Team[]; table: Record<string, any> | null; onSchedule: () => void; onOpenTeam: (id: string) => void }) {
+  const { favorites: selected } = useFavorites();
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const matches = (t: Team) => !q || `${t.name} ${t.city} ${t.short} ${t.id}`.toLowerCase().includes(q);
@@ -30,6 +33,7 @@ export function Teams({ teams, table, selected, onSchedule, onOpenTeam }: { team
         </span>
         <span className="tm-chev" aria-hidden="true"><Icon name="chevron" size={18} /></span>
       </button>
+      <FavoriteStar id={t.id} name={t.name} />
     </li>
   );
   const shown = teams.filter(matches);
@@ -38,7 +42,7 @@ export function Teams({ teams, table, selected, onSchedule, onOpenTeam }: { team
       <PageHeader
         title="Teams"
         eyebrow="ALL 32 CLUBS"
-        actions={<button type="button" className="tm-sched" onClick={onSchedule}><Icon name="calendar" size={18} /> Team schedules</button>}
+        actions={<><button type="button" className="tm-sched" onClick={() => window.dispatchEvent(new Event("iceboard:pick-favorites"))}><Icon name="star" size={18} /> Pick favorites</button><button type="button" className="tm-sched" onClick={onSchedule}><Icon name="calendar" size={18} /> Team schedules</button></>}
       />
       <label className="tm-search">
         <Icon name="search" size={18} />

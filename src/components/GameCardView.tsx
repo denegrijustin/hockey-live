@@ -1,3 +1,4 @@
+import { FavoriteMark } from "./FavoriteStar";
 import { useRef, type ReactNode } from "react";
 import type { Game, Team } from "../types";
 import { gameStatus } from "../lib/game-status.mjs";
@@ -83,7 +84,7 @@ export function GameCardView(p: GameCardViewProps) {
     const full = variant === "row";
     return (
       <span className={`sb-team gcv-team${winner ? (winner === side ? " won" : " lost") : ""}`} key={team.id}>
-        <TeamLogo id={team.id} size={LOGO_SIZE[variant]} />
+        <TeamLogo id={team.id} size={LOGO_SIZE[variant]} /><FavoriteMark id={team.id} />
         {full ? (
           <span className="sb-name gcv-name" title={team.name}>
             {nick ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}

@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { test, expect } from "@playwright/test";
 
 test("compact card, concise expansion, outside collapse and direct Game Center", async ({ page }) => {
@@ -28,6 +29,7 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   expect(await dialog.evaluate((node) => node.getBoundingClientRect().width / innerWidth)).toBeGreaterThanOrEqual(0.75);
   expect(await dialog.evaluate((node) => node.getBoundingClientRect().height / innerHeight)).toBeGreaterThanOrEqual(0.85);
   await expect(card.locator(".card-expanded")).toHaveCount(0);
+  await gcTab(page, "Team Stats");
   await expect(dialog.locator(".matchup-comparison")).toBeVisible();
   await expect(dialog.locator(".goalie-comparison")).toBeVisible();
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Starting goalies" }).click();

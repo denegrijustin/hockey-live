@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { test, expect } from "@playwright/test";
 import { filterGames, selectAllTeams } from "./controls";
 import { goTo } from "./nav";
@@ -82,6 +83,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await shotsGraph.locator('.shot-chart').hover({position:{x:bounds!.width/2,y:bounds!.height/2}});
   await expect(shotsGraph.locator('.pulse-readout')).toContainText('Selected point');
   const previousEstimate = await dialog.locator(".projection .prediction-labels").innerText();
+  await gcTab(page, "Matchup Intelligence");
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Why this game matters" }).click();
   const why = dialog.locator(".game-center-section").filter({ hasText: "Why this game matters" });
   await expect(why).toHaveAttribute("open", "");
@@ -215,6 +217,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(dialog.locator(".ice-tilt")).toContainText("ICE TILT", { timeout: 20000 });
   await expect(dialog.locator(".shot-chart")).toHaveCount(2);
   // Player tracker: ice time and top/bottom-3 broken out per team.
+  await gcTab(page, "Players");
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Player leaders and trends" }).click();
   await expect(dialog).toContainText("PLAYER TRACKER");
   const trackerTeams = dialog.locator(".tracker-team");

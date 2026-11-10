@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { test, expect } from "@playwright/test";
 import { selectAllTeams } from "./controls";
 test("rank line, crossover comparison at 320px, team swapping and ESPN link", async ({ page }) => {
@@ -14,6 +15,7 @@ test("rank line, crossover comparison at 320px, team swapping and ESPN link", as
   await expect(card.locator(".team-rank").first()).toContainText("by points %");
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");
+  await gcTab(page, "Team Stats");
   const cmp = dialog.locator(".matchup-comparison");
   await expect(cmp.locator(".crossover-row").first()).toBeVisible();
   // One view at a time: offense against defense, and Swap sides is the way to the other direction.
@@ -50,6 +52,7 @@ for (const width of [320, 390, 1280]) {
     await page.getByLabel("Season", { exact: true }).selectOption("20252026");
     await page.locator(".game-card").first().getByRole("button", { name: /Open Game Center for/ }).click();
     const dialog = page.locator("dialog.game-dialog");
+    await gcTab(page, "Team Stats");
     await expect(dialog.locator(".crossover-row .gauge").first()).toBeVisible();
     await page.addStyleTag({ content: "dialog.game-dialog, dialog.game-dialog * { font-family: 'DejaVu Sans', Verdana, sans-serif !important; }" }); // a wide system font, as on a Mac or Windows machine
     await page.waitForTimeout(300);

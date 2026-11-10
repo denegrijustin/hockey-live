@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync, mkdirSync } from "node:fs";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
@@ -231,6 +232,7 @@ test("a11y: search palette, injuries and game-center lens at 360 (light + dark),
     // game center lens
     await page.locator(`.sb-row[data-game="9710"] .sb-main`).click();
     const dialog = page.locator("dialog.game-dialog");
+    await gcTab(page, "Matchup Intelligence");
     await dialog.locator("summary", { hasText: "Form and matchup lens" }).click();
     await expect(dialog.locator(".tr-lens")).toBeVisible();
     const b = await audit(page, "dialog.game-dialog .tr-lens");

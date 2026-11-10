@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { test, expect } from "@playwright/test";
 import { closeTeams, filterGames, isPhone, openTeams, filterValue, pickOnlyTeam, selectAllTeams, selectMyThree, teamCount } from "./controls";
 import { goTo, goToAllGames } from "./nav";
@@ -191,6 +192,7 @@ test("recent actual game contribution and mobile card layout", async ({
   const card = page.locator(".game-card").first();
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");
+  await gcTab(page, "Players");
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Player leaders and trends" }).click();
   await expect(dialog).toContainText("Final box score");
   await expect(dialog.locator(".impact-row").first()).toBeVisible();

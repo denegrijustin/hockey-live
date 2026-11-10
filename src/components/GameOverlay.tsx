@@ -1,4 +1,4 @@
-import { Suspense, lazy, useLayoutEffect, useMemo, useRef } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { fmtDay, fmtTime } from "../lib/dates.mjs";
 import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
@@ -9,8 +9,6 @@ import { GameRecap, DeservedHero } from "./GameRecap";
 import { Gauge } from "./Gauge";
 import { modelGaugeProps } from "./Projection";
 import { projectGame } from "../lib/projection.mjs";
-import { useGameFeedData } from "../lib/use-game-feed";
-import type { GameFeed } from "../types";
 import { TeamComparison } from "./TeamComparison";
 import { GoalieComparison } from "./TeamComparison";
 import { MatchupLens } from "./trends/MatchupLens";
@@ -23,6 +21,19 @@ import { InsightLine } from "./InsightLine";
 import { useSheetDrag } from "../hooks/useSheetDrag";
 import { TeamLogo } from "./TeamLogo";
 import { SaveGameButton } from "./SaveGameButton";
+import { GameCenterProvider, useGameCenter } from "./gc/GameCenterContext";
+import { GameCenterUiProvider, type GcTab } from "./gc/GameCenterUi";
+import { GameHeader } from "./gc/GameHeader";
+import { GameTabs } from "./gc/GameTabs";
+import { GameAnnouncer } from "./gc/GameAnnouncer";
+import OverviewPane from "./gc/OverviewPane";
+import { GameFollowBadge } from "./gc/FollowedGames";
+import "./gc/game-center.css";
+
+const PlayByPlay = lazy(() => import("./gc/PlayByPlay"));
+const TeamStatsPane = lazy(() => import("./gc/TeamStatsPane"));
+const PlayersPane = lazy(() => import("./gc/PlayersPane"));
+const IntelPane = lazy(() => import("./gc/IntelPane"));
 
 const PlayerTracker = lazy(() =>
   import("./PlayerTracker").then((m) => ({ default: m.PlayerTracker })),
@@ -43,6 +54,9 @@ export function GameOverlay({
   sim,
   onNavigate,
   onClose,
+  tab: routeTab,
+  event: routeEvent,
+  onTab,
 }: {
   game: Game;
   home: Team;
@@ -62,12 +76,48 @@ export function GameOverlay({
   onNavigate?: (view: string) => void;
   /** Where the page was scrolled when the Game Center was opened; the page returns there on close. */
   returnTo?: number;
-  onClose: () => void;
+  /** `replace` closes without going Back (another navigation follows straight away). */
+  onClose: (opts?: { replace?: boolean }) => void;
+  /** The tab and play-by-play event the address names (?tab=&event=), and the callback that writes a tab change back to it. */
+  tab?: GcTab | null;
+  event?: number | null;
+  onTab?: (tab: GcTab, event?: number | null) => void;
 }) {
   useTimeKey();
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const pageScroll = useRef(0);
+  const [tab, setTab] = useState<GcTab>(routeTab ?? "overview");
+  const [focusEvent, setFocusEvent] = useState<number | null>(routeEvent ?? null);
+  useEffect(() => {
+    if (routeTab) setTab(routeTab);
+    setFocusEvent(routeEvent ?? null);
+  }, [routeTab, routeEvent]);
+  const goTab = (next: GcTab, event: number | null = null) => {
+    setTab(next);
+    setFocusEvent(event);
+    onTab?.(next, event);
+  };
+  // The sticky tab bar sits exactly under the (sticky) toolbar, whatever height the toolbar has on this screen.
+  useLayoutEffect(() => {
+    const element = dialog.current, bar = element?.querySelector<HTMLElement>(".dialog-toolbar");
+    if (!element || !bar) return;
+    const set = () => element.style.setProperty("--gc-bar", `${bar.offsetHeight}px`);
+    set();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
+  // Switching tab from far down the page brings the new pane's top into view under the sticky bars.
+  const firstTab = useRef(true);
+  useEffect(() => {
+    if (firstTab.current) { firstTab.current = false; return; }
+    const element = dialog.current, bar = element?.querySelector<HTMLElement>(".gc-tabs");
+    if (!element || !bar) return;
+    const top = bar.offsetTop - (element.querySelector<HTMLElement>(".dialog-toolbar")?.offsetHeight ?? 44);
+    if (element.scrollTop > top) element.scrollTop = Math.max(0, top);
+  }, [tab]);
   const past = finished(game),
     live = isLive(game);
   const previousMeetings = allGames.filter((candidate) =>
@@ -75,6 +125,7 @@ export function GameOverlay({
     ((candidate.home === game.home && candidate.away === game.away) ||
       (candidate.home === game.away && candidate.away === game.home)),
   ).slice(-5).reverse();
+  const dayGames = useMemo(() => allGames.filter((g) => g.date === game.date && g.type !== 0), [allGames, game.date]);
   const restLabel = (team: string) => {
     const days = restDays(allGames, game, team);
     if (days == null) return "Rest unavailable";
@@ -139,89 +190,111 @@ export function GameOverlay({
           <span className="close-done">Done</span>
         </button>
       </div>
-      <div className="dialog-matchup">
-        {[away, home].map((t, i) => (
-          <div className="dialog-team" key={t.id}>
-            <TeamLogo id={t.id} size={54} eager />
-            <div>
-              <span>{t.city}</span>
-              <h3>{t.short}</h3>
-            </div>
-            {past || live ? (
-              <b>{(i === 0 ? game.awayScore : game.homeScore) ?? "—"}</b>
-            ) : (
-              <small>{i === 0 ? "AWAY" : "HOME"}</small>
-            )}
+      <GameCenterProvider game={game}>
+        <GameCenterUiProvider value={{ tab, focusEvent, goTab }}>
+          <GameAnnouncer home={home} away={away} />
+          <GameHeader home={home} away={away} />
+          <p className="detail-note dialog-status">
+            {fmtDay(game.start, { long: true })}{" "}
+            ·{" "}
+            {past
+              ? `FINAL${game.end !== "REG" ? " / " + game.end : ""}`
+              : live
+                ? `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`
+                : fmtTime(game.start, { withZone: true })}
+            {" · "}
+            {analysis.kind} · {analysis.score}/100 overall importance · Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}
+          </p>
+          <div className="game-center-actions">
+            <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
+            <SaveGameButton game={game} awayName={away.name} homeName={home.name} labeled />
+            <GameFollowBadge game={game} awayName={away.name} homeName={home.name} />
+            <span>{game.venue || "Venue unavailable"}</span>
           </div>
-        ))}
-      </div>
-      <p className="detail-note dialog-status">
-        {fmtDay(game.start, { long: true })}{" "}
-        ·{" "}
-        {past
-          ? `FINAL${game.end !== "REG" ? " / " + game.end : ""}`
-          : live
-            ? `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`
-            : fmtTime(game.start, { withZone: true })}
-        {" · "}
-        {analysis.kind} · {analysis.score}/100 overall importance · Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}
-      </p>
-      {live && game.intermission && <IntermissionRink game={game} home={home} away={away} />}
-      <div className="game-center-actions">
-        <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
-        <SaveGameButton game={game} awayName={away.name} homeName={home.name} labeled />
-        <span>{game.venue || "Venue unavailable"}</span>
-      </div>
-      {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} before={before} baseline={baseline} />}
-      <details className="game-center-section" open>
-        <summary>Projection and game pulse <span>+</span></summary>
-        <GameData eager game={game} home={home} away={away} before={before} baseline={baseline} />
-      </details>
-      {(past || live) && <RecapSection game={game} home={home} away={away} live={live} />}
-      <details className="game-center-section" open>
-        <summary>Offense vs. defense <span>+</span></summary>
-        <section className="dialog-comparison" aria-label="Season team comparison">
-          <TeamComparison away={away} home={home} season={game.season} table={before} ranks={ranks} />
-        </section>
-      </details>
-      <details className="game-center-section">
-        <summary>Form and matchup lens <span>+</span></summary>
-        <div className="dialog-comparison"><MatchupLens away={away} home={home} table={before} games={allGames} season={game.season} /></div>
-      </details>
-      <details className="game-center-section" open>
-        <summary>Starting goalies <span>+</span></summary>
-        <GoalieComparison game={game} away={away} home={home} />
-      </details>
-      <GameInjuries away={away} home={home} season={game.season} />
-      <GameCenterAnalytics game={game} away={away} home={home} onClose={onClose} />
-      <details className="game-center-section">
-        <summary>Player leaders and trends <span>+</span></summary>
-        <Suspense fallback={<p className="loading" role="status">Loading player tracker…</p>}>
-          <PlayerTracker game={game} home={home} away={away} sourceSeason={sourceSeason} />
-        </Suspense>
-      </details>
-      <details className="game-center-section">
-        <summary>Recent meetings, rest and availability <span>+</span></summary>
-        <div className="matchup-context">
-          <div className="rest-grid"><span><b>{away.id}</b>{restLabel(away.id)}</span><span><b>{home.id}</b>{restLabel(home.id)}</span></div>
-          <p className="detail-note">Season series entering this game: {series.played ? `${away.id} ${series.away}–${series.home} ${home.id}` : "first meeting"}.</p>
-          {previousMeetings.length ? <ul>{previousMeetings.map((meeting) => <li key={meeting.id}>{meeting.date} · {meeting.away} {meeting.awayScore}–{meeting.homeScore} {meeting.home} {meeting.end !== "REG" ? `(${meeting.end})` : ""}</li>)}</ul> : <p className="detail-note">No prior meetings this season.</p>}
-          <p className="availability-note">Injuries are in the Injuries section above, from ESPN's injury report. The NHL public feed has no line-combination or confirmed-lineup data, so no lineup claims are shown.</p>
-        </div>
-      </details>
-      <details className="game-center-section">
-        <summary>Why this game matters <span>+</span></summary>
-        {insights.length > 0 && (
-          <div className="game-insights" data-testid="game-insights">
-            {insights.map((insight) => (
-              <InsightLine key={insight.id} insight={insight} variant="list" onNavigate={onNavigate ? (view) => { onClose(); onNavigate(view); } : undefined} />
-            ))}
-          </div>
-        )}
-        <h4 className="detail-note">Model inputs</h4>
-        <ul className="model-reasons">{analysis.reasons.map((reason: string) => <li key={reason}>{reason}</li>)}</ul>
-        <p className="detail-note">These are model inputs and rank comparisons, not guarantees or isolated causal claims.</p>
-      </details>
+          <GameTabs
+            tab={tab}
+            onTab={(next) => goTab(next)}
+            panes={{
+              overview: (
+                <>
+                  {live && game.intermission && <IntermissionRink game={game} home={home} away={away} />}
+                  <div className="gc-cols">
+                    <div className="gc-col"><OverviewPane home={home} away={away} dayGames={dayGames} /></div>
+                    <div className="gc-col">
+                      {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} before={before} baseline={baseline} />}
+                      <details className="game-center-section" open>
+                        <summary>Projection and game pulse <span>+</span></summary>
+                        <GameData eager game={game} home={home} away={away} before={before} baseline={baseline} />
+                      </details>
+                    </div>
+                  </div>
+                  {(past || live) && <RecapSection game={game} home={home} away={away} live={live} />}
+                </>
+              ),
+              pbp: <Suspense fallback={null}><PlayByPlay /></Suspense>,
+              stats: (
+                <>
+                  <details className="game-center-section" open>
+                    <summary>Offense vs. defense <span>+</span></summary>
+                    <section className="dialog-comparison" aria-label="Season team comparison">
+                      <TeamComparison away={away} home={home} season={game.season} table={before} ranks={ranks} />
+                    </section>
+                  </details>
+                  <details className="game-center-section" open>
+                    <summary>Starting goalies <span>+</span></summary>
+                    <GoalieComparison game={game} away={away} home={home} />
+                  </details>
+                  <Suspense fallback={null}><TeamStatsPane /></Suspense>
+                </>
+              ),
+              players: (
+                <>
+                  <GameInjuries away={away} home={home} season={game.season} />
+                  <GameCenterAnalytics game={game} away={away} home={home} onClose={() => onClose({ replace: true })} />
+                  <details className="game-center-section">
+                    <summary>Player leaders and trends <span>+</span></summary>
+                    <Suspense fallback={<p className="loading" role="status">Loading player tracker…</p>}>
+                      <PlayerTracker game={game} home={home} away={away} sourceSeason={sourceSeason} />
+                    </Suspense>
+                  </details>
+                  <Suspense fallback={null}><PlayersPane /></Suspense>
+                </>
+              ),
+              intel: (
+                <>
+                  <details className="game-center-section">
+                    <summary>Form and matchup lens <span>+</span></summary>
+                    <div className="dialog-comparison"><MatchupLens away={away} home={home} table={before} games={allGames} season={game.season} /></div>
+                  </details>
+                  <details className="game-center-section">
+                    <summary>Recent meetings, rest and availability <span>+</span></summary>
+                    <div className="matchup-context">
+                      <div className="rest-grid"><span><b>{away.id}</b>{restLabel(away.id)}</span><span><b>{home.id}</b>{restLabel(home.id)}</span></div>
+                      <p className="detail-note">Season series entering this game: {series.played ? `${away.id} ${series.away}–${series.home} ${home.id}` : "first meeting"}.</p>
+                      {previousMeetings.length ? <ul>{previousMeetings.map((meeting) => <li key={meeting.id}>{meeting.date} · {meeting.away} {meeting.awayScore}–{meeting.homeScore} {meeting.home} {meeting.end !== "REG" ? `(${meeting.end})` : ""}</li>)}</ul> : <p className="detail-note">No prior meetings this season.</p>}
+                      <p className="availability-note">Injuries are in the Injuries section of the Players tab, from ESPN's injury report. The NHL public feed has no line-combination or confirmed-lineup data, so no lineup claims are shown.</p>
+                    </div>
+                  </details>
+                  <details className="game-center-section">
+                    <summary>Why this game matters <span>+</span></summary>
+                    {insights.length > 0 && (
+                      <div className="game-insights" data-testid="game-insights">
+                        {insights.map((insight) => (
+                          <InsightLine key={insight.id} insight={insight} variant="list" onNavigate={onNavigate ? (view) => { onClose({ replace: true }); onNavigate(view); } : undefined} />
+                        ))}
+                      </div>
+                    )}
+                    <h4 className="detail-note">Model inputs</h4>
+                    <ul className="model-reasons">{analysis.reasons.map((reason: string) => <li key={reason}>{reason}</li>)}</ul>
+                    <p className="detail-note">These are model inputs and rank comparisons, not guarantees or isolated causal claims.</p>
+                  </details>
+                  <Suspense fallback={null}><IntelPane /></Suspense>
+                </>
+              ),
+            }}
+          />
+        </GameCenterUiProvider>
+      </GameCenterProvider>
     </dialog>
   );
   return node;
@@ -229,7 +302,7 @@ export function GameOverlay({
 
 /** The deserved-to-win gauge first thing in the Game Center: stats and game flow, not the pregame odds. */
 function DeservedTop({ game, home, away, live, before, baseline }: { game: Game; home: Team; away: Team; live: boolean; before: any; baseline: any }) {
-  const { data } = useGameFeedData(game);
+  const { feed: data } = useGameCenter();
   const model = projectGame(game, before, baseline, data);
   // Side by side with the model's own win chance: one row, no empty space around a lone dial.
   const beside = model ? <section className="gr-model" aria-label="Model win chance"><h4>{model.score ? "Projected final score" : "Model win chance"} <small>{model.score ? "most likely result, win chance beneath" : "score, time and shots"}</small></h4><Gauge size="lg" {...modelGaugeProps(game, model)} /></section> : null;
@@ -238,7 +311,7 @@ function DeservedTop({ game, home, away, live, before, baseline }: { game: Game;
 
 /** The game recap with the shot charts, in its own section: it reads the live feed, so it is here while a game is on as well as after it. */
 function RecapSection({ game, home, away, live }: { game: Game; home: Team; away: Team; live: boolean }) {
-  const { data } = useGameFeedData(game);
+  const data = useGameCenter().feed ?? undefined;
   return (
     <details className="game-center-section game-center-recap" open data-testid="gc-recap-section">
       <summary>Game recap and shot chart <span>+</span></summary>

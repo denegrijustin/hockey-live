@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
@@ -25,6 +26,7 @@ async function open(page: Page, injuries: unknown = report, expand = true) {
   await page.route(`**/api/injuries/${season}`, (route) => (injuries ? route.fulfill({ json: injuries }) : route.fulfill({ status: 502, body: "{}" })));
   await page.goto("/");
   await page.locator(`.sb-row[data-game="${game.id}"] .sb-main`).click();
+  if (await page.locator("dialog.game-dialog").waitFor({ timeout: 4000 }).then(() => true, () => false)) await gcTab(page, "Players"); // injuries live in the Players tab of the Game Center
   // The injuries are an expandable section, closed until asked for.
   if (expand) await page.getByTestId("game-injuries").locator("summary").click();
 }
@@ -80,7 +82,7 @@ test("injuries are an expandable section: closed by default, so the key stats st
 
 test("in the Game Center the injuries are their own expandable section", async ({ page }) => {
   await open(page, report, false);
-  await page.locator(`.sb-row[data-game="${game.id}"]`).getByRole("button", { name: /Open Game Center/ }).click();
+  await gcTab(page, "Players");
   const dialog = page.locator("dialog.game-dialog, .game-panel").first();
   const box = dialog.getByTestId("game-injuries");
   await expect(box).toBeVisible();

@@ -16,3 +16,8 @@ export async function goTo(page: Page, name: string) {
 export async function goToAllGames(page: Page) {
   await goTo(page, "Games");
 }
+
+/** Selects a Game Center tab (Overview, Play-by-Play, Team Stats, Players, Matchup Intelligence); the panes stay mounted, only the active one is visible. */
+export async function gcTab(page: Page, name: "Overview" | "Play-by-Play" | "Team Stats" | "Players" | "Matchup Intelligence") {
+  await page.locator("dialog.game-dialog").getByRole("tab", { name }).click();
+}

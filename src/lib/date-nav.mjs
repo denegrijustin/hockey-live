@@ -1,5 +1,6 @@
 /** Pure date-navigation rules shared by the day strip on Home and Games. `days` is the sorted list of days that have games. */
 import { isDay, shiftDay } from "./dates.mjs";
+import { withGameRoute } from "./gc-route.mjs";
 
 /** The day to show when nobody picked one: today if it has games, else the next game day, else the last one. */
 export function autoDay(days, today) {
@@ -58,6 +59,7 @@ export function searchFor(view, date, extra = {}) {
   // A team page (?view=teams&team=EDM) and an open player profile (&player=8478402) have their own addresses; both ids are validated here so a bad link cannot reach the app.
   if (extra.team && view === "teams" && /^[A-Z]{3}$/.test(extra.team)) p.set("team", extra.team);
   if (extra.player && /^\d{7}$/.test(String(extra.player))) p.set("player", String(extra.player));
-  const s = p.toString();
-  return s ? `?${s}` : "";
+  const s = p.toString() ? `?${p.toString()}` : "";
+  // An open Game Center (?game=ID&tab=…&event=…) travels with the address; the id and tab are validated in withGameRoute.
+  return extra.game ? withGameRoute(s, extra.game) : s;
 }

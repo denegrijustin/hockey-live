@@ -27,10 +27,13 @@ import { haptic, useChanged, useFlip } from "../motion";
 import { Skeleton } from "./Skeleton";
 
 import { OPEN_GAME_EVENT } from "../lib/open-game";
+import { useGameRoute } from "../hooks/useGameRoute";
+import { GameNotFound } from "./gc/GameNotFound";
+import type { GcTab } from "./gc/GameCenterUi";
 
 // Remembers an openGame request made while another screen was showing, so Home can open the overlay when it mounts a moment later.
-let pendingOpen: { id: number; at: number } | null = null;
-if (typeof window !== "undefined") window.addEventListener(OPEN_GAME_EVENT, (e) => { const id = (e as CustomEvent).detail?.id; if (Number.isFinite(id)) pendingOpen = { id, at: Date.now() }; });
+let pendingOpen: { id: number; tab?: GcTab; event?: number; at: number } | null = null;
+if (typeof window !== "undefined") window.addEventListener(OPEN_GAME_EVENT, (e) => { const d = (e as CustomEvent).detail; if (Number.isFinite(d?.id)) pendingOpen = { id: d.id, tab: d.tab, event: d.event, at: Date.now() }; });
 
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
 const RowDetails = lazy(() => import("./home/RowDetails"));
@@ -189,15 +192,16 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   }, [games, today, sim, lists.soon.length, lists.live.length, analysis]);
 
   const chip = useMemo(() => ({ live: lists.live.length, final: lists.done.length, soon: lists.soon.length }), [lists]);
-  const [centerId, setCenterId] = useState<number | null>(null);
+  const gc = useGameRoute();
+  const centerId = gc.route?.id ?? null;
   const scrollAtOpen = useRef(0);
-  const openCenter = (g: Game) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); };
+  const openCenter = (g: Game) => { scrollAtOpen.current = window.scrollY; gc.open(g.id); };
   // Search, team and player pages ask Home to open a game (openGame). A request made while another screen was showing is picked up on mount.
   useEffect(() => {
-    const open = (id: number) => { scrollAtOpen.current = window.scrollY; setCenterId(id); };
-    if (pendingOpen && Date.now() - pendingOpen.at < 5000) open(pendingOpen.id);
+    const open = (id: number, tab?: GcTab, event?: number) => { scrollAtOpen.current = window.scrollY; gc.open(id, { tab, event }); };
+    if (pendingOpen && Date.now() - pendingOpen.at < 5000) open(pendingOpen.id, pendingOpen.tab, pendingOpen.event);
     pendingOpen = null;
-    const on = (e: Event) => { const id = (e as CustomEvent).detail?.id; if (Number.isFinite(id)) { pendingOpen = null; open(id); } };
+    const on = (e: Event) => { const d = (e as CustomEvent).detail; if (Number.isFinite(d?.id)) { pendingOpen = null; open(d.id, d.tab, d.event); } };
     window.addEventListener(OPEN_GAME_EVENT, on);
     return () => window.removeEventListener(OPEN_GAME_EVENT, on);
   }, []);
@@ -346,10 +350,14 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
             sim={sim}
             onNavigate={onNavigate}
             returnTo={scrollAtOpen.current}
-            onClose={() => setCenterId(null)}
+            tab={gc.route?.tab}
+            event={gc.route?.event}
+            onTab={gc.setTab}
+            onClose={gc.close}
           />
         </Suspense>
       )}
+      {gc.route && !centerGame && !loading && games.length > 0 && <GameNotFound onClose={() => gc.close({ replace: true })} />}
     </section>
   );
 }

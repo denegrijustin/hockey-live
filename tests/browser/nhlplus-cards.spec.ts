@@ -1,4 +1,5 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
+import { gcTab } from "./nav";
 import { selectAllTeams, showPeriod } from "./controls";
 import { existsSync, readFileSync } from "node:fs";
 
@@ -231,6 +232,8 @@ test("shootout game: note about excluded attempts on the card, no shootout goals
   await expect(c.getByTestId("nhlp-game").locator("[data-row=goals] .nhlp-val b").first()).toHaveText("2");
   await c.locator(".gc-icon").click();
   const d = page.locator("dialog.game-dialog");
+  await expect(d).toBeVisible();
+  await gcTab(page, "Players"); // the NHL+ analytics sections live in the Players tab
   await expect(d.getByTestId("so-note")).toBeVisible();
   const svg = d.getByTestId("chance-flow").locator("svg").first();
   expect(Number(await svg.getAttribute("data-end"))).toBe(3900);
@@ -247,6 +250,8 @@ test("final without shot detail still shows the game block; final not yet downlo
   await expect(p.getByTestId("nhlp-strip")).toContainText("Season profile");
   await p.locator(".gc-icon").click();
   const d = page.locator("dialog.game-dialog");
+  await expect(d).toBeVisible();
+  await gcTab(page, "Players"); // the NHL+ analytics sections live in the Players tab
   await expect(d.getByTestId("gc-flow").getByTestId("nhlp-pending")).toBeVisible();
   await expect(d.getByTestId("chance-flow")).toHaveCount(0);
 });
@@ -257,6 +262,8 @@ test("Game Center: sections, situation comparison, shot map, goalies, lines, NHL
   await page.evaluate(() => { (window as any).__nhlp = []; window.addEventListener("iceboard:nhlplus", (e) => (window as any).__nhlp.push({ detail: (e as CustomEvent).detail, dialogOpen: !!document.querySelector("dialog.game-dialog") })); });
   await c.locator(".gc-icon").click();
   const d = page.locator("dialog.game-dialog");
+  await expect(d).toBeVisible();
+  await gcTab(page, "Players"); // the NHL+ analytics sections live in the Players tab
   await expect(d.getByTestId("gc-profile")).toContainText("Season profile");
   const flow = d.getByTestId("gc-flow");
   await expect(flow.getByTestId("chance-flow")).toBeVisible();
@@ -297,6 +304,8 @@ test("Game Center for a live game: season profile plus a labelled NHL feed note,
   const c = await show(page, "live");
   await c.locator(".gc-icon").click();
   const d = page.locator("dialog.game-dialog");
+  await expect(d).toBeVisible();
+  await gcTab(page, "Players"); // the NHL+ analytics sections live in the Players tab
   await d.getByTestId("gc-flow").locator("summary").click();
   await expect(d.getByTestId("live-activity")).toContainText("NHL feed");
   await expect(d.getByTestId("live-activity")).toContainText("BOS 11");
@@ -342,11 +351,13 @@ test("layout: no horizontal overflow at 320px, cards and Game Center; screenshot
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
   await c.locator(".gc-icon").click();
   const d = page.locator("dialog.game-dialog");
+  await expect(d).toBeVisible();
+  await gcTab(page, "Players"); // the NHL+ analytics sections live in the Players tab
   await expect(d.getByTestId("shot-map")).toBeVisible();
   expect(await d.evaluate((n) => n.scrollWidth - n.clientWidth)).toBeLessThanOrEqual(1);
   await d.getByTestId("gc-goalies-lines").locator("summary").click();
   await expect(d.getByTestId("lines-block")).toBeVisible();
-  const wide = await d.evaluate((n) => [...n.querySelectorAll("*")].filter((e) => e.getBoundingClientRect().right > n.getBoundingClientRect().right + 1 && !e.closest(".nhlp-table-wrap")).slice(0, 6).map((e) => `${e.tagName}.${(e as HTMLElement).className?.toString?.().slice(0, 40)} ${Math.round(e.getBoundingClientRect().right)}`));
+  const wide = await d.evaluate((n) => [...n.querySelectorAll("*")].filter((e) => e.getBoundingClientRect().right > n.getBoundingClientRect().right + 1 && !e.closest(".nhlp-table-wrap, .gc-tabs")).slice(0, 6).map((e) => `${e.tagName}.${(e as HTMLElement).className?.toString?.().slice(0, 40)} ${Math.round(e.getBoundingClientRect().right)}`));
   expect(wide, "elements past the dialog edge").toEqual([]);
   expect(await d.evaluate((n) => n.scrollWidth - n.clientWidth)).toBeLessThanOrEqual(1);
 });
@@ -370,6 +381,8 @@ test("screenshots", async ({ page }, info) => {
   await c.screenshot({ path: `/tmp/cards-shots/${name}-ot-expanded.png` });
   await c.locator(".gc-icon").click();
   const d = page.locator("dialog.game-dialog");
+  await expect(d).toBeVisible();
+  await gcTab(page, "Players"); // the NHL+ analytics sections live in the Players tab
   await d.getByTestId("gc-goalies-lines").locator("summary").click();
   await page.waitForTimeout(500);
   for (const id of ["gc-profile", "gc-flow", "gc-goalies-lines"]) {

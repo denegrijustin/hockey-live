@@ -38,6 +38,7 @@ const key = (text, abbr = false) => ({ text: normalize(text), abbr });
 /**
  * Build the index. `today` (YYYY-MM-DD, Eastern) selects which games are searchable: games on that day, plus anything live.
  * players: [{id, name, team?, headshot?, number?}] only from data already fetched. views: [{id,label,hint?,short?}].
+ * @param {{ teams?: any[], games?: any[], players?: any[], views?: any[], today?: string | null }} [input]
  */
 export function buildIndex({ teams = [], games = [], players = [], views = [], today = null } = {}) {
   const items = [];

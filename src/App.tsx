@@ -25,6 +25,9 @@ import { GameFilterFields, PeriodSwitch } from "./components/GameFilters";
 import { TeamsSheet } from "./components/TeamsSheet";
 import { StatusPill } from "./components/StatusPill";
 import { Icon } from "./components/icons";
+import { SearchPalette } from "./components/SearchPalette";
+import { useSearchIndex } from "./hooks/useSearchIndex";
+import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { Skeleton } from "./components/Skeleton";
@@ -197,6 +200,21 @@ export default function App() {
     window.addEventListener(NHLPLUS_EVENT, open);
     return () => window.removeEventListener(NHLPLUS_EVENT, open);
   }, []);
+  // Search: a team opens its page (?view=teams&team=ID), a game opens its Game Center on Home.
+  const openTeamPage = useCallback((id: string) => {
+    try {
+      history.replaceState({ ...history.state, view: viewRef.current, scroll: window.scrollY }, "");
+      history.pushState({ view: "teams", scroll: 0 }, "", `${location.pathname}${searchFor("teams", null, { team: id })}`);
+    } catch {}
+    setViewState("teams");
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+  useEffect(() => {
+    const onOpenGame = () => setView("scoreboard");
+    window.addEventListener(OPEN_GAME_EVENT, onOpenGame);
+    return () => window.removeEventListener(OPEN_GAME_EVENT, onOpenGame);
+  }, [setView]);
+  const searchIndex = useSearchIndex({ teams, games: data?.games ?? [] });
   const changeTeams = (ids: string[]) => {
     setSelected(ids);
     try {
@@ -271,6 +289,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
+          <SearchPalette index={searchIndex} onTeam={openTeamPage} onView={setView} />
           <StatusPill live={hasLive} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
             Season

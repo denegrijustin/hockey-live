@@ -26,6 +26,12 @@ import { useSelectedDate } from "../hooks/useSelectedDate";
 import { haptic, useChanged, useFlip } from "../motion";
 import { Skeleton } from "./Skeleton";
 
+import { OPEN_GAME_EVENT } from "../lib/open-game";
+
+// Remembers an openGame request made while another screen was showing, so Home can open the overlay when it mounts a moment later.
+let pendingOpen: { id: number; at: number } | null = null;
+if (typeof window !== "undefined") window.addEventListener(OPEN_GAME_EVENT, (e) => { const id = (e as CustomEvent).detail?.id; if (Number.isFinite(id)) pendingOpen = { id, at: Date.now() }; });
+
 const RowDetails = lazy(() => import("./home/RowDetails"));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
@@ -163,6 +169,15 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   const [centerId, setCenterId] = useState<number | null>(null);
   const scrollAtOpen = useRef(0);
   const openCenter = (g: Game) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); };
+  // Search, team and player pages ask Home to open a game (openGame). A request made while another screen was showing is picked up on mount.
+  useEffect(() => {
+    const open = (id: number) => { scrollAtOpen.current = window.scrollY; setCenterId(id); };
+    if (pendingOpen && Date.now() - pendingOpen.at < 5000) open(pendingOpen.id);
+    pendingOpen = null;
+    const on = (e: Event) => { const id = (e as CustomEvent).detail?.id; if (Number.isFinite(id)) { pendingOpen = null; open(id); } };
+    window.addEventListener(OPEN_GAME_EVENT, on);
+    return () => window.removeEventListener(OPEN_GAME_EVENT, on);
+  }, []);
   const centerGame = centerId != null ? games.find((g) => g.id === centerId) : undefined;
   const goDay = (d: string) => { setDate(d); setOpenId(null); };
   const prevDay = days.filter((d) => d < day).at(-1), nextDay = days.find((d) => d > day);

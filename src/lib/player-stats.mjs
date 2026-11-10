@@ -75,3 +75,38 @@ export function rangeLabel(games, n) {
 export const fmtRatio = (v, kind = "pct") => (num(v) === null ? "—" : kind === "sv" ? v.toFixed(3).replace(/^0/, "") : `${(v * 100).toFixed(1)}%`);
 /** A plain number or "—". */
 export const fmt = (v, digits = 0) => (num(v) === null ? "—" : Number(v).toFixed(digits));
+
+const hasNum = (v) => num(v) !== null;
+/**
+ * The season line the profile shows, from the NHL landing payload: `featuredStats.regularSeason.subSeason` (all teams that season) when present,
+ * otherwise the regular-season `seasons` rows for that season (summed when a player was traded). Every field is a number or null; nothing is invented.
+ * Derived when the NHL did not send it: shootingPct = goals/shots, savePct = (shotsAgainst - goalsAgainst)/shotsAgainst, saves = shotsAgainst - goalsAgainst,
+ * gaa = goalsAgainst*3600/time on ice. `avgToi` (skaters) is only shown when a single team row exists (an average cannot be summed).
+ */
+export function seasonLine(profile) {
+  const rows = (profile?.seasons ?? []).filter((s) => s?.gameTypeId === 2);
+  const feat = profile?.featuredStats;
+  const season = num(feat?.season) ?? (rows.length ? Math.max(...rows.map((r) => num(r.season) ?? 0)) : null);
+  if (!season) return null;
+  const mine = rows.filter((r) => r.season === season);
+  const sub = feat?.regularSeason?.subSeason;
+  const sum = (k) => (mine.some((r) => hasNum(r[k])) ? mine.reduce((a, r) => a + (num(r[k]) ?? 0), 0) : null);
+  const pick = (k) => (sub && hasNum(sub[k]) ? Number(sub[k]) : sum(k));
+  if (!sub && !mine.length) return null;
+  const gp = pick("gamesPlayed");
+  const goals = pick("goals"), assists = pick("assists"), shots = pick("shots"), ga = pick("goalsAgainst"), sa = pick("shotsAgainst");
+  const points = pick("points") ?? (goals !== null && assists !== null ? goals + assists : null);
+  const toiSec = mine.length ? mine.reduce((a, r) => a + (parseToi(r.timeOnIce) ?? 0), 0) || null : null;
+  const gaaSent = sub && hasNum(sub.goalsAgainstAvg) ? Number(sub.goalsAgainstAvg) : mine.length === 1 && hasNum(mine[0].goalsAgainstAvg) ? mine[0].goalsAgainstAvg : null;
+  const svSent = sub && hasNum(sub.savePctg) ? Number(sub.savePctg) : mine.length === 1 && hasNum(mine[0].savePctg) ? mine[0].savePctg : null;
+  return {
+    season, gp, goals, assists, points, shots, plusMinus: pick("plusMinus"), pim: pick("pim"),
+    shootingPct: sub && hasNum(sub.shootingPctg) ? Number(sub.shootingPctg) : shootingPct(goals, shots),
+    avgToi: mine.length === 1 ? (mine[0].avgToi ?? null) : null,
+    starts: pick("gamesStarted"), wins: pick("wins"), losses: pick("losses"), otLosses: pick("otLosses"), shutouts: pick("shutouts"),
+    goalsAgainst: ga, shotsAgainst: sa,
+    saves: ga !== null && sa !== null && sa >= ga ? sa - ga : null,
+    gaa: gaaSent ?? gaa(ga, toiSec),
+    savePct: svSent ?? (ga !== null && sa !== null ? savePct(sa - ga, sa) : null),
+  };
+}

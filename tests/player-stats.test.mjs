@@ -58,3 +58,15 @@ test("labels", () => {
   assert.equal(fmt(undefined), "—");
   assert.equal(fmt(2.6217, 2), "2.62");
 });
+test("seasonLine prefers featured stats, falls back to rows, sums traded players, and never invents", async () => {
+  const { seasonLine } = await import("../src/lib/player-stats.mjs");
+  assert.equal(seasonLine({ seasons: [] }), null);
+  assert.equal(seasonLine(null), null);
+  const sk = seasonLine({ featuredStats: { season: 20262027, regularSeason: { subSeason: { gamesPlayed: 18, goals: 10, assists: 37, points: 47, shots: 49, plusMinus: 22, pim: 2, shootingPctg: 0.204082 } } }, seasons: [{ season: 20262027, gameTypeId: 2, avgToi: "23:40" }] });
+  assert.equal(sk.points, 47); assert.equal(sk.avgToi, "23:40"); assert.equal(sk.shootingPct, 0.204082); assert.equal(sk.starts, null); assert.equal(sk.saves, null);
+  const traded = seasonLine({ seasons: [{ season: 20262027, gameTypeId: 2, gamesPlayed: 5, goals: 1, assists: 1, shots: 10, avgToi: "10:00" }, { season: 20262027, gameTypeId: 2, gamesPlayed: 7, goals: 3, assists: 0, shots: 10, avgToi: "12:00" }, { season: 20252026, gameTypeId: 2, gamesPlayed: 82 }] });
+  assert.equal(traded.gp, 12); assert.equal(traded.points, 5); assert.equal(traded.avgToi, null); assert.equal(traded.shootingPct, 0.2);
+  const g = seasonLine({ seasons: [{ season: 20262027, gameTypeId: 2, gamesPlayed: 12, gamesStarted: 12, goalsAgainst: 32, shotsAgainst: 361, timeOnIce: "732:20", wins: 5, losses: 3, otLosses: 4, shutouts: 0 }] });
+  assert.equal(g.saves, 329); assert.ok(Math.abs(g.savePct - 329 / 361) < 1e-9); assert.ok(Math.abs(g.gaa - (32 * 3600) / 43940) < 1e-9); assert.equal(g.shutouts, 0);
+  assert.equal(seasonLine({ seasons: [{ season: 20262027, gameTypeId: 3, gamesPlayed: 4 }] }), null);
+});

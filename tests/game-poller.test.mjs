@@ -268,6 +268,27 @@ test("reconciliation reaches the snapshot: a vanished goal stays one poll, then 
   assert.deepEqual(p.getSnapshot().score, { home: 0, away: 0 });
 });
 
+test("passive subscribers (small cards) poll live games at most every 30 s and never get the final recheck; an active one raises the cadence", async () => {
+  clock();
+  const f = fetcher(() => body(poll(raw, { state: "live" })));
+  const p = createGamePoller(game, { fetch: f, doc: doc(), random: () => 1, ...noElection() });
+  cleanups.push(p.subscribe(() => {}, { passive: true }));
+  await advance(0);
+  await advance(61_000);
+  assert.equal(f.calls.length, 3, "initial + 30 s + 60 s");
+  const offActive = p.subscribe(() => {});
+  cleanups.push(offActive);
+  await advance(16_000);
+  assert.equal(f.calls.length, 4, "an active subscriber brings the 15 s cadence");
+  offActive();
+  const finalCalls = fetcher(() => body(poll(raw, { state: "final" })));
+  const q = createGamePoller({ ...game, state: "OFF" }, { fetch: finalCalls, doc: doc(), ...noElection() });
+  cleanups.push(q.subscribe(() => {}, { passive: true }));
+  await advance(0);
+  await advance(600_000, 5000);
+  assert.equal(finalCalls.calls.length, 1, "passive: one fetch, no recheck");
+});
+
 // ---- tab leader ----
 class FakeBC {
   static all = new Map();

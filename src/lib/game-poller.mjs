@@ -26,6 +26,7 @@ import { joinLeaderChannel } from "./tab-leader.mjs";
 export const BACKOFF_BASE_MS = 5000;
 export const BACKOFF_CAP_MS = 60_000;
 export const PASSIVE_MIN_MS = 30_000;
+const RELEASE_GRACE_MS = 10_000;
 const FINAL_CHECKS = 2; // the first fetch of a finished game and one recheck
 
 /** Backoff with jitter: 5 s, 10 s, 20 s, 40 s, 60 s..., each scaled by a random 0.5-1.0. */
@@ -323,7 +324,10 @@ export function acquireGamePoller(game, env) {
     release() {
       if (released) return;
       released = true;
-      if (--entry.refs <= 0 && registry.get(game.id) === entry) registry.delete(game.id);
+      if (--entry.refs > 0) return;
+      // Kept for a moment: a card scrolling out of view as the Game Center opens on the same game reuses this data instead of refetching.
+      const drop = setTimeout(() => { if (entry.refs <= 0 && registry.get(game.id) === entry) registry.delete(game.id); }, RELEASE_GRACE_MS);
+      drop?.unref?.();
     },
   };
 }

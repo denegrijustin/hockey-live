@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useVisibleInterval } from "../lib/polling";
 
-const ago = (ms: number) => {
+export const ago = (ms: number) => {
   const s = Math.max(0, Math.round(ms / 1000));
   if (s < 10) return "just now";
   if (s < 60) return `${s}s ago`;
@@ -11,13 +11,13 @@ const ago = (ms: number) => {
 };
 
 /** A small data-status pill for the header: live and fresh, a saved copy, or offline. */
-export function StatusPill({ live, offline, updatedAt }: { live: boolean; offline: boolean; updatedAt?: string }) {
+export function StatusPill({ live, offline, updatedAt, online = true }: { live: boolean; offline: boolean; updatedAt?: string; online?: boolean }) {
   const [, tick] = useState(0);
   useVisibleInterval(() => tick((n) => n + 1), 15000);
   const age = updatedAt ? Date.now() - Date.parse(updatedAt) : 0;
-  const saved = offline || age > 86400000;
+  const saved = offline || !online || age > 86400000;
   const state = saved ? "saved" : live ? "live" : "fresh";
-  const label = saved ? "saved copy" : live ? "live" : "synced";
+  const label = !online ? "offline" : saved ? "saved copy" : live ? "live" : "synced";
   const showAge = !!updatedAt && !(live && !saved && age < 10000 && false);
   return (
     <span className="status-pill" data-state={state} role="status">

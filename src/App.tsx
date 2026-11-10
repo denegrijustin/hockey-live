@@ -25,7 +25,8 @@ import { Scoreboard as ScoreboardView } from "./components/Scoreboard";
 import { Sheet } from "./components/Sheet";
 import { GameFilterFields, PeriodSwitch } from "./components/GameFilters";
 import { TeamsSheet } from "./components/TeamsSheet";
-import { StatusPill } from "./components/StatusPill";
+import { StatusPill, ago } from "./components/StatusPill";
+import { useOnline } from "./hooks/useOnline";
 import { Icon } from "./components/icons";
 import { NotificationBell } from "./components/alerts/NotificationBell";
 import { SearchPalette } from "./components/SearchPalette";
@@ -117,6 +118,7 @@ const addressFor = (view: string, team: string | null = null) => {
 };
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
+  const online = useOnline();
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry, reloadLive, source } = useSeason();
   const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
   const [view, setViewState] = useState(initialView),
@@ -317,7 +319,7 @@ export default function App() {
         <div className="header-right">
           <NotificationBell onNavigate={setView} />
           <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeam} onView={setView} />
-          <StatusPill live={hasLive} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
+          <StatusPill live={hasLive && online} online={online} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
             Season
             <select
@@ -376,8 +378,13 @@ export default function App() {
             )}
           </div>
         )}
+        {!online && (
+          <div className="status-banner" role="status" data-testid="offline-banner">
+            <span>You are offline. Scores below are the last saved copy{data ? `, ${ago(staleness)}` : ""}, and may be out of date.</span>
+          </div>
+        )}
         {phone || home ? (
-          (liveError || staleness > 86400000) && (
+          online && (liveError || staleness > 86400000) && (
             <div className="status-banner" role="status">
               <span>{liveError ? "Live scores unavailable. Showing saved data." : "Showing a saved copy. Refresh pending."}</span>
               <button onClick={refresh} disabled={loading}>Retry</button>

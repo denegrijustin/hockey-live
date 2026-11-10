@@ -18,3 +18,5 @@
   Cache-Control: no-cache
 /manifest.webmanifest
   Cache-Control: public, max-age=86400
+/sw-routes.js
+  Cache-Control: no-cache

@@ -1,15 +1,26 @@
 {
+  "id": "/",
   "name": "Iceboard · NHL game intelligence",
   "short_name": "Iceboard",
   "description": "NHL team trends, game stakes, win-loss scenarios and player contributions for every team.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
+  "categories": ["sports"],
   "background_color": "#0a131b",
   "theme_color": "#0a141c",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Games", "short_name": "Games", "description": "Every game: schedule, scores and live", "url": "/?view=games", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Standings", "short_name": "Standings", "description": "League, conference and division tables", "url": "/?view=standings", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Following", "short_name": "Following", "description": "Your followed players and saved games", "url": "/?view=following", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }

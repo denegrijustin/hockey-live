@@ -98,6 +98,17 @@ export function GameOverlay({
     setFocusEvent(event);
     onTab?.(next, event);
   };
+  // The sticky tab bar sits exactly under the (sticky) toolbar, whatever height the toolbar has on this screen.
+  useLayoutEffect(() => {
+    const element = dialog.current, bar = element?.querySelector<HTMLElement>(".dialog-toolbar");
+    if (!element || !bar) return;
+    const set = () => element.style.setProperty("--gc-bar", `${bar.offsetHeight}px`);
+    set();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
   // Switching tab from far down the page brings the new pane's top into view under the sticky bars.
   const firstTab = useRef(true);
   useEffect(() => {

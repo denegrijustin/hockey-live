@@ -614,6 +614,7 @@ export default function App() {
                   games={data.games}
                   baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
                   selected={selected}
+                  onNavigate={setView}
                 />
               </Suspense></ErrorBoundary>
             )}

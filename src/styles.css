@@ -3694,22 +3694,49 @@ body {
 
 /* Standings fits the screen: no sideways scrolling. On a phone the division, W, L and OT columns fold into one record, the team shows its abbreviation, and the entry-line gap sits under it. */
 .table-scroll.st-fit { overflow: visible; }
-.standings-table .st-rec, .standings-table .st-abbr, .standings-table .st-sub { display: none; }
+.standings-table .st-rec, .standings-table .st-abbr, .standings-table .st-sub, .standings-table .st-clinch-text, .standings-table .st-sub-spot { display: none; }
+.standings-table th, .standings-table td { padding-left: 6px; padding-right: 6px; }
 .standings-table .table-team b { display: grid; line-height: 1.25; }
 .standings-table .st-sub { font-weight: 400; font-size: .6875rem; color: var(--text-1); letter-spacing: 0; }
 @media (max-width: 860px) {
-  .standings-table .st-div, .standings-table .st-wlo, .standings-table .st-gap { display: none; }
+  .standings-table .st-div, .standings-table .st-wlo, .standings-table .st-gap, .standings-table .st-gih { display: none; }
   .standings-table .st-rec { display: table-cell; }
   .standings-table .st-sub { display: block; }
   .standings-table th, .standings-table td { padding-left: 4px; padding-right: 4px; }
 }
 @media (max-width: 600px) {
+  .standings-table .st-l10, .st-seg.st-group-seg { display: none; }
   .standings-table .st-full { display: none; }
   .standings-table .st-abbr { display: inline; }
   .standings-table .table-team { gap: 6px; }
   .standings-table .table-team img { width: 22px; height: 22px; }
 }
-@media (max-width: 480px) { .standings-table .st-l5 { display: none; } .standings-table { font-size: .75rem; } }
+@media (max-width: 480px) { .standings-table .st-l5, .standings-table .st-spot { display: none; } .standings-table .st-sub-spot { display: inline; } .standings-table { font-size: .75rem; } .standings-table .st-margin { display: none; }
+  .standings-table th, .standings-table td { padding-left: 3px; padding-right: 3px; }
+  .standings-table th { letter-spacing: 0; font-size: .625rem; white-space: nowrap; }
+  .standings-table .table-team img { width: 18px; height: 18px; }
+  .standings-table .table-team { gap: 4px; } }
+@media (min-width: 861px) { .standings-table .st-clinch-text { display: inline; } }
+/* Standings views: segmented switcher, mode badge, playoff spot pills, wild card cut line. */
+.st-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 10px 0; }
+.st-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-3); border-radius: 10px; overflow: hidden; }
+.st-seg button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 0; background: transparent; color: var(--text-3); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; }
+.st-seg button[aria-checked="true"] { background: var(--surface-8); color: var(--mint-6); }
+.st-seg button:focus-visible { outline: 2px solid var(--mint-5); outline-offset: -2px; }
+@media (min-width: 1100px) { .st-seg button { min-height: 34px; } }
+.st-mode-badge { font-size: .75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-3); color: var(--text-2); }
+.st-mode-projected { color: var(--amber-5); border-color: var(--amber-5); }
+.st-pill { display: inline-block; min-width: 2.4em; text-align: center; padding: 1px 4px; border-radius: 4px; font-size: .6875rem; font-weight: 700; background: var(--surface-8); color: var(--text-3); }
+.st-pill.st-in, .st-pill.st-wc1, .st-pill.st-wc2 { background: var(--mint-1); color: var(--mint-5); }
+.st-pill.st-wc1, .st-pill.st-wc2 { border: 1px dashed currentColor; }
+.st-pill.st-out { color: var(--red-4); }
+.standings-table .st-margin { margin-left: 4px; color: var(--text-2); }
+.standings-table .st-clinch { display: block; font-size: .6875rem; color: var(--text-2); }
+.standings-table .st-spot { white-space: nowrap; }
+.standings-table .st-sect th, .standings-table .st-cut th { text-align: left; font-size: .75rem; padding: 6px 8px; background: var(--surface-7); color: var(--text-2); }
+.standings-table .st-cut th { border-top: 2px dashed var(--amber-5); border-bottom: 2px dashed var(--amber-5); background: transparent; color: var(--amber-5); }
+.st-link { background: none; border: 0; padding: 0; color: var(--mint-6); text-decoration: underline; font: inherit; cursor: pointer; }
+.st-legend .detail-note { margin: 6px 0; }
 
 /* Phones: a wide table is a list of cards, never a sideways scroll. useStackedTables labels each cell with its column and adds a Sort by menu. */
 .stk-sort { display: none; }

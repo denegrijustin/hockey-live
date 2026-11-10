@@ -95,7 +95,7 @@ async function refreshSeason(season, env) {
 // ---- Injury report ----
 // ESPN's NHL injury feed, each player's impact judged from NHL box-score production (this season, else last), cached in KV for ten minutes.
 const ESPN_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries";
-const injuriesKey = (season) => `injuries-v1-${season}`;
+const injuriesKey = (season) => `injuries-v2-${season}`;
 async function refreshInjuries(season, env) {
   const prev = season - 10001; // 20262027 -> 20252026
   const [espnResponse, skaters, goalies, prevSkaters, prevGoalies] = await Promise.all([

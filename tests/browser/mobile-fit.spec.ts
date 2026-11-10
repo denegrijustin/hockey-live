@@ -21,7 +21,7 @@ test.describe("a phone never scrolls sideways", () => {
     await page.locator("tbody tr").first().waitFor({ timeout: 30000 });
     const heads = await page.locator("thead th:visible").allInnerTexts();
     const names = heads.map((h) => h.trim().toUpperCase());
-    expect(names).toEqual(expect.arrayContaining(["RANK", "TEAM", "GP", "W–L–OT", "PTS", "PTS %", "GD"]));
+    expect(names).toEqual(expect.arrayContaining(["RANK", "TEAM", "GP", "W–L–OTL", "PTS", "P%", "DIFF", "STRK"]));
     expect(names).not.toContain("DIVISION");
     expect(await page.locator("tbody tr:first-child .st-abbr").first().isVisible()).toBe(true);
     await expect(page.locator("tbody tr:first-child .st-sub").first()).toContainText("line");
@@ -78,7 +78,7 @@ test("the desktop tables keep their ordinary table layout", async ({ page }, inf
   await page.goto("/?view=standings");
   await page.locator("tbody tr").first().waitFor({ timeout: 30000 });
   const heads = await page.locator("thead th:visible").allInnerTexts();
-  expect(heads.map((h) => h.trim().toUpperCase())).toEqual(expect.arrayContaining(["DIVISION", "W", "L", "OT", "LAST 5", "ENTRY-LINE GAP"]));
+  expect(heads.map((h) => h.trim().toUpperCase())).toEqual(expect.arrayContaining(["DIVISION", "W", "L", "OTL", "L10", "STRK", "LAST 5", "ENTRY-LINE GAP"]));
   await expect(page.locator(".stk-sort")).toBeHidden();
 });
 

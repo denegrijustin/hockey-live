@@ -50,7 +50,7 @@ test("game cards and Game Center do not overflow a narrow mobile viewport", asyn
 });
 
 test("live games lead the board and completed-today games sit below unfinished games", async ({ page }) => {
-  const today = new Date().toLocaleDateString("en-CA");
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
   const at = (hour: number) => `${today}T${String(hour).padStart(2, "0")}:00:00Z`;
   const base = { season: 20262027, type: 2, date: today, scheduleState: "OK", venue: "Test Arena", broadcasts: ["ESPN (US)"], round: null, end: "REG" };
   const live = { ...base, id: 2026020991, start: at(18), state: "LIVE", home: "EDM", away: "CHI", homeScore: 1, awayScore: 1, period: 2, periodType: "REG", clock: "10:00", intermission: false };

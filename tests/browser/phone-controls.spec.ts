@@ -91,8 +91,11 @@ test("the header shows a status pill: saved copy when live scores are down", asy
 });
 
 test("with live scores working there is no banner, and the pill says live when a game is on", async ({ page }) => {
-  const games = scoreboardFixture.games.map((g) => ({ ...g, state: "LIVE", intermission: false, period: 2, periodType: "REG", clock: "10:00" }));
-  await open(page, { ...scoreboardFixture, updatedAt: new Date().toISOString(), games });
+  const started = new Date(DATA_NOW.getTime() - 3600_000).toISOString();
+  const games = scoreboardFixture.games.map((g) => ({ ...g, start: started, state: "LIVE", intermission: false, period: 2, periodType: "REG", clock: "10:00" }));
+  // A worker-served season snapshot (not the saved copy), so the pill is judged on the live feed alone.
+  await page.route("**/api/season/*", async (route) => route.fulfill({ response: await route.fetch({ url: new URL(`/data/seasons/${route.request().url().split("/").pop()}.json`, route.request().url()).toString() }) }));
+  await open(page, { ...scoreboardFixture, date: DATA_DAY, updatedAt: DATA_NOW.toISOString(), games: games.map((g) => ({ ...g, date: DATA_DAY })) });
   await expect(page.locator(".status-pill")).toHaveAttribute("data-state", "live");
   await expect(page.locator(".status-banner")).toHaveCount(0);
   await expect(page.getByTestId("live-dot")).toBeVisible(); // a dot on the Games tab

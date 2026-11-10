@@ -1,0 +1,18 @@
+.gc-intel { display: grid; gap: 14px; min-width: 0; }
+.gc-intel h3 { margin: 0 0 4px; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted, inherit); }
+.gc-intel ul { list-style: none; margin: 0; padding: 0; }
+.gc-intel-item { display: grid; gap: 2px; padding: 8px 0; border-bottom: 1px solid var(--line, rgba(128, 128, 128, 0.25)); min-width: 0; }
+.gc-intel-text { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-weight: 600; overflow-wrap: anywhere; }
+.gc-intel-detail { margin: 0; font-size: 0.8rem; opacity: 0.8; overflow-wrap: anywhere; }
+.gc-intel-note { margin: 0; font-size: 0.85rem; color: var(--muted, inherit); }
+.gc-basis { font-size: 0.68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; letter-spacing: 0.03em; white-space: nowrap; }
+.gc-basis-official { color: var(--mint-5, #1f9d6b); }
+.gc-basis-derived { color: var(--text-1, inherit); }
+.gc-basis-historical { color: var(--amber-5, #b7791f); }
+.gc-basis-projection { color: var(--blue-5, #3b82c4); }
+.gc-intel-links { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.gc-intel-link { min-height: 44px; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--line, rgba(128, 128, 128, 0.4)); background: transparent; color: inherit; font: inherit; font-size: 0.8rem; cursor: pointer; }
+.gc-intel-legend { margin: 0; display: grid; gap: 4px; font-size: 0.75rem; }
+.gc-intel-legend div { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.gc-intel-legend dt { flex: none; }
+.gc-intel-legend dd { margin: 0; min-width: 0; opacity: 0.8; }

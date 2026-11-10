@@ -82,7 +82,11 @@ export function importance(p) {
   return "low";
 }
 
-/** Decode an NHL situationCode for a side ("home"|"away"|null). Returns {label, kind, away, home} or null. */
+/**
+ * Decode an NHL situationCode for a side ("home"|"away"|null). Returns {label, kind, away, home} or null.
+ * @param {any} sit
+ * @param {"home"|"away"|null} [side]
+ */
 export function strengthLabel(sit, side = null) {
   if (typeof sit !== "string" || !/^\d{4}$/.test(sit)) return null;
   const [ag, as, hs, hg] = sit.split("").map(Number);
@@ -134,12 +138,17 @@ export function groupByPeriod(plays) {
 /** Period navigation list: [{key,label,short,count,firstId}] over the given (filtered) plays. */
 export const periodList = (plays) => groupByPeriod(plays).map((g) => ({ key: g.key, label: g.label, short: g.short, count: g.plays.length, firstId: g.plays[0]?.id ?? null }));
 
-/** Filter by type groups (empty/absent = all) and team ("all" | abbreviation | "neutral" for events with no team). */
+/**
+ * Filter by type groups (empty/absent = all) and team ("all" | abbreviation | "neutral" for events with no team).
+ * @param {any[] | null | undefined} plays
+ * @param {{groups?: string[] | Set<string>, team?: string}} [opts]
+ */
 export function applyFilters(plays, { groups, team = "all" } = {}) {
   const set = groups && (groups.size ?? groups.length) ? new Set(groups) : null;
   return (plays ?? []).filter((p) => (!set || set.has(groupOf(p))) && (team === "all" || (team === "neutral" ? !p.team : p.team === team)));
 }
 
+/** @param {any[] | undefined | null} list */
 const idsOf = (list) => new Set((list ?? []).map((x) => (x && typeof x === "object" ? x.id ?? x.eventId : x)).filter((x) => x != null));
 /** Normalise the optional event-store fields `voided` / `changed` (arrays of ids or play objects, or undefined) to id sets. */
 export const eventFlags = (voided, changed) => ({ voided: idsOf(voided), changed: idsOf(changed) });
@@ -173,8 +182,15 @@ export function goalList(plays, game, { voided } = {}) {
 }
 
 /** Goal ids in order. */
+/** @param {any[] | null | undefined} plays */
 export const goalIds = (plays) => (plays ?? []).filter((p) => p.type === "goal").map((p) => p.id);
-/** The next (dir 1) or previous (dir -1) goal id relative to `fromId` (an event id, or null = from the start), wrapping around; null if no goals. */
+/**
+ * The next (dir 1) or previous (dir -1) goal id relative to `fromId` (an event id, or null = from the start), wrapping around; null if no goals.
+ * @param {any[] | null | undefined} plays
+ * @param {number | null} [fromId]
+ * @param {number} [dir]
+ * @returns {number | null}
+ */
 export function jumpToGoals(plays, fromId = null, dir = 1) {
   const list = plays ?? [];
   const goals = list.map((p, i) => [p, i]).filter(([p]) => p.type === "goal");

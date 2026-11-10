@@ -100,7 +100,7 @@ export default function PlayByPlay({ focusEvent }: { focusEvent?: number }) {
   const periods = useMemo(() => groupByPeriod(shown), [shown]);
   const nav = useMemo(() => periodList(shown), [shown]);
   const counts = useMemo(() => { const c: Record<string, number> = {}; for (const p of all) c[groupOf(p)] = (c[groupOf(p)] ?? 0) + 1; return c; }, [all]);
-  const teamCounts = useMemo(() => ({ neutral: all.filter((p) => !p.team).length }), [all]);
+  const teamCounts = useMemo(() => ({ neutral: all.filter((p: Play) => !p.team).length }), [all]);
   const colors = useMemo(() => gaugeColors(game.away, game.home), [game.away, game.home]);
   const target = jump?.id ?? focusEvent ?? urlFocus;
   const targetKey = `${jump?.n ?? 0}:${target ?? ""}`;
@@ -172,7 +172,7 @@ export default function PlayByPlay({ focusEvent }: { focusEvent?: number }) {
         <section key={g.key} className="pbp-period" id={`pbp-period-${g.key.replace(/\W/g, "_")}`} aria-labelledby={`pbp-h-${g.key.replace(/\W/g, "_")}`}>
           <h3 id={`pbp-h-${g.key.replace(/\W/g, "_")}`} className="pbp-period-h">{g.label} <span className="pbp-count">{g.plays.length}</span></h3>
           <ol className="pbp-list" reversed={newest}>
-            {(newest ? [...g.plays].reverse() : g.plays).map((p) => (
+            {(newest ? [...g.plays].reverse() : g.plays).map((p: Play) => (
               <Row key={`${game.id}:${p.id}`} gameId={game.id} play={p} side={sideOf(p, game)} goal={goalById.get(p.id)} voided={flags.voided.has(p.id)} changed={flags.changed.has(p.id)} focused={target === p.id} home={game.home} away={game.away} roster={roster} open={open} />
             ))}
           </ol>

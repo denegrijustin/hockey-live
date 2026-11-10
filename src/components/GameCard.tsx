@@ -1,3 +1,4 @@
+import { FavoriteMark } from "./FavoriteStar";
 import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
@@ -94,7 +95,7 @@ export const GameCard = memo(function GameCard({
           <div className="matchup-teams">
             {[away, home].map((team, index) => (
               <div className="matchup-team" key={team.id}>
-                <TeamLogo id={team.id} size={LOGO_SIZE.row} />
+                <TeamLogo id={team.id} size={LOGO_SIZE.row} /><FavoriteMark id={team.id} />
                 <div>
                   <span>{team.city}</span><h3>{team.short}</h3>
                   <small className="team-record">

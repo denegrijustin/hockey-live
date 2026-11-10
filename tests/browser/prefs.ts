@@ -14,3 +14,5 @@ export async function seedPrefs(page: Page, partial: Record<string, any> = {}) {
     } catch {}
   }, partial);
 }
+/** The old built-in default team set, for specs written against it. */
+export const OLD_DEFAULT = { favorites: ["EDM", "CHI", "MIN"] };

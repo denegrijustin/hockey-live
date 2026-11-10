@@ -1,5 +1,6 @@
 import type { Team } from "../../types";
 import { openGame } from "../../lib/open-game";
+import { FavoriteStar } from "../FavoriteStar";
 import { TeamLogo } from "../TeamLogo";
 import { DASH, ord, pct3, streakText, when } from "./format";
 
@@ -17,6 +18,7 @@ export function TeamOverview({ team, summary }: { team: Team; summary: any }) {
           <span>{team.division} Division</span>
           <span>{team.conference === "E" ? "Eastern" : "Western"} Conference</span>
         </p>
+        <FavoriteStar id={team.id} name={team.name} />
       </div>
       {s ? (
         <>

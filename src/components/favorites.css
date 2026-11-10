@@ -1,0 +1,23 @@
+.fav-star { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: none; padding: 0; border: 0; border-radius: 12px; background: transparent; color: var(--text-3); cursor: pointer; }
+.fav-star:hover { background: var(--surface-6); color: var(--text-5); }
+.fav-star.on { color: var(--amber-4); }
+.fav-star:focus-visible { outline: 2px solid var(--mint); outline-offset: 1px; }
+.fav-mark { display: inline-flex; align-items: center; margin-left: 3px; color: var(--amber-4); vertical-align: middle; line-height: 1; }
+:root[data-theme="light"] .fav-star.on, :root[data-theme="light"] .fav-mark { color: var(--amber-3); }
+.tm-card { position: relative; }
+.tm-card .fav-star { position: absolute; top: 50%; right: 34px; transform: translateY(-50%); }
+.tm-card .tm-link { padding-right: 82px; }
+.tpg-id .fav-star { margin-left: auto; }
+.tp-head .fav-star { margin-left: 4px; }
+.ob-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line-1); border-radius: 14px; background: var(--surface-3); }
+.ob-banner p { flex: 1 1 200px; margin: 0; color: var(--text-4); font-size: .875rem; }
+.ob-banner p b { color: var(--text-5); }
+.ob-banner button, .ob-actions button { min-height: 44px; padding: 0 14px; border: 1px solid var(--line-1); border-radius: 12px; background: var(--surface-6); color: var(--text-5); font: inherit; cursor: pointer; }
+.ob-banner button:focus-visible, .ob-actions button:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+.ob-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ob-grid button { display: grid; justify-items: center; gap: 2px; width: 100%; min-height: 64px; padding: 6px; border: 1px solid var(--line-1); border-radius: 12px; background: var(--surface-3); color: var(--text-4); font: inherit; font-size: .75rem; cursor: pointer; }
+.ob-grid button[aria-pressed="true"] { border-color: var(--mint); background: var(--surface-6); color: var(--text-5); }
+.ob-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.ob-actions p { flex: 1; margin: 0; color: var(--text-3); font-size: .8125rem; }
+.gcv-team .fav-mark { margin-left: 0; margin-right: 2px; }
+.ts-opp .fav-mark { margin-left: 4px; }

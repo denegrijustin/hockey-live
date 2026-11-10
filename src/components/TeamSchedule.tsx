@@ -1,3 +1,4 @@
+import { FavoriteMark, FavoriteStar } from "./FavoriteStar";
 import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { fmtTime } from "../lib/dates.mjs";
 import { useTimeKey } from "../lib/display";
@@ -70,7 +71,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
         <button type="button" className={`ts-card ${i.status}${i.result ? ` r-${i.result}` : ""}${first ? " is-next" : ""}`} onClick={() => open(i.game)}
           aria-label={`${wd} ${md}: ${i.home ? "home against" : "at"} ${opp.name}, ${i.status === "upcoming" ? `${time(i.start)}` : i.status === "live" ? `live, ${i.us} to ${i.them}` : `${i.result === "W" ? "won" : i.result === "OTL" ? "lost in overtime" : "lost"} ${i.us} to ${i.them}${i.ot ? ` in ${i.ot === "SO" ? "a shootout" : "overtime"}` : ""}`}. Open Game Center`}>
           <span className="ts-date"><b>{wd}</b><span>{md}</span></span>
-          <span className="ts-opp"><TeamLogo id={opp.id} size={LOGO_SIZE.row} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}</b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
+          <span className="ts-opp"><TeamLogo id={opp.id} size={LOGO_SIZE.row} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}<FavoriteMark id={opp.id} /></b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
           <span className="ts-res">
             {i.status === "final" ? <><b className={`ts-badge ${i.result ?? ""}`}>{i.result ?? "–"}</b><span>{resultText(i)}</span></> : i.status === "live" ? <><b className="ts-badge live">LIVE</b><span>{i.us}–{i.them}</span></> : <span className="ts-time">{resultText(i)}</span>}
           </span>
@@ -89,6 +90,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
         <div className="ts-head">
         <div className="ts-team">
           <TeamLogo id={team.id} size={44} />
+          <FavoriteStar id={team.id} name={team.name} />
           <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming · <TeamLink id={team.id}>{team.short} profile</TeamLink></p>
         </div>
         <div className="ts-tools">

@@ -12,6 +12,7 @@ import { PlayerProfileProvider } from "./components/player/PlayerContext";
 import { getPrefs } from "./lib/prefs";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
+import { useFavorites } from "./hooks/useFavorites";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NHLPLUS_EVENT } from "./lib/nhlplus-nav";
 import rawTeams from "./data/teams.json";
@@ -61,6 +62,7 @@ const ImperialismMap = lazy(() =>
   import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
 );
 const TeamSchedule = lazy(() => import("./components/TeamSchedule").then((m) => ({ default: m.TeamSchedule })));
+const Onboarding = lazy(() => import("./components/Onboarding"));
 const Settings = lazy(() => import("./components/settings/Settings").then((m) => ({ default: m.Settings })));
 const Recommended = lazy(() => import("./components/following/Recommended"));
 const Following = lazy(() => import("./components/following/Following").then((m) => ({ default: m.Following })));
@@ -71,19 +73,7 @@ const NhlPlus = lazy(() =>
   import("./components/nhlplus/NhlPlus").then((m) => ({ default: m.NhlPlus })),
 );
 const teams: Team[] = rawTeams;
-const defaults = ["EDM", "CHI", "MIN"];
-function initialTeams() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("iceboard-teams") ?? "null");
-    return Array.isArray(saved) &&
-      saved.length &&
-      saved.every((x) => teams.some((t) => t.id === x))
-      ? saved
-      : defaults;
-  } catch {
-    return defaults;
-  }
-}
+const allTeamIds = teams.map((t) => t.id);
 const seasonLabel = (s: number) =>
   `${String(s).slice(0, 4)}–${String(s).slice(6)}`;
 // Groups the game-center list under a day heading: the game's Eastern day against today's Eastern day, so "Today" is right in every time zone.
@@ -124,11 +114,22 @@ const addressFor = (view: string, team: string | null = null) => {
 };
 export default function App() {
   const prefs = usePrefs();
-  const [selected, setSelected] = useState<string[]>(initialTeams);
   const online = useOnline();
+  const { favorites } = useFavorites();
+  const onboarded = prefs.onboarded;
+  const [pickOpen, setPickOpen] = useState(false);
+  useEffect(() => {
+    const open = () => setPickOpen(true);
+    window.addEventListener("iceboard:pick-favorites", open);
+    return () => window.removeEventListener("iceboard:pick-favorites", open);
+  }, []);
+  // No favorites: the whole league. With favorites: they are the default filter until the user picks another set this session.
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const selected = picked ?? (favorites.length ? favorites : allTeamIds);
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry, reloadLive, source } = useSeason();
   useGameAlerts(scoreboard?.games);
-  const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
+  const [pickedPlayers, setPlayerTeams] = useState<string[] | null>(null);
+  const playerTeams = pickedPlayers ?? favorites.slice(0, 3);
   const [view, setViewState] = useState(initialView),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
@@ -250,12 +251,7 @@ export default function App() {
     window.addEventListener(OPEN_GAME_EVENT, onOpenGame);
     return () => window.removeEventListener(OPEN_GAME_EVENT, onOpenGame);
   }, [setView]);
-  const changeTeams = (ids: string[]) => {
-    setSelected(ids);
-    try {
-      localStorage.setItem("iceboard-teams", JSON.stringify(ids));
-    } catch {}
-  };
+  const changeTeams = (ids: string[]) => setPicked(ids);
   // Game Center lists games in chronological order by default (live games first, then by start time under day
   // headings); "Importance to teams + league" is one choice away in Sort by, and every card still shows its
   // importance. Completed games move to the finished section. A 30-day window suits a handful of followed teams, but
@@ -447,6 +443,9 @@ export default function App() {
                 {scoreboard.games.filter(isLive).length} games in progress around the league
               </p>
             )}
+            {((view === "scoreboard" && !onboarded && !favorites.length) || pickOpen) && (
+              <Suspense fallback={null}><Onboarding teams={teams} banner={view === "scoreboard" && !onboarded} open={pickOpen} onOpen={() => setPickOpen(true)} onClose={() => setPickOpen(false)} /></Suspense>
+            )}
             {view === "scoreboard" && (
               <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} sim={playoff} onNavigate={setView} onBrowse={() => setView("games")} favorites={prefs.favorites} followedPlayers={prefs.players} density={prefs.display.density} homeOrder={prefs.display.homeOrder} sections={prefs.display.sections} onDensity={(density) => setPrefs((p) => ({ ...p, display: { ...p.display, density } }))} />
             )}
@@ -457,7 +456,7 @@ export default function App() {
             )}
             {view === "teamschedule" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the team schedule" />}>
-                <TeamSchedule games={data.games} teams={teams} defaultTeam={selected[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
+                <TeamSchedule games={data.games} teams={teams} defaultTeam={favorites[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
               </Suspense></ErrorBoundary>
             )}
             {view === "settings" && (
@@ -655,7 +654,7 @@ export default function App() {
                 )}
               </>
             )}
-            {view === "teams" && !teamId && <Teams teams={teams} table={analysis.table} selected={selected} onSchedule={() => setView("teamschedule")} onOpenTeam={openTeam} />}
+            {view === "teams" && !teamId && <Teams teams={teams} table={analysis.table} onSchedule={() => setView("teamschedule")} onOpenTeam={openTeam} />}
             {view === "teams" && teamId && (
               <ErrorBoundary resetKey={teamId}><Suspense fallback={<Skeleton rows={3} label="Loading team page" />}>
                 <TeamPage teamId={teamId} teams={teams} table={analysis.table} games={data.games} season={season} today={todayEt} onBack={() => (pushedTeam.current ? history.back() : setView("teams"))} onNavigate={setView} />
@@ -686,7 +685,7 @@ export default function App() {
                   table={analysis.table}
                   games={data.games}
                   baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
-                  selected={selected}
+                  selected={favorites}
                   onNavigate={setView}
                 />
               </Suspense></ErrorBoundary>

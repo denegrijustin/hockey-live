@@ -231,15 +231,7 @@ export default function App() {
     window.addEventListener(NHLPLUS_EVENT, open);
     return () => window.removeEventListener(NHLPLUS_EVENT, open);
   }, []);
-  // Search: a team opens its page (?view=teams&team=ID), a game opens its Game Center on Home.
-  const openTeamPage = useCallback((id: string) => {
-    try {
-      history.replaceState({ ...history.state, view: viewRef.current, scroll: window.scrollY }, "");
-      history.pushState({ view: "teams", scroll: 0 }, "", `${location.pathname}${searchFor("teams", null, { team: id })}`);
-    } catch {}
-    setViewState("teams");
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  }, []);
+  // Search: a team opens its page (openTeam), a game opens its Game Center on Home.
   useEffect(() => {
     const onOpenGame = () => setView("scoreboard");
     window.addEventListener(OPEN_GAME_EVENT, onOpenGame);
@@ -320,7 +312,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
-          <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeamPage} onView={setView} />
+          <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeam} onView={setView} />
           <StatusPill live={hasLive} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
             Season

@@ -1,0 +1,28 @@
+.save-game { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; margin: 0; padding: 0 8px; border: 0; border-radius: 10px; background: transparent; color: var(--text-2); font: inherit; font-size: .8125rem; font-weight: 650; cursor: pointer; }
+.save-game:hover, .save-game:focus-visible { color: var(--mint); }
+.save-game.on { color: var(--mint); }
+.save-game.on svg { fill: currentColor; }
+.save-game.labeled { border: 1px solid var(--line-3); padding: 0 12px; }
+.scoreboard .sb-actions .save-game { min-width: 44px; min-height: 44px; }
+@media (min-width: 1100px) { .scoreboard .sb-actions .save-game { min-width: 34px; min-height: 34px; width: 34px; height: 34px; padding: 0; } }
+
+.sg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sg-item { display: grid; gap: 4px; min-width: 0; }
+.sg-note { margin: 0; padding: 0 4px; color: var(--text-2); font-size: .75rem; }
+.sg-missing { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 1px dashed var(--line-3); border-radius: 10px; background: var(--surface-5); min-width: 0; }
+.sg-missing p { margin: 0; min-width: 0; font-size: .8125rem; color: var(--text-3); }
+.sg-missing b { display: block; color: var(--text-4); }
+.sg-remove, .sg-finished button, .fw-tabs button { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-3); background: transparent; color: var(--text-3); font: inherit; font-size: .8125rem; cursor: pointer; }
+.sg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 8px; }
+.sg-head h2, .rec h2 { margin: 0; font-size: 1rem; }
+.sg-pill { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line-3); font-size: .6875rem; font-weight: 750; text-transform: uppercase; color: var(--amber-5); }
+.sg-device { margin: 4px 0 0; color: var(--text-2); font-size: .75rem; }
+
+.fw-tabs { display: flex; gap: 4px; margin: 0 0 12px; border-bottom: 1px solid var(--line-2); }
+.fw-tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--text-2); font-weight: 650; }
+.fw-tabs button[aria-selected="true"] { color: var(--mint); border-bottom-color: var(--mint); }
+
+.rec { margin: 0 0 16px; }
+.rec ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.rec-why { margin: 0; padding: 0 4px 2px; color: var(--text-3); font-size: .8125rem; line-height: 1.4; }
+.rec-note { margin: 6px 0 0; color: var(--text-2); font-size: .75rem; }

@@ -20,6 +20,7 @@ import { pregameHomeWin } from "../lib/watchability.mjs";
 import { InsightLine } from "./InsightLine";
 import { useSheetDrag } from "../hooks/useSheetDrag";
 import { TeamLogo } from "./TeamLogo";
+import { SaveGameButton } from "./SaveGameButton";
 
 const PlayerTracker = lazy(() =>
   import("./PlayerTracker").then((m) => ({ default: m.PlayerTracker })),
@@ -173,6 +174,7 @@ export function GameOverlay({
       {live && game.intermission && <IntermissionRink game={game} home={home} away={away} />}
       <div className="game-center-actions">
         <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
+        <SaveGameButton game={game} awayName={away.name} homeName={home.name} labeled />
         <span>{game.venue || "Venue unavailable"}</span>
       </div>
       {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} before={before} baseline={baseline} />}

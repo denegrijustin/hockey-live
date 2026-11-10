@@ -4,6 +4,7 @@ import { gameStatus } from "../lib/game-status.mjs";
 import { rankTitle } from "../lib/ranks.mjs";
 import { usePauseOffscreen } from "../motion";
 import { TeamLogo } from "./TeamLogo";
+import { SaveGameButton } from "./SaveGameButton";
 import "../game-card-view.css";
 
 export type GameCardVariant = "row" | "compact" | "tile";
@@ -144,6 +145,7 @@ export function GameCardView(p: GameCardViewProps) {
         </span>
         <span className="sb-actions">
           {p.actions}
+          <SaveGameButton game={game} awayName={away.name} homeName={home.name} />
           {p.gcIcon !== false && <button type="button" className="gc-icon" onClick={() => onOpen(game)} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>}
         </span>
       </div>

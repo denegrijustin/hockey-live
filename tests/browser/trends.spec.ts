@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { expect, test, type Page } from "@playwright/test";
 import { mk, mockApis, watchErrors } from "./fixtures-games";
 
@@ -21,6 +22,7 @@ async function open(page: Page) {
   await page.goto("/");
   await page.locator(`.sb-row[data-game="${today.id}"] .sb-main`).click();
   const dialog = page.locator("dialog.game-dialog");
+  await gcTab(page, "Matchup Intelligence");
   await dialog.locator("summary", { hasText: "Form and matchup lens" }).click();
   return dialog;
 }

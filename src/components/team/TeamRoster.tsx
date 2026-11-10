@@ -4,6 +4,7 @@ import { loadPlayers } from "../../lib/api";
 import { useFeed } from "../../lib/polling";
 import { groupRoster } from "../../lib/team-summary.mjs";
 import { usePlayerProfile } from "../player/PlayerContext";
+import { FollowButton } from "../FollowButton";
 import { DASH, fixed } from "./format";
 
 const GROUPS = [["F", "Forwards"], ["D", "Defense"], ["G", "Goalies"]] as const;
@@ -51,6 +52,7 @@ export function TeamRoster({ teamId, season }: { teamId: string; season: number 
                       <button type="button" className="tpg-player" aria-label={`View ${p.name} details`} onClick={() => openPlayer({ id: p.id, name: p.name, team: teamId, headshot: p.headshot, number: p.number })}>
                         {p.name}<small>{p.position}</small>
                       </button>
+                      <FollowButton compact player={{ id: p.id, name: p.name, team: teamId, pos: p.position, number: p.number, headshot: p.headshot }} />
                       {p.injury && <span className="tpg-inj" title={[p.injury.kind, p.injury.back].filter(Boolean).join(" · ")}>{p.injury.label}</span>}
                     </th>
                     <td>{p.gp ?? DASH}</td>

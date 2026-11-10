@@ -48,3 +48,10 @@ test("empty query lists games and pages only", () => {
   assert.ok(r.includes("game:1"));
 });
 test("no match gives no groups", () => assert.equal(search(idx, "zzzz").groups.length, 0));
+
+test("followed players rank one match tier higher and carry pos for following", () => {
+  const players = [{ id: 1, name: "Sam Smith", team: "EDM" }, { id: 2, name: "Jo Smithers", team: "TOR", pos: "G", followed: true }];
+  assert.equal(search(buildIndex({ players }), "smith").flat[0].id, "2");
+  assert.equal(search(buildIndex({ players }), "smith").flat[0].payload.pos, "G");
+  assert.equal(search(buildIndex({ players: players.map((p) => ({ ...p, followed: false })) }), "smith").flat[0].id, "1");
+});

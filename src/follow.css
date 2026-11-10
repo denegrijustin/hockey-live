@@ -1,0 +1,29 @@
+/* Follow button and the Following > Players watchlist. Colours from tokens only. */
+.follow-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 0 12px; border: 1px solid var(--line-3); border-radius: 999px; background: var(--surface-7); color: var(--text-4); font-weight: 700; font-size: 0.8125rem; cursor: pointer; }
+.follow-btn.compact { padding: 0; border-color: transparent; background: transparent; flex-shrink: 0; }
+.follow-btn .icon { fill: none; }
+.follow-btn.on { color: var(--mint-6); border-color: var(--mint-5); }
+.follow-btn.on .icon { fill: currentColor; }
+.follow-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pi-wrap { display: inline-flex; align-items: center; max-width: 100%; }
+.search-item .follow-btn { margin-left: auto; }
+
+.pw { display: grid; gap: 16px; }
+.pw h2 { margin: 0; font-size: 1rem; }
+.pw-note { color: var(--text-2); font-size: 0.8125rem; margin: 0; }
+.pw-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.pw-card { border: 1px solid var(--line-2); border-radius: 12px; background: var(--surface-5); padding: 10px 12px; min-width: 0; }
+.pw-top { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+.pw-top .player-identity { min-width: 0; flex: 1; }
+.pw-status { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.pw-badge { display: inline-block; padding: 3px 10px; border: 1px solid var(--line-3); border-radius: 999px; background: var(--surface-7); color: var(--text-4); font-size: 0.75rem; font-weight: 700; }
+.pw-badge.out { border-color: var(--red-3); background: var(--red-1); color: var(--red-5); }
+.pw-badge.tonight { border-color: var(--mint-5); color: var(--mint-6); }
+.pw-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; margin: 6px 0 0; }
+.pw-stats > div { padding: 6px 8px; border: 1px solid var(--line-1); border-radius: 8px; background: var(--surface-4); }
+.pw-stats dt { color: var(--text-2); font-size: 0.6875rem; }
+.pw-stats dd { margin: 2px 0 0; color: var(--text-6); font-weight: 800; font-variant-numeric: tabular-nums; }
+.pw-more { margin-top: 6px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line-3); border-radius: 8px; background: transparent; color: var(--mint-6); font-weight: 700; cursor: pointer; }
+.pw-recent { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 0.8125rem; color: var(--text-4); }
+.pw-recent li { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pw-empty { padding: 16px; border: 1px dashed var(--line-3); border-radius: 12px; color: var(--text-3); }

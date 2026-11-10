@@ -209,7 +209,7 @@ export function GameOverlay({
           <div className="rest-grid"><span><b>{away.id}</b>{restLabel(away.id)}</span><span><b>{home.id}</b>{restLabel(home.id)}</span></div>
           <p className="detail-note">Season series entering this game: {series.played ? `${away.id} ${series.away}–${series.home} ${home.id}` : "first meeting"}.</p>
           {previousMeetings.length ? <ul>{previousMeetings.map((meeting) => <li key={meeting.id}>{meeting.date} · {meeting.away} {meeting.awayScore}–{meeting.homeScore} {meeting.home} {meeting.end !== "REG" ? `(${meeting.end})` : ""}</li>)}</ul> : <p className="detail-note">No prior meetings this season.</p>}
-          <p className="availability-note">Verified injury and line-combination data are unavailable in the NHL public feed. No unverified lineup claims are shown.</p>
+          <p className="availability-note">Injuries are in the Injuries section above, from ESPN's injury report. The NHL public feed has no line-combination or confirmed-lineup data, so no lineup claims are shown.</p>
         </div>
       </details>
       <details className="game-center-section">

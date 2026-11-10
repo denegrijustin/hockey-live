@@ -2988,6 +2988,854 @@
       "detail": "Surgery",
       "returnDate": "2026-12-02"
      }
+    },
+    {
+     "id": "9900001",
+     "longComment": "Outman is out indefinitely.",
+     "shortComment": "Outman is out indefinitely.",
+     "status": "Out",
+     "date": "2026-09-28T19:18Z",
+     "athlete": {
+      "firstName": "Test",
+      "lastName": "Outman",
+      "displayName": "Test Outman",
+      "shortName": "Test Outman",
+      "headshot": {
+       "href": "https://a.espncdn.com/i/headshots/nhl/players/full/9900001.png",
+       "alt": "Test Outman"
+      },
+      "position": {
+       "id": "1",
+       "name": "Center",
+       "displayName": "Center",
+       "abbreviation": "C",
+       "leaf": true
+      },
+      "team": {
+       "id": "20",
+       "uid": "s:70~l:90~t:20",
+       "slug": "tampa-bay-lightning",
+       "name": "Lightning",
+       "abbreviation": "TB",
+       "displayName": "Tampa Bay Lightning",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2024-07-03T19:45Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500-dark/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2024-07-02T15:46Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500/scoreboard/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard"
+         ],
+         "lastUpdated": "2024-07-03T19:45Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500-dark/scoreboard/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard",
+          "dark"
+         ],
+         "lastUpdated": "2024-07-02T15:46Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_black"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_black"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        }
+       ],
+       "links": [
+        {
+         "language": "en-US",
+         "rel": [
+          "clubhouse",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/_/name/tb/tampa-bay-lightning",
+         "text": "Clubhouse",
+         "shortText": "Clubhouse",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "clubhouse",
+          "mobile",
+          "team"
+         ],
+         "href": "https://m.espn.com/nhl/clubhouse?teamId=20",
+         "text": "Clubhouse",
+         "shortText": "Clubhouse",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "roster",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/roster/_/name/tb/tampa-bay-lightning",
+         "text": "Roster",
+         "shortText": "Roster",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "roster",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=roster",
+         "text": "Roster",
+         "shortText": "Roster",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "stats",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/stats/_/name/tb/tampa-bay-lightning",
+         "text": "Statistics",
+         "shortText": "Statistics",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "stats",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=stats",
+         "text": "Statistics",
+         "shortText": "Statistics",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "schedule",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/schedule/_/name/tb",
+         "text": "Schedule",
+         "shortText": "Schedule",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "schedule",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=scores",
+         "text": "Schedule",
+         "shortText": "Schedule",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "photos",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/photos/_/name/tb",
+         "text": "photos",
+         "shortText": "photos",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "tickets",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.vividseats.com/tampa-bay-lightning-tickets--sports-nhl-hockey/performer/841?wsUser=717",
+         "text": "Tickets",
+         "shortText": "Tickets",
+         "isExternal": true,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "transactions",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/transactions/_/name/tb",
+         "text": "Transactions",
+         "shortText": "Transactions",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "injuries",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/injuries/_/name/tb",
+         "text": "Injuries",
+         "shortText": "Injuries",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "depthchart",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/line-combo/_/name/tb",
+         "text": "Line Combo",
+         "shortText": "Line Combo",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "depthchart",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=depthchart",
+         "text": "Line Combo",
+         "shortText": "Line Combo",
+         "isExternal": false,
+         "isPremium": false
+        }
+       ]
+      },
+      "status": {
+       "id": "1",
+       "name": "Active",
+       "type": "active",
+       "abbreviation": "Active"
+      },
+      "id": "9900001"
+     },
+     "source": {
+      "id": "1",
+      "description": "basic/manual",
+      "state": "basic"
+     },
+     "type": {
+      "id": "5",
+      "name": "INJURY_STATUS_IR",
+      "description": "Injured Reserve",
+      "abbreviation": "IR"
+     },
+     "details": {
+      "type": "Upper Body",
+      "fantasyStatus": {
+       "description": "Out",
+       "abbreviation": "Out"
+      }
+     }
+    },
+    {
+     "id": "9900002",
+     "longComment": "Suspendo is serving a suspension.",
+     "shortComment": "Suspendo is serving a suspension.",
+     "status": "Suspension",
+     "date": "2026-09-28T19:18Z",
+     "athlete": {
+      "firstName": "Sample",
+      "lastName": "Suspendo",
+      "displayName": "Sample Suspendo",
+      "shortName": "Sample Suspendo",
+      "headshot": {
+       "href": "https://a.espncdn.com/i/headshots/nhl/players/full/9900002.png",
+       "alt": "Sample Suspendo"
+      },
+      "position": {
+       "id": "1",
+       "name": "Center",
+       "displayName": "Center",
+       "abbreviation": "C",
+       "leaf": true
+      },
+      "team": {
+       "id": "20",
+       "uid": "s:70~l:90~t:20",
+       "slug": "tampa-bay-lightning",
+       "name": "Lightning",
+       "abbreviation": "TB",
+       "displayName": "Tampa Bay Lightning",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2024-07-03T19:45Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500-dark/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2024-07-02T15:46Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500/scoreboard/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard"
+         ],
+         "lastUpdated": "2024-07-03T19:45Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nhl/500-dark/scoreboard/tb.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard",
+          "dark"
+         ],
+         "lastUpdated": "2024-07-02T15:46Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_black"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/primary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_black"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/49fa608f-040f-21c1-ebfb-99e8feb8b774/logos/secondary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:31Z"
+        }
+       ],
+       "links": [
+        {
+         "language": "en-US",
+         "rel": [
+          "clubhouse",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/_/name/tb/tampa-bay-lightning",
+         "text": "Clubhouse",
+         "shortText": "Clubhouse",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "clubhouse",
+          "mobile",
+          "team"
+         ],
+         "href": "https://m.espn.com/nhl/clubhouse?teamId=20",
+         "text": "Clubhouse",
+         "shortText": "Clubhouse",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "roster",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/roster/_/name/tb/tampa-bay-lightning",
+         "text": "Roster",
+         "shortText": "Roster",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "roster",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=roster",
+         "text": "Roster",
+         "shortText": "Roster",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "stats",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/stats/_/name/tb/tampa-bay-lightning",
+         "text": "Statistics",
+         "shortText": "Statistics",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "stats",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=stats",
+         "text": "Statistics",
+         "shortText": "Statistics",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "schedule",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/schedule/_/name/tb",
+         "text": "Schedule",
+         "shortText": "Schedule",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "schedule",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=scores",
+         "text": "Schedule",
+         "shortText": "Schedule",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "photos",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/photos/_/name/tb",
+         "text": "photos",
+         "shortText": "photos",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "tickets",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.vividseats.com/tampa-bay-lightning-tickets--sports-nhl-hockey/performer/841?wsUser=717",
+         "text": "Tickets",
+         "shortText": "Tickets",
+         "isExternal": true,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "transactions",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/transactions/_/name/tb",
+         "text": "Transactions",
+         "shortText": "Transactions",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "injuries",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/injuries/_/name/tb",
+         "text": "Injuries",
+         "shortText": "Injuries",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "depthchart",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nhl/team/line-combo/_/name/tb",
+         "text": "Line Combo",
+         "shortText": "Line Combo",
+         "isExternal": false,
+         "isPremium": false
+        },
+        {
+         "language": "en-US",
+         "rel": [
+          "depthchart",
+          "sportscenter",
+          "app",
+          "team"
+         ],
+         "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:20&section=depthchart",
+         "text": "Line Combo",
+         "shortText": "Line Combo",
+         "isExternal": false,
+         "isPremium": false
+        }
+       ]
+      },
+      "status": {
+       "id": "1",
+       "name": "Active",
+       "type": "active",
+       "abbreviation": "Active"
+      },
+      "id": "9900002"
+     },
+     "source": {
+      "id": "1",
+      "description": "basic/manual",
+      "state": "basic"
+     },
+     "type": {
+      "id": "5",
+      "name": "INJURY_STATUS_IR",
+      "description": "Injured Reserve",
+      "abbreviation": "IR"
+     },
+     "details": {
+      "type": "Personal",
+      "fantasyStatus": {
+       "description": "SUSP",
+       "abbreviation": "SUSP"
+      }
+     }
     }
    ]
   },

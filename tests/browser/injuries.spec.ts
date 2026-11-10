@@ -34,7 +34,7 @@ test("each injury shows the type, how serious it is, when the player may be back
   await expect(page.getByTestId("inj-counts")).toContainText(String(report.counts.total));
   const first = page.getByTestId("injury").filter({ hasText: names[0] });
   await expect(first).toContainText(names[0]);
-  await expect(first.locator(".inj-sev")).toHaveText(/Day-to-day|Short-term|Moderate|Long-term|Season-ending|Unknown/);
+  await expect(first.locator(".inj-sev")).toHaveText(/Estimate: (Day-to-day|Short-term|Moderate|Long-term|Season-ending)/);
   await expect(first.locator(".inj-facts")).toContainText("Injury");
   await expect(first.locator(".inj-facts")).toContainText("Back");
   await expect(first.locator(".inj-impact")).toContainText(/High impact|Medium impact|Low impact/);
@@ -113,7 +113,9 @@ test("each card's drawing follows where the player is hurt: the named part, or a
   expect(knee.zone).toBe("knee");
   expect(knee.pose).toBe("ankle");
   expect(knee.label).toContain("Knee");
-  expect((await art("Pavel Mintyukov")).pose).toBe("ankle"); // "Lower Body" only
+  const vague = await art("Pavel Mintyukov"); // "Lower Body" only: the team is not saying where, so no leg is drawn
+  expect(vague.pose).toBe("skater-unknown");
+  expect(vague.label).toBe("Injury location for Pavel Mintyukov: Lower body (not specified)");
   expect((await art("Jeff Malott")).pose).toBe("skater-unknown"); // illness
 });
 
@@ -147,16 +149,16 @@ test("the drawing is painted in the team's colours with its logo, and pops in on
 
 const withEdm = { ...report, items: report.items.map((i: { team: string }, k: number) => (k < 2 ? { ...i, team: "EDM" } : i)) };
 
-test("the report opens on Edmonton, and picking another team changes the list straight away", async ({ page }) => {
+test("the report opens on All teams (not one hard-coded team), and picking another team changes the list straight away", async ({ page }) => {
   await open(page, withEdm);
-  await expect(page.getByLabel("Team", { exact: true })).toHaveValue("EDM");
+  await expect(page.getByLabel("Team", { exact: true })).toHaveValue("all");
   const teamsShown = () => page.getByTestId("injury").evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("data-team")))]);
+  expect((await teamsShown()).length).toBeGreaterThan(1);
+  await page.getByLabel("Team", { exact: true }).selectOption("EDM");
   expect(await teamsShown()).toEqual(["EDM"]);
   const other = withEdm.items.find((i: { team: string }) => i.team !== "EDM")!.team;
   await page.getByLabel("Team", { exact: true }).selectOption(other);
   expect(await teamsShown()).toEqual([other]);
-  await page.getByLabel("Team", { exact: true }).selectOption("all");
-  expect((await teamsShown()).length).toBeGreaterThan(1);
 });
 
 test("Teams hit hardest is a compact row of small chips", async ({ page }) => {
@@ -195,3 +197,63 @@ test("with motion off nothing animates", async ({ page }) => {
   expect(await fig.getByTestId("inj-art").evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
 });
 
+
+const card = (page: Page, name: string) => page.getByTestId("injury").filter({ hasText: name });
+
+test("the provider's own status words are shown as chips, with its code and what the code means", async ({ page }) => {
+  await open(page);
+  await expect(card(page, "Jeff Malott").getByTestId("inj-status")).toHaveText("Day-To-Day");
+  await expect(card(page, "Jeff Malott").getByTestId("inj-code")).toHaveCount(0); // the code repeats the status: shown once
+  await expect(card(page, "Pavel Mintyukov").getByTestId("inj-status")).toHaveText("Injured Reserve");
+  await expect(card(page, "Pavel Mintyukov").getByTestId("inj-code")).toHaveAttribute("title", "IR = injured reserve");
+  await expect(card(page, "Dakota Joshua").getByTestId("inj-code")).toHaveText("IR-LT");
+  await expect(card(page, "Dakota Joshua").getByTestId("inj-code")).toHaveAttribute("title", "IR-LT = long-term injured reserve");
+  await expect(card(page, "Judd Caulfield").getByTestId("inj-code")).toHaveText("IR-NR");
+  await expect(card(page, "Judd Caulfield").getByTestId("inj-code")).toHaveAttribute("title", /^Provider status code: IR-NR$/); // no definition we can state
+  await expect(card(page, "Test Outman").getByTestId("inj-status")).toHaveText("Out");
+  await expect(card(page, "Sample Suspendo").getByTestId("inj-status")).toHaveText("Suspension"); // an unknown status passes through as given
+  await expect(page.getByTestId("inj-status-counts")).toContainText("11 IR");
+  await expect(page.getByTestId("inj-status-counts")).toContainText("1 IR-LT");
+  await expect(page.getByTestId("inj-status-counts")).toContainText("3 Day-To-Day");
+  await expect(page.getByTestId("inj-status-counts")).toContainText("1 Out");
+  await expect(page.getByTestId("inj-status-counts")).toContainText("1 Other");
+});
+
+test("the app's own severity is labelled an estimate; no return date says so plainly; every row says when it was reported", async ({ page }) => {
+  await open(page);
+  const out = card(page, "Test Outman");
+  await expect(out.locator(".inj-facts")).toContainText("No return date reported");
+  await expect(out.locator(".inj-sev")).toHaveCount(0); // nothing to estimate from
+  const m = card(page, "Pavel Mintyukov");
+  await expect(m.locator(".inj-sev")).toHaveAttribute("title", /Estimated from the reported return date/);
+  await expect(m.locator(".inj-facts")).toContainText(/Reported return date \(estimate\): Oct 29|Return date has passed \(Oct 29\)/);
+  const rep = m.getByTestId("inj-reported");
+  await expect(rep).toHaveText(/^Reported (just now|\d+ (min|h) ago|\d+ days? ago)$/);
+  await expect(rep).toHaveAttribute("title", /Oct 23, 2026/);
+  await expect(page.getByTestId("injury")).toHaveCount(await page.getByTestId("inj-reported").count());
+  await expect(page.locator(".inj-source")).toContainText("updated");
+});
+
+test("a player links to his profile only when he is matched on the team's roster; otherwise plain text", async ({ page }) => {
+  await page.route(`**/api/players/${season}/ANA`, (r) => r.fulfill({ json: { season, gameType: 2, updatedAt: new Date().toISOString(), skaters: [{ id: 8482112, name: "Pavel Mintyukov", team: "ANA", position: "D", gp: 3, goals: 0, assists: 1, shots: 2, plusMinus: 0, pim: 0 }], goalies: [] } }));
+  await open(page);
+  await page.getByLabel("Team", { exact: true }).selectOption("ANA");
+  await expect(card(page, "Pavel Mintyukov").getByTestId("inj-player-link")).toHaveText("Pavel Mintyukov");
+  await expect(card(page, "Ryan Poehling").getByTestId("inj-player-text")).toHaveText("Ryan Poehling");
+  await expect(card(page, "Ryan Poehling").getByTestId("inj-player-link")).toHaveCount(0);
+});
+
+test("each figure names the player in its accessible label, beside the written injury", async ({ page }) => {
+  await open(page);
+  const c = card(page, "Ryan Poehling");
+  await expect(c.getByRole("img", { name: /^Injury location for Ryan Poehling: / })).toBeVisible();
+  await expect(c.locator(".inj-figure-wrap small")).toContainText("Knee");
+});
+
+test("Colorado, Montreal and San Jose have no drawn set and fall back to the neutral drawing by name", async ({ page }) => {
+  const base = report.items[0] as object;
+  await open(page, { ...report, items: ["COL", "MTL", "SJS"].map((team, k) => ({ ...base, id: "n" + k, name: "Neutral " + k, team })) });
+  const arts = page.getByTestId("inj-art");
+  await expect(arts).toHaveCount(3);
+  for (let k = 0; k < 3; k++) await expect(arts.nth(k)).toHaveAttribute("data-set", "neutral");
+});

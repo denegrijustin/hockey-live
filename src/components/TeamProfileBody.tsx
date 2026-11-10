@@ -5,6 +5,7 @@ import { buildResumes } from "../lib/resumes.mjs";
 import { teamGames, sideOf } from "../lib/team-schedule.mjs";
 import { Chip } from "./Resumes";
 import { TeamLogo } from "./TeamLogo";
+import { InjuryList } from "./InjuryList";
 import "./team-profile.css";
 
 const DIV_FILE: Record<string, string> = { Atlantic: "atlantic", Metropolitan: "metro", Central: "central", Pacific: "pacific" };
@@ -62,7 +63,7 @@ export default function TeamProfileBody({ team, teams, table, games, season, onC
       </div>
       <section>
         <h3>Injuries</h3>
-        {hurt.length ? <ul className="tp-inj">{hurt.map((i: any) => <li key={i.id}><b>{i.name}</b>{i.pos ? <small> {i.pos}</small> : null}<span className={`gi-sev ${i.severity.level}`}>{i.severity.label}</span><em>{i.kind} · {i.back.text}</em></li>)}</ul> : <p className="rs-none">{inj ? "No injuries reported" : "Loading the injury report…"}</p>}
+        {hurt.length ? <InjuryList items={hurt} season={season} /> :<p className="rs-none">{inj ? "No injuries reported" : "Loading the injury report…"}</p>}
       </section>
     </>
   );

@@ -20,7 +20,13 @@ export function teamIdFor(group, teams) {
   return teams.some((t) => t.id === id) ? id : null;
 }
 
-const STATUS = { "day-to-day": "Day-to-day", "injured reserve": "Injured reserve", out: "Out" };
+/** The provider's own status words, verbatim ("Injured Reserve", "Day-To-Day", "Out", anything else as given); "Not reported" only when the feed gives none. */
+const statusText = (v) => (String(v ?? "").trim() || "Not reported");
+export const isDayToDay = (item) => /^day[- ]?to[- ]?day$/i.test(String(item?.status ?? "").trim());
+
+/** What the provider's fantasy status codes mean, only where that is certain. Unknown codes show the code alone. */
+export const FANTASY_DEFINITIONS = { IR: "IR = injured reserve", "IR-LT": "IR-LT = long-term injured reserve" };
+export const fantasyDefinition = (code) => FANTASY_DEFINITIONS[String(code ?? "").toUpperCase()] ?? null;
 
 /** ESPN's injury feed as one flat list of injuries, each with our team id. */
 export function parseEspnInjuries(json, teams) {
@@ -39,7 +45,9 @@ export function parseEspnInjuries(json, teams) {
         pos: a.position?.abbreviation ?? null,
         team,
         headshot: a.headshot?.href ?? (a.id ? `https://a.espncdn.com/i/headshots/nhl/players/full/${a.id}.png` : null),
-        status: STATUS[String(i.status ?? "").toLowerCase()] ?? i.status ?? "Unknown",
+        status: statusText(i.status),
+        statusRaw: i.status ?? null,
+        fantasy: d.fantasyStatus?.abbreviation ?? null,
         longTerm: /\bLT\b/i.test(d.fantasyStatus?.abbreviation ?? ""),
         kind,
         detail: real(d.detail),
@@ -56,34 +64,52 @@ export function parseEspnInjuries(json, teams) {
 
 const SEASON_ENDING = /out for the (?:rest of the )?season|season-ending|miss the (?:rest|remainder) of the season|done for the season/i;
 
-/** How serious it looks: from the reported time out, the injured-reserve type and what the team has said. */
+/**
+ * An ESTIMATE of how serious it looks, from the reported return date, the long-term injured-reserve code and what the team has said. The thresholds (42 and 15 days) are this app's own,
+ * not the league's or the provider's, so the UI shows the result only as "Estimated from the reported return date". No basis at all is "Not reported", never short-term.
+ */
 export function severity(item, today) {
   const days = item.returnDate ? daysBetween(item.returnDate, today) : null;
   if (SEASON_ENDING.test(`${item.comment} ${item.note}`)) return { level: "season", label: "Season-ending", days };
   if (item.longTerm || (days != null && days >= 42)) return { level: "serious", label: "Long-term", days };
   if (days != null && days >= 15) return { level: "moderate", label: "Moderate", days };
-  if (item.status === "Day-to-day") return { level: "minor", label: "Day-to-day", days };
+  if (isDayToDay(item)) return { level: "minor", label: "Day-to-day", days };
   if (days != null) return { level: "minor", label: "Short-term", days };
-  return { level: "unknown", label: "Unknown", days };
+  return { level: "unknown", label: "Not reported", days };
 }
 
-/** When he may be back, in words: time left to a reported return date, what the team said, or that nothing is reported. */
+/**
+ * When he may be back, in the provider's words only: "Reported return date (estimate): Oct 29" when the feed has a return date, "Return date has passed (Oct 20)" when that date is behind us,
+ * "Out for the season" when the team's own comment says so, otherwise exactly "No return date reported". `days` (to the date) is kept for sorting.
+ */
 export function timeBack(item, today) {
   const sev = severity(item, today), days = sev.days;
   if (sev.level === "season") return { text: "Out for the season", days: null, date: null };
-  if (days == null) {
-    const w = /(\d+)(?:\s*(?:-|–|to)\s*(\d+))?\s*weeks?/i.exec(`${item.comment} ${item.note}`);
-    if (w) return { text: `Reported: ${w[2] ? `${w[1]}–${w[2]}` : w[1]} weeks`, days: null, date: null };
-    return { text: item.status === "Day-to-day" ? "Day-to-day, no return date" : "No return date reported", days: null, date: null };
-  }
+  if (days == null) return { text: "No return date reported", days: null, date: null };
   const date = item.returnDate;
-  if (days < 0) return { text: `Return date passed (${dateText(date)}): could be back any day`, days, date };
-  if (days === 0) return { text: "Could return today", days, date };
-  if (days === 1) return { text: `About a day · ${dateText(date)}`, days, date };
-  if (days < 14) return { text: `About ${days} days · ${dateText(date)}`, days, date };
-  const weeks = Math.round(days / 7);
-  return { text: `About ${weeks} ${weeks === 1 ? "week" : "weeks"} · ${dateText(date)}`, days, date };
+  if (days < 0) return { text: `Return date has passed (${dateText(date)})`, days, date };
+  return { text: `Reported return date (estimate): ${dateText(date)}`, days, date };
 }
+
+/** "Reported 3 days ago" for the report's own timestamp, with the absolute time for a tooltip; null when the feed gave none. */
+export function reportedAgo(updated, now = Date.now()) {
+  const t = Date.parse(updated ?? "");
+  if (!Number.isFinite(t)) return null;
+  const mins = Math.max(0, Math.round((now - t) / 60000));
+  const hours = Math.round(mins / 60), days = Math.round(mins / 1440);
+  const text = mins < 2 ? "Reported just now" : mins < 60 ? `Reported ${mins} min ago` : mins < 1440 ? `Reported ${hours} h ago` : `Reported ${days} ${days === 1 ? "day" : "days"} ago`;
+  return { text, title: new Date(t).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }) };
+}
+
+/** One roster match by normalized name, or null when there is none or more than one (never a guess). */
+export function matchRoster(name, roster = []) {
+  const k = normName(name);
+  const hits = roster.filter((p) => normName(p.name) === k);
+  return hits.length === 1 ? hits[0] : null;
+}
+
+/** The provider's status as a count bucket: IR-LT, IR (injured reserve with any other IR code), Day-To-Day, Out, other. */
+export const statusBucket = (i) => (i.longTerm ? "irLt" : /injured reserve/i.test(i.status) ? "ir" : isDayToDay(i) ? "dayToDay" : /^out$/i.test(i.status) ? "out" : "other");
 
 /**
  * A season's production by player, as an impact index per game, and where each player stands among his position group.
@@ -153,12 +179,12 @@ export function buildInjuryReport({ espn, teams, today, now = Date.now(), season
   }
   const teamList = [...teamsOut.values()].map((t) => ({ ...t, lost: Math.round(t.lost * 10) / 10 })).sort((a, b) => b.lost - a.lost || b.count - a.count);
   return {
-    schema: 1,
+    schema: 2,
     season,
     updatedAt: new Date(now).toISOString(),
     sourceUpdated: espn?.timestamp ?? null,
     source: "ESPN injury report; impact from NHL box-score production",
-    counts: { total: items.length, dayToDay: items.filter((i) => i.status === "Day-to-day").length, longTerm: items.filter((i) => i.severity.level === "serious" || i.severity.level === "season").length, high: items.filter((i) => i.impact.level === "high").length },
+    counts: { total: items.length, byStatus: items.reduce((m, i) => ({ ...m, [statusBucket(i)]: m[statusBucket(i)] + 1 }), { ir: 0, irLt: 0, dayToDay: 0, out: 0, other: 0 }), dayToDay: items.filter(isDayToDay).length, longTerm: items.filter((i) => i.severity.level === "serious" || i.severity.level === "season").length, high: items.filter((i) => i.impact.level === "high").length },
     teams: teamList,
     items,
   };

@@ -26,10 +26,13 @@ export function injuryZone(item) {
   const kind = String(item.kind ?? "").toLowerCase();
   const comment = String(item.comment ?? "").toLowerCase();
   const text = `${kind} ${/\(([^)]+)\)/.exec(comment)?.[1] ?? ""}`;
-  const side = /left/i.test(item.side ?? "") || /\bleft\b/.test(comment) ? "left" : /right/i.test(item.side ?? "") || /\bright\b/.test(comment) ? "right" : null;
+  const reported = /\bleft\b/i.test(item.side ?? "") ? "left" : /\bright\b/i.test(item.side ?? "") ? "right" : null;
+  // Without a reported side, a side counts only when it sits right next to the body part ("left knee", "knee (left)"): never "right wing" or "left the game".
+  const sideNear = (re) => { const m = new RegExp(`\\b(left|right)[ -](?:${re.source})|(?:${re.source})\\s*\\((left|right)\\)`).exec(`${kind} ${comment}`); return m ? (m[1] ?? m[2]) : null; };
   if (/illness|flu|sick|virus|covid|ill\b/.test(kind)) return { zone: "illness", side: null, label: "Illness", general: true };
   if (/personal|family|bereavement|non-?injury/.test(kind)) return { zone: "personal", side: null, label: "Personal reasons", general: true };
   for (const [zone, re] of ZONES) if (re.test(text)) {
+    const side = reported ?? sideNear(re);
     const name = zone[0].toUpperCase() + zone.slice(1);
     return { zone, side: side && !["head", "neck", "chest", "core", "back", "groin"].includes(zone) ? side : null, label: side && !["head", "neck", "chest", "core", "back", "groin"].includes(zone) ? `${side[0].toUpperCase()}${side.slice(1)} ${zone}` : name, general: false };
   }

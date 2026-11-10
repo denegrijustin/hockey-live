@@ -91,3 +91,21 @@
 @keyframes pose-pop { 0% { opacity: 0; transform: translateY(8px) scale(.94); } 100% { opacity: 1; transform: none; } }
 html[data-motion="off"] .inj-pose.play :is(canvas, img) { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .inj-pose.play :is(canvas, img) { animation: none !important; } }
+
+/* Provider status words, fantasy codes, estimate tags, reported times, player links */
+.inj-badges { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.inj-status { padding: 2px 9px; border-radius: 6px; font-size: .6875rem; font-weight: 750; background: var(--surface-8); color: var(--text-4, var(--text-1)); border: 1px solid var(--surface-7); white-space: nowrap; }
+.inj-code { padding: 2px 7px; border-radius: 6px; font-size: .6875rem; font-weight: 650; color: var(--text-3); border: 1px dashed var(--surface-7); white-space: nowrap; cursor: help; }
+.inj-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.inj-reported { color: var(--text-3); font-size: .6875rem; white-space: nowrap; }
+.inj-plink { all: unset; cursor: pointer; font-weight: 700; font-size: inherit; text-decoration: underline; text-decoration-color: var(--surface-7); text-underline-offset: 3px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inj-plink:hover { text-decoration-color: currentColor; }
+.inj-plink:focus-visible, .inj-face:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; border-radius: 4px; }
+.inj-face { all: unset; cursor: pointer; display: inline-flex; border-radius: 50%; }
+.inj-who .inj-name .inj-plink, .inj-who .inj-name b { font-size: 1rem; }
+.gi-side li .inj-face { grid-row: 1 / span 3; grid-column: 1; }
+.gi-name .inj-plink, .gi-name b { font-size: .875rem; }
+.gi-name .inj-badges { margin-left: 4px; }
+.inj-status-counts { margin-top: -4px; }
+.tp-inj .inj-plink, .tp-inj b { font-size: .8125rem; }
+.inj-more { margin: 6px 0 0; font-size: .75rem; }

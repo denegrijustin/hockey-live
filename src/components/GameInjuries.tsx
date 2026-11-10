@@ -4,32 +4,33 @@ import { useFeed } from "../lib/polling";
 import { ordinal } from "../lib/injuries.mjs";
 import { injuryZone } from "../lib/injury-zone.mjs";
 import { InjuryMascot } from "./InjuryMascot";
-import { InjuryHeadshot } from "./InjuryHeadshot";
+import { InjuryBadge, InjuryEstimate, InjuryFace, InjuryPlayerName, InjuryReported } from "./InjuryList";
 import { TeamLogo } from "./TeamLogo";
+import { TeamLink } from "./TeamProfile";
 
-type Item = { id: string; name: string; pos: string | null; team: string; headshot: string | null; side: string | null; comment: string; kind: string; status: string; severity: { level: string; label: string }; back: { text: string }; impact: { basis: "season" | "last" | "none"; level: "high" | "medium" | "low" | null; label: string; percentile: number | null; gp: number; small?: boolean } };
+type Item = { id: string; name: string; pos: string | null; team: string; headshot: string | null; side: string | null; comment: string; kind: string; status: string; fantasy?: string | null; updated?: string | null; severity: { level: string; label: string }; back: { text: string }; impact: { basis: "season" | "last" | "none"; level: "high" | "medium" | "low" | null; label: string; percentile: number | null; gp: number; small?: boolean } };
 type Report = { items: Item[]; stale?: boolean };
 const SHOWN = 4;
 const basis = (i: Item["impact"]) => (i.basis === "none" ? "no earlier games" : i.basis === "last" ? `${i.gp} GP last season` : i.small ? `${i.gp} GP, small sample` : `${i.gp} GP this season`);
 
-function Side({ team, items }: { team: Team; items: Item[] }) {
+function Side({ team, items, season }: { team: Team; items: Item[]; season: number }) {
   const [all, setAll] = useState(false);
   const shown = all ? items : items.slice(0, SHOWN);
   const high = items.filter((i) => i.impact.level === "high").length;
   return (
     <div className="gi-side" data-team={team.id}>
-      <h4><TeamLogo id={team.id} size={20} /> {team.short} <span>{items.length ? `${items.length} out${high ? ` · ${high} high-impact` : ""}` : "No injuries reported"}</span></h4>
+      <h4><TeamLogo id={team.id} size={20} /> <TeamLink id={team.id}>{team.short}</TeamLink> <span>{items.length ? `${items.length} out${high ? ` · ${high} high-impact` : ""}` : "No injuries reported"}</span></h4>
       {items.length > 0 && (
         <ul>
           {shown.map((i) => {
             const zone = injuryZone(i);
             return (
               <li key={i.id} data-testid="game-injury" data-impact={i.impact.level ?? "none"}>
-                <InjuryHeadshot src={i.headshot} name={i.name} size={40} />
-                <span className="gi-name"><b>{i.name}</b>{i.pos ? <small> {i.pos}</small> : null} <span className={`gi-sev ${i.severity.level}`}>{i.severity.label}</span></span>
-                <span className="gi-line">{zone.label !== i.kind ? `${zone.label} · ` : ""}{i.kind} · {i.back.text}</span>
+                <InjuryFace item={i} season={season} size={40} />
+                <span className="gi-name"><InjuryPlayerName item={i} season={season} />{i.pos ? <small> {i.pos}</small> : null} <InjuryBadge item={i} /> <InjuryEstimate severity={i.severity} className="gi-sev" /></span>
+                <span className="gi-line">{zone.label !== i.kind ? `${zone.label} · ` : ""}{i.kind} · {i.back.text} <InjuryReported updated={i.updated} /></span>
                 <span className={`gi-impact ${i.impact.level ?? "none"}`} title={`Judged on ${basis(i.impact)}`}>{i.impact.label}{i.impact.percentile != null ? ` · ${ordinal(i.impact.percentile)} pct` : ""} <small>({basis(i.impact)})</small></span>
-                <span className="gi-fig"><InjuryMascot team={team.id} goalie={i.pos === "G"} zone={zone.zone} side={zone.side} label={zone.label} size={56} /></span>
+                <span className="gi-fig"><InjuryMascot team={team.id} goalie={i.pos === "G"} zone={zone.zone} side={zone.side} label={zone.label} name={i.name} size={56} /></span>
               </li>
             );
           })}
@@ -54,10 +55,10 @@ export function GameInjuries({ away, home, season }: { away: Team; home: Team; s
       {!data ? <p className="gi-note" role={error ? undefined : "status"}>{error ? "The injury report is unavailable right now." : "Loading injuries…"}</p> : (
         <>
           <div className="gi-grid">
-            <Side team={away} items={of(away)} />
-            <Side team={home} items={of(home)} />
+            <Side team={away} items={of(away)} season={season} />
+            <Side team={home} items={of(home)} season={season} />
           </div>
-          <p className="gi-note">Impact is judged on the player’s earlier games this season, or last season if he has few. Source: ESPN. Return dates are estimates.</p>
+          <p className="gi-note">Impact is judged on the player’s earlier games this season, or last season if he has few. Source: ESPN injury report; status words and codes are its own, and “Estimate” tags are this app’s guess from the reported return date.</p>
         </>
       )}
     </details>

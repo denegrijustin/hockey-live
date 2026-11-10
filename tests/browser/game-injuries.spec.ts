@@ -36,7 +36,7 @@ test("opening a game shows each side's injuries: who, the injury, how serious, w
   await expect(box.locator('.gi-side[data-team="TOR"]')).toContainText("out");
   const first = box.locator('.gi-side[data-team="ANA"] [data-testid="game-injury"]').first();
   await expect(first).toContainText(names[0]); // highest impact first
-  await expect(first.locator(".gi-sev")).toHaveText(/Day-to-day|Short-term|Moderate|Long-term|Season-ending|Unknown/);
+  await expect(first.locator(".gi-sev")).toHaveText(/Estimate: (Day-to-day|Short-term|Moderate|Long-term|Season-ending)/);
   await expect(first.locator(".gi-line")).toContainText("·");
   await expect(first.locator(".gi-impact")).toContainText(/High impact|Medium impact|Low impact/);
   await expect(first.locator(".gi-impact")).toContainText("this season");

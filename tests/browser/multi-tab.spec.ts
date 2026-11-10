@@ -13,8 +13,8 @@ test("a favorite toggled in one tab appears in the other without a reload", asyn
     await p.route("**/api/live", (route) => route.fulfill({ json: liveBody() }));
     await p.goto("/?view=teams&team=EDM");
   }
-  await a.waitForLoadState("domcontentloaded");
-  if (!(await star(a).isVisible().catch(() => false))) test.skip(true, "favorite star not merged yet (needs Agent 1: FavoriteStar on the team page); store sync is covered at the unit level by tests/prefs.test.mjs only for parsing");
+  await expect(star(a)).toBeVisible();
+  await expect(star(b)).toBeVisible();
   const before = await star(b).getAttribute("aria-pressed");
   await star(a).click();
   await expect(star(a)).not.toHaveAttribute("aria-pressed", before!);

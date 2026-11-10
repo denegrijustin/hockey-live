@@ -25,7 +25,11 @@ test("503 then abort then recovery on /api/live: stale label, recovery, bounded 
 
   // The page clock is fake but the network is real: step one poll period, then let that request finish before the next step.
   const step = async (n: number) => {
-    await page.clock.runFor(31_000);
+    // Retry the step if the previous request had not finished yet (a poll is skipped while one is in flight).
+    for (let i = 0; i < 4 && (counts.get("/api/live") ?? 0) < n; i++) {
+      await page.clock.runFor(31_000);
+      await page.waitForTimeout(300);
+    }
     await expect.poll(() => counts.get("/api/live") ?? 0).toBeGreaterThanOrEqual(n);
     await page.waitForTimeout(250);
   };

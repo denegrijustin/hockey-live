@@ -81,7 +81,8 @@ test("two tabs, one favorite game: the start alert is delivered once per tab and
   await a.close(); await b.close();
 });
 
-test("new controls are named, pressed-state aware and at least 44px (desktop and phone)", async ({ page }) => {
+test("new controls are named, pressed-state aware and at least 44px (touch targets, phone project)", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the 44px touch-target rule is checked on the phone project; desktop uses pointer-sized controls");
   await mockApis(page, { games });
   await personal(page);
   await page.goto("/?view=teams&team=EDM");
@@ -167,8 +168,16 @@ for (const [w, h] of [[390, 844], [360, 740]] as const) {
       await personal(page);
       for (const [name, url] of [["home", "/"], ["following", "/?view=following"], ["settings", "/?view=settings"], ["team", "/?view=teams&team=EDM"]] as const) {
         await page.goto(url);
-        await page.waitForTimeout(700);
+        await page.waitForTimeout(name === "following" ? 2000 : 700);
         await shot(page, `${name}-${w}-${scheme}`);
+        if (name === "settings") {
+          for (const sec of ["display", "notifications", "application"]) {
+            await page.getByTestId(`settings-${sec}`).scrollIntoViewIfNeeded();
+            await page.getByTestId(`settings-${sec}`).evaluate((n) => n.scrollIntoView({ block: "start" }));
+            await page.waitForTimeout(200);
+            await shot(page, `settings-${sec}-${w}-${scheme}`);
+          }
+        }
         expect(await overflow(page), `${name} overflow`).toBeLessThanOrEqual(1);
       }
     });

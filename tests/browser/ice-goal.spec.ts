@@ -59,13 +59,13 @@ test("a finished game keeps its ice view, and a game that has not started has no
   await showPeriod(page, "past");
   const card = page.locator(".game-card").first();
   await card.scrollIntoViewIfNeeded(); // the feed is fetched only for a card that is on screen
-  await expect(card).toContainText("FINAL");
+  await expect(card).toContainText(/final/i);
   await expect(card.getByTestId("ice-view")).toContainText("Shot map · final");
   // A game that has not started has no ice view, and so adds nothing to the small card.
   await showPeriod(page, "future");
   const upcoming = page.locator(".game-card").first();
   await upcoming.scrollIntoViewIfNeeded();
-  await expect(upcoming).not.toContainText("FINAL");
+  await expect(upcoming).not.toContainText(/final/i);
   await expect(page.getByTestId("ice-view")).toHaveCount(0);
 });
 

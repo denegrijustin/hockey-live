@@ -8,6 +8,7 @@ import { Skeleton } from "./Skeleton";
 import { GameRecap } from "./GameRecap";
 import { CompactGameFlow } from "./GameData";
 import { TeamLogo } from "./TeamLogo";
+import { LOGO_SIZE } from "./GameCardView";
 import "./last-night.css";
 import { PageHeader } from "./PageHeader";
 
@@ -108,9 +109,9 @@ export function LastNight({ games, teams, season, current = true }: { games: Gam
               return (
                 <li key={f.id} data-game-id={f.id}>
                   <button type="button" className="ln-gamebtn" aria-label={`${nameOf(f.away)} ${f.awayScore}, ${nameOf(f.home)} ${f.homeScore}, final${f.end ? ` in ${f.end}` : ""}. Open the game: best and worst nights, shot chart and analysis.`} onClick={() => setOpen(f.id)}>
-                  <span className={`ln-side${aw ? " win" : ""}`}><TeamLogo id={f.away} size={26} /><b>{f.away}</b></span>
+                  <span className={`ln-side${aw ? " win" : ""}`}><TeamLogo id={f.away} size={LOGO_SIZE.row} /><b>{f.away}</b></span>
                   <span className="ln-score"><strong className={aw ? "win" : ""}>{f.awayScore}</strong><i>–</i><strong className={aw ? "" : "win"}>{f.homeScore}</strong>{f.end && <small>{f.end}</small>}</span>
-                  <span className={`ln-side home${aw ? "" : " win"}`}><b>{f.home}</b><TeamLogo id={f.home} size={26} /></span>
+                  <span className={`ln-side home${aw ? "" : " win"}`}><b>{f.home}</b><TeamLogo id={f.home} size={LOGO_SIZE.row} /></span>
                   </button>
                 </li>
               );

@@ -1,0 +1,107 @@
+/* GameCardView: the one game card (row, compact, tile). Tokens only; light and dark come from the variables. */
+
+/* The Game Center tag: a small visible tag with a >= 44px hit area (::before), the single rule for every card. */
+.gc-icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--mint) 50%, var(--line-2));
+  background: var(--surface-5);
+  color: var(--mint);
+  font-size: 0.6875rem;
+  font-weight: 850;
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+.gc-icon::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+.gc-icon:hover,
+.gc-icon:focus-visible {
+  background: var(--surface-7);
+  border-color: var(--mint);
+}
+
+.gcv { min-width: 0; }
+.gcv .sb-main { min-width: 0; text-align: left; }
+.gcv .sb-team { min-width: 0; grid-template-columns: var(--gcv-logo, 32px) minmax(0, 1fr) auto; }
+.gcv-row { --gcv-logo: 32px; }
+.gcv-compact, .gcv-tile { --gcv-logo: 20px; }
+.gcv .team-logo { width: var(--gcv-logo); height: var(--gcv-logo); flex: none; }
+
+/* Names: city dimmed, nickname bold; a long name is cut with an ellipsis (the full name is in the title). */
+.gcv .sb-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gcv .sb-name small { font-weight: 500; }
+.gcv .gcv-record { margin-left: 6px; color: var(--text-1); font-size: 0.6875rem; font-variant-numeric: tabular-nums; }
+
+/* Final: the winner reads strongest, the loser steps back. */
+.gcv .sb-team.won .sb-name b, .gcv .sb-team.won .sb-score { color: var(--text-6); font-weight: 800; }
+.gcv .sb-team.lost .sb-name b, .gcv .sb-team.lost .sb-score { color: var(--text-1); font-weight: 500; }
+
+/* Live: a small red dot and the text, no glow. */
+.gcv .sb-status i, .gcv .gcv-tag i {
+  flex: none;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--red-3);
+  animation: none;
+}
+.gcv .sb-status { min-width: 0; flex-wrap: wrap; row-gap: 2px; }
+.gcv.live .sb-status, .gcv .gcv-tag.is-live { color: var(--red-4); }
+
+/* Postponed, canceled, suspended */
+.gcv-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line-3); background: var(--surface-6); color: var(--text-3); font-size: 0.6875rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
+.gcv-pill.cancelled { border-color: color-mix(in srgb, var(--red-4) 50%, var(--line-2)); color: var(--red-4); }
+.gcv-pill.suspended, .gcv-pill.postponed { border-color: color-mix(in srgb, var(--amber-5) 50%, var(--line-2)); color: var(--amber-5); }
+
+.gcv-context, .gcv-insight { padding: 0 16px 10px; min-width: 0; }
+.gcv-insight { color: var(--text-3); font-size: 0.8125rem; line-height: 1.4; }
+.gcv .sb-actions { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+@media (min-width: 1100px) {
+  .scoreboard .sb-row > .gcv-context, .scoreboard .sb-row > .gcv-insight { grid-column: 1 / -1; padding: 0 0 2px; }
+}
+
+/* Compact: two lines, for the completed strip */
+.gcv-compact { position: relative; display: flex; align-items: stretch; gap: 4px; min-height: 44px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-5); color: var(--text-4); font-size: 0.8125rem; }
+.gcv-compact .sb-main { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 44px; padding: 4px 8px 4px 10px; border: 0; border-radius: 10px; background: transparent; font: inherit; }
+.gcv-compact .gcv-lines { display: grid; gap: 2px; min-width: 0; }
+.gcv-compact .sb-team { gap: 6px; line-height: 1.25; }
+.gcv-compact .sb-name b { font-weight: 600; }
+.gcv-compact .sb-score { min-width: 1.5ch; font-size: 0.8125rem; font-weight: 600; }
+.gcv-compact .gcv-end { display: grid; justify-items: end; gap: 2px; }
+.gcv-compact .gcv-tag { display: inline-flex; align-items: center; font-style: normal; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text-1); }
+.gcv-compact.upset { border-color: var(--amber-5); background: color-mix(in srgb, var(--amber-5) 14%, var(--surface-5)); box-shadow: inset 3px 0 0 var(--amber-5); }
+.gcv-compact .sb-actions { padding-right: 6px; }
+
+/* Tile: Watch now */
+.gcv-tile { position: relative; display: grid; border-radius: 12px; border: 1px solid var(--line-2); background: var(--surface-5); }
+.gcv-tile.live { border-color: color-mix(in srgb, var(--red-3) 45%, var(--line-1)); }
+.gcv-tile .sb-main { display: grid; gap: 6px; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; font: inherit; }
+.gcv-tile .gcv-lines { display: grid; gap: 4px; }
+.gcv-tile .sb-team { gap: 8px; }
+.gcv-tile .sb-score { font-size: 1rem; font-weight: 700; }
+.gcv-tile .gcv-when { font-size: 0.75rem; }
+
+@media (hover: hover) {
+  .gcv-compact .sb-main:hover, .gcv-tile .sb-main:hover { background: var(--surface-6); }
+}
+.gcv .sb-main:focus-visible { outline: 2px solid var(--mint); outline-offset: -2px; }
+@media (max-width: 400px) {
+  .gcv-row .sb-main { padding-left: 12px; padding-right: 12px; }
+  .gcv-row .sb-top { min-width: 0; }
+}
+
+/* Live dot on the Games-list card date line (same dot as the other cards) */
+.gc-live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--red-3); vertical-align: 0.06em; }

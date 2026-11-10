@@ -630,8 +630,8 @@ p {
   min-width: 0;
 }
 .matchup-team img {
-  width: 37px;
-  height: 37px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -1738,10 +1738,6 @@ footer b {
     grid-template-columns: 34px minmax(0, 1fr) minmax(28px, auto);
     column-gap: 8px;
   }
-  .matchup-team img {
-    width: 34px;
-    height: 34px;
-  }
   .matchup-team > div {
     min-width: 0;
   }
@@ -2334,10 +2330,6 @@ footer b {
     grid-template-columns: 30px minmax(0, 1fr) minmax(25px, auto);
     column-gap: 7px;
   }
-  .matchup-team img {
-    width: 30px;
-    height: 30px;
-  }
   .matchup-team span {
     font-size: 0.6875rem;
   }
@@ -2383,7 +2375,7 @@ a.network-logo-link:focus-visible{outline:2px solid var(--mint,var(--mint-5));ou
 .game-card-top{cursor:default}
 .dialog-comparison{margin:16px 0}
 /* Two-level card and Game Center */
-.card-top-actions{display:flex;align-items:center;gap:7px;min-width:0}.gc-icon{display:inline-grid;place-items:center;width:38px;height:38px;min-width:38px;padding:0;border-radius:9px;border:1px solid color-mix(in srgb,var(--mint) 50%,var(--line-2));background:var(--surface-5);color:var(--mint);font-size:0.6875rem;font-weight:850;letter-spacing:.5px}.gc-icon:hover,.gc-icon:focus-visible{background:var(--surface-7);border-color:var(--mint)}.compact-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding-top:10px;border-top:1px solid color-mix(in srgb, var(--text-2) 16%, transparent);font-size:0.6875rem;line-height:1.45;color:var(--text-1)}.compact-meta span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-expanded{margin-top:15px;padding-top:2px;animation:card-reveal 220ms ease-out both}.primary-game-center{margin-top:0;color:var(--mint-6);border-color:var(--line-4);background:linear-gradient(120deg,var(--surface-8),var(--surface-7))}.why-watch{margin:13px 0;padding:12px;border:1px solid var(--line-1);border-radius:9px;background:color-mix(in srgb, var(--surface-3) 55%, transparent)}.why-watch>span{display:block;margin-bottom:6px;color:var(--rating);font-size:0.6875rem;font-weight:800;letter-spacing:.75px}.why-watch p{margin:0;color:var(--text-4);font-size:0.6875rem;line-height:1.55}.compact-projection .projection{margin-bottom:12px}.compact-projection .inner-details{display:none}.game-center-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 16px;padding:10px 12px;border:1px solid var(--line-1);border-radius:9px;background:var(--surface-4);font-size:0.6875rem}.game-center-actions a{color:var(--mint);font-weight:750}.game-center-actions span{color:var(--text-1);text-align:right}.game-center-section{border-top:1px solid var(--line-1)}.game-center-section>summary{display:flex;align-items:center;justify-content:space-between;min-height:54px;list-style:none;color:var(--text-4);font-size:0.6875rem;font-weight:750;letter-spacing:.2px;cursor:pointer}.game-center-section>summary span{font-size:1.25rem;color:var(--line-5);transition:transform 160ms ease}.game-center-section[open]>summary span{transform:rotate(45deg)}.game-center-section>.game-data,.game-center-section>.dialog-comparison,.game-center-section>.goalie-comparison,.game-center-section>.player-tracker,.game-center-section>.matchup-context,.game-center-section>.model-reasons{margin:0 0 20px}.rest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.rest-grid span{padding:12px;border:1px solid var(--line-1);border-radius:8px;background:var(--surface-4);color:var(--text-3);font-size:0.6875rem}.rest-grid b{display:block;margin-bottom:4px;color:var(--text-6);font-size:0.75rem}.matchup-context ul,.model-reasons{padding-left:18px;color:var(--text-3);font-size:0.6875rem;line-height:1.7}.availability-note{padding:10px;border-left:3px solid var(--line-5);background:var(--surface-6);color:var(--text-2);font-size:0.6875rem;line-height:1.55}.importance-score span{font-size:0.6875rem}.game-card.is-expanded{border-color:color-mix(in srgb,var(--rating) 48%,var(--line-1))}
+.card-top-actions{display:flex;align-items:center;gap:7px;min-width:0}.compact-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding-top:10px;border-top:1px solid color-mix(in srgb, var(--text-2) 16%, transparent);font-size:0.6875rem;line-height:1.45;color:var(--text-1)}.compact-meta span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-expanded{margin-top:15px;padding-top:2px;animation:card-reveal 220ms ease-out both}.primary-game-center{margin-top:0;color:var(--mint-6);border-color:var(--line-4);background:linear-gradient(120deg,var(--surface-8),var(--surface-7))}.why-watch{margin:13px 0;padding:12px;border:1px solid var(--line-1);border-radius:9px;background:color-mix(in srgb, var(--surface-3) 55%, transparent)}.why-watch>span{display:block;margin-bottom:6px;color:var(--rating);font-size:0.6875rem;font-weight:800;letter-spacing:.75px}.why-watch p{margin:0;color:var(--text-4);font-size:0.6875rem;line-height:1.55}.compact-projection .projection{margin-bottom:12px}.compact-projection .inner-details{display:none}.game-center-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 16px;padding:10px 12px;border:1px solid var(--line-1);border-radius:9px;background:var(--surface-4);font-size:0.6875rem}.game-center-actions a{color:var(--mint);font-weight:750}.game-center-actions span{color:var(--text-1);text-align:right}.game-center-section{border-top:1px solid var(--line-1)}.game-center-section>summary{display:flex;align-items:center;justify-content:space-between;min-height:54px;list-style:none;color:var(--text-4);font-size:0.6875rem;font-weight:750;letter-spacing:.2px;cursor:pointer}.game-center-section>summary span{font-size:1.25rem;color:var(--line-5);transition:transform 160ms ease}.game-center-section[open]>summary span{transform:rotate(45deg)}.game-center-section>.game-data,.game-center-section>.dialog-comparison,.game-center-section>.goalie-comparison,.game-center-section>.player-tracker,.game-center-section>.matchup-context,.game-center-section>.model-reasons{margin:0 0 20px}.rest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.rest-grid span{padding:12px;border:1px solid var(--line-1);border-radius:8px;background:var(--surface-4);color:var(--text-3);font-size:0.6875rem}.rest-grid b{display:block;margin-bottom:4px;color:var(--text-6);font-size:0.75rem}.matchup-context ul,.model-reasons{padding-left:18px;color:var(--text-3);font-size:0.6875rem;line-height:1.7}.availability-note{padding:10px;border-left:3px solid var(--line-5);background:var(--surface-6);color:var(--text-2);font-size:0.6875rem;line-height:1.55}.importance-score span{font-size:0.6875rem}.game-card.is-expanded{border-color:color-mix(in srgb,var(--rating) 48%,var(--line-1))}
 @keyframes card-reveal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:620px){.game-card-top{align-items:flex-start}.card-top-actions{max-width:58%}.tv-network{max-width:calc(100% - 45px)}.compact-meta{align-items:flex-start;flex-direction:column}.compact-meta span:last-child{text-align:left;white-space:normal}.game-center-actions{align-items:flex-start;flex-direction:column}.game-center-actions span{text-align:left}.rest-grid{grid-template-columns:1fr}.importance-wrap{flex-basis:66px}.importance-components{font-size:0.6875rem}}
 @media(prefers-reduced-motion:reduce){.card-expanded{animation:none}.game-center-section>summary span{transition:none}}
@@ -2842,11 +2834,6 @@ select,
     width: 22px;
     height: 22px;
   }
-  .gc-icon {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-  }
   .matchup-teams {
     gap: 6px;
   }
@@ -3020,10 +3007,6 @@ select,
     display: inline;
     font-size: 1.0625rem;
   }
-  .matchup-team img {
-    width: 30px;
-    height: 30px;
-  }
   .matchup-teams {
     gap: 4px;
   }
@@ -3090,12 +3073,6 @@ select,
   align-items: center;
 }
 @media (max-width: 760px) {
-  .gc-icon {
-    width: 30px;
-    height: 28px;
-    min-width: 30px;
-    border-radius: 8px;
-  }
   .compact-meta .network-logo {
     width: 20px;
     height: 16px;
@@ -3106,33 +3083,7 @@ select,
   }
 }
 
-/* The Game Center button is a small tag, not a tile */
-.gc-icon {
-  width: 28px;
-  height: 22px;
-  min-height: 22px;
-  min-width: 28px;
-  border-radius: 6px;
-  font-size: 0.6875rem;
-  letter-spacing: 0.3px;
-}
 @media (max-width: 760px) {
-  .gc-icon {
-    width: 26px;
-    height: 20px;
-    min-height: 20px;
-    min-width: 26px;
-    font-size: 0.6875rem;
-  }
-}
-/* Small to look at, still easy to tap: the hit area extends past the visible tag */
-.gc-icon {
-  position: relative;
-}
-.gc-icon::after {
-  content: "";
-  position: absolute;
-  inset: -12px -9px;
 }
 
 /* ---------- Phones, round three: the board starts with four games showing ----------
@@ -3300,18 +3251,6 @@ select,
   .game-date {
     font-size: 0.6875rem;
   }
-  /* the channel logos and the GC tag are one row of equal squares */
-  .gc-icon {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
-    border-radius: 7px;
-    font-size: 0.6875rem;
-    line-height: 1;
-  }
   .tv-network {
     min-height: 0;
     padding: 0;
@@ -3366,10 +3305,6 @@ select,
     gap: 8px;
     min-height: 0;
     align-items: center;
-  }
-  .matchup-team img {
-    width: 28px;
-    height: 28px;
   }
   .matchup-team > div {
     display: flex;
@@ -3687,7 +3622,6 @@ body {
   }
   :is(
       .brand,
-      .gc-icon,
       .network-logo,
       .team-pill,
       .text-button,
@@ -3719,7 +3653,6 @@ body {
   }
   :is(
       .brand,
-      .gc-icon,
       .network-logo,
       .team-pill,
       .text-button,

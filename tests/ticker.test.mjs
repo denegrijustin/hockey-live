@@ -12,6 +12,8 @@ test("status text says final, final in overtime, live with period and clock, int
   assert.equal(tickerStatus(g(1, "2026-10-10", 23, "LIVE", { period: 4, periodType: "OT", clock: "03:10" })), "LIVE OT 03:10");
   assert.equal(tickerStatus(g(1, "2026-10-10", 23, "CRIT", { period: 3, clock: "00:45" })), "LIVE P3 00:45");
   assert.equal(tickerStatus(g(1, "2026-10-10", 23, "LIVE", { period: 1, intermission: true })), "INT 1");
+  assert.equal(tickerStatus(g(1, "2026-10-10", 23, "LIVE", { period: 4, periodType: "SO" })), "LIVE SO");
+  assert.equal(tickerStatus(g(1, "2026-10-10", 23, "FUT", { scheduleState: "PPD" })), "POSTPONED");
   assert.match(tickerStatus(g(1, "2026-10-10", 23, "FUT")), /^\d{1,2}:\d{2}\s?(AM|PM)$/);
 });
 

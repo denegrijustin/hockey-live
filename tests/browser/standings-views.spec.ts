@@ -100,6 +100,8 @@ for (const width of [360, 390]) {
       for (const g of ["conference", "division", "wildcard"]) {
         await page.getByLabel("Group standings").selectOption(g);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+        const edge = await page.locator("thead th:visible").evaluateAll((ths) => Math.max(...ths.map((t) => t.getBoundingClientRect().right)));
+        expect(edge, g).toBeLessThanOrEqual(width);
       }
       await page.getByLabel("Standings view").selectOption("projected");
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);

@@ -3705,6 +3705,7 @@ body {
   .standings-table th, .standings-table td { padding-left: 4px; padding-right: 4px; }
 }
 @media (max-width: 600px) {
+  .standings-table .st-cut-more { display: none; }
   .standings-table .st-l10, .st-seg.st-group-seg { display: none; }
   .standings-table .st-full { display: none; }
   .standings-table .st-abbr { display: inline; }
@@ -3733,7 +3734,7 @@ body {
 .standings-table .st-margin { margin-left: 4px; color: var(--text-2); }
 .standings-table .st-clinch { display: block; font-size: .6875rem; color: var(--text-2); }
 .standings-table .st-spot { white-space: nowrap; }
-.standings-table .st-sect th, .standings-table .st-cut th { text-align: left; font-size: .75rem; padding: 6px 8px; background: var(--surface-7); color: var(--text-2); }
+.standings-table .st-sect th, .standings-table .st-cut th { max-width: 0; text-align: left; font-size: .75rem; padding: 6px 8px; background: var(--surface-7); color: var(--text-2); }
 .standings-table .st-cut th { border-top: 2px dashed var(--amber-5); border-bottom: 2px dashed var(--amber-5); background: transparent; color: var(--amber-5); }
 .st-link { background: none; border: 0; padding: 0; color: var(--mint-6); text-decoration: underline; font: inherit; cursor: pointer; }
 .st-legend .detail-note { margin: 6px 0; }
@@ -3775,3 +3776,4 @@ body {
   .panel-heading .st-intro, .rs-tabs .st-intro { display: none; }
   .panel:has(.standings-table) .panel-heading h2, .panel:has(.rs) .panel-heading h2 { font-size: 1.25rem; margin-bottom: 4px; }
 }
+@media (max-width: 400px) { .standings-table .table-team img { width: 14px; height: 14px; } .standings-table .table-team { gap: 3px; } .standings-table th, .standings-table td { padding-left: 2px; padding-right: 2px; } }

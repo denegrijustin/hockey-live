@@ -188,7 +188,7 @@ export function Standings({
             {head}
             {secs.map(([d, ids]) => section(`${d} top 3`, ids, d, 1, "div"))}
             {section("Wild card", g.wildCard, "wc", 1, "wc")}
-            <tbody className="st-block st-block-cut"><tr className="st-cut"><th scope="rowgroup" colSpan={cols}>Playoff cut line · teams below are outside the picture</th></tr></tbody>
+            <tbody className="st-block st-block-cut"><tr className="st-cut"><th scope="rowgroup" colSpan={cols}>Playoff cut line<span className="st-cut-more"> · teams below are outside the picture</span></th></tr></tbody>
             {section("Outside the picture", g.out, "out", 1, "out")}
           </table>
         </div>

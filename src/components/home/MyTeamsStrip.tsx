@@ -3,6 +3,8 @@ import type { Game, Team } from "../../types";
 import { isLive } from "../../lib/game-data.mjs";
 import { localTime } from "../../lib/game-status.mjs";
 import { teamSummary } from "../../lib/team-summary.mjs";
+import { sideOf, teamGames } from "../../lib/team-schedule.mjs";
+import { dayDiff } from "../../lib/dates.mjs";
 import { rankTitle } from "../../lib/ranks.mjs";
 import { GameCardView } from "../GameCardView";
 import { TeamLogo } from "../TeamLogo";
@@ -50,7 +52,8 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
       const game = mine.find((g) => !placed.has(g.id)) ?? null;
       const shownAbove = !game && mine[0] ? mine[0] : null;
       if (game) placed.add(game.id);
-      return { id, order, game, shownAbove, sum: teamSummary(id, { teams, table, games, today }) };
+      const n = teamGames(games, id).map((g: Game) => sideOf(g, id)).find((i: any) => i.status === "upcoming") ?? null;
+      return { id, order, game, shownAbove, sum: teamSummary(id, { teams, table, games, today }), next: n && { ...n, daysAway: n.date ? dayDiff(today, n.date) : null } };
     });
     // Live first, then a game that day, then the order the favorites were added.
     return out.sort((a, b) => Number(!!b.game && isLive(b.game)) - Number(!!a.game && isLive(a.game)) || Number(!!b.game) - Number(!!a.game) || a.order - b.order);
@@ -63,8 +66,7 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
   return (
     <HomeSection id="myteams" label="My teams" count={cards.length} className={`mt-section density-${density}`}>
       <ul className="mt-list">
-        {shown.map(({ id, game, shownAbove, sum }) => {
-          const next = sum?.nextGame && sum.nextGame.status !== "live" ? sum.nextGame : null;
+        {shown.map(({ id, game, shownAbove, sum, next }) => {
           const st = sum?.streak, stand = sum?.standing;
           return (
             <li key={id} className="mt-card" data-team={id}>

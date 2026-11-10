@@ -1,0 +1,144 @@
+/* The day strip: previous / next, a scrolling row of day chips, Today and a date picker. Fixed height; only the chip row scrolls. */
+.date-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  box-sizing: border-box;
+}
+.ds-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line-3);
+  border-radius: 12px;
+  background: var(--surface-5);
+  color: var(--text-4);
+  font: inherit;
+  cursor: pointer;
+}
+.ds-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ds-btn:focus-visible,
+.ds-chip:focus-visible,
+.ds-pick:focus-within {
+  outline: 2px solid var(--mint-5);
+  outline-offset: 2px;
+}
+.ds-flip {
+  display: inline-grid;
+  transform: scaleX(-1);
+}
+.ds-today {
+  padding: 0 14px;
+  border-color: var(--mint-5);
+  color: var(--mint-6);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.ds-today:disabled {
+  border-color: var(--line-3);
+  color: var(--text-3);
+}
+.ds-pick .ds-date {
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  cursor: pointer;
+}
+.ds-rail {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.ds-rail::-webkit-scrollbar {
+  display: none;
+}
+.ds-chip {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-3);
+  font: inherit;
+  cursor: pointer;
+  scroll-snap-align: center;
+}
+.ds-chip .ds-wd {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ds-chip .ds-num {
+  color: var(--text-5);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.ds-chip.today .ds-wd {
+  color: var(--mint-5);
+}
+.ds-chip.on {
+  border-color: var(--mint-5);
+  background: var(--surface-8);
+}
+.ds-chip.on .ds-num,
+.ds-chip.on .ds-wd {
+  color: var(--mint-6);
+}
+.ds-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+.ds-dot.has {
+  background: var(--text-2);
+}
+.ds-chip.on .ds-dot.has {
+  background: var(--mint-5);
+}
+@media (max-width: 480px) {
+  .date-strip { gap: 4px; }
+  .ds-today { padding: 0 10px; }
+  .ds-chip { width: 44px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ds-btn, .ds-chip { transition: background 0.12s, border-color 0.12s; }
+}
+.games-day-strip { margin: 0 0 8px; }
+.field-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 0.875rem; cursor: pointer; }
+.field-check input { width: 20px; height: 20px; margin: 0; }

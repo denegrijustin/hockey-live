@@ -1,4 +1,8 @@
 import { isLive } from "./lib/game-data.mjs";
+import { relativeDay } from "./lib/dates.mjs";
+import { searchFor } from "./lib/date-nav.mjs";
+import { GameDayStrip, hasDateParam, clearDateParam } from "./components/GameDayStrip";
+import { useEtToday } from "./hooks/useEtToday";
 import { useSeason } from "./hooks/useSeason";
 import { useGameLists } from "./hooks/useGameLists";
 import { useStackedTables } from "./hooks/useStackedTables";
@@ -70,20 +74,12 @@ function initialTeams() {
 }
 const seasonLabel = (s: number) =>
   `${String(s).slice(0, 4)}–${String(s).slice(6)}`;
-// Groups the game-center list under a day heading when sorted chronologically.
-function dayHeading(dateStr: string) {
-  const start = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const diff = Math.round(
-    (start(new Date(`${dateStr}T00:00:00`)) - start(new Date())) / 86400000,
-  );
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  if (diff === -1) return "Yesterday";
-  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
+// Groups the game-center list under a day heading: the game's Eastern day against today's Eastern day, so "Today" is right in every time zone.
+function dayHeading(dateStr: string, today: string) {
+  const rel = relativeDay(dateStr, today);
+  return /^(Today|Tomorrow|Yesterday)$/.test(rel)
+    ? rel
+    : new Date(`${dateStr}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
 }
 /** The view the address names: ?view=standings, with the bare address as Home. Unknown names open Home. */
 const viewFromAddress = () => {
@@ -95,7 +91,12 @@ const viewFromAddress = () => {
   }
 };
 const initialView = viewFromAddress;
-const addressFor = (view: string) => (view === "scoreboard" ? location.pathname : `?view=${view}`);
+/** The address of a view: `?view=…` (Home is the plain address). A picked day (`&date=`) goes along only to Home and Games. */
+const addressFor = (view: string) => {
+  let date: string | null = null;
+  try { date = new URLSearchParams(location.search).get("date"); } catch {}
+  return `${location.pathname}${searchFor(view, date)}`;
+};
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry } = useSeason();
@@ -108,7 +109,14 @@ export default function App() {
     [query, setQuery] = useState(""),
     [limit, setLimit] = useState(18),
     [filtersOpen, setFiltersOpen] = useState(false),
+    [byDay, setByDayState] = useState(() => viewFromAddress() === "games" && hasDateParam()),
+    [gameDate, setGameDate] = useState<string | null>(null),
     [teamsOpen, setTeamsOpen] = useState(false);
+  const todayEt = useEtToday();
+  const setByDay = useCallback((on: boolean) => {
+    setByDayState(on);
+    if (!on) { clearDateParam(); setGameDate(null); }
+  }, []);
   const phone = useMedia("(max-width: 720px)");
   const home = view === "scoreboard";
   // Every screen has its own address (?view=…; Home is the plain address) and its own history entry, so Back and Forward move between screens,
@@ -177,7 +185,9 @@ export default function App() {
     data?.games.filter(
       (g) => selected.includes(g.home) || selected.includes(g.away),
     ) ?? [];
-  const { games, finishedToday } = useGameLists({ data, analysis, teams, selected, type, period, range, query, sort });
+  const { games, finishedToday } = useGameLists({ data, analysis, teams, selected, type, period, range, query, sort, date: byDay && view === "games" ? gameDate : null });
+  const gameDays = useMemo(() => [...new Set(relevant.filter((g) => g.type === type).map((g) => g.date))].sort(), [data, selected, type]); // eslint-disable-line react-hooks/exhaustive-deps
+  const gameDayCounts = useMemo(() => { const c: Record<string, number> = {}; for (const g of relevant) if (g.type === type) c[g.date] = (c[g.date] ?? 0) + 1; return c; }, [data, selected, type]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(
     () => setLimit(18),
     [season, selected, type, period, range, query, sort],
@@ -227,12 +237,13 @@ export default function App() {
   const liveCount = scoreboard ? scoreboard.games.filter(isLive).length : 0;
   const defaultRange = isAllTeams ? "7" : "30";
   // How many filters differ from the defaults: shown on the phone Filters button.
-  const activeFilters = [period !== "future", type !== 2, range !== defaultRange, sort !== "date"].filter(Boolean).length;
+  const activeFilters = [period !== "future", type !== 2, range !== defaultRange, sort !== "date", byDay].filter(Boolean).length;
   const resetFilters = () => {
     setPeriod("future");
     setType(2);
     setRange(defaultRange);
     setSort("date");
+    setByDay(false);
   };
   return (
     <TeamProfileProvider teams={teams} table={analysis?.table ?? null} games={data?.games ?? []} season={season}>
@@ -438,10 +449,11 @@ export default function App() {
                 {!phone && (
                   <>
                     <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>
-                      <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} />
+                      <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} byDay={byDay} setByDay={setByDay} />
                     </div>
                   </>
                 )}
+                {byDay && <GameDayStrip days={gameDays} counts={gameDayCounts} onDate={setGameDate} />}
                 <div className="results-line">
                   <span role="status">
                     {games.length} games · {selected.length} selected teams
@@ -460,7 +472,7 @@ export default function App() {
                         if (sort === "date" && (i === 0 || arr[i - 1].date !== g.date))
                           elements.push(
                             <div className="game-day-heading" key={`day-${g.date}`}>
-                              {dayHeading(g.date)}
+                              {dayHeading(g.date, todayEt)}
                             </div>,
                           );
                         elements.push(
@@ -640,7 +652,7 @@ export default function App() {
             <span>Status</span>
             <PeriodSwitch period={period} setPeriod={setPeriod} relevant={relevant} type={type} />
           </div>
-          <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} showSearch={false} />
+          <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} showSearch={false} byDay={byDay} setByDay={setByDay} />
         </Sheet>
       )}
       {phone && teamsOpen && (

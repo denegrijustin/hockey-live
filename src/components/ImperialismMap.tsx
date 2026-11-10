@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { motionOff } from "../motion";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { Delaunay } from "d3-delaunay";
 import { geoConicConformal, geoPath } from "d3-geo";
@@ -91,12 +92,12 @@ function lighten(hex: string): string {
 }
 const seasonLabel = (s: number) => `${String(s).slice(0, 4)}–${String(s).slice(6)}`;
 const useReducedMotion = () => {
-  const [v, setV] = useState(() => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [v, setV] = useState(motionOff);
   useEffect(() => {
-    if (typeof matchMedia !== "function") return;
-    const q = matchMedia("(prefers-reduced-motion: reduce)"), f = () => setV(q.matches);
-    q.addEventListener("change", f);
-    return () => q.removeEventListener("change", f);
+    const mo = new MutationObserver(() => setV(motionOff()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-motion"] });
+    setV(motionOff());
+    return () => mo.disconnect();
   }, []);
   return v;
 };

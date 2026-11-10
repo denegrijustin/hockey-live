@@ -1,3 +1,4 @@
+import { fmtTime } from "./dates.mjs";
 import { isLive, isCalledOff, STALE_LIVE_MS } from "./game-data.mjs";
 export { STALE_LIVE_MS };
 
@@ -5,7 +6,7 @@ const finished = (g) => g.state === "OFF" || g.state === "FINAL";
 
 /** Local start time, e.g. "7:00 PM"; `withZone` adds the zone name ("7:00 PM PST"). Uses the viewer's own time zone. */
 export function localTime(start, { withZone = false } = {}) {
-  return new Date(start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", ...(withZone ? { timeZoneName: "short" } : {}) });
+  return fmtTime(start, { withZone });
 }
 
 /**

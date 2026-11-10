@@ -18,6 +18,10 @@
   --negative: var(--red-4);
   --amber: var(--amber-5);
 }
+/* Text size (Settings > Display): every rem length scales with the root size. */
+html[data-text="s"] { font-size: 90%; }
+html[data-text="l"] { font-size: 112.5%; }
+html[data-text="xl"] { font-size: 125%; }
 * {
   box-sizing: border-box;
 }

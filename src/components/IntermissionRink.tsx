@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motionOff } from "../motion";
 import type { Game, Team } from "../types";
 import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, lapState, exitProgress, EXIT_PATH, zamboniColors, resurfacingMotion, FINISH_S } from "../lib/intermission.mjs";
 import { LogoImage } from "./TeamLogo";
@@ -95,7 +96,7 @@ export function IntermissionRink({ game, home, away, compact = false }: { game: 
   const { left, deadline } = useIntermissionLeft(game);
   const colors = useMemo(() => zamboniColors(home.cardColor ?? home.color), [home.cardColor, home.color]);
   const route = useMemo(() => resurfacePath(), []);
-  const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const still = motionOff();
   const next = game.period ? (game.period >= 3 ? "overtime" : `period ${game.period + 1}`) : "the next period";
   const { path, paint, sign, gate, machine, root } = useResurfacing(still, deadline);
   const id = `rink-${game.id}${compact ? "-c" : ""}`;

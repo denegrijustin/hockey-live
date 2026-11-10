@@ -1,4 +1,6 @@
 import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { fmtTime } from "../lib/dates.mjs";
+import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
@@ -14,7 +16,7 @@ const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m
 type Item = ReturnType<typeof sideOf>;
 type Filter = "all" | "final" | "upcoming";
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const time = (iso: string) => fmtTime(iso);
 const dayParts = (date: string) => {
   const d = new Date(`${date}T12:00:00Z`);
   return { wd: d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }), md: d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) };
@@ -26,6 +28,7 @@ interface Props { games: Game[]; teams: Team[]; defaultTeam?: string; analysis: 
 /** A team's whole season: a calendar that opens on this month (the default), or a list of cards that opens on the game closest to being played. */
 export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, baselineTable, sourceSeason }: Props) {
   const [teamId, setTeamId] = useState(defaultTeam && teams.some((t) => t.id === defaultTeam) ? defaultTeam : teams[0]?.id);
+  useTimeKey();
   const [mode, setMode] = useState<"list" | "calendar">("calendar");
   const [filter, setFilter] = useState<Filter>("all");
   const today = useEtToday();

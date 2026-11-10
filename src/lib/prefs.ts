@@ -2,7 +2,10 @@ import { useSyncExternalStore } from "react";
 import teamsJson from "../data/teams.json";
 import { LEGACY_TEAMS_KEY, PREFS_KEY, defaultPrefs, parsePrefs, sanitize, serialize } from "./prefs.mjs";
 
-export type Prefs = ReturnType<typeof defaultPrefs>;
+type Defaults = ReturnType<typeof defaultPrefs>;
+export type FollowedPlayer = { id: number; name: string; team: string; pos: string; number: number | null; headshot: string; at: number };
+export type SavedGame = { id: number; season: number; home: string; away: string; date: string; at: number };
+export type Prefs = Omit<Defaults, "favorites" | "players" | "games"> & { favorites: string[]; players: FollowedPlayer[]; games: SavedGame[] };
 const teamIds = (teamsJson as { id: string }[]).map((t) => t.id);
 
 /** Device-local preference store. Reads once, keeps an in-memory copy (so a blocked or full storage never breaks the session),

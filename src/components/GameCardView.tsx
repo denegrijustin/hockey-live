@@ -1,4 +1,5 @@
 import { useRef, type ReactNode } from "react";
+import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { gameStatus } from "../lib/game-status.mjs";
 import { rankTitle } from "../lib/ranks.mjs";
@@ -60,6 +61,7 @@ const stateOf = (kind: string) => (kind === "live" || kind === "intermission" ? 
 
 export function GameCardView(p: GameCardViewProps) {
   const { game, away, home, variant, ranks, record, rating, onOpen } = p;
+  useTimeKey();
   const st = gameStatus(game);
   const ref = useRef<HTMLElement>(null);
   usePauseOffscreen(ref);

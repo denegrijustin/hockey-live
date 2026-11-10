@@ -104,3 +104,6 @@ html[data-motion="off"] .tab-bar::after { transition: none !important; }
   .late-flag::after, .sb-score.scored::after, .skel-line::after { animation: none !important; }
   :is(.sr-fill, .sb-chip, .sb-main, .sb-full, .gc-icon, .np-subnav button, .tab-item, .sb-step, .pk-card, .card-toggle), .np-subnav::after, .tab-bar::after { transition: none !important; }
 }
+
+/* ---- the Settings "Reduce motion" choice (and data-saver / low power) also stills CSS animation and smooth scrolling ---- */
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }

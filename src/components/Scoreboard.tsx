@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { finished, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { byStartThenId, isCalledOff, isLive, isUpcoming } from "../lib/game-data.mjs";
@@ -307,6 +308,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
 function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks, analysisRow, insight, open, onFull }: {
   game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: Rated; ranks?: Record<string, any> | null; analysisRow?: any; insight?: ReactNode; open: boolean; onFull: () => void;
 }) {
+  useTimeKey();
   const gs = gameStatus(game);
   const kind = gs.final ? "final" : gs.live ? "live" : "soon";
   const showScore = kind !== "soon" && game.awayScore != null && game.homeScore != null;

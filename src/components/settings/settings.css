@@ -1,0 +1,33 @@
+.settings { max-width: 720px; display: grid; gap: 16px; min-width: 0; }
+.settings a { color: var(--mint-5); }
+.st-device { margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--surface-5); border: 1px solid var(--line-1); color: var(--text-4); font-size: .875rem; }
+.st-warn { margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--amber-1); border: 1px solid var(--amber-3); color: var(--amber-5); font-size: .875rem; }
+.st-section { background: var(--surface-4); border: 1px solid var(--line-1); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.st-section h2 { margin: 0; font-size: 1.125rem; }
+.st-section h3 { margin: 8px 0 0; font-size: .8125rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
+.st-hint, .st-none, .st-note { margin: 0; color: var(--text-2); font-size: .8125rem; overflow-wrap: anywhere; }
+.st-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.st-list li { display: flex; align-items: center; gap: 10px; min-height: 44px; flex-wrap: wrap; }
+.st-list li a { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+.st-sub { color: var(--text-2); font-size: .8125rem; }
+.st-btn { min-height: 44px; min-width: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-6); color: var(--text-5); cursor: pointer; justify-self: start; }
+.st-btn:hover { border-color: var(--line-4); }
+.st-btn:focus-visible, .st-pill input:focus-visible + span, .st-select select:focus-visible, .st-search:focus-visible, .st-toggle input:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; }
+.st-primary { border-color: var(--mint-3); color: var(--mint-5); }
+.st-danger { border-color: var(--red-3); color: var(--red-4); }
+.st-field { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 6px; }
+.st-field legend, .st-select > span:first-child { padding: 0; font-weight: 650; font-size: .9375rem; color: var(--text-5); }
+.st-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.st-pill { position: relative; }
+.st-pill input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.st-pill span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-6); color: var(--text-4); }
+.st-pill input:checked + span { background: var(--mint-1); border-color: var(--mint-4); color: var(--mint-6); font-weight: 650; }
+.st-select select { min-height: 44px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-6); color: var(--text-5); padding: 0 12px; max-width: 100%; }
+.st-toggle { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+.st-toggle input { width: 22px; height: 22px; accent-color: var(--mint-4); }
+.st-search { width: 100%; min-height: 44px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-6); color: var(--text-5); padding: 0 12px; margin-bottom: 8px; }
+.st-teamlist { list-style: none; margin: 0; padding: 0; }
+.st-teamlist label { display: flex; align-items: center; gap: 12px; min-height: 48px; cursor: pointer; }
+.st-teamlist input { width: 22px; height: 22px; accent-color: var(--mint-4); }
+.st-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.settings .methodology { margin: 0; }

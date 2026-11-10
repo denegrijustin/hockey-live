@@ -128,6 +128,17 @@ for (const vp of VIEWPORTS) {
       expect(Math.abs((await page.evaluate(() => window.scrollY)) - y1), `window scroll (was ${y1}, hasScroll ${hasScroll})`).toBeLessThanOrEqual(25);
     });
 
+    test("closing returns to the same schedule: date strip selection and active filter preserved", async ({ page }) => {
+      const s = await openSchedule(page, vp);
+      await page.locator(`[data-game="${s.lastId}"] .sb-main`).click();
+      await expect(page.locator(GAME_DIALOG)).toBeVisible();
+      await page.locator(CLOSE).first().click();
+      await expect(page.locator(GAME_DIALOG)).toHaveCount(0);
+      expect(await strip(page)).toBe(s.yesterday);
+      expect(await completedOn(page)).toBe("true");
+      await expect(page.locator(`[data-game="${s.lastId}"]`)).toBeVisible();
+    });
+
     test("browser Back closes the Game Center without leaving the app or losing the selection", async ({ page }) => {
       const s = await openSchedule(page, vp);
       await page.locator(`[data-game="${s.firstId}"] .sb-main`).click();

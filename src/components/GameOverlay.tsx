@@ -1,4 +1,4 @@
-import { Suspense, lazy, useLayoutEffect, useRef } from "react";
+import { Suspense, lazy, useLayoutEffect, useMemo, useRef } from "react";
 import type { Game, Team } from "../types";
 import { finished } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
@@ -14,6 +14,9 @@ import { GoalieComparison } from "./TeamComparison";
 import { GameInjuries } from "./GameInjuries";
 import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IntermissionRink } from "./IntermissionRink";
+import { matchupInsights, restDays } from "../lib/insights.mjs";
+import { pregameHomeWin } from "../lib/watchability.mjs";
+import { InsightLine } from "./InsightLine";
 import { useSheetDrag } from "../hooks/useSheetDrag";
 import { TeamLogo } from "./TeamLogo";
 
@@ -32,6 +35,9 @@ export function GameOverlay({
   allGames,
   series,
   returnTo,
+  teams,
+  sim,
+  onNavigate,
   onClose,
 }: {
   game: Game;
@@ -44,6 +50,12 @@ export function GameOverlay({
   ranks?: any;
   allGames: Game[];
   series: { away: number; home: number; played: number };
+  /** All teams (for the playoff line and divisions). Optional; without it the standings-line insights are skipped. */
+  teams?: Team[];
+  /** Playoff simulation, either chancesForCards(result, teams) or the raw result. Optional; without it no playoff-odds insight shows. */
+  sim?: any;
+  /** Opens an app view (a VIEW_IDS id); the overlay closes first. Without it insights show no view link. */
+  onNavigate?: (view: string) => void;
   /** Where the page was scrolled when the Game Center was opened; the page returns there on close. */
   returnTo?: number;
   onClose: () => void;
@@ -59,11 +71,20 @@ export function GameOverlay({
       (candidate.home === game.away && candidate.away === game.home)),
   ).slice(-5).reverse();
   const restLabel = (team: string) => {
-    const previous = allGames.filter((candidate) => finished(candidate) && candidate.start < game.start && (candidate.home === team || candidate.away === team)).at(-1);
-    if (!previous) return "Rest unavailable";
-    const days = Math.max(0, Math.round((Date.parse(game.start) - Date.parse(previous.start)) / 86400000) - 1);
+    const days = restDays(allGames, game, team);
+    if (days == null) return "Rest unavailable";
     return days === 0 ? "Back-to-back" : `${days} day${days === 1 ? "" : "s"} rest`;
   };
+  const insights = useMemo(
+    () => matchupInsights(game, before, before, {
+      teams: teams ?? [away, home],
+      allGames,
+      ranks,
+      sim: sim ?? null,
+      pregameHome: before ? pregameHomeWin(game, before, baseline) : null,
+    }),
+    [game, before, baseline, teams, away, home, allGames, ranks, sim],
+  );
   useLayoutEffect(() => {
     const element = dialog.current;
     if (!element) return;
@@ -183,6 +204,14 @@ export function GameOverlay({
       </details>
       <details className="game-center-section">
         <summary>Why this game matters <span>+</span></summary>
+        {insights.length > 0 && (
+          <div className="game-insights" data-testid="game-insights">
+            {insights.map((insight) => (
+              <InsightLine key={insight.id} insight={insight} variant="list" onNavigate={onNavigate ? (view) => { onClose(); onNavigate(view); } : undefined} />
+            ))}
+          </div>
+        )}
+        <h4 className="detail-note">Model inputs</h4>
         <ul className="model-reasons">{analysis.reasons.map((reason: string) => <li key={reason}>{reason}</li>)}</ul>
         <p className="detail-note">These are model inputs and rank comparisons, not guarantees or isolated causal claims.</p>
       </details>

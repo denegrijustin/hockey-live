@@ -3,7 +3,7 @@ import { useMedia } from "../hooks/useMedia";
 import { useSlidingUnderline } from "../hooks/useSlidingUnderline";
 import { Icon, type IconName } from "./icons";
 
-interface ViewDef {
+export interface ViewDef {
   id: string;
   label: string;
   /** The shorter name under the icon in the phone tab bar. */
@@ -38,6 +38,8 @@ export const MORE_GROUPS: { title: string; items: ViewDef[] }[] = [
   { title: "Players & teams", items: [PLAYERS, INJURIES] },
 ];
 const MORE = MORE_GROUPS.flatMap((g) => g.items);
+/** Every screen with its label and hint, in nav order: the search palette lists these as pages. */
+export const VIEW_LIST: ViewDef[] = [...PRIMARY, ...MORE];
 export const VIEW_IDS = [...PRIMARY, ...MORE].map((v) => v.id);
 /** Page titles, for the tab title and the screen-reader announcement on a view change. */
 export const VIEW_TITLES: Record<string, string> = Object.fromEntries([...PRIMARY, ...MORE].map((v) => [v.id, v.label]));

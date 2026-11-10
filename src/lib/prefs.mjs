@@ -51,7 +51,7 @@ export function sanitize(raw, teamIds) {
   const players = (Array.isArray(raw.players) ? raw.players : [])
     .filter((p) => isObj(p) && validPlayerId(p.id) && !pseen.has(String(p.id)) && pseen.add(String(p.id)))
     .slice(0, LIMITS.players)
-    .map((p) => ({ id: Number(p.id), name: str(p.name), team: ids.has(p.team) ? p.team : "", pos: str(p.pos, 3), number: Number.isFinite(Number(p.number)) ? Number(p.number) : null, headshot: typeof p.headshot === "string" && /^https:\/\/assets\.nhle\.com\//.test(p.headshot) ? p.headshot : "", at: Number(p.at) || 0 }));
+    .map((p) => ({ id: Number(p.id), name: str(p.name), team: ids.has(p.team) ? p.team : "", pos: str(p.pos, 3), number: p.number != null && p.number !== "" && Number.isFinite(Number(p.number)) ? Number(p.number) : null, headshot: typeof p.headshot === "string" && /^https:\/\/assets\.nhle\.com\//.test(p.headshot) ? p.headshot : "", at: Number(p.at) || 0 }));
   const gseen = new Set();
   const games = (Array.isArray(raw.games) ? raw.games : [])
     .filter((g) => isObj(g) && validGameId(g.id) && !gseen.has(Number(g.id)) && gseen.add(Number(g.id)))

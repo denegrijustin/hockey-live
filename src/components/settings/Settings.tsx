@@ -5,6 +5,7 @@ import { TeamLogo } from "../TeamLogo";
 import { Methodology } from "../Methodology";
 import { VIEW_LIST } from "../MainNav";
 import { AlertSettings } from "../alerts/AlertSettings";
+import { InstallCard } from "../InstallCard";
 import { prefsPersisted, resetPrefs, setPrefs, usePrefs, type Prefs } from "../../lib/prefs";
 import { fmtTime } from "../../lib/dates.mjs";
 import teamsJson from "../../data/teams.json";
@@ -182,6 +183,7 @@ export function Settings() {
       <Section id="application" title="Application">
         <h3>About Iceboard</h3>
         <p className="st-hint">Iceboard, NHL game intelligence. Version {pkg.version}.</p>
+        <InstallCard />
         <h3>Data</h3>
         <p className="st-hint">Schedules, scores, standings and rosters come from public NHL data; advanced stats from MoneyPuck. When a source is unavailable Iceboard says so and may show a saved copy with its date.</p>
         <Methodology />

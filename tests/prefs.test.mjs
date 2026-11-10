@@ -68,3 +68,7 @@ test("a record round-trips through serialize and parse, and a newer version is k
   assert.deepEqual(parsePrefs(JSON.stringify({ version: 7, favorites: ["TOR"] }), opts).favorites, ["TOR"]);
   assert.deepEqual(migrate({ version: 1, a: 1 }, null), { version: 1, a: 1 });
 });
+test("a missing jersey number stays null instead of becoming 0", () => {
+  const p = sanitize({ players: [{ id: 8478402, number: null }, { id: 8477424, number: 30 }, { id: 8470000, number: "" }] }, teamIds);
+  assert.deepEqual(p.players.map((x) => x.number), [null, 30, null]);
+});

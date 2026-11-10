@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PlayerData } from "../../types";
 import { loadPlayers } from "../../lib/api";
 import { useFeed } from "../../lib/polling";
@@ -15,13 +15,15 @@ export function TeamRoster({ teamId, season }: { teamId: string; season: number 
   const [state, setState] = useState<{ data: PlayerData | null; error: boolean; loading: boolean }>({ data: null, error: false, loading: false });
   const [attempt, setAttempt] = useState(0);
   const openPlayer = usePlayerProfile();
+  const loaded = useRef("");
   const { data: inj } = useFeed<any>(open ? `/api/injuries/${season}` : null, 600_000);
   useEffect(() => {
-    if (!open) return;
+    const key = `${season}/${teamId}/${attempt}`;
+    if (!open || loaded.current === key) return; // closing and reopening keeps what was loaded
     const c = new AbortController();
     setState((s) => ({ ...s, loading: true, error: false }));
     loadPlayers(season, teamId, c.signal)
-      .then((data) => setState({ data, error: false, loading: false }))
+      .then((data) => { loaded.current = key; setState({ data, error: false, loading: false }); })
       .catch(() => { if (!c.signal.aborted) setState({ data: null, error: true, loading: false }); });
     return () => c.abort();
   }, [open, season, teamId, attempt]);

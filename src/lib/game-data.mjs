@@ -1,5 +1,17 @@
 import { normalizeGame, value } from "./normalize.mjs";
 export const isLive = (g) => ["LIVE", "CRIT"].includes(g.state);
+/** A live game this long after its puck drop with no word from the feed is stale (no NHL game lasts this long). */
+export const STALE_LIVE_MS = 8 * 3600_000;
+/** Live and not stale: the only kind of game that should keep fast refresh modes on. */
+export const isFreshLive = (g, now = Date.now()) => isLive(g) && !(g.start && now - Date.parse(g.start) > STALE_LIVE_MS);
+const isFinished = (g) => g.state === "OFF" || g.state === "FINAL";
+/** A game that is not live or finished and whose schedule state says it is postponed, canceled or suspended. */
+export const isCalledOff = (g) =>
+  !isFinished(g) && !isLive(g) && ["PPD", "CNCL", "SUSP"].includes(String(g.scheduleState ?? "OK").toUpperCase());
+/** Still to be played as scheduled: not live, not finished, not postponed/canceled/suspended. Same rule as gameStatus().upcoming. */
+export const isUpcoming = (g) => !isFinished(g) && !isLive(g) && !isCalledOff(g);
+/** Deterministic game order: puck drop, then id (identical start times are common). */
+export const byStartThenId = (a, b) => String(a.start ?? "").localeCompare(String(b.start ?? "")) || a.id - b.id;
 export function normalizeScoreboard(j) {
   return {
     updatedAt: new Date().toISOString(),
@@ -17,6 +29,9 @@ export function normalizeScoreboard(j) {
 }
 const LIVE_FIELDS = [
   "state",
+  "scheduleState",
+  "start",
+  "date",
   "homeScore",
   "awayScore",
   "period",

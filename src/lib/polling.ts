@@ -33,22 +33,33 @@ async function poll(url: string, feed: Feed) {
   feed.listeners.forEach((_, listener) => listener(feed.data, feed.error));
 }
 
+/** An interval of 0, Infinity or less means "fetch once, no timer" (for data that never changes, like a final game). */
+const repeats = (ms: number) => Number.isFinite(ms) && ms > 0;
+
 function retime(url: string, feed: Feed) {
-  const every = Math.min(...feed.listeners.values());
-  if (feed.timer && every === feed.every) return;
+  const finite = [...feed.listeners.values()].filter(repeats);
+  const every = finite.length ? Math.min(...finite) : 0;
+  if (every === feed.every && (feed.timer || !every)) return;
   if (feed.timer) clearInterval(feed.timer);
+  feed.timer = null;
   feed.every = every;
-  feed.timer = setInterval(() => void poll(url, feed), every);
+  if (every) feed.timer = setInterval(() => void poll(url, feed), every);
 }
 
 /**
  * Polls `url` every `interval` ms while the tab is visible. Every subscriber to the same URL shares one timer and one
- * request; the shortest requested interval wins. Returns the unsubscribe function.
+ * request; the shortest requested interval wins. An interval of 0 or Infinity fetches once with no timer. Returns the unsubscribe function.
  */
 export function subscribeFeed(url: string, interval: number, listener: Listener) {
   if (!watching) {
     watching = true;
-    document.addEventListener("visibilitychange", () => feeds.forEach((feed, key) => void poll(key, feed)));
+    document.addEventListener("visibilitychange", () =>
+      feeds.forEach((feed, key) => {
+        // Feeds polled a moment ago are fresh; "once" feeds that already have data never need another request.
+        if (Date.now() - feed.at <= SHARE_MS || (!feed.every && feed.data !== null)) return;
+        void poll(key, feed);
+      }),
+    );
   }
   let feed = feeds.get(url);
   if (!feed) {
@@ -58,7 +69,7 @@ export function subscribeFeed(url: string, interval: number, listener: Listener)
   feed.listeners.set(listener, interval);
   retime(url, feed);
   if (feed.data !== null || feed.error) listener(feed.data, feed.error);
-  if (Date.now() - feed.at > SHARE_MS) void poll(url, feed);
+  if (Date.now() - feed.at > SHARE_MS && !(!repeats(interval) && feed.data !== null && feed.at)) void poll(url, feed);
   return () => {
     feed.listeners.delete(listener);
     if (feed.listeners.size) return retime(url, feed);

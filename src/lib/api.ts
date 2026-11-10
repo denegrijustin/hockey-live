@@ -1,5 +1,11 @@
 import type { Snapshot, Boxscore, PlayerData } from "../types";
 const promises = new Map<string, Promise<unknown>>();
+export type DataSource = "live" | "saved";
+const sources = new Map<string, DataSource>();
+/** Where the last response for an /api/... path came from: the live API, or the saved snapshot shipped with the site. */
+export const sourceOf = (api: string): DataSource => sources.get(api) ?? "live";
+/** Where the last loaded season snapshot came from. */
+export const lastSeasonSource = (season: number) => sourceOf(`/api/season/${season}`);
 async function request<T>(
   api: string,
   fallback: string,
@@ -9,13 +15,17 @@ async function request<T>(
     const r = await fetch(api, { signal });
     if (!r.ok || !r.headers.get("content-type")?.includes("application/json"))
       throw Error("API unavailable");
-    return await r.json();
+    const body = await r.json();
+    sources.set(api, "live");
+    return body;
   } catch (e) {
     if (signal?.aborted) throw e;
     const r = await fetch(fallback, { signal });
     if (!r.ok || !r.headers.get("content-type")?.includes("application/json"))
       throw Error("Data could not be loaded. Please retry.");
-    return r.json();
+    const body = await r.json();
+    sources.set(api, "saved");
+    return body;
   }
 }
 export const loadSeason = (season: number, signal?: AbortSignal) =>

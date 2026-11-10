@@ -1,8 +1,7 @@
-import { isLive } from "./game-data.mjs";
+import { isLive, isCalledOff, STALE_LIVE_MS } from "./game-data.mjs";
+export { STALE_LIVE_MS };
 
 const finished = (g) => g.state === "OFF" || g.state === "FINAL";
-/** A live game this long after its puck drop with no word from the feed is stale (no NHL game lasts this long). */
-export const STALE_LIVE_MS = 8 * 3600_000;
 
 /** Local start time, e.g. "7:00 PM"; `withZone` adds the zone name ("7:00 PM PST"). Uses the viewer's own time zone. */
 export function localTime(start, { withZone = false } = {}) {
@@ -19,7 +18,7 @@ export function gameStatus(g, { now = Date.now(), withZone = false } = {}) {
   const has = g.awayScore != null && g.homeScore != null;
   const score = has ? `${away} ${g.awayScore}, ${home} ${g.homeScore}` : `${away} at ${home}`;
   const sched = String(g.scheduleState ?? "OK").toUpperCase();
-  if (!finished(g) && !isLive(g) && (sched === "PPD" || sched === "CNCL" || sched === "SUSP")) {
+  if (isCalledOff(g)) {
     const kind = sched === "PPD" ? "postponed" : sched === "CNCL" ? "cancelled" : "suspended";
     const label = kind === "postponed" ? "Postponed" : kind === "cancelled" ? "Canceled" : "Suspended";
     return { kind, label, short: label, aria: `${away} at ${home}, ${label.toLowerCase()}`, live: false, final: false, upcoming: false, stale: false };

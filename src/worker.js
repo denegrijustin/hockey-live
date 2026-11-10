@@ -84,8 +84,8 @@ async function refreshSeason(season, env) {
     season,
     updatedAt: new Date().toISOString(),
     source: "NHL schedule feed",
-    games: [...new Map(schedules.map((g) => [g.id, g])).values()].sort((a, b) =>
-      a.start.localeCompare(b.start),
+    games: [...new Map(schedules.map((g) => [g.id, g])).values()].sort(
+      (a, b) => a.start.localeCompare(b.start) || a.id - b.id,
     ),
   };
   if (data.games.length < 100) throw Error("Incomplete NHL season");
@@ -194,6 +194,12 @@ async function staticData(env, request, path) {
   const r = await env.ASSETS.fetch(new Request(new URL(path, request.url)));
   if (!r.ok || !r.headers.get("content-type")?.includes("json")) return null;
   return r.json();
+}
+/** The snapshot with the later `updatedAt` (a missing or unparsable stamp loses); KV wins a tie. */
+function newerSnapshot(kv, asset) {
+  if (!kv || !asset) return kv ?? asset ?? null;
+  const t = (x) => Date.parse(x.updatedAt) || 0;
+  return t(asset) > t(kv) ? asset : kv;
 }
 // Routes that read KV on every request; their responses carry a 60 s max-age, so the edge cache can serve repeats.
 const EDGE_CACHED = /^\/api\/(edge|league-matchups)\//;
@@ -341,13 +347,16 @@ async function handle(request, env, ctx) {
           return json({ error: "Season not supported" }, 400);
         const key = `dashboard-season-${season}`;
         const cached = await env.TEAM_STATS.get(key, { type: "json" });
-        const snapshot =
-          cached ??
-          (await staticData(env, request, `/data/seasons/${season}.json`));
+        // The weekly refresh can commit a static file newer than the KV copy: serve whichever is newer.
+        const asset = await staticData(env, request, `/data/seasons/${season}.json`);
+        const snapshot = newerSnapshot(cached, asset);
         // While any game is live, refresh far more often than the normal
         // 15-minute window so scores keep pace with play.
-        const live = cached?.games?.some((g) =>
-          ["LIVE", "CRIT"].includes(g.state),
+        // A game "live" more than 8h after puck drop is stuck data (same rule as game-status.mjs), not a reason to poll fast.
+        const live = cached?.games?.some(
+          (g) =>
+            ["LIVE", "CRIT"].includes(g.state) &&
+            !(g.start && Date.now() - Date.parse(g.start) > 8 * 3600_000),
         );
         const staleAfter = live ? 45000 : 900000;
         if (

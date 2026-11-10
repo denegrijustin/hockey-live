@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadSeason } from "../lib/api";
-import { isLive, mergeScores } from "../lib/game-data.mjs";
+import { lastSeasonSource, loadSeason, type DataSource } from "../lib/api";
+import { isFreshLive, mergeScores } from "../lib/game-data.mjs";
 import { useFeed, useVisibleInterval } from "../lib/polling";
 import type { Scoreboard, Snapshot } from "../types";
 
@@ -17,7 +17,8 @@ export function useSeason() {
     [baseline, setBaseline] = useState<Snapshot | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
-    [retry, setRetry] = useState(0);
+    [retry, setRetry] = useState(0),
+    [source, setSource] = useState<DataSource>("live");
 
   useEffect(() => {
     fetch("/data/manifest.json")
@@ -42,7 +43,10 @@ export function useSeason() {
     setError("");
     setData(null);
     loadSeason(season, controller.signal)
-      .then(setData)
+      .then((d) => {
+        setData(d);
+        setSource(lastSeasonSource(season));
+      })
       .catch(() => {
         if (!controller.signal.aborted) setError("The NHL snapshot could not be loaded. Please retry.");
       })
@@ -69,7 +73,10 @@ export function useSeason() {
   useVisibleInterval(
     () => {
       loadSeason(season)
-        .then(setData)
+        .then((d) => {
+          setData(d);
+          setSource(lastSeasonSource(season));
+        })
         .catch(() => {});
     },
     300000,
@@ -92,7 +99,9 @@ export function useSeason() {
     baseline,
     scoreboard,
     liveError,
-    hasLive: scoreboard?.games.some(isLive) ?? false,
+    /** "saved" when the season came from the snapshot shipped with the site because the live API failed. */
+    source,
+    hasLive: scoreboard?.games.some((g) => isFreshLive(g)) ?? false,
     error,
     loading,
     retry: () => setRetry((x) => x + 1),

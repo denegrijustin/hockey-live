@@ -18,7 +18,7 @@ async function openStats(page: Page, id: number, tab: "Team Stats" | "Players", 
   await page.goto("/");
   await openCard(page, id);
   const t = page.getByRole("tab", { name: tab });
-  if (await t.count()) await t.click(); // once the Game Center tabs are integrated
+  await t.click();
   return page.getByTestId(tab === "Team Stats" ? "gc-team-stats" : "gc-players");
 }
 const openCard = (page: Page, id: number) => page.getByRole("button", { name: id === LIVE_ID ? /CAR 1, VGK 1, live.*Open the full game view/ : /CAR 3, VGK 0, final\. Open the full game view/ }).first().click();
@@ -121,6 +121,7 @@ test("360px: both panes fit without sideways scroll and tap targets are 44px", a
   const h = await pane.getByTestId("gc-skaters-CAR").getByRole("columnheader", { name: "SOG" }).getByRole("button").boundingBox();
   expect(h!.height).toBeGreaterThanOrEqual(44);
   await expect(pane.getByTestId("gc-skaters-CAR").locator("tbody tr").first().locator(".sub")).toBeVisible(); // hits/BLK/PIM move under the name
+  await page.getByRole("tab", { name: "Team Stats" }).click();
   const teamPane = page.getByTestId("gc-team-stats");
   await expect(teamPane.getByTestId("gc-team-table")).toBeVisible();
   await noOverflow(page);

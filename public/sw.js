@@ -7,7 +7,7 @@ importScripts("/sw-routes.js");
 const BUILD = "__BUILD_ID__";
 const CACHE = `iceboard-${BUILD}`;
 const SHELL_WAIT_MS = 4000;
-const MAX_ENTRIES = 150; // runtime cache cap: the oldest entries go first
+const MAX_ENTRIES = 250; // runtime cache cap: the oldest entries go first
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("message", (event) => { if (event.data === "skipWaiting") self.skipWaiting(); });
@@ -27,7 +27,7 @@ async function put(request, response) {
   if (response.ok) {
     const cache = await caches.open(CACHE);
     await cache.put(request, response.clone());
-    await trim(cache);
+    trim(cache).catch(() => {}); // pruning happens in the background
   }
   return response;
 }

@@ -1,0 +1,20 @@
+# Phase 4: mobile experience and PWA (Agent 7)
+
+## What changed
+- **Manifest** (`public/manifest.webmanifest`): `id`, `lang`, `dir`, `categories: ["sports"]`, `orientation: any`, standalone kept, three shortcuts (`/?view=games`, `/?view=standings`, `/?view=following`), and a separate `purpose: "maskable"` entry (`icon-maskable-512.png`, full-bleed `#72dfc3` with the glyph inside the 80% safe zone). Purposes are never combined. Every PNG's declared size is checked against its real pixels in `tests/browser/pwa.spec.ts`.
+- **Service worker** (one worker, `public/sw.js`): cache name `iceboard-<hash>`; a tiny vite plugin (`vite.config.ts`, `sw-version`) replaces `__BUILD_ID__` in `dist/sw.js` with a hash of the built asset names, so each deploy gets a new cache and `activate` deletes older `iceboard-*` caches. Runtime cache capped at 250 entries (oldest dropped). Nothing is precached. Routing is in `public/sw-routes.js` (pure, unit-tested by `tests/sw-routes.test.mjs`): `/api/*`, other origins and non-GET are never handled; navigations and `/data/*` are network-first (cache only when the network fails or takes more than 4 s); hashed assets and logos are cache-first. A page can post `"skipWaiting"` to the worker; the install step still calls `skipWaiting` itself (unchanged behaviour, nothing intrusive shown).
+- **Install**: `src/hooks/useInstallPrompt.ts` captures `beforeinstallprompt` (never prompts by itself); `src/components/InstallCard.tsx` (`InstallCard`, also default export) renders nothing when already standalone, an "Install app" button on Chromium (click only), and the "Share, then Add to Home Screen" instructions on iOS. Agent 6 imports it into Settings > Application. Not wired into Settings by me.
+- **Offline**: `src/hooks/useOnline.ts` (online/offline events) feeds `StatusPill` (label "offline", with the age of the data) and an `offline-banner` ("You are offline. Scores were last updated X ago and may be out of date."). The live badge is dropped while offline so stale scores never look current.
+- **Main bundle headroom**: see the report numbers below.
+
+## Bundle (gzip, `node scripts/check-budget.mjs`)
+Main `index-*.js`: 133.2 KB before, 121.7 KB after (11.5 KB freed against a 135 KB budget; budgets untouched). Moved to lazy chunks: the expanded half of a game card (`GameCardExpanded`: NHL+ expanded block, compact projection, goalie comparison, injuries), the Game Center data panel (`GameDataPanel`, split out of `GameData.tsx`), `IntermissionRink`, and `Methodology`.
+
+## Verified (headless Chromium via Playwright, `tests/browser/pwa.spec.ts`)
+Manifest fields and icon pixel sizes; stamped `sw.js`; offline pill and banner appear immediately on the `offline` event and clear on `online`; no horizontal scroll at 390x844, 360x740 and landscape 844x390; search, More and first tab-bar item are inside the viewport with tap height >= 40 px; tab bar fully inside the viewport in landscape. Existing `offline.spec.ts` (app opens offline after one visit with the worker allowed) still runs.
+
+## Not verified (needs real devices)
+- **Android Chrome**: real install flow, `beforeinstallprompt` timing and eligibility heuristics, maskable icon cropping by the launcher (only checked that the glyph sits inside the safe zone by construction and by eye), shortcut menu on long-press.
+- **iOS Safari**: Add to Home Screen behaviour, standalone launch, `apple-touch-icon` rendering, safe-area insets with the notch and home indicator (the CSS uses `env(safe-area-inset-*)` and `viewport-fit=cover`, but desktop Chromium reports 0 for them), iOS does not fire `beforeinstallprompt` or support shortcuts, and background web push is not offered (the app does not claim it). iOS may evict service worker caches after weeks of disuse.
+- The `online`/`offline` events and `navigator.onLine` are hints: a captive portal or dead Wi-Fi can report online; the existing live-fetch failure path (`liveError`) still covers that case.
+- The notification bell is Agent 4's stub (renders nothing yet), so its reachability on phones is not tested; the spec checks it only when it exists.

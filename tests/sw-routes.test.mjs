@@ -1,8 +1,10 @@
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
-const { routeFor } = createRequire(import.meta.url)("../public/sw-routes.js");
+import vm from "node:vm";
+const ctx = { self: {}, URL };
+vm.runInNewContext(readFileSync(new URL("../public/sw-routes.js", import.meta.url), "utf8"), ctx); // the worker loads it as a classic script
+const { routeFor } = ctx.self.iceboardRoutes;
 const O = "https://iceboard.test";
 const r = (path, mode = "no-cors", method = "GET", origin = O) => routeFor(method, origin + path, mode, O);
 

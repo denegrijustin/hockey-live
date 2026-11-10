@@ -380,7 +380,7 @@ export default function App() {
         )}
         {!online && (
           <div className="status-banner" role="status" data-testid="offline-banner">
-            <span>You are offline. Scores below are the last saved copy{data ? `, ${ago(staleness)}` : ""}, and may be out of date.</span>
+            <span>You are offline. {data ? `Scores were last updated ${ago(staleness)}` : "No scores are loaded"} and may be out of date.</span>
           </div>
         )}
         {phone || home ? (

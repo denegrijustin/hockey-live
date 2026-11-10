@@ -4,16 +4,17 @@ import { finished } from "../../lib/model.mjs";
 import { useGameCenter } from "./GameCenterContext";
 import { useGameCenterUi } from "./GameCenterUi";
 import { goalsOf, periodLabel } from "./gcFormat";
+import FollowedGames from "./FollowedGames";
+import type { Game } from "../../types";
 
 const MomentumPane = lazy(() => import("./MomentumPane"));
-const FollowedGames = lazy(() => import("./FollowedGames"));
 
 /**
  * Overview: where the game stands, the latest goals and penalties (links into Play-by-Play), the scoring summary
  * by period, a few team stats and links to the other panes. Everything is read from useGameCenter(); nothing is
  * fetched or invented, and a block with no data is simply not shown.
  */
-export default function OverviewPane({ home, away }: { home: Team; away: Team }) {
+export default function OverviewPane({ home, away, dayGames }: { home: Team; away: Team; /** The scoreboard rows of this game's day, for the followed-games switcher. */ dayGames?: Game[] }) {
   const { game, feed, plays, live } = useGameCenter();
   const { goTab } = useGameCenterUi();
   const src = feed ?? game;
@@ -87,7 +88,7 @@ export default function OverviewPane({ home, away }: { home: Team; away: Team })
         <button type="button" className="gc-link" onClick={() => goTab("intel")}>Matchup intelligence</button>
       </nav>
       <Suspense fallback={null}><MomentumPane /></Suspense>
-      <Suspense fallback={null}><FollowedGames /></Suspense>
+      <FollowedGames games={dayGames} currentId={game.id} />
     </div>
   );
 }

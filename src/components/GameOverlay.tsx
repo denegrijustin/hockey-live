@@ -27,6 +27,7 @@ import { GameHeader } from "./gc/GameHeader";
 import { GameTabs } from "./gc/GameTabs";
 import { GameAnnouncer } from "./gc/GameAnnouncer";
 import OverviewPane from "./gc/OverviewPane";
+import { GameFollowBadge } from "./gc/FollowedGames";
 import "./gc/game-center.css";
 
 const PlayByPlay = lazy(() => import("./gc/PlayByPlay"));
@@ -113,6 +114,7 @@ export function GameOverlay({
     ((candidate.home === game.home && candidate.away === game.away) ||
       (candidate.home === game.away && candidate.away === game.home)),
   ).slice(-5).reverse();
+  const dayGames = useMemo(() => allGames.filter((g) => g.date === game.date && g.type !== 0), [allGames, game.date]);
   const restLabel = (team: string) => {
     const days = restDays(allGames, game, team);
     if (days == null) return "Rest unavailable";
@@ -195,6 +197,7 @@ export function GameOverlay({
           <div className="game-center-actions">
             <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
             <SaveGameButton game={game} awayName={away.name} homeName={home.name} labeled />
+            <GameFollowBadge game={game} awayName={away.name} homeName={home.name} />
             <span>{game.venue || "Venue unavailable"}</span>
           </div>
           <GameTabs
@@ -205,7 +208,7 @@ export function GameOverlay({
                 <>
                   {live && game.intermission && <IntermissionRink game={game} home={home} away={away} />}
                   <div className="gc-cols">
-                    <div className="gc-col"><OverviewPane home={home} away={away} /></div>
+                    <div className="gc-col"><OverviewPane home={home} away={away} dayGames={dayGames} /></div>
                     <div className="gc-col">
                       {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} before={before} baseline={baseline} />}
                       <details className="game-center-section" open>

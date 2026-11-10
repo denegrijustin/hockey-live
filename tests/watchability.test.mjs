@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { watchability, closeAndLate, liveHeat, upsetBrewing, periodOf, slotOf } from "../src/lib/watchability.mjs";
+import { watchability, closeAndLate, liveHeat, upsetBrewing, periodOf, slotOf, slotLabel } from "../src/lib/watchability.mjs";
 
 const live = (o) => ({ state: "LIVE", period: 3, periodType: "REG", homeScore: 2, awayScore: 2, ...o });
 
@@ -43,7 +43,20 @@ test("periods and slots", () => {
   assert.equal(periodOf({ period: 3, periodType: "REG" }), 3);
   assert.equal(periodOf({ period: 4, periodType: "OT" }), 4);
   assert.equal(periodOf({ period: 3, periodType: "SO" }), 4);
-  assert.equal(slotOf("2026-10-22T23:37:10Z"), "2026-10-22T23:00:00.000Z");
+  // UTC viewer: half-hour slots, so 7:00 and 7:30 are different.
+  assert.equal(slotOf("2026-10-22T23:37:10Z", 0), "2026-10-22T23:30:00.000Z");
+  assert.equal(slotOf("2026-10-22T23:00:00Z", 0), "2026-10-22T23:00:00.000Z");
+  assert.notEqual(slotOf("2026-10-22T23:00:00Z", 0), slotOf("2026-10-22T23:30:00Z", 0));
+  assert.equal(slotOf("2026-10-22T23:08:00Z", 0), slotOf("2026-10-22T23:00:00Z", 0)); // 7:08 and 7:00 drop together
+  // Eastern (UTC-4, offset +240): 7:30 PM local is 23:30Z.
+  assert.equal(slotOf("2026-10-22T23:37:10Z", 240), "2026-10-22T23:30:00.000Z");
+  // India (UTC+5:30, offset -330): 05:07 IST is 23:37Z; the slot is 5:00 IST = 23:30Z.
+  assert.equal(slotOf("2026-10-22T23:37:10Z", -330), "2026-10-22T23:30:00.000Z");
+  assert.equal(slotOf("2026-10-22T23:20:00Z", -330), "2026-10-22T23:00:00.000Z"); // 04:50 IST -> 04:30 IST = 23:00Z
+  // Nepal (UTC+5:45, offset -345): 04:45 NPT is 23:00Z; 05:15 NPT -> 05:00 NPT = 23:15Z.
+  assert.equal(slotOf("2026-10-22T23:30:00Z", -345), "2026-10-22T23:15:00.000Z");
+  assert.equal(slotLabel("2026-10-22T23:30:00.000Z", "America/New_York"), "Puck drop 7:30 PM");
+  assert.equal(slotLabel("2026-10-22T23:00:00.000Z", "America/New_York"), "Puck drop 7:00 PM");
 });
 
 import { tierOf, watchBreakdown, pickWatchNow, recap } from "../src/lib/watchability.mjs";

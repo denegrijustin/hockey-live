@@ -62,12 +62,19 @@ export function upsetWon(g, pregameHome) {
   return wp <= 0.4 ? wp : null;
 }
 
-/** Start time rounded down to the hour: the puck-drop slot a game belongs to. */
-export const slotOf = (start) => {
-  const d = new Date(start);
-  d.setUTCMinutes(0, 0, 0);
-  return d.toISOString();
+/**
+ * The puck-drop slot a game belongs to: its start rounded down to a half hour of the viewer's LOCAL clock, so 7:00 and 7:30 are different slots and
+ * zones that sit at :30 or :45 offsets still land on 7:00 / 7:30 on the wall clock. The key is the slot's start as an ISO UTC instant (sortable;
+ * `slotLabel` shows it). `offsetMin` is the viewer's UTC offset in minutes (as `getTimezoneOffset()` reports it, west positive); it defaults to the viewer's own.
+ */
+export const slotOf = (start, offsetMin) => {
+  const t = new Date(start).getTime();
+  const off = (offsetMin ?? new Date(t).getTimezoneOffset()) * 60000;
+  const HALF = 1800000;
+  return new Date(Math.floor((t - off) / HALF) * HALF + off).toISOString();
 };
+/** "Puck drop 7:30 PM": the label of a slot key, in the viewer's local time. */
+export const slotLabel = (key, timeZone) => `Puck drop ${new Date(key).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", ...(timeZone ? { timeZone } : {}) })}`;
 
 /** The score's tier: it picks the ring's color and the verdict word. */
 export const tierOf = (score) => (score >= 75 ? { key: "high", label: "Must watch" } : score >= 50 ? { key: "mid", label: "Worth a look" } : { key: "low", label: "Background" });

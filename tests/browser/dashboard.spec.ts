@@ -110,8 +110,8 @@ test("featured team shortcuts filter to exactly one team", async ({ page }) => {
 test("finished-today games collapse into a compact expandable strip", async ({
   page,
 }) => {
-  const today = new Date().toLocaleDateString("en-CA");
-  const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString("en-CA");
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
   const season = manifest.current;
   const snapshot = {
     season,

@@ -55,7 +55,10 @@ export function specialTeams(matchups, teamId) {
   };
 }
 
-/** @returns {null | object} null when the team has no games played (table gp 0 and no counted games). */
+/**
+ * @param {string} teamId
+ * @param {{ teams?: any[]; table?: any; games?: any[]; matchups?: any; today?: string | null }} [ctx]
+ * @returns {any} null when the team has no games played (table gp 0 and no counted games). */
 export function teamSummary(teamId, { teams = [], table = null, games = [], matchups = null, today = null } = {}) {
   const items = teamGames(games, teamId).map((g) => sideOf(g, teamId));
   const counted = items.filter((i) => i.game.type === 2 && i.status === "final" && i.result);

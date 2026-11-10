@@ -18,6 +18,7 @@ import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
 import { MainNav, VIEW_IDS, VIEW_TITLES } from "./components/MainNav";
 import { Teams } from "./components/Teams";
+const TeamPage = lazy(() => import("./components/team/TeamPage"));
 import { PageHeader } from "./components/PageHeader";
 import { Scoreboard as ScoreboardView } from "./components/Scoreboard";
 import { Sheet } from "./components/Sheet";
@@ -91,11 +92,20 @@ const viewFromAddress = () => {
   }
 };
 const initialView = viewFromAddress;
-/** The address of a view: `?view=…` (Home is the plain address). A picked day (`&date=`) goes along only to Home and Games. */
-const addressFor = (view: string) => {
+/** The team page the address names (?view=teams&team=EDM); a missing or unknown team id is the Teams directory. */
+const teamFromAddress = () => {
+  try {
+    const p = new URLSearchParams(location.search), id = p.get("team");
+    return p.get("view") === "teams" && id && teams.some((t) => t.id === id) ? id : null;
+  } catch {
+    return null;
+  }
+};
+/** The address of a view: `?view=…` (Home is the plain address). A picked day (`&date=`) goes along only to Home and Games; `team` only to Teams. */
+const addressFor = (view: string, team: string | null = null) => {
   let date: string | null = null;
   try { date = new URLSearchParams(location.search).get("date"); } catch {}
-  return `${location.pathname}${searchFor(view, date)}`;
+  return `${location.pathname}${searchFor(view, date, { team })}`;
 };
 export default function App() {
   const [selected, setSelected] = useState<string[]>(initialTeams);
@@ -111,7 +121,8 @@ export default function App() {
     [filtersOpen, setFiltersOpen] = useState(false),
     [byDay, setByDayState] = useState(() => viewFromAddress() === "games" && hasDateParam()),
     [gameDate, setGameDate] = useState<string | null>(null),
-    [teamsOpen, setTeamsOpen] = useState(false);
+    [teamsOpen, setTeamsOpen] = useState(false),
+    [teamId, setTeamId] = useState<string | null>(teamFromAddress);
   const todayEt = useEtToday();
   const setByDay = useCallback((on: boolean) => {
     setByDayState(on);
@@ -123,23 +134,40 @@ export default function App() {
   // a link opens the same screen, and a refresh stays put. Each entry remembers how far down it was scrolled.
   const viewRef = useRef(view);
   viewRef.current = view;
+  const teamRef = useRef(teamId);
+  teamRef.current = teamId;
+  const pushedTeam = useRef(false);
   const setView = useCallback((next: string) => {
-    if (next === viewRef.current) return;
+    if (next === viewRef.current && !teamRef.current) return;
     try {
-      history.replaceState({ ...history.state, view: viewRef.current, scroll: window.scrollY }, "");
-      history.pushState({ view: next, scroll: 0 }, "", addressFor(next));
+      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: window.scrollY }, "");
+      history.pushState({ view: next, team: null, scroll: 0 }, "", addressFor(next));
     } catch {}
     setViewState(next);
+    setTeamId(null);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+  /** Open a team's full page (?view=teams&team=EDM) as its own history entry, so Back returns to where it was opened from. */
+  const openTeam = useCallback((id: string) => {
+    if (!teams.some((t) => t.id === id)) return;
+    try {
+      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: window.scrollY }, "");
+      history.pushState({ view: "teams", team: id, scroll: 0 }, "", addressFor("teams", id));
+      pushedTeam.current = true;
+    } catch {}
+    setViewState("teams");
+    setTeamId(id);
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
   useEffect(() => {
     try {
       history.scrollRestoration = "manual";
-      history.replaceState({ ...history.state, view: viewRef.current, scroll: history.state?.scroll ?? 0 }, "", addressFor(viewRef.current));
+      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: history.state?.scroll ?? 0 }, "", addressFor(viewRef.current, teamRef.current));
     } catch {}
     const pop = (e: PopStateEvent) => {
       const next = e.state?.view && VIEW_IDS.includes(e.state.view) ? e.state.view : viewFromAddress();
       setViewState(next);
+      setTeamId(next === "teams" ? (e.state?.view ? (e.state.team ?? null) : teamFromAddress()) : null);
       const y = Number(e.state?.scroll) || 0;
       requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: y, left: 0, behavior: "instant" })));
     };
@@ -148,8 +176,9 @@ export default function App() {
   }, []);
   useEffect(() => {
     document.documentElement.toggleAttribute("data-home", home);
-    document.title = home ? "Iceboard · NHL game intelligence" : `${VIEW_TITLES[view] ?? "Iceboard"} · Iceboard`;
-  }, [view, home]);
+    const teamName = view === "teams" && teamId ? teams.find((t) => t.id === teamId)?.name : null;
+    document.title = home ? "Iceboard · NHL game intelligence" : `${teamName ?? VIEW_TITLES[view] ?? "Iceboard"} · Iceboard`;
+  }, [view, home, teamId]);
   // After a screen change, move focus to the page so keyboard and screen-reader users start at the top of the new screen.
   const firstView = useRef(true);
   useEffect(() => {
@@ -247,7 +276,7 @@ export default function App() {
     setByDay(false);
   };
   return (
-    <TeamProfileProvider teams={teams} table={analysis?.table ?? null} games={data?.games ?? []} season={season}>
+    <TeamProfileProvider teams={teams} table={analysis?.table ?? null} games={data?.games ?? []} season={season} onOpenPage={openTeam}>
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
@@ -587,7 +616,12 @@ export default function App() {
                 )}
               </>
             )}
-            {view === "teams" && <Teams teams={teams} table={analysis.table} selected={selected} onSchedule={() => setView("teamschedule")} />}
+            {view === "teams" && !teamId && <Teams teams={teams} table={analysis.table} selected={selected} onSchedule={() => setView("teamschedule")} onOpenTeam={openTeam} />}
+            {view === "teams" && teamId && (
+              <ErrorBoundary resetKey={teamId}><Suspense fallback={<Skeleton rows={3} label="Loading team page" />}>
+                <TeamPage teamId={teamId} teams={teams} table={analysis.table} games={data.games} season={season} today={todayEt} onBack={() => (pushedTeam.current ? history.back() : setView("teams"))} onNavigate={setView} />
+              </Suspense></ErrorBoundary>
+            )}
             {view === "trends" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading team trends" />}>
                 <Trends

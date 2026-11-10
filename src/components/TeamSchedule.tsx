@@ -1,3 +1,5 @@
+import { useGameRoute } from "../hooks/useGameRoute";
+import { GameNotFound } from "./gc/GameNotFound";
 import { FavoriteMark, FavoriteStar } from "./FavoriteStar";
 import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { fmtTime } from "../lib/dates.mjs";
@@ -41,7 +43,8 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
   const shown = useMemo(() => items.filter((i) => (filter === "all" ? true : filter === "final" ? i.status === "final" : i.status !== "final")), [items, filter]);
   const [month, setMonth] = useState(() => defaultMonth(items, today));
   const months = useMemo(() => seasonMonths(items), [items]);
-  const [centerId, setCenterId] = useState<number | null>(null);
+  const gc = useGameRoute();
+  const centerId = gc.route?.id ?? null;
   const scrollAtOpen = useRef(0);
   const root = useRef<HTMLElement>(null);
 
@@ -55,7 +58,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
   useLayoutEffect(() => { setMonth(defaultMonth(items, today)); }, [teamId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const jump = () => root.current?.querySelector<HTMLElement>("[data-next]")?.scrollIntoView({ block: "center", behavior: document.documentElement.dataset.motion === "off" ? "auto" : "smooth" });
-  const open = (g: Game) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); };
+  const open = (g: Game) => { scrollAtOpen.current = window.scrollY; gc.open(g.id); };
   const teamOf = (id: string) => teams.find((t) => t.id === id)!;
   const centerGame = centerId != null ? games.find((g) => g.id === centerId) : undefined;
   const ranks = useMemo(() => (analysis && centerGame ? teamRanks(analysis.before[centerGame.id], teams) : undefined), [analysis, centerGame, teams]);
@@ -158,10 +161,14 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
             allGames={games}
             series={seasonSeriesBeforeGame(games, centerGame)}
             returnTo={scrollAtOpen.current}
-            onClose={() => setCenterId(null)}
+            tab={gc.route?.tab}
+            event={gc.route?.event}
+            onTab={gc.setTab}
+            onClose={gc.close}
           />
         </Suspense>
       )}
+      {gc.route && !centerGame && games.length > 0 && <GameNotFound onClose={() => gc.close({ replace: true })} />}
     </section>
   );
 }

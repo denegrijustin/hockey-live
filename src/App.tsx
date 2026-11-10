@@ -1,6 +1,7 @@
 import { isLive } from "./lib/game-data.mjs";
 import { relativeDay } from "./lib/dates.mjs";
 import { searchFor } from "./lib/date-nav.mjs";
+import { parseGameRoute } from "./lib/gc-route.mjs";
 import { GameDayStrip, hasDateParam, clearDateParam } from "./components/GameDayStrip";
 import { useEtToday } from "./hooks/useEtToday";
 import { useSeason } from "./hooks/useSeason";
@@ -106,12 +107,14 @@ const teamFromAddress = () => {
   }
 };
 /** The address of a view: `?view=…` (Home is the plain address). A picked day (`&date=`) goes along only to Home and Games; `team` only to Teams. */
-const addressFor = (view: string, team: string | null = null) => {
+const addressFor = (view: string, team: string | null = null, keepGame = false) => {
   let date: string | null = null;
   try { date = new URLSearchParams(location.search).get("date"); } catch {}
   let player: string | undefined;
   try { player = new URLSearchParams(location.search).get("player") ?? undefined; } catch {}
-  return `${location.pathname}${searchFor(view, date, { team, player })}`;
+  // An open Game Center (?game=&tab=&event=) is kept only when the address is being normalised in place, never when moving to another view.
+  const game = keepGame ? parseGameRoute(location.search) : null;
+  return `${location.pathname}${searchFor(view, date, { team, player, game })}`;
 };
 export default function App() {
   const prefs = usePrefs();
@@ -182,7 +185,7 @@ export default function App() {
   useEffect(() => {
     try {
       history.scrollRestoration = "manual";
-      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: history.state?.scroll ?? 0 }, "", addressFor(viewRef.current, teamRef.current));
+      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: history.state?.scroll ?? 0 }, "", addressFor(viewRef.current, teamRef.current, true));
     } catch {}
     const pop = (e: PopStateEvent) => {
       const next = e.state?.view && VIEW_IDS.includes(e.state.view) ? e.state.view : viewFromAddress();

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { IDS, mockPlayers, seedFollowed } from "./fixtures-players";
+import { IDS, mockPlayers, seedFollowed } from "./fixtures-following";
 
 const watch = (page: import("@playwright/test").Page) => page.getByTestId("pw-card");
 const open = async (page: import("@playwright/test").Page, url = "/?view=following") => { await page.goto(url); };

@@ -104,3 +104,28 @@ test("heading unwraps continuously through the west-facing angle", () => {
     previous=pose.deg;
   }
 });
+
+import { firstSeenAt, SEEN_PREFIX } from "../src/lib/intermission.mjs";
+const memStore = (init = {}) => {
+  const m = new Map(Object.entries(init));
+  return { get length() { return m.size; }, key: (i) => [...m.keys()][i] ?? null, getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m };
+};
+test("first-seen storage: remembers, ignores junk/future/old stamps, prunes stale iceboard-int keys, leaves other keys", () => {
+  const now = 10_000_000_000, key = `${SEEN_PREFIX}1-2`;
+  const s = memStore({ [`${SEEN_PREFIX}old`]: String(now - 4 * 3_600_000), [`${SEEN_PREFIX}junk`]: "abc", [`${SEEN_PREFIX}fut`]: String(now + 5), [`${SEEN_PREFIX}fresh`]: String(now - 60_000), other: "keep" });
+  assert.equal(firstSeenAt(() => s, key, now), now);
+  assert.equal(s.getItem(key), String(now));
+  assert.deepEqual([...s.m.keys()].sort(), [key, `${SEEN_PREFIX}fresh`, "other"].sort());
+  assert.equal(firstSeenAt(() => s, key, now + 30_000), now); // a reload keeps the original start
+  s.setItem(key, String(now - 4 * 3_600_000));
+  assert.equal(firstSeenAt(() => s, key, now), now); // a 4 h old stamp restarts
+});
+test("first-seen storage never throws when storage is blocked, full or unreadable", () => {
+  const now = 5_000_000_000;
+  assert.equal(firstSeenAt(() => { throw new DOMException("x", "SecurityError"); }, "iceboard-int-1-1", now), now);
+  assert.equal(firstSeenAt(() => null, "iceboard-int-1-1", now), now);
+  const full = memStore(); full.setItem = () => { throw new DOMException("q", "QuotaExceededError"); };
+  assert.equal(firstSeenAt(() => full, "iceboard-int-1-1", now), now);
+  const bad = { length: 1, key: () => { throw new Error("no"); }, getItem: () => { throw new Error("no"); }, setItem() {}, removeItem() {} };
+  assert.equal(firstSeenAt(() => bad, "iceboard-int-1-1", now), now);
+});

@@ -1,56 +1,48 @@
-import type { Page } from "@playwright/test";
-import { SEASON, mk, mockApis, etDay } from "./fixtures-games";
+import type { PlayerData, PlayerSeason } from "../../src/types";
 
-/** Player fixtures for the Following > Players specs: roster files, injuries, profiles, and a seeded preference record. */
-export { SEASON };
-export const IDS = { skater: 8470001, traded: 8470002, goalie: 8470003, sparse: 8470004, gone: 8470005 } as const;
+/**
+ * Edge-case player data, typed against the real shapes:
+ *  - roster rows: public/data/players/<season>/<TEAM>.json (PlayerData in src/types.ts)
+ *  - profile: the Worker's /api/player/<id> reply (src/worker.js, a reduction of the NHL landing page)
+ *  - game log: /api/player/<id>/log/<season>
+ * All ids are fictitious 7-digit values in a range no real player uses; names are obviously synthetic, so
+ * nothing here can be mistaken for real NHL data. They exist to exercise layout and fallback paths.
+ */
+export const SEASON = 20262027;
+const HEAD = (team: string, id: number) => `https://assets.nhle.com/mugs/nhl/${SEASON}/${team}/${id}.png`;
 
-const sk = (id: number, name: string, team: string, o: Record<string, unknown> = {}) => ({ id, name, team, position: "C", gp: 12, goals: 5, assists: 7, shots: 40, plusMinus: 3, pim: 2, toi: 19.5, headshot: "", number: 11, ...o });
-const gl = (id: number, name: string, team: string, o: Record<string, unknown> = {}) => ({ id, name, team, position: "G", gp: 9, saves: 220, shotsAgainst: 240, savePct: 0.9167, headshot: "", number: 31, ...o });
-
-export const rosters: Record<string, { skaters: unknown[]; goalies: unknown[] }> = {
-  EDM: { skaters: [sk(IDS.skater, "Alpha Forward", "EDM")], goalies: [] },
-  CGY: { skaters: [sk(IDS.traded, "Trade Target", "CGY", { position: "D" })], goalies: [] },
-  NSH: { skaters: [sk(IDS.sparse, "Sparse Stats", "NSH", { goals: null, shots: undefined, toi: null, plusMinus: null })], goalies: [gl(IDS.goalie, "Gus Goalie", "NSH")] },
-};
-const profileGame = (i: number, goalie: boolean) => goalie
-  ? { gameId: 2026029000 + i, gameDate: `2026-11-0${i + 1}`, opponentAbbrev: "STL", homeRoadFlag: "H", decision: i % 2 ? "L" : "W", savePctg: 0.93, goalsAgainst: 2, shotsAgainst: 28 }
-  : { gameId: 2026029000 + i, gameDate: `2026-11-0${i + 1}`, opponentAbbrev: "VAN", homeRoadFlag: "R", goals: i % 2, assists: 1, points: (i % 2) + 1, shots: 3 };
-const profile = (id: number, name: string, team: string, pos: string) => ({
-  id, name, number: 11, headshot: "", position: pos, team, updatedAt: new Date().toISOString(),
-  seasons: [{ season: SEASON, gameTypeId: 2, gamesPlayed: 9, gamesStarted: 9, wins: 5, losses: 3, otLosses: 1, goalsAgainst: 20, shotsAgainst: 240, goalsAgainstAvg: 2.31, savePctg: 0.9167, goals: 5, assists: 7, points: 12, shots: 40 }],
-  last5Games: Array.from({ length: 5 }, (_, i) => profileGame(i, pos === "G")),
+const skater = (over: Partial<PlayerSeason> = {}): PlayerSeason => ({
+  id: 9000001, name: "Test Skater", team: "EDM", position: "C", gp: 16, hits: 12, goals: 6, assists: 9, shots: 40, plusMinus: 3, pim: 4, toi: 1180,
+  headshot: HEAD("EDM", 9000001), number: 97, ...over,
 });
 
-/** Mocks everything the Following > Players view and the search need. Returns request counters. */
-export async function mockPlayers(page: Page, o: { injuries?: unknown[]; tonight?: string[] } = {}) {
-  const counts = { players: {} as Record<string, number>, profiles: {} as Record<string, number> };
-  const games = (o.tonight ?? []).length ? [mk.upcoming(9901, o.tonight![0], o.tonight![1], { date: etDay(0) })] : [];
-  await mockApis(page, { games, live: games });
-  await page.route("**/api/injuries/**", (r) => r.fulfill({ json: { season: SEASON, updatedAt: new Date().toISOString(), sourceUpdated: null, items: o.injuries ?? [], teams: [] } }));
-  await page.route("**/api/players/**", (r) => {
-    const team = r.request().url().split("/").pop()!;
-    counts.players[team] = (counts.players[team] ?? 0) + 1;
-    return r.fulfill({ json: { season: SEASON, gameType: 2, updatedAt: new Date().toISOString(), ...(rosters[team] ?? { skaters: [], goalies: [] }) } });
-  });
-  await page.route(/\/api\/player\/\d{7}$/, (r) => {
-    const id = Number(r.request().url().split("/").pop());
-    counts.profiles[id] = (counts.profiles[id] ?? 0) + 1;
-    const all: Record<number, ReturnType<typeof profile>> = {
-      [IDS.skater]: profile(IDS.skater, "Alpha Forward", "EDM", "C"), [IDS.goalie]: profile(IDS.goalie, "Gus Goalie", "NSH", "G"),
-      [IDS.traded]: profile(IDS.traded, "Trade Target", "CGY", "D"), [IDS.sparse]: profile(IDS.sparse, "Sparse Stats", "NSH", "C"),
-    };
-    return all[id] ? r.fulfill({ json: all[id] }) : r.fulfill({ status: 404, body: "{}" });
-  });
-  return counts;
-}
+export const fx = {
+  skater: skater(),
+  goalie: {
+    id: 9000002, name: "Test Goalie", team: "EDM", position: "G", gp: 10, goals: 0, assists: 0, shots: 0, plusMinus: 0, pim: 0, toi: 36000,
+    saves: 250, shotsAgainst: 275, goalsAgainst: 25, savePct: 0.909, headshot: HEAD("EDM", 9000002), number: 31,
+  } as PlayerSeason,
+  /** Played for two clubs: the same id appears on both rosters. */
+  traded: [skater({ id: 9000003, name: "Test Traded", team: "EDM", gp: 8, headshot: HEAD("EDM", 9000003) }), skater({ id: 9000003, name: "Test Traded", team: "CHI", gp: 8, headshot: HEAD("CHI", 9000003) })],
+  /** Every optional stat absent or null (the feed can lag). */
+  missingStats: skater({ id: 9000004, name: "Test Missing", gp: 0, hits: null, goals: undefined as never, assists: undefined as never, shots: undefined as never, plusMinus: undefined as never, pim: undefined as never, toi: undefined as never, number: null }),
+  longName: skater({ id: 9000005, name: "Maximilian Bartholomew-Featherstonehaugh-Montgomery III of Very Long Name", headshot: HEAD("EDM", 9000005) }),
+  noHeadshot: skater({ id: 9000006, name: "Test NoPhoto", headshot: "" }),
+} as const;
 
-type Seed = { id: number; name: string; team: string; pos: string; number?: number | null };
-/** Writes a preference record with these followed players before the page loads (the app reads it through its own store). */
-export async function seedFollowed(page: Page, players: Seed[]) {
-  await page.addInitScript((list) => {
-    if (sessionStorage.getItem("seeded")) return;
-    sessionStorage.setItem("seeded", "1");
-    localStorage.setItem("iceboard-prefs-v1", JSON.stringify({ version: 1, onboarded: true, players: list.map((p, i) => ({ ...p, number: p.number ?? null, headshot: "", at: i + 1 })) }));
-  }, players);
-}
+/** A team's roster file with the given rows. */
+export const rosterFile = (team: string, skaters: PlayerSeason[], goalies: PlayerSeason[] = []): PlayerData => ({
+  season: SEASON, gameType: 2, updatedAt: "2026-11-09T12:00:00.000Z", skaters: skaters.map((p) => ({ ...p, team })), goalies: goalies.map((p) => ({ ...p, team })),
+});
+/** A club with no roster published yet. */
+export const noRoster = (): PlayerData => rosterFile("EDM", []);
+
+/** The Worker's /api/player/<id> reply for a fixture player. */
+export const profileFor = (p: PlayerSeason, extra: Record<string, unknown> = {}) => ({
+  id: p.id, name: p.name, number: p.number ?? undefined, headshot: p.headshot || undefined, position: p.position, team: p.team,
+  birthDate: "2000-01-01", height: 73, weight: 195, shoots: "L",
+  seasons: [{ season: SEASON, leagueAbbrev: "NHL", gameTypeId: 2, teamName: { default: p.team }, gamesPlayed: p.gp, goals: p.goals, assists: p.assists, points: (p.goals ?? 0) + (p.assists ?? 0) }],
+  updatedAt: "2026-11-09T12:00:00.000Z", ...extra,
+});
+/** Empty game log (the Worker tolerates a missing list). */
+export const emptyLog = (id: number) => ({ id, season: SEASON, games: [], updatedAt: "2026-11-09T12:00:00.000Z" });

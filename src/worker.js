@@ -375,9 +375,13 @@ async function handle(request, env, ctx) {
         const cacheKey = new Request(url.origin + url.pathname);
         const cached = await caches.default.match(cacheKey);
         if (cached) return cached;
-        const data = normalizeBoxscore(
-          await get(`/gamecenter/${match[1]}/boxscore`),
-        );
+        // right-rail carries the official team stats (faceoffs, power play, PIM, hits, blocks...) and shots by period;
+        // if it is unavailable the box score still works and the app labels its team numbers Derived.
+        const [box, rail] = await Promise.all([
+          get(`/gamecenter/${match[1]}/boxscore`),
+          get(`/gamecenter/${match[1]}/right-rail`).catch(() => null),
+        ]);
+        const data = normalizeBoxscore(box, rail);
         if (!data.players.length)
           return json({ error: "No box score published yet" }, 404, 15);
         const response = json(

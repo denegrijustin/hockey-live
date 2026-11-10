@@ -84,7 +84,7 @@ test("wildCardGroups: top 3 per division, then best two of the rest, rest are ou
 });
 
 test("wildCardGroups: a division can send 5 teams (3 + two wild cards) and a team one point out stays out", () => {
-  const table = mk({ A1: 40, A2: 39, A3: 38, A4: 37, A5: 36, M1: 20, M2: 19, M3: 18, M4: 35, M5: 34 });
+  const table = mk({ A1: 40, A2: 39, A3: 38, A4: 37, A5: 36, M1: 50, M2: 49, M3: 48, M4: 35, M5: 34 });
   // M4/M5 are rest-of-conf; A4 37 and A5 36 are wild cards, M4 35 is one point out, so M-division 4th/5th beat M3 in points but M3 is a division qualifier
   const g = wildCardGroups(table, teams).E;
   assert.deepEqual(g.wildCard, ["A4", "A5"]);

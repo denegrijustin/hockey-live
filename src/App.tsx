@@ -129,7 +129,7 @@ export default function App() {
   const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry, reloadLive, source } = useSeason();
   useGameAlerts(scoreboard?.games);
   const [pickedPlayers, setPlayerTeams] = useState<string[] | null>(null);
-  const playerTeams = pickedPlayers ?? favorites.slice(0, 3);
+  const playerTeams = pickedPlayers ?? (favorites.length ? favorites.slice(0, 3) : allTeamIds);
   const [view, setViewState] = useState(initialView),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),

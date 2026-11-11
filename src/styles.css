@@ -3806,3 +3806,6 @@ body {
 /* A lone dial (pregame projection, ice tilt): proportional and centred, never stretched to the row. */
 .gauge-lone { display: grid; justify-items: center; min-width: 0; }
 .gauge-lone > .gauge { width: 100%; max-width: var(--gauge-standard); }
+
+/* My team: its row stays marked even when every team is highlighted as a favorite. */
+.standings-table tr.mine td:first-child, .tm-card.mine, .po-row.mine .po-btn { box-shadow: inset 3px 0 0 var(--mint-5); }

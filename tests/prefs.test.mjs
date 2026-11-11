@@ -72,3 +72,27 @@ test("a missing jersey number stays null instead of becoming 0", () => {
   const p = sanitize({ players: [{ id: 8478402, number: null }, { id: 8477424, number: 30 }, { id: 8470000, number: "" }] }, teamIds);
   assert.deepEqual(p.players.map((x) => x.number), [null, 30, null]);
 });
+
+test("My team: stored only when valid, choosing it follows it and puts it first, clearing it keeps the favorites", async () => {
+  const { defaultPrefs, sanitize, setMyTeam, myTeamOf } = await import("../src/lib/prefs.mjs");
+  const ids = ["EDM", "TOR", "BOS"];
+  assert.equal(defaultPrefs().myTeam, "");
+  assert.equal(sanitize({ myTeam: "XXX" }, ids).myTeam, "");
+  assert.equal(sanitize({ myTeam: "TOR", favorites: ["EDM"] }, ids).myTeam, "TOR");
+  let p = sanitize({ favorites: ["EDM", "BOS"] }, ids);
+  p = setMyTeam(p, "BOS");
+  assert.equal(p.myTeam, "BOS"); assert.deepEqual(p.favorites, ["BOS", "EDM"]); assert.equal(p.onboarded, true);
+  p = setMyTeam(p, "TOR");
+  assert.deepEqual(p.favorites, ["TOR", "BOS", "EDM"]);
+  p = setMyTeam(p, "");
+  assert.equal(p.myTeam, ""); assert.deepEqual(p.favorites, ["TOR", "BOS", "EDM"]);
+  assert.equal(myTeamOf({ myTeam: "EDM" }), "EDM"); assert.equal(myTeamOf({ myTeam: "" }), ""); assert.equal(myTeamOf({}), "");
+});
+
+test("team logo style: retro by default, current when chosen, junk falls back to retro", async () => {
+  const { defaultPrefs, sanitize } = await import("../src/lib/prefs.mjs");
+  assert.equal(defaultPrefs().display.logos, "retro");
+  assert.equal(sanitize({ display: { logos: "current" } }, []).display.logos, "current");
+  assert.equal(sanitize({ display: { logos: "neon" } }, []).display.logos, "retro");
+  assert.equal(sanitize({}, []).display.logos, "retro");
+});

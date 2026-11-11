@@ -1,0 +1,11 @@
+/* The My team picker sheet. Tokens only. */
+.mtp-hint { margin: 0 0 12px; color: var(--text-3); font-size: .8125rem; }
+.mtp-div { margin: 0 0 12px; }
+.mtp-div h3 { margin: 0 0 6px; color: var(--text-2); font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; }
+.mtp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mtp-grid button { display: grid; justify-items: center; gap: 2px; width: 100%; min-height: 72px; padding: 8px 4px; border: 1px solid var(--line-1); border-radius: 12px; background: var(--surface-5); color: var(--text-4); font: inherit; font-size: .75rem; cursor: pointer; }
+.mtp-grid button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mtp-grid button:hover { background: var(--surface-6); }
+.mtp-grid button[aria-pressed="true"] { border-color: var(--mint); background: var(--surface-6); color: var(--text-6); font-weight: 700; }
+.mtp-grid button:focus-visible, .mtp-clear:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+.mtp-clear { min-height: 44px; padding: 0 10px; border: 0; background: transparent; color: var(--text-3); font: inherit; font-size: .8125rem; cursor: pointer; }

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import teamsJson from "../data/teams.json";
+import { setLogoMode } from "./logos";
 import { LEGACY_TEAMS_KEY, PREFS_KEY, defaultPrefs, parsePrefs, sanitize, serialize } from "./prefs.mjs";
 
 type Defaults = ReturnType<typeof defaultPrefs>;
@@ -19,13 +20,17 @@ function load(): Prefs {
   const p = parsePrefs(read(PREFS_KEY), { teamIds, legacy: read(LEGACY_TEAMS_KEY) });
   return p as Prefs;
 }
-export const getPrefs = (): Prefs => (cache ??= load());
+export const getPrefs = (): Prefs => {
+  if (!cache) { cache = load(); setLogoMode(cache.display.logos as "retro" | "current"); }
+  return cache;
+};
 /** False when the browser blocked storage: preferences still work for this session but are not saved. */
 export const prefsPersisted = () => { getPrefs(); return storageOk; };
 
 export function setPrefs(next: Prefs | ((p: Prefs) => Prefs)) {
   const value = sanitize(typeof next === "function" ? next(getPrefs()) : next, teamIds) as Prefs;
   cache = value;
+  setLogoMode(value.display.logos as "retro" | "current");
   try { localStorage.setItem(PREFS_KEY, serialize(value)); storageOk = true; } catch { storageOk = false; }
   listeners.forEach((l) => l());
 }
@@ -33,6 +38,7 @@ export function setPrefs(next: Prefs | ((p: Prefs) => Prefs)) {
 export function resetPrefs() {
   try { localStorage.removeItem(PREFS_KEY); localStorage.removeItem(LEGACY_TEAMS_KEY); } catch {}
   cache = defaultPrefs() as Prefs;
+  setLogoMode("retro");
   listeners.forEach((l) => l());
 }
 export function subscribePrefs(l: () => void) {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSlidingUnderline } from "../../hooks/useSlidingUnderline";
+import { useMyTeam } from "../../hooks/useMyTeam";
 import { useMedia } from "../../hooks/useMedia";
 import type { Game, Team } from "../../types";
 import { useMoneyPuck, useMoneyPuckRefresh } from "../../lib/moneypuck-client";
@@ -27,10 +28,16 @@ const VIEWS: [NhlPlusView, string][] = [["teams", "Teams"], ["power", "Power ran
 // Filters live here, outside React, so they survive switching between NHL+ views and between dashboard tabs.
 let saved: NpState = INITIAL;
 let handledNonce = 0;
+let seededFor = "";
 
 export function NhlPlus({ games, season }: { games: Game[]; season: number; teams?: Team[] }) {
   const [s, setS] = useState<NpState>(saved);
   const set = useCallback((patch: Partial<NpState>) => setS((cur) => (saved = { ...cur, ...patch })), []);
+  const { myTeam } = useMyTeam();
+  // My team starts highlighted in the team views and picked in Trends, once per team chosen (a later choice of the viewer stays).
+  useEffect(() => {
+    if (myTeam && seededFor !== myTeam) { seededFor = myTeam; set({ highlight: saved.highlight.includes(myTeam) ? saved.highlight : [myTeam, ...saved.highlight], tTeam: myTeam }); }
+  }, [myTeam, set]);
   const target = useNhlPlusTarget();
   // A target arrives through the store (read on mount and on change) or the window event (while mounted); a nonce is applied once.
   const apply = useCallback((t: NhlPlusTarget | null | undefined) => {

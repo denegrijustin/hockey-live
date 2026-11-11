@@ -7,6 +7,7 @@ import { VIEW_LIST } from "../MainNav";
 import { AlertSettings } from "../alerts/AlertSettings";
 import { InstallCard } from "../InstallCard";
 import { prefsPersisted, resetPrefs, setPrefs, usePrefs, type Prefs } from "../../lib/prefs";
+import { openMyTeamPicker } from "../../hooks/useMyTeam";
 import { fmtTime } from "../../lib/dates.mjs";
 import teamsJson from "../../data/teams.json";
 import pkg from "../../../package.json";
@@ -104,6 +105,11 @@ export function Settings() {
       )}
 
       <Section id="mynhl" title="My NHL">
+        <h3>My team</h3>
+        <p className="st-hint">The schedule, standings, playoff odds, players and Home open on this team first.</p>
+        {prefs.myTeam ? <p className="st-myteam" data-testid="settings-my-team"><TeamLogo id={prefs.myTeam} size={28} /> <b>{nameOf(prefs.myTeam)}</b></p> : <p className="st-hint">No team chosen: the app stays league-wide.</p>}
+        <button type="button" className="st-btn st-primary" onClick={openMyTeamPicker}>{prefs.myTeam ? "Change my team" : "Choose my team"}</button>
+
         <h3>Favorite teams</h3>
         {prefs.favorites.length ? (
           <ul className="st-list">
@@ -158,6 +164,7 @@ export function Settings() {
           <span className="st-hint">Game start times, e.g. 7:00 PM ET puck drop shows as {sample} here. Game days stay on the Eastern hockey day.</span>
         </label>
         <Choice label="Clock" value={d.hour12} onChange={(v) => setD("hour12", v)} options={[["auto", "Device"], ["12", "12-hour"], ["24", "24-hour"]]} />
+        <Choice label="Team logos" value={d.logos} onChange={(v) => setD("logos", v)} options={[["retro", "Retro"], ["current", "Current"]]} />
         <Choice label="Cards" value={d.density} onChange={(v) => setD("density", v)} options={[["comfortable", "Comfortable"], ["compact", "Compact"]]} />
         <label className="st-field st-select">
           <span>Open Iceboard on</span>

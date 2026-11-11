@@ -12,7 +12,14 @@
     if (p.indexOf("/data/") === 0) return "data";
     return null;
   }
-  var api = { routeFor: routeFor };
+  // A hashed script, stylesheet, font or image is never an HTML page. During a deploy the host can answer a not-yet-published
+  // /assets/ URL with the app's index.html (single-page fallback); that must never be cached or handed to the page.
+  function isPageForAsset(href, contentType) {
+    var p = new URL(href).pathname;
+    var asset = p.indexOf("/assets/") === 0 || p.indexOf("/logos/") === 0 || p.indexOf("/network-logos/") === 0;
+    return asset && /text\/html/i.test(String(contentType || ""));
+  }
+  var api = { routeFor: routeFor, isPageForAsset: isPageForAsset };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.iceboardRoutes = api;
 })(typeof self !== "undefined" ? self : this);

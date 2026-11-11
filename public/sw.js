@@ -43,8 +43,15 @@ async function networkFirst(request, key = request, waitMs = SHELL_WAIT_MS) {
   }
 }
 // Cached copy first (hashed assets and logos never change under one URL), refreshed on a miss.
+// A cached HTML page under an asset URL (a deploy answered it with index.html) is dropped, and the network is asked again,
+// bypassing the browser's own HTTP cache, which may also hold the bad copy.
 async function cacheFirst(request) {
-  return (await caches.match(request)) ?? put(request, await fetch(request));
+  const hit = await caches.match(request);
+  const bad = (r) => self.iceboardRoutes.isPageForAsset(request.url, r.headers.get("content-type"));
+  if (hit && !bad(hit)) return hit;
+  let res = await fetch(request);
+  if (bad(res)) res = await fetch(new Request(request, { cache: "reload" }));
+  return bad(res) ? res : put(request, res);
 }
 
 self.addEventListener("fetch", (event) => {

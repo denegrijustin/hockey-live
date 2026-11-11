@@ -123,6 +123,7 @@ test.describe("Home row (GameCardView, variant row)", () => {
   });
 
   test("a 40-character team name is cut with an ellipsis, the full name stays in the title", async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 800 }); // below the two-column desktop layout, where names have the narrower column
     await ready(page);
     const name = row(page, G.upcoming).locator(".sb-name").first();
     const long = "Extraordinarily Long Franchise Nickname!";

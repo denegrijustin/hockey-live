@@ -74,3 +74,7 @@
 .gc-keystats dt { color: var(--text-2); } .gc-keystats dd { margin: 0; font-variant-numeric: tabular-nums; }
 .gc-links { display: flex; flex-wrap: wrap; gap: 8px; }
 .gc-link { min-height: 44px; padding: 8px 14px; border: 1px solid var(--line-3); border-radius: 9px; background: var(--surface-4); color: var(--mint); font: inherit; font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+
+/* Header actions: one wrapping row (the stacked column cost ~200px on a phone), and no second copy of the venue (the header already shows it). */
+.game-dialog .game-center-actions { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 6px 12px; padding: 8px 10px; margin-bottom: 12px; }
+.game-dialog .game-center-actions > span { display: none; }

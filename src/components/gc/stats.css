@@ -42,3 +42,10 @@
   .gcs .sub { display: block; }
   .gcs-sk td:first-child, .gcs-sk th:first-child { width: 36%; }
 }
+/* Wide panes: the dials and the team table share the row instead of stacking with empty gutters. */
+@media (min-width: 1000px) {
+  .gcs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; column-gap: 24px; }
+  .gcs > * { grid-column: 1 / -1; }
+  .gcs > .gcs-gauges { grid-column: 1; }
+  .gcs > .gcs-gauges + .gcs-cmp { grid-column: 2; }
+}

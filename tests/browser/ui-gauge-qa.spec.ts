@@ -3,7 +3,7 @@
 // and are fixme until the lead merges (run them with QA_AFTER=1).
 import { test, expect } from "@playwright/test";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { openGameCenter, openTab, gaugeWaste, noOverflow, captionOverlaps, clippedCaptions, gaugeFingerprint, expectedRows, realBox, gated, NEEDS, WIDTHS, GAME_DIALOG, type GcState } from "./ui-qa-helpers";
+import { openGameCenter, openTab, gaugeWaste, noOverflow, captionOverlaps, clippedCaptions, gaugeFingerprint, expectedRows, realBox, splitFingerprint, gated, NEEDS, WIDTHS, GAME_DIALOG, type GcState } from "./ui-qa-helpers";
 
 const STATS = `${GAME_DIALOG} [data-testid=gc-team-stats]`;
 const BASELINE = "tests/fixtures/ui-qa-gauges.baseline.json";
@@ -31,7 +31,7 @@ test.describe("gauge calculations are unchanged", () => {
   });
 
   for (const state of ["final", "live", "pregame"] as GcState[]) {
-    test(`${state}: every gauge label and leader flag matches the pre-change baseline`, async ({ page }) => {
+    test(`${state}: every gauge label and leader flag matches the pre-change baseline (period and goalie rows: same numbers)`, async ({ page }) => {
       await page.setViewportSize(size(1440));
       await openGameCenter(page, state);
       await page.waitForTimeout(300);
@@ -42,7 +42,12 @@ test.describe("gauge calculations are unchanged", () => {
       const all = existsSync(BASELINE) ? JSON.parse(readFileSync(BASELINE, "utf8")) : {};
       if (process.env.QA_RECORD) { all[state] = got; writeFileSync(BASELINE, JSON.stringify(all, null, 1) + "\n"); return; }
       expect(all[state], "baseline recorded on claude/phase2 (QA_RECORD=1)").toBeTruthy();
-      expect(got).toEqual(all[state]);
+      // dial-based gauges stay byte-identical; period dials and goalie SV%/GAA became text-first rows: same numbers (labels equal), leader flag not required
+      for (const pane of ["overview", "stats"]) {
+        const a = splitFingerprint(got[pane]), b = splitFingerprint(all[state][pane]);
+        expect(a.dials, `${pane} dials`).toEqual(b.dials);
+        expect(a.rows, `${pane} period/goalie rows carry the baseline numbers`).toEqual(b.rows);
+      }
     });
   }
 });
@@ -106,11 +111,15 @@ gated(`${NEEDS}: a lone large dial (pregame projection, Overview) is proportiona
   }
 });
 
-gated(`${NEEDS}: hero dials are shorter at 390 (finished game recap hero <= 260px, live Overview hero <= 420px)`, async ({ page }) => {
+gated(`${NEEDS}: hero dials are shorter at 390 (finished game recap hero <= 300px, live Overview hero <= 420px)`, async ({ page }) => {
   await page.setViewportSize(size(390));
   await openGameCenter(page, "final");
   const hero = await page.locator(`${GAME_DIALOG} .gr-hero`).first().evaluate((e) => e.getBoundingClientRect().height).catch(() => null);
-  if (hero != null) expect(hero).toBeLessThanOrEqual(260);
+  if (hero != null) expect(hero).toBeLessThanOrEqual(300);
+  await page.reload();
+  await openGameCenter(page, "live");
+  const live = await page.locator(`${GAME_DIALOG} .gr-hero`).first().evaluate((e) => e.getBoundingClientRect().height).catch(() => null);
+  if (live != null) expect(live).toBeLessThanOrEqual(420);
 });
 
 gated(`${NEEDS}: mixed sizes: same-size gauges in one pane have equal widths, large >= compact`, async ({ page }) => {

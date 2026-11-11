@@ -122,4 +122,17 @@ test.describe("home personal", () => {
     const o2 = await p2.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
     expect(o2.sw).toBeLessThanOrEqual(o2.cw);
   });
+
+  test("a My teams game card shows each team's name beside its logo, not pushed to the far edge", async ({ page }) => {
+    await seedPrefs(page, { favorites: ["ANA"] });
+    await mockApis(page, { games: [mk.upcoming(9820, "NSH", "ANA", { time: "01:00" })] });
+    await page.goto("/");
+    const card = page.locator(`${sec("myteams")} li[data-team=ANA] .gcv-compact`);
+    await expect(card).toBeVisible();
+    await expect(card.locator(".gcv-full").first()).toBeVisible();
+    const logo = await card.locator(".sb-team").first().locator(".team-logo").boundingBox();
+    const name = await card.locator(".sb-team").first().locator(".sb-name").boundingBox();
+    expect(name!.x - (logo!.x + logo!.width)).toBeLessThan(40);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+  });
 });

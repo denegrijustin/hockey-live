@@ -98,6 +98,7 @@ export function GameCardView(p: GameCardViewProps) {
         ) : (
           <span className="sb-name gcv-abbr" title={team.name}>
             <b>{team.id}</b>
+            {variant === "compact" && <span className="gcv-full">{team.short}</span>}
             {rank && variant === "compact" && <small className="sb-rank" title={rankTitle(rank)}>#{rank.league}</small>}
           </span>
         )}

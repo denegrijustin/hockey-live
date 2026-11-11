@@ -107,3 +107,11 @@
 .gc-live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--red-3); vertical-align: 0.06em; }
 .gcv-acts { display: inline-flex; align-items: center; gap: 8px; }
 @media (min-width: 1100px) and (max-width: 1399px) { .scoreboard .sb-actions .gcv-acts { grid-column: 4; grid-row: 1; justify-self: end; } }
+
+/* Compact and tile cards: the logo, the favorite star, the name and the score are four children, so a three-column grid pushes the name to the far edge. Lay them out in a row instead. */
+.gcv-compact .sb-team, .gcv-tile .sb-team { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.gcv-compact .sb-team .sb-name, .gcv-tile .sb-team .sb-name { flex: 1; min-width: 0; }
+.gcv-compact .sb-score, .gcv-tile .sb-score { margin-left: auto; }
+/* The full team name is for cards with room (My teams); elsewhere the abbreviation stands alone. */
+.gcv .gcv-full { display: none; margin-left: 6px; color: var(--text-3); font-weight: 400; }
+.scoreboard .mt-game .gcv-full { display: inline; }

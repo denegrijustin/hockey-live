@@ -72,7 +72,7 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
             <li key={id} className="mt-card" data-team={id}>
               <div className="mt-head">
                 <TeamLogo id={id} size={24} />
-                <b className="mt-abbr" title={teamOf(id).name}>{id}</b>
+                <span className="sr-only">{teamOf(id).name} ({id})</span>
                 {sum ? (
                   <>
                     <span className="mt-rec" title="Record: wins, losses, overtime losses">{sum.record.text}</span>
@@ -80,6 +80,7 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
                     {comfy && stand && <span className="mt-stand" title={rankTitle(stand)}>#{stand.division} {teamOf(id).division}</span>}
                     {comfy && sum.form.length > 0 && (
                       <span className="mt-form" role="img" aria-label={`Last ${sum.form.length}, newest first: ${sum.form.map((r: string) => WORD[r]).join(", ")}`}>
+                        <small className="mt-form-label" aria-hidden="true">Last {sum.form.length}</small>
                         {sum.form.map((r: string, i: number) => <i key={i} className={`mt-dot mt-${r.toLowerCase()}`} />)}
                       </span>
                     )}

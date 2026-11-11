@@ -3773,3 +3773,6 @@ body {
   .panel:has(.standings-table) .panel-heading h2, .panel:has(.rs) .panel-heading h2 { font-size: 1.25rem; margin-bottom: 4px; }
 }
 @media (max-width: 400px) { .standings-table .table-team img { width: 14px; height: 14px; } .standings-table .table-team { gap: 3px; } .standings-table th, .standings-table td { padding-left: 2px; padding-right: 2px; } }
+/* A lone dial (pregame projection, ice tilt): proportional and centred, never stretched to the row. */
+.gauge-lone { display: grid; justify-items: center; min-width: 0; }
+.gauge-lone > .gauge { width: 100%; max-width: var(--gauge-standard); }

@@ -45,7 +45,7 @@ async function open(page: Page, id: number) {
   else await page.getByRole("button", { name: /Colorado Avalanche at Washington Capitals.*full game view/ }).click();
   const dialog = page.locator("dialog.game-dialog");
   const tab = dialog.getByRole("tab", { name: "Matchup Intelligence" });
-  if (await tab.count()) await tab.click(); // once the Game Center tabs exist the pane lives behind this tab
+  await tab.click(); // the pane lives behind this tab
   return { dialog, pane: dialog.getByTestId("gc-intel") };
 }
 

@@ -21,10 +21,10 @@ export default function TeamStatsPane() {
       {box && (
         <>
           {gauges.length > 0 && (
-            <div className="gcs-gauges">
+            <div className="gcs-gauges gauge-grid">
               {gauges.map((r) => (
-                <div key={r.key} data-testid={`gc-gauge-${r.key}`}>
-                  <Gauge away={r.away ?? 0} home={r.home ?? 0} awayId={game.away} homeId={game.home} label={r.label} percent={r.percent} lowerBetter={r.lowerBetter} awayText={r.awayText} homeText={r.homeText} />
+                <div key={r.key} className="gauge-item" data-testid={`gc-gauge-${r.key}`}>
+                  <Gauge size="compact" away={r.away ?? 0} home={r.home ?? 0} awayId={game.away} homeId={game.home} label={r.label} percent={r.percent} lowerBetter={r.lowerBetter} awayText={r.awayText} homeText={r.homeText} />
                   <Src kind={r.source} />
                 </div>
               ))}

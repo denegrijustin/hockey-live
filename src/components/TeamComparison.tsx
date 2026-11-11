@@ -8,6 +8,7 @@ import { useLeagueMatchups } from "./useLeagueMatchups";
 import "./team-comparison.css";
 import { TeamLogo } from "./TeamLogo";
 import { Gauge } from "./Gauge";
+import { gaugeColors } from "../lib/kits";
 import "./gauge.css";
 
 const seasonLabel = (season: number) => `${String(season).slice(0, 4)}–${String(season).slice(6)}`;
@@ -34,8 +35,28 @@ function RankGap({ offense, defense }: { offense: RankedMatchupMetric | null; de
     : <span className="rank-gap stronger-right">{gap} rank places →</span>;
 }
 
+/** A two-sided number as text first (label, both values) with a thin split bar; `span` is the gap that swings the bar all the way for rates. */
+function SplitRow({ label, away, home, awayId, homeId, span, lowerBetter, format }: { label: string; away: number; home: number; awayId: string; homeId: string; span: number; lowerBetter?: boolean; format: (v: number) => string }) {
+  const share = Math.min(0.95, Math.max(0.05, 0.5 + ((away - home) / span / 2) * (lowerBetter ? -1 : 1)));
+  const lead = Math.abs(share - 0.5) < 0.02 ? "even" : share > 0.5 ? "away" : "home", colors = gaugeColors(awayId, homeId);
+  return (
+    <div className="split-row" data-leader={lead} role="img" aria-label={`${label}: ${awayId} ${format(away)}, ${homeId} ${format(home)}`} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties}>
+      <span className="split-label">{label}</span>
+      <b className="away"><em>{awayId}</em> {format(away)}</b>
+      <span className="split-bar" aria-hidden="true"><i style={{ width: `${share * 100}%` }} /></span>
+      <b className="home">{format(home)} <em>{homeId}</em></b>
+    </div>
+  );
+}
+
 /** How strong a side is in this matchup row, from its league rank (first of the pool is the most). */
 const strength = (m: RankedMatchupMetric | null) => (m?.rank == null || m.pool == null ? 0 : m.pool - m.rank + 1);
+
+/** Phone replacement for the 86px dial: the same split (offense rank strength against defense rank strength) as a thin bar. */
+function GapBar({ offense, defense, offenseId, defenseId }: { offense: RankedMatchupMetric | null; defense: RankedMatchupMetric | null; offenseId: string; defenseId: string }) {
+  const a = strength(offense), d = strength(defense), c = gaugeColors(offenseId, defenseId);
+  return <span className="gap-bar" aria-hidden="true" style={{ "--g-away": c.away, "--g-home": c.home } as React.CSSProperties}><i style={{ width: `${(a + d > 0 ? a / (a + d) : 0.5) * 100}%` }} /></span>;
+}
 
 function Crossover({ offenseTeam, defenseTeam, snapshot }: {
   offenseTeam: Team;
@@ -61,6 +82,7 @@ function Crossover({ offenseTeam, defenseTeam, snapshot }: {
             <Badge metric={offenseMetric} />
           </div>
           <div className="metric-gap">
+            <GapBar offense={offenseMetric} defense={defenseMetric} offenseId={offenseTeam.id} defenseId={defenseTeam.id} />
             <Gauge away={strength(offenseMetric)} home={strength(defenseMetric)} awayId={offenseTeam.id} homeId={defenseTeam.id} label={offenseMetric?.label?.replace(" scored", "") ?? "Metric"} awayText={displayValue(offenseMetric)} homeText={displayValue(defenseMetric)} />
             <RankGap offense={offenseMetric} defense={defenseMetric} />
           </div>
@@ -149,9 +171,9 @@ export function GoalieComparison({ game, away, home, compact = false }: { game: 
       <div className="mini-heading">STARTING GOALIES <span>Official when available</span></div>
       <div className="goalie-grid">{cards.map((card) => <GoalieCard key={card.team.id} {...card} />)}</div>
       {cards[0].goalie && cards[1].goalie && (
-        <div className="gauge-grid goalie-gauges">
-          {cards[0].goalie.savePct != null && cards[1].goalie.savePct != null && <Gauge away={cards[0].goalie.savePct} home={cards[1].goalie.savePct} awayId={away.id} homeId={home.id} label="Save percentage" span={0.04} format={(v) => v.toFixed(3).replace(/^0/, "")} />}
-          {cards[0].goalie.gaa != null && cards[1].goalie.gaa != null && <Gauge away={cards[0].goalie.gaa} home={cards[1].goalie.gaa} awayId={away.id} homeId={home.id} label="Goals against average" span={1.5} lowerBetter format={(v) => v.toFixed(2)} />}
+        <div className="goalie-gauges">
+          {cards[0].goalie.savePct != null && cards[1].goalie.savePct != null && <SplitRow label="Save percentage" away={cards[0].goalie.savePct} home={cards[1].goalie.savePct} awayId={away.id} homeId={home.id} span={0.04} format={(v) => v.toFixed(3).replace(/^0/, "")} />}
+          {cards[0].goalie.gaa != null && cards[1].goalie.gaa != null && <SplitRow label="Goals against average" away={cards[0].goalie.gaa} home={cards[1].goalie.gaa} awayId={away.id} homeId={home.id} span={1.5} lowerBetter format={(v) => v.toFixed(2)} />}
         </div>
       )}
       <p className="cmp-note">{error || "Pregame status is projected from season starts until the NHL box score identifies the starter. Recent-form and individual-rest data are not available reliably in the official summary report."}</p>

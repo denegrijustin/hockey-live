@@ -120,6 +120,12 @@ test("the roster is requested once, only when its section opens; a player row as
   }
 });
 
+/** Opening a game switches to Home and opens its Game Center (two history entries); Back closes it, then returns to the team page. */
+async function backToTeam(page: Page) {
+  const h1 = page.getByRole("heading", { level: 1, name: "Edmonton Oilers" });
+  for (let i = 0; i < 3 && !(await h1.isVisible()); i++) await page.goBack();
+  await expect(h1).toBeVisible();
+}
 test("schedule rows and the next game ask to open that game (iceboard:open-game)", async ({ page }) => {
   await setup(page);
   await page.goto("/?view=teams&team=EDM");
@@ -127,15 +133,13 @@ test("schedule rows and the next game ask to open that game (iceboard:open-game)
   await page.evaluate(() => { (window as any).__opened = []; window.addEventListener("iceboard:open-game", (e) => (window as any).__opened.push((e as CustomEvent).detail.id)); });
   await page.locator(".tpg-next .tpg-game").click();
   await expect(page.getByRole("heading", { level: 1, name: "Tomorrow" })).toBeVisible();
-  await page.goBack();
-  await expect(page.getByRole("heading", { level: 1, name: "Edmonton Oilers" })).toBeVisible();
+  await backToTeam(page);
   const sched = page.locator("details.tpg-details", { has: page.getByRole("heading", { name: "Schedule & results" }) });
   await sched.locator("summary").click();
   await expect(sched.getByRole("heading", { name: "Recent results" })).toBeVisible();
   await sched.locator(".tpg-games button").last().click();
   const opened = await page.evaluate(() => (window as any).__opened as number[]);
-  await page.goBack();
-  await expect(page.getByRole("heading", { level: 1, name: "Edmonton Oilers" })).toBeVisible();
+  await backToTeam(page);
   expect(opened).toHaveLength(2);
   expect(opened.every((id) => Number.isInteger(id) && id > 8000)).toBe(true);
   const again = page.locator("details.tpg-details", { has: page.getByRole("heading", { name: "Schedule & results" }) });

@@ -182,7 +182,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("open", "");
-  await expect(dialog.getByRole("button", { name: "Close full game view" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Close game details" })).toBeFocused();
   expect(await dialog.evaluate((element) => element.scrollTop)).toBe(0);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await expect(dialog.locator(".dialog-team")).toHaveCount(2);
@@ -231,7 +231,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(trackerTeams.last()).toContainText("CAR Bottom Player");
   await expect(dialog).toContainText("FLA Goalie");
   await expect(dialog).toContainText("CAR Goalie");
-  await dialog.getByRole("button", { name: "Close full game view" }).click();
+  await dialog.getByRole("button", { name: "Close game details" }).click();
   await expect(dialog).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 });

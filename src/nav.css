@@ -185,8 +185,7 @@
   font-weight: 650;
 }
 /* ---------- Game Center: a sheet on phones, a window on larger screens ---------- */
-.game-dialog .sheet-grabber,
-.dialog-close .close-done {
+.game-dialog .sheet-grabber {
   display: none;
 }
 @media (max-width: 720px) {
@@ -210,33 +209,6 @@
   }
   .game-dialog .sheet-grabber {
     display: block;
-  }
-  .game-dialog .dialog-close {
-    border: 0;
-    background: transparent;
-    color: var(--mint);
-    font-size: 1rem;
-    font-weight: 650;
-  }
-  .dialog-close .close-full {
-    display: none;
-  }
-  .dialog-close .close-done {
-    display: inline;
-  }
-  /* The close button's labels are spans, and an older rule that hides spans (it was for an icon-only button) was hiding "Done" too, leaving an empty box. */
-  .game-dialog .dialog-close .close-done {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip-path: none;
-  }
-  .game-dialog .dialog-close {
-    width: auto;
-    min-width: 64px;
-    padding: 6px 14px;
-    font-size: 1rem;
   }
 }
 

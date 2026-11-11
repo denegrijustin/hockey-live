@@ -24,6 +24,7 @@ import { SaveGameButton } from "./SaveGameButton";
 import { GameCenterProvider, useGameCenter } from "./gc/GameCenterContext";
 import { GameCenterUiProvider, type GcTab } from "./gc/GameCenterUi";
 import { GameHeader } from "./gc/GameHeader";
+import { GameCenterClose } from "./gc/GameCenterClose";
 import { GameTabs } from "./gc/GameTabs";
 import { GameAnnouncer } from "./gc/GameAnnouncer";
 import OverviewPane from "./gc/OverviewPane";
@@ -162,7 +163,11 @@ export function GameOverlay({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const drag = useSheetDrag(dialog, () => closeOverlay());
+  const closing = useRef(false);
   const closeOverlay = () => {
+    // Escape fires both cancel and close, and a swipe or a double tap can follow a click: only the first one counts.
+    if (closing.current) return;
+    closing.current = true;
     const returnTo = pageScroll.current;
     onClose();
     requestAnimationFrame(() => {
@@ -183,12 +188,9 @@ export function GameOverlay({
       }}
       aria-label={`${away.name} at ${home.name} full game view`}
     >
+      <GameCenterClose buttonRef={closeButton} onClose={closeOverlay} />
       <div className="dialog-toolbar" {...drag}>
         <span className="sheet-grabber" aria-hidden="true" />
-        <button ref={closeButton} className="dialog-close" onClick={closeOverlay} aria-label="Close full game view">
-          <span className="close-full"><span>Close</span> ×</span>
-          <span className="close-done">Done</span>
-        </button>
       </div>
       <GameCenterProvider game={game}>
         <GameCenterUiProvider value={{ tab, focusEvent, goTab }}>

@@ -34,7 +34,7 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   await expect(dialog.locator(".goalie-comparison")).toBeVisible();
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Starting goalies" }).click();
   await expect(dialog.locator(".goalie-comparison")).toBeHidden();
-  await dialog.getByRole("button", { name: "Close full game view" }).click();
+  await dialog.getByRole("button", { name: "Close game details" }).click();
 });
 
 test("game cards and Game Center do not overflow a narrow mobile viewport", async ({ page }) => {

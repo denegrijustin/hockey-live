@@ -117,7 +117,7 @@ test.describe("Home row (GameCardView, variant row)", () => {
     await ready(page);
     await row(page, G.upcoming).locator(".sb-main").click();
     await expect(page.locator("dialog.game-dialog")).toBeVisible();
-    await page.getByRole("button", { name: "Close full game view" }).click();
+    await page.getByRole("button", { name: "Close game details" }).click();
     await row(page, G.upcoming).getByRole("button", { name: /Open Game Center for/ }).click();
     await expect(page.locator("dialog.game-dialog")).toBeVisible();
   });

@@ -3441,19 +3441,32 @@ select,
 .int-dot { fill: #d6293e; }
 .int-crease { fill: #cfe3f3; stroke: #d6293e; stroke-width: 0.5; }
 .int-net { fill: #dfe7ee; stroke: #d6293e; stroke-width: 0.7; }
-.int-zshadow { fill: #152f40; opacity: .16; filter: blur(.6px); }
-.int-zbody { fill: var(--z-body, var(--amber-4)); stroke: var(--z-edge, var(--amber-2)); stroke-width: 0.5; }
-.int-tire { fill: var(--surface-5); }
-.int-cab { fill: var(--z-cab, var(--amber-3)); stroke: var(--z-edge, var(--amber-2)); stroke-width: 0.4; }
-.int-driver { fill: var(--amber-5); stroke: rgb(0 0 0 / 40%); stroke-width: 0.3; }
-.int-cond { fill: var(--text-1); stroke: var(--line-2); stroke-width: 0.4; }
-.int-sign { fill: var(--z-sign, var(--surface-6)); stroke: var(--z-accent, var(--amber-4)); stroke-width: 0.4; }
-.int-sign-t { font: 800 1.65px system-ui, sans-serif; fill: #fff; }
+.int-zshadow { fill: #152f40; opacity: .14; filter: blur(.5px); }
+/* the machine: realistic Zamboni red, the home team's color on the stripes and placard */
+.int-zbody { fill: #c8202f; stroke: #7d1019; stroke-width: 0.45; }
+.int-lid { fill: #b21b29; stroke: #8f1523; stroke-width: 0.3; }
+.int-rib { fill: none; stroke: #8f1523; stroke-width: 0.3; }
+.int-zstripe { fill: none; stroke: var(--z-accent, #fff); stroke-width: 0.8; stroke-linecap: round; }
+.int-tire { fill: #262d33; stroke: #10161a; stroke-width: 0.25; }
+.int-seat { fill: #2c3640; }
+.int-driver-coat { fill: #1f3a52; }
+.int-driver { fill: #e8c4a0; stroke: rgb(0 0 0 / 35%); stroke-width: 0.25; }
+.int-cap { fill: none; stroke: #101820; stroke-width: 0.7; stroke-linecap: round; }
+.int-col { fill: none; stroke: #1d2429; stroke-width: 0.4; }
+.int-wheel { fill: none; stroke: #1d2429; stroke-width: 0.45; }
+.int-lamp { fill: #fff6c4; }
+.int-beacon { fill: #ffb000; stroke: #8a5d00; stroke-width: 0.2; }
+.int-cond { fill: #56646f; stroke: #2f3a42; stroke-width: 0.35; }
+.int-blade { fill: none; stroke: #cfd8de; stroke-width: 0.5; }
+.int-auger { fill: none; stroke: #3a464f; stroke-width: 0.4; stroke-dasharray: 0.7 0.5; }
+.int-sign { fill: var(--z-sign, var(--surface-6)); stroke: var(--z-accent, var(--amber-4)); stroke-width: 0.3; }
+.int-sign-t { font: 800 1.15px system-ui, sans-serif; fill: #fff; }
 .int-sign-t.gold { fill: var(--z-accent, var(--amber-4)); }
-.int-hitch, .int-bumper { fill: none; stroke: #526b78; stroke-width: .7; }
-.int-body-shine { fill: none; stroke: #fff; stroke-opacity: .35; stroke-width: .35; }
-.int-driver-coat { fill: #263b4a; }
-.int-water { fill: none; stroke: #bce5f1; stroke-width: 1.4; opacity: .65; }
+.int-hitch, .int-bumper { fill: none; stroke: #3a4650; stroke-width: .7; }
+.int-body-shine { fill: none; stroke: #fff; stroke-opacity: .3; stroke-width: .35; }
+.int-water { fill: none; stroke: #bce5f1; stroke-width: 1.2; opacity: .6; }
+.int-sheen { fill: none; stroke: #cfe6f5; stroke-opacity: .55; stroke-width: 2.6; stroke-linecap: butt; stroke-linejoin: round; stroke-dasharray: 100 100; stroke-dashoffset: 100; }
+.int-sheen.done { stroke-dashoffset: 0; }
 .int-cap {
   margin: 6px 0 0;
   font-size: 0.78rem;
@@ -3461,7 +3474,7 @@ select,
   color: var(--muted, var(--text-2));
 }
 @media (prefers-reduced-motion: reduce) {
-  .int-fresh { stroke-dashoffset: 0 !important; }
+  .int-fresh, .int-sheen { stroke-dashoffset: 0 !important; }
 }
 
 /* ---------- Ice view on the small card ---------- */

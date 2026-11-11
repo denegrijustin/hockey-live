@@ -3713,6 +3713,15 @@ body {
   .standings-table .st-sub { display: block; }
   .standings-table th, .standings-table td { padding-left: 4px; padding-right: 4px; }
 }
+/* With the tab bar (under 1100px, the full width but no sidebar) and on landscape phones: fewer columns, so the table fits even in a wider fallback font.
+   The Spot column folds under the team name below 1100px, and L10 goes below 760px. */
+@media (max-width: 1099px) {
+  .standings-table .st-spot { display: none; }
+  .standings-table .st-sub-spot { display: inline; }
+}
+@media (max-width: 760px) {
+  .standings-table .st-l10 { display: none; }
+}
 @media (max-width: 600px) {
   .standings-table .st-cut-more { display: none; }
   .standings-table .st-l10, .st-seg.st-group-seg { display: none; }
@@ -3726,6 +3735,14 @@ body {
   .standings-table th { letter-spacing: 0; font-size: .625rem; white-space: nowrap; }
   .standings-table .table-team img { width: 18px; height: 18px; }
   .standings-table .table-team { gap: 4px; } }
+@media (max-width: 400px) {
+  .standings-table { font-size: .6875rem; }
+  .standings-table th, .standings-table td { padding-left: 1px; padding-right: 1px; }
+  .standings-table .table-team img { width: 16px; height: 16px; }
+  .standings-table .table-team { gap: 3px; }
+  .standings-table th { font-size: .5625rem; }
+  .table-scroll.st-fit { margin-inline: -10px; } /* let the table use the panel's padding on the narrowest phones */
+}
 @media (min-width: 861px) { .standings-table .st-clinch-text { display: inline; } }
 /* Standings views: segmented switcher, mode badge, playoff spot pills, wild card cut line. */
 .st-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 10px 0; }

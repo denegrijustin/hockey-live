@@ -78,7 +78,7 @@ for (const width of [390, 360]) {
     const hero = dialog.getByTestId("deserved-hero");
     await expect(hero.locator(".gr-model .gauge")).toBeVisible();
     const [a, b] = await Promise.all([hero.locator(".gr-deserved .gauge").boundingBox(), hero.locator(".gr-model .gauge").boundingBox()]);
-    expect(Math.abs(a!.y - b!.y)).toBeLessThan(6); // same row
+    expect(Math.min(a!.y + a!.height, b!.y + b!.height) - Math.max(a!.y, b!.y), "same row: the dials overlap vertically").toBeGreaterThan(a!.height * 0.8); // a longer heading may sit one dial lower, never in another row
     expect(a!.x + a!.width).toBeLessThanOrEqual(b!.x + 1); // side by side, not overlapping
     expect(a!.width).toBeLessThan(width / 2);
     expect(a!.height).toBeLessThan(200); // not the ~280px-wide, ~250px-tall stacked dials of before

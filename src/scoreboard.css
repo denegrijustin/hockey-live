@@ -275,7 +275,7 @@ html[data-home] {
 .scoreboard > .sb-group:first-of-type > .sb-title { margin-top: 6px; }
 .scoreboard .sb-filters { margin: 0 0 4px; }
 
-/* Layout: the DOM order is the visual order (date, status filter, Live, Upcoming, Worth watching, Completed, Postponed, League intelligence). */
+/* Layout: the DOM order is the visual order (date, status filter, Live, Upcoming, Completed, Postponed, League intelligence). */
 .scoreboard { display: flex; flex-direction: column; }
 .scoreboard .sb-toolbar { display: grid; gap: 0; min-width: 0; }
 .scoreboard .sb-done { margin: 6px 0 2px; }
@@ -351,12 +351,6 @@ html[data-home] {
 
 /* Live: the underdog is ahead late */
 .scoreboard .sb-brew { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--amber-5) 55%, var(--line-2)); color: var(--amber-5); font-size: .6875rem; font-weight: 700; }
-
-/* Worth watching: tiles in a row (three on a phone, five on a desktop) */
-.scoreboard .home-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
-.scoreboard .home-tiles li { min-width: 0; }
-.scoreboard .home-tiles .gcv-tile { height: 100%; }
-.scoreboard .home-tiles .gcv-insight { padding: 0 12px 10px; font-size: .75rem; }
 
 /* League intelligence: real links, then the way to the full list */
 .scoreboard .home-intel { list-style: none; margin: 0 0 6px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }

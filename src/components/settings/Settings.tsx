@@ -171,7 +171,6 @@ export function Settings() {
           <legend>Home sections</legend>
           <Toggle label="My teams" checked={d.sections.myTeams} onChange={(v) => setSection("myTeams", v)} />
           <Toggle label="My players" checked={d.sections.myPlayers} onChange={(v) => setSection("myPlayers", v)} />
-          <Toggle label="Worth watching" checked={d.sections.worth} onChange={(v) => setSection("worth", v)} />
           <Toggle label="League pulse" checked={d.sections.pulse} onChange={(v) => setSection("pulse", v)} />
         </fieldset>
       </Section>

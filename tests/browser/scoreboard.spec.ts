@@ -158,22 +158,14 @@ test.describe("scoreboard home", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
   });
 
-  test("Worth watching: the best upcoming games of the day, never a live one; at most 3 on a phone and 5 on desktop; a tile opens the Game Center", async ({ page, isMobile }) => {
+  test("there is no Worth watching strip (its games are already in Upcoming); a live close-and-late game is flagged on its own card", async ({ page, isMobile }) => {
     const soon = (id: number, away: string, home: string, minutes: number) => ({ ...game(id, 0, away, home), start: new Date(Date.now() + minutes * 60000).toISOString() });
     await open(page, "/", [soon(9210, "TBL", "FLA", 25), soon(9211, "LAK", "SJS", 90), soon(9212, "NSH", "STL", 95), soon(9213, "PHI", "PIT", 100), soon(9214, "OTT", "MTL", 110), soon(9215, "CGY", "VAN", 120)]);
-    const strip = page.getByTestId("home-section-featured");
-    await expect(strip).toHaveAttribute("aria-label", "Worth watching");
-    const tiles = strip.locator(".gcv-tile");
-    await expect(tiles.first()).toBeVisible();
-    await expect(tiles).toHaveCount(isMobile ? 3 : 5);
-    // The live game (9206, tied in the 3rd) is in the Live section, not in the strip; it is flagged close and late on its own card.
-    await expect(strip.locator('[data-game="9206"]')).toHaveCount(0);
+    await expect(page.getByTestId("home-section-featured")).toHaveCount(0);
+    await expect(page.getByText("Worth watching", { exact: true })).toHaveCount(0);
     await expect(page.locator('[data-testid=home-section-live] .sb-row[data-game="9206"] .late-flag')).toContainText(/Close/);
-    // A tile starting within the hour counts down.
-    await expect(strip.locator('[data-game="9210"]')).toContainText(/In \d+ min/);
-    await tiles.first().locator(".sb-main").click();
-    await expect(page.locator("dialog.game-dialog, .game-panel").first()).toBeVisible();
   });
+
 
   test("the ring shows the watchability score and tapping it says why", async ({ page }) => {
     await open(page);

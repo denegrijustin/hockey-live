@@ -16,6 +16,8 @@ const noOverflow = async (page: Page, width: number) => {
   expect(m.dialog, `dialog overflows horizontally at ${width}px`).toBeLessThanOrEqual(1);
   expect(m.page, `page overflows horizontally at ${width}px`).toBeLessThanOrEqual(1);
 };
+/** Advances fake time in 5 s steps so timers that are re-armed after a fetch resolves still fire (one big runFor skips them). */
+const steps = async (page: Page, ms: number) => { for (let t = 0; t < ms; t += 5_000) await page.clock.runFor(5_000); };
 const hide = (page: Page, hidden: boolean) =>
   page.evaluate((h) => { Object.defineProperty(document, "hidden", { value: h, configurable: true }); document.dispatchEvent(new Event("visibilitychange")); }, hidden);
 
@@ -25,14 +27,17 @@ test.describe("requests and polling", () => {
     const counts = countRequests(page);
     const errors = watchErrors(page);
     const { feed, row } = await openFromHome(page, pollSequence(REAL.ot(), 4).map((r) => withState(r, "live")));
-    await page.clock.runFor(30_000);
+    await steps(page, 30_000);
     const rows = [...counts].sort((a, b) => b[1] - a[1]);
     console.log(`Game Center open, 30 s, game ${row.id}:\n` + rows.map(([p, n]) => `  ${n}x ${p}`).join("\n"));
     test.info().annotations.push({ type: "requests", description: rows.map(([p, n]) => `${n}x ${p}`).join("; ") });
     const game = [...counts].filter(([p]) => p.startsWith("/api/game/"));
     expect(game.length, "one URL per game (no ?score= variants split subscriptions)").toBe(1);
     // The overlay and its card/provider share one subscription: loose bound that still catches a fetch loop or a per-pane fetch.
-    expect(feed.hits, "/api/game hits in 30 s").toBeLessThanOrEqual(4);
+    // Adaptive polling: a running clock is polled every 15 s, so the open + 2 ticks in 30 s; the card and the dialog share one subscription.
+    expect(feed.hits, "/api/game hits in 30 s").toBeLessThanOrEqual(3);
+    expect(feed.hits).toBeGreaterThanOrEqual(2);
+    expect(counts.get(`/api/boxscore/${row.id}`) ?? 0, "box score shares one timer").toBeLessThanOrEqual(3);
     expect(counts.get("/api/live") ?? 0).toBeLessThanOrEqual(3);
     expect(errors.filter((e) => !/Failed to load resource|moneypuck/i.test(e))).toEqual([]);
   });
@@ -43,7 +48,7 @@ test.describe("requests and polling", () => {
     await page.clock.runFor(1_000);
     await hide(page, true);
     const before = feed.hits;
-    await page.clock.runFor(180_000);
+    await steps(page, 180_000);
     expect(feed.hits, "no /api/game requests while hidden").toBe(before);
     await hide(page, false);
     await page.clock.runFor(1_000);
@@ -51,12 +56,16 @@ test.describe("requests and polling", () => {
     expect(feed.hits - before, "one catch-up, not a burst").toBeLessThanOrEqual(2);
   });
 
-  test("a final game is fetched once or twice, not polled for the whole session", async ({ page }) => {
+  test("a final game is fetched once, rechecked once about 3 minutes later, then never again", async ({ page }) => {
     await page.clock.install();
     const { feed } = await openFromHome(page, withState(REAL.reg(), "final"));
-    await page.clock.runFor(600_000);
-    console.log(`final game /api/game hits over 10 min: ${feed.hits}`);
-    expect(feed.hits).toBeLessThanOrEqual(3); // baseline: hourly timer; contract: one fetch + one ~3 min recheck
+    const timeline: number[] = [];
+    for (let i = 0; i < 12; i++) { await page.clock.runFor(60_000); timeline.push(feed.hits); }
+    console.log(`final game /api/game hits at each minute: ${timeline.join(",")}`);
+    expect(timeline[0], "one fetch on open").toBe(1);
+    expect(timeline[1], "nothing before the recheck").toBe(1);
+    expect(timeline[5], "the recheck has happened by minute 6").toBe(2);
+    expect(timeline.at(-1), "and nothing after it").toBe(2);
   });
 });
 
@@ -74,16 +83,17 @@ test.describe("focus, scroll and live updates", () => {
     await page.clock.install();
     const seq = pollSequence(REAL.ot(), 5).map((r) => withState(r, "live"));
     const { dialog, feed } = await openFromHome(page, seq);
-    const target = dialog.locator("summary").first();
-    await target.focus();
-    await expect(target).toBeFocused();
-    const text = await target.innerText();
+    // Pin the element by handle: lazy panes mount later and can become the "first summary", which would make a locator-based check flaky.
+    const handle = await dialog.locator("summary").first().elementHandle();
+    await handle!.focus();
+    const same = () => page.evaluate((h) => document.activeElement === h && h!.isConnected, handle);
+    expect(await same()).toBe(true);
     const hits = feed.hits;
-    await page.clock.runFor(31_000);
-    await page.clock.runFor(31_000);
+    await page.clock.runFor(16_000);
+    await page.clock.runFor(16_000);
+    await page.clock.runFor(16_000);
     expect(feed.hits).toBeGreaterThan(hits);
-    await expect(target).toBeFocused();
-    expect(await target.innerText()).toBe(text);
+    expect(await same(), "focus stayed on the same element across polls").toBe(true);
   });
 
   test("scroll position inside the dialog is kept across polls", async ({ page }) => {

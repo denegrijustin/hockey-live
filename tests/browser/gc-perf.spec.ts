@@ -45,7 +45,7 @@ test("request duplication table: Home, then Home + live Game Center (per URL, 30
   const counts = countRequests(page);
   await page.goto("/");
   await expect(page.locator(".status-pill")).toBeVisible();
-  await page.clock.runFor(30_000);
+  for (let t = 0; t < 30_000; t += 5_000) await page.clock.runFor(5_000);
   const home = new Map(counts);
   console.log("Home, 30 s:\n" + [...home].sort((a, b) => b[1] - a[1]).map(([p, n]) => `  ${n}x ${p}`).join("\n"));
   for (const [p, n] of home) expect(n, p).toBeLessThanOrEqual(p === "/api/live" ? 3 : 2);
@@ -56,10 +56,12 @@ test("request duplication table: opening a live Game Center adds only the game f
   const counts = countRequests(page);
   const { feed } = await openFromHome(page, pollSequence(REAL.ot(), 4).map((r) => withState(r, "live")));
   const afterOpen = new Map(counts);
-  await page.clock.runFor(60_000);
+  for (let t = 0; t < 60_000; t += 5_000) await page.clock.runFor(5_000);
   const rows = [...counts].map(([p, n]) => `  ${String(afterOpen.get(p) ?? 0).padStart(2)} on open, ${String(n).padStart(2)} after 60 s: ${p}`);
   console.log("Home + Game Center:\n" + rows.join("\n") + `\n  /api/game hits: ${feed.hits}`);
-  expect(feed.hits).toBeLessThanOrEqual(5);
+  expect(feed.hits, "15 s cadence: open + 4 ticks in 60 s").toBeLessThanOrEqual(5);
+  expect(feed.hits, "polling kept running").toBeGreaterThanOrEqual(3); // 3 not 4: the fake clock stretches the re-armed timer by the fetch latency
+  for (const [p, n] of counts) if (p.startsWith("/api/boxscore/")) expect(n, p).toBeLessThanOrEqual(4);
   const doc = [...counts].filter(([p]) => !p.startsWith("/api/") && (p.endsWith(".json") || p.endsWith(".js")) && (counts.get(p) ?? 0) > 2);
   expect(doc, "static assets fetched more than twice").toEqual([]);
 });

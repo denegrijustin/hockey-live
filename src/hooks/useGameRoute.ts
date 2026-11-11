@@ -16,7 +16,10 @@ const urlWith = (route: GameRoute | null) => `${location.pathname}${withGameRout
 export function useGameRoute() {
   const [route, setRoute] = useState<GameRoute | null>(read);
   useEffect(() => {
-    const pop = () => setRoute(read());
+    const pop = () => setRoute((prev) => {
+      const next = read();
+      return prev && next && prev.id === next.id && prev.tab === next.tab && prev.event === next.event ? prev : next;
+    });
     window.addEventListener("popstate", pop);
     return () => window.removeEventListener("popstate", pop);
   }, []);
@@ -38,12 +41,25 @@ export function useGameRoute() {
     try { history.replaceState(history.state, "", urlWith(next)); } catch {}
     setRoute(next);
   }, []);
-  /** `replace` removes the parameters in place without going Back (used when another navigation follows straight away). */
+  /**
+   * `replace` removes the parameters in place without going Back (used when another navigation follows straight away).
+   * Safe to call twice. A deep link (no in-app entry under it) never goes Back: the parameters are removed in place and,
+   * when the address names no screen, the Games view takes over (`?view=games`), so Close never leaves the app.
+   */
   const close = useCallback((opts?: { replace?: boolean }) => {
     try {
       if (!read()) { setRoute(null); return; }
       if (history.state?.gc && !opts?.replace) history.back();
-      else history.replaceState({ ...history.state, gc: undefined }, "", urlWith(null));
+      else {
+        const params = new URLSearchParams(withGameRoute(location.search, null));
+        const toGames = !opts?.replace && !params.get("view");
+        if (toGames) params.set("view", "games");
+        if (toGames) params.delete("team");
+        const q = params.toString();
+        const state = toGames ? { view: "games", team: null, scroll: 0 } : { ...history.state, gc: undefined };
+        history.replaceState(state, "", `${location.pathname}${q ? `?${q}` : ""}${location.hash}`);
+        if (toGames) window.dispatchEvent(new PopStateEvent("popstate", { state }));
+      }
     } catch {}
     setRoute(null);
   }, []);

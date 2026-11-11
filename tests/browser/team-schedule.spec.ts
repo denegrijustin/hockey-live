@@ -144,26 +144,18 @@ test("every calendar chip says home (vs) or away (@), on a phone too, and the Ga
   }
 });
 
-test("on a phone the Game Center's close button says Done, with a real size", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/?view=teamschedule");
-  await page.getByTestId("ts-calendar").locator(".ts-gchip").first().click({ timeout: 30000 });
-  const close = page.locator("dialog.game-dialog[open] > .dialog-toolbar .dialog-close");
-  await expect(close).toBeVisible();
-  const label = close.locator(".close-done");
-  await expect(label).toBeVisible();
-  await expect(label).toHaveText("Done");
-  const box = await label.boundingBox();
-  expect(box!.width).toBeGreaterThan(20);
-  expect(box!.height).toBeGreaterThan(8);
-  await close.click();
-  await expect(page.locator("dialog[open]")).toHaveCount(0);
-});
-
-test("on a laptop the Game Center's close button says Close", async ({ page }) => {
-  await page.setViewportSize({ width: 1300, height: 900 });
-  await page.goto("/?view=teamschedule");
-  await page.getByTestId("ts-calendar").locator(".ts-gchip").first().click({ timeout: 30000 });
-  await expect(page.locator("dialog[open] .dialog-close .close-full")).toBeVisible();
-  await expect(page.locator("dialog[open] .dialog-close .close-full")).toContainText("Close");
-});
+for (const [label, size] of [["phone", { width: 390, height: 844 }], ["laptop", { width: 1300, height: 900 }]] as const) {
+  test(`on a ${label} the Game Center has one icon close button of at least 44x44`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await page.goto("/?view=teamschedule");
+    await page.getByTestId("ts-calendar").locator(".ts-gchip").first().click({ timeout: 30000 });
+    const close = page.locator('dialog.game-dialog[open] button[aria-label^="Close"]');
+    await expect(close).toHaveCount(1);
+    await expect(close).toHaveAttribute("aria-label", "Close game details");
+    const box = await close.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    await close.click();
+    await expect(page.locator("dialog[open]")).toHaveCount(0);
+  });
+}

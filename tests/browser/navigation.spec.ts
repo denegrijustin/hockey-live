@@ -109,7 +109,7 @@ test.describe("A. user journeys", () => {
     await card.getByRole("button", { name: /Open Game Center/ }).click();
     const gc = page.locator("dialog.game-dialog");
     await expect(gc).toBeVisible();
-    await gc.getByRole("button", { name: "Close full game view" }).click();
+    await gc.getByRole("button", { name: "Close game details" }).click();
     await expect(gc).toBeHidden();
     await expectView(page, "games");
     await goTo(page, "scoreboard");
@@ -120,7 +120,7 @@ test.describe("A. user journeys", () => {
     await open(page);
     await page.locator(".sb-row .sb-name").first().click();
     await expect(page.locator("dialog.game-dialog")).toBeVisible();
-    await page.getByRole("button", { name: "Close full game view" }).click();
+    await page.getByRole("button", { name: "Close game details" }).click();
     await expect(page.locator("dialog.game-dialog")).toBeHidden();
     await expectView(page, "scoreboard");
   });

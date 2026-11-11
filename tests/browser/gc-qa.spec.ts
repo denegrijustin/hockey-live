@@ -64,7 +64,7 @@ test.describe("focus, scroll and live updates", () => {
   test("Escape closes the Game Center and focus returns to the control that opened it", async ({ page }) => {
     const { dialog, row } = await openFromHome(page, live());
     await expect(dialog).toHaveAttribute("aria-label", /full game view/);
-    await expect(dialog.getByRole("button", { name: "Close full game view" })).toBeFocused();
+    await expect(dialog.getByRole("button", { name: "Close game details" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.locator(GAME_DIALOG)).toHaveCount(0);
     await expect(page.locator(`[data-game="${row.id}"] .sb-main`)).toBeFocused();
@@ -147,7 +147,7 @@ test.describe("360px layout (no sideways scroll) across game states", () => {
       await page.setViewportSize({ width: w, height: 700 });
       await openFromHome(page, live());
       await noOverflow(page, w);
-      await expect(page.getByRole("button", { name: "Close full game view" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Close game details" })).toBeVisible();
     }
   });
 });

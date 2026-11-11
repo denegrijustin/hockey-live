@@ -14,6 +14,7 @@ import { TeamLogo } from "./TeamLogo";
 import { gameStatus } from "../lib/game-status.mjs";
 import { LOGO_SIZE } from "./GameCardView";
 import { usePauseOffscreen } from "../motion";
+import { useGameRoute } from "../hooks/useGameRoute";
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
 const GameCardExpanded = lazy(() => import("./GameCardExpanded"));
 const SaveGameButton = lazy(() => import("./SaveGameButton").then((m) => ({ default: m.SaveGameButton })));
@@ -33,7 +34,9 @@ export const GameCard = memo(function GameCard({
   playoff: any;
 }) {
   const past = finished(game), live = isLive(game);
-  const [expanded, setExpanded] = useState(false), [gameCenterOpen, setGameCenterOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const gc = useGameRoute();
+  const gameCenterOpen = gc.route?.id === game.id;
   const cardRef = useRef<HTMLElement>(null);
   usePauseOffscreen(cardRef);
   const { ref: feedRef, data: feed } = useCardFeed(game);
@@ -66,12 +69,12 @@ export const GameCard = memo(function GameCard({
   const scrollAtOpen = useRef(0);
   const openGameCenter = () => {
     scrollAtOpen.current = window.scrollY;
-    setGameCenterOpen(true);
+    gc.open(game.id);
   };
   return (
     <article
       ref={cardRef}
-      data-start={game.start}
+      data-start={game.start} data-game={game.id}
       className={`game-card ${scoreClass} ${live ? "live-card" : ""} ${expanded ? "is-expanded" : "is-compact"}${goal ? " goal-glow" : ""}`}
       style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, var(--surface-3)), var(--surface-4))`, ...(goal ? ({ "--gf": (goal.side === "home" ? home : away).cardColor ?? (goal.side === "home" ? home : away).color } as object) : {}) }}
     >
@@ -143,7 +146,10 @@ export const GameCard = memo(function GameCard({
           allGames={allGames}
           series={series}
           returnTo={scrollAtOpen.current}
-          onClose={() => setGameCenterOpen(false)}
+          tab={gc.route?.tab}
+          event={gc.route?.event}
+          onTab={gc.setTab}
+          onClose={gc.close}
         />
       </Suspense>}
     </article>

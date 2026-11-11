@@ -130,7 +130,7 @@ test.describe("Game Center routing", () => {
     expect(page.url()).toBe(before);
     await page.goForward();
     await expect(dialog(page)).toBeVisible();
-    await dialog(page).getByRole("button", { name: "Close full game view" }).click();
+    await dialog(page).getByRole("button", { name: "Close game details" }).click();
     await expect(dialog(page)).toHaveCount(0);
     expect(page.url()).not.toContain("game=");
   });
@@ -140,7 +140,7 @@ test.describe("Game Center routing", () => {
     await expect(dialog(page).getByRole("tab", { name: "Players" })).toHaveAttribute("aria-selected", "true");
     await page.goto(`/?game=${FINAL}&event=22`);
     await expect(dialog(page).getByRole("tab", { name: "Play-by-Play" })).toHaveAttribute("aria-selected", "true");
-    await dialog(page).getByRole("button", { name: "Close full game view" }).click();
+    await dialog(page).getByRole("button", { name: "Close game details" }).click();
     await expect(dialog(page)).toHaveCount(0);
     expect(page.url()).not.toMatch(/game=|tab=|event=/);
   });

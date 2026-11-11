@@ -887,13 +887,6 @@ p {
   min-height: 44px;
   margin-bottom: 4px;
 }
-.game-dialog .dialog-close {
-  float: none;
-  min-height: 44px;
-  padding: 8px 14px;
-  font-size: 0.8125rem;
-  line-height: 1;
-}
 .game-dialog::backdrop {
   background: #000b;
 }
@@ -997,20 +990,6 @@ p {
   .dialog-toolbar {
     min-height: 40px;
     margin-bottom: 10px;
-  }
-  .game-dialog .dialog-close {
-    width: 44px;
-    min-height: 40px;
-    padding: 6px;
-    font-size: 1.25rem;
-  }
-  .game-dialog .dialog-close span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
   .dialog-matchup {
     display: grid;

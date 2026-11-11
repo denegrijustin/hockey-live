@@ -1,11 +1,29 @@
 /* Game Center layout (Phase 5): sticky toolbar + tabs, header hierarchy, panes, overview cards. */
 .game-dialog { --gc-bar: 44px; --gc-gap: 4px; }
 @media (max-width: 720px) { .game-dialog { --gc-bar: 40px; --gc-gap: 10px; } }
-.game-dialog .dialog-toolbar { position: sticky; top: 0; z-index: 6; background: var(--surface-5); }
+/* The toolbar is only the swipe handle now (grabber, phones); the close button lives in .gc-close-wrap. No handle on larger screens. */
+.game-dialog .dialog-toolbar { position: sticky; top: 0; z-index: 6; background: var(--surface-5); min-height: 0; margin: 0; padding: 0; }
+@media (min-width: 721px) { .game-dialog .dialog-toolbar { display: none; } }
+@media (max-width: 720px) { .game-dialog .dialog-toolbar { min-height: 28px; padding-top: 0; margin: 0; } }
+/* The one close control: a zero-height sticky strip (no layout space) that holds a 44px square pinned top-right while the dialog scrolls. */
+.game-dialog { --gc-px: max(24px, calc((100vw - 1240px) / 2)); --gc-py: 24px; --gc-in: max(8px, var(--safe-top)); }
+@media (max-width: 720px) { .game-dialog { --gc-px: 12px; --gc-py: 12px; } }
+/* It spans the dialog's padding box, so the button sits 8px from the dialog's top and 12px from its right edge, not from the centred content column. */
+.gc-close-wrap { position: sticky; top: calc(var(--gc-in) - var(--gc-py)); z-index: var(--z-float); height: 0; margin: calc(var(--gc-in) - var(--gc-py)) calc(-1 * var(--gc-px)) calc(var(--gc-py) - var(--gc-in)); pointer-events: none; }
+.gc-close {
+  position: absolute; top: 0; right: max(12px, var(--safe-right)); box-sizing: border-box; display: grid; place-items: center; width: var(--float-btn-size); height: var(--float-btn-size); padding: 0;
+  border: 1px solid var(--float-btn-line); border-radius: var(--float-btn-radius); background: var(--float-btn-bg); color: var(--float-btn-fg);
+  cursor: pointer; touch-action: manipulation; pointer-events: auto; -webkit-tap-highlight-color: transparent;
+}
+.gc-close:hover { background: color-mix(in srgb, var(--float-btn-fg) 14%, var(--float-btn-bg)); }
+.gc-close:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+.gc-close .icon { display: block; }
+/* Room for the button: the header's first row and the stuck tab bar stop short of it. */
+.game-dialog .gc-header-meta { padding-right: calc(var(--float-btn-size) + 12px); min-height: calc(var(--float-btn-size) + 6px); }
 .gc-tabs {
   position: sticky; top: var(--gc-bar); z-index: 5; display: flex; gap: 4px; overflow-x: auto; overscroll-behavior-x: contain;
   scrollbar-width: none; margin: 14px 0 12px; padding: 0 0 2px; background: var(--surface-5);
-  box-shadow: 0 calc(-1 * var(--gc-gap)) 0 0 var(--surface-5); border-bottom: 1px solid var(--line-1);
+  box-shadow: 0 calc(-1 * var(--gc-gap)) 0 0 var(--surface-5), calc(var(--float-btn-size) + 8px) 0 0 0 var(--surface-5); margin-right: calc(var(--float-btn-size) + 8px); border-bottom: 1px solid var(--line-1);
 }
 .gc-tabs::-webkit-scrollbar { display: none; }
 .gc-tabs [role="tab"] {

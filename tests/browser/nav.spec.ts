@@ -34,8 +34,8 @@ test.describe("wide screens", () => {
     await page.locator(".primary-game-center").first().click();
     const dialog = page.locator("dialog.game-dialog");
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator(".close-full")).toBeVisible();
-    await expect(dialog.locator(".close-done")).toBeHidden();
+    await expect(dialog.getByRole("button", { name: "Close game details" })).toBeVisible();
+    await expect(dialog.locator(".sheet-grabber")).toBeHidden();
   });
 });
 
@@ -92,7 +92,7 @@ test.describe("phones", () => {
     await expect(menu).toBeHidden();
   });
 
-  test("the Game Center is a bottom sheet with a grabber and a Done button", async ({ page }) => {
+  test("the Game Center is a bottom sheet with a grabber and an X close button", async ({ page }) => {
     await open(page, 390, 844);
     await page.locator(".game-card-summary").first().click();
     await page.locator(".primary-game-center").first().click();
@@ -103,9 +103,8 @@ test.describe("phones", () => {
     expect(Math.abs(Math.round(box.y + box.height) - 844), "docked to the bottom edge").toBeLessThanOrEqual(4);
     expect(Math.abs(box.y), "the Game Center takes the whole screen").toBeLessThanOrEqual(4);
     await expect(dialog.locator(".sheet-grabber")).toBeVisible();
-    await expect(dialog.locator(".close-done")).toBeVisible();
-    await expect(dialog.locator(".close-full")).toBeHidden();
-    await dialog.getByRole("button", { name: "Close full game view" }).click();
+    await expect(dialog.getByRole("button", { name: "Close game details" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Close game details" }).click();
     await expect(dialog).toBeHidden();
   });
 

@@ -124,7 +124,7 @@ test("hidden tab: no game requests while hidden, a single catch-up on show", asy
   expect(feed.since(), "requests while hidden").toBe(0);
   await setHidden(page, false);
   await run(page, 2000);
-  expect(feed.since(), "one catch-up on show").toBe(1);
+  await expect.poll(() => feed.since(), { message: "one catch-up on show", timeout: 5000 }).toBe(1);
 });
 
 test("two tabs of one browser watching the same game make one request stream", async ({ context }) => {

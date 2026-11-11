@@ -48,9 +48,13 @@ test("keyboard: Tab reaches the tablist, arrows/Home/End move and select, the pa
   expect(selected).toBe(1);
   // exactly one tab is in the tab order (roving tabindex)
   expect(await list.getByRole("tab").evaluateAll((els) => els.filter((e) => (e as HTMLElement).tabIndex >= 0).length)).toBe(1);
-  // modal: Tab never leaves the dialog
-  for (let i = 0; i < 40; i++) await page.keyboard.press("Tab");
-  expect(await page.evaluate(() => !!document.activeElement?.closest("dialog.game-dialog"))).toBe(true);
+  // modal: Tab never lands on page content behind the dialog (it may leave to the browser UI, which shows as body)
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press("Tab");
+    const outside = await page.evaluate(() => { const a = document.activeElement; return !!a && a !== document.body && !a.closest("dialog.game-dialog") ? `${a.tagName}.${a.className}` : ""; });
+    expect(outside, `focus escaped the modal at Tab ${i + 1}`).toBe("");
+  }
+  await closeBtn(page).focus();
   await page.keyboard.press("Escape");
   await expect(page.locator(GAME_DIALOG)).toHaveCount(0);
   await expect(page.locator(`[data-game="${row.id}"] .sb-main`)).toBeFocused();

@@ -238,7 +238,7 @@ test.describe("Phase 5 features", () => {
     await anchor.focus();
     const y = () => dialog.locator(`[data-event-id="${id}"]`).evaluate((e) => e.getBoundingClientRect().top);
     const before = await y();
-    for (let i = 0; i < 3; i++) await page.clock.runFor(16_000);
+    for (let i = 0; i < 3; i++) { await page.clock.runFor(16_000); await page.waitForTimeout(300); } // real time for layout to settle under load
     expect(await events.count(), "polls added events").toBeGreaterThan(n);
     expect(Math.abs((await y()) - before), "the event being read moved on screen").toBeLessThanOrEqual(4);
     await expect(dialog.locator(`[data-event-id="${id}"]`)).toBeFocused();

@@ -19,6 +19,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   let calls = 0;
   const game = {
     ...scoreboardFixture.games.find((g) => g.id === fixture.id)!,
+    start: new Date(Date.now() - 3600_000).toISOString(), // a live game that started an hour ago (an old start reads as stale-live and is not polled)
     state: "LIVE",
     homeScore: 0,
     intermission: false, // the fixture game is in an intermission, which shows the Zamboni rink instead of the momentum chart
@@ -131,7 +132,7 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
 test("full game overlay shows projection, ice tilt and a per-team player tracker with ice time", async ({
   page,
 }, info) => {
-  const game = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
+  const game = { ...scoreboardFixture.games.find((g) => g.id === fixture.id)!, start: new Date(Date.now() - 3600_000).toISOString() }; // started an hour ago (an old start reads as stale-live)
   await page.route("**/api/live", (route) =>
     route.fulfill({
       json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] },

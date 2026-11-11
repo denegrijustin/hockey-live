@@ -7,7 +7,8 @@
 .scoreboard .mt-streak { padding: 0 6px; border-radius: 999px; font-size: .6875rem; font-weight: 800; border: 1px solid var(--line-3); }
 .scoreboard .mt-streak.mt-w { color: var(--mint-6); background: var(--mint-1); border-color: var(--mint-2); }
 .scoreboard .mt-streak.mt-l { color: var(--red-5); background: var(--red-1); border-color: var(--red-2); }
-.scoreboard .mt-form { display: inline-flex; gap: 3px; margin-left: auto; }
+.scoreboard .mt-form { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; }
+.scoreboard .mt-form-label { margin-right: 3px; color: var(--text-2); font-size: .6875rem; }
 .scoreboard .mt-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-3); }
 .scoreboard .mt-dot.mt-w { background: var(--mint-5); }
 .scoreboard .mt-dot.mt-l { background: var(--red-3); }

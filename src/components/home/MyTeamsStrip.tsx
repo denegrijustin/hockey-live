@@ -80,6 +80,7 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
                     {comfy && stand && <span className="mt-stand" title={rankTitle(stand)}>#{stand.division} {teamOf(id).division}</span>}
                     {comfy && sum.form.length > 0 && (
                       <span className="mt-form" role="img" aria-label={`Last ${sum.form.length}, newest first: ${sum.form.map((r: string) => WORD[r]).join(", ")}`}>
+                        <small className="mt-form-label" aria-hidden="true">Last {sum.form.length}</small>
                         {sum.form.map((r: string, i: number) => <i key={i} className={`mt-dot mt-${r.toLowerCase()}`} />)}
                       </span>
                     )}

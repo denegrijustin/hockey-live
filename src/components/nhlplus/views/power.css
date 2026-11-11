@@ -1,0 +1,42 @@
+/* Power rankings: a heat table (green above even, red below). Tokens only, so light and dark both follow. */
+.pw-wrap { max-width: 100%; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.pw-table { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; font-size: .8125rem; }
+.pw-table th, .pw-table td { padding: 6px 8px; border-bottom: 1px solid var(--surface-8); }
+.pw-table thead th { background: var(--surface-5); color: var(--text-2); font-size: .6875rem; font-weight: 650; text-align: right; vertical-align: bottom; }
+.pw-table thead th.pw-teamh, .pw-table th.pw-team { text-align: left; }
+.pw-rank { width: 2.2rem; text-align: center; color: var(--text-2); }
+.pw-table td.pw-rank { font-weight: 700; color: var(--text-5); }
+.pw-team { font-weight: 500; }
+.pw-team .np-teambtn { display: flex; align-items: center; gap: 8px; min-height: 44px; width: 100%; text-align: left; }
+.pw-name { display: grid; line-height: 1.2; min-width: 0; } .pw-name b { color: var(--text-6); } .pw-name .np-teamname { font-size: .6875rem; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pw-num { text-align: right; font-weight: 650; color: var(--text-6); transition: background .2s; }
+.pw-num.pos { background: color-mix(in srgb, var(--mint-5) calc(var(--a, 0) * 42%), transparent); }
+.pw-num.neg { background: color-mix(in srgb, var(--red-4, #d6455f) calc(var(--a, 0) * 42%), transparent); }
+.pw-xg { color: var(--text-3); font-weight: 500; }
+.pw-table tbody tr { transition: background .15s; }
+.pw-table tbody tr:hover > th, .pw-table tbody tr:hover > td.pw-rank { background: var(--surface-6); }
+.pw-table tr.highlighted > th, .pw-table tr.highlighted > td.pw-rank { background: var(--mint-1); }
+.pw-note { margin: 10px 2px 0; color: var(--text-2); font-size: .75rem; line-height: 1.5; max-width: 80ch; }
+/* Phone: the full team name goes (the logo and abbreviation stay) and the cells tighten, so five columns fit without scrolling. */
+@media (max-width: 600px) {
+  .pw-name .np-teamname, .pw-xg { display: none; }
+  .pw-table th, .pw-table td { padding: 6px 4px; }
+  .pw-table { font-size: .75rem; }
+  .pw-rank { width: 1.6rem; }
+}
+@media (max-width: 400px) {
+  .pw-table { font-size: .6875rem; }
+  .pw-table th, .pw-table td { padding: 6px 2px; }
+  .pw-table thead th { font-size: .625rem; }
+  .pw-table .np-th-in, .pw-table .np-sortbtn { gap: 0; }
+  .pw-table .np-sortbtn i { width: .55em; }
+  .pw-team .np-teambtn { gap: 4px; }
+  .pw-rank { width: 1.3rem; }
+  .pw-wrap { max-width: none; margin-inline: -16px; border-radius: 0; border-inline: 0; }
+  .pw-table .np-sortbtn { padding-inline: 0; }
+  .pw-table .np-sortbtn i { width: .5em; min-width: 0; margin-left: 1px; font-size: .5625rem; }
+}
+@media (prefers-reduced-motion: reduce) { .pw-num, .pw-table tbody tr { transition: none; } }
+/* Heading buttons keep a 44px-tall target but shrink to their text so the five columns fit a phone. */
+.pw-table .np-sortbtn { min-width: 0; padding-inline: 2px; }
+.pw-team .np-teambtn { min-width: 0; }

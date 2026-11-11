@@ -14,6 +14,7 @@ import { INITIAL } from "./state";
 import type { NpState } from "./state";
 import type { Ctx } from "./context";
 import { TeamsView } from "./views/TeamsView";
+import { PowerView } from "./views/PowerView";
 import { MatchupsView } from "./views/MatchupsView";
 import { GoalieView } from "./views/GoalieView";
 import { PlayersView } from "./views/PlayersView";
@@ -21,7 +22,7 @@ import { TrendsView } from "./views/TrendsView";
 import { MatrixView } from "./views/MatrixView";
 import { DataView } from "./views/DataView";
 
-const VIEWS: [NhlPlusView, string][] = [["teams", "Teams"], ["matchups", "Matchups"], ["goalies", "Goalies"], ["players", "Players"], ["trends", "Trends"], ["matrix", "Play vs results"], ["data", "Data"]];
+const VIEWS: [NhlPlusView, string][] = [["teams", "Teams"], ["power", "Power rankings"], ["matchups", "Matchups"], ["goalies", "Goalies"], ["players", "Players"], ["trends", "Trends"], ["matrix", "Play vs results"], ["data", "Data"]];
 
 // Filters live here, outside React, so they survive switching between NHL+ views and between dashboard tabs.
 let saved: NpState = INITIAL;
@@ -80,6 +81,7 @@ export function NhlPlus({ games, season }: { games: Game[]; season: number; team
       <DataStatus compact state={primary.state} updated={primary.updated} stale={primary.stale} savedCopy={primary.savedCopy} what={what} onRetry={primary.retry} />
       <div className="np-body">
         {v === "teams" && <TeamsView ctx={ctx} />}
+        {v === "power" && <PowerView ctx={ctx} />}
         {v === "matchups" && <MatchupsView ctx={ctx} />}
         {v === "goalies" && <GoalieView ctx={ctx} />}
         {v === "players" && <PlayersView ctx={ctx} />}

@@ -1,0 +1,45 @@
+import { fmtTime } from "./dates.mjs";
+import { STALE_LIVE_MS } from "./game-data.mjs";
+import { phaseOf } from "./game-state.mjs";
+export { STALE_LIVE_MS };
+
+/** Local start time, e.g. "7:00 PM"; `withZone` adds the zone name ("7:00 PM PST"). Uses the viewer's own time zone. */
+export function localTime(start, { withZone = false } = {}) {
+  return fmtTime(start, { withZone });
+}
+
+/**
+ * One description of where a game stands, for every card, tile and ticker item, so they all say the same thing.
+ * kind: upcoming | live | intermission | final | postponed | cancelled | suspended.
+ * label is the short status text ("7:00 PM", "P2 · 12:31", "Final/OT"); aria is a full sentence for screen readers.
+ */
+export function gameStatus(g, { now = Date.now(), withZone = false } = {}) {
+  const away = g.away, home = g.home;
+  const has = g.awayScore != null && g.homeScore != null;
+  const score = has ? `${away} ${g.awayScore}, ${home} ${g.homeScore}` : `${away} at ${home}`;
+  const info = phaseOf(g, { now });
+  const p = info.phase;
+  if (p === "postponed" || p === "cancelled" || p === "suspended") {
+    const kind = p;
+    const label = kind === "postponed" ? "Postponed" : kind === "cancelled" ? "Canceled" : "Suspended";
+    return { kind, label, short: label, aria: `${away} at ${home}, ${label.toLowerCase()}`, live: false, final: false, upcoming: false, stale: false };
+  }
+  if (info.final) {
+    const tag = info.label;
+    return { kind: "final", label: tag, short: p === "final-ot" ? "F/OT" : p === "final-so" ? "F/SO" : "F", aria: `${score}, ${tag.toLowerCase().replace("/", " in ")}`, live: false, final: true, upcoming: false, stale: false };
+  }
+  if (info.live) {
+    const stale = info.stale;
+    const so = g.periodType === "SO";
+    const ot = g.periodType === "OT";
+    const period = so ? "SO" : ot ? "OT" : `P${g.period ?? "–"}`;
+    if (g.intermission) {
+      return { kind: "intermission", label: `${period} · Intermission`, short: "INT", aria: `${score}, intermission after period ${g.period ?? ""}`, live: true, final: false, upcoming: false, stale };
+    }
+    const clock = so ? "" : g.clock ? ` · ${g.clock}` : "";
+    const label = stale ? "Updating" : `${period}${clock}`;
+    return { kind: "live", label, short: so ? "SO" : `${period} ${g.clock ?? ""}`.trim(), aria: `${score}, live, ${so ? "shootout" : `${ot ? "overtime" : `period ${g.period ?? ""}`}${g.clock ? `, ${g.clock} left` : ""}`}`, live: true, final: false, upcoming: false, stale };
+  }
+  const time = g.start ? localTime(g.start, { withZone }) : "TBD";
+  return { kind: "upcoming", label: time, short: time, aria: `${score}, starts at ${time}`, live: false, final: false, upcoming: true, stale: false };
+}

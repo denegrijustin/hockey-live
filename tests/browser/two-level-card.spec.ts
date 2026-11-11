@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { test, expect } from "@playwright/test";
 
 test("compact card, concise expansion, outside collapse and direct Game Center", async ({ page }) => {
@@ -19,7 +20,7 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   await expect(card.locator(".lineup-brief")).toBeVisible();
   await expect(card.locator(".matchup-comparison")).toHaveCount(0);
 
-  await page.locator(".site-header").click();
+  await page.locator(".site-header").click({ position: { x: 4, y: 4 } });
   await expect(card.locator(".card-expanded")).toHaveCount(0);
 
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
@@ -28,11 +29,12 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   expect(await dialog.evaluate((node) => node.getBoundingClientRect().width / innerWidth)).toBeGreaterThanOrEqual(0.75);
   expect(await dialog.evaluate((node) => node.getBoundingClientRect().height / innerHeight)).toBeGreaterThanOrEqual(0.85);
   await expect(card.locator(".card-expanded")).toHaveCount(0);
+  await gcTab(page, "Team Stats");
   await expect(dialog.locator(".matchup-comparison")).toBeVisible();
   await expect(dialog.locator(".goalie-comparison")).toBeVisible();
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Starting goalies" }).click();
   await expect(dialog.locator(".goalie-comparison")).toBeHidden();
-  await dialog.getByRole("button", { name: "Close full game view" }).click();
+  await dialog.getByRole("button", { name: "Close game details" }).click();
 });
 
 test("game cards and Game Center do not overflow a narrow mobile viewport", async ({ page }) => {
@@ -50,7 +52,7 @@ test("game cards and Game Center do not overflow a narrow mobile viewport", asyn
 });
 
 test("live games lead the board and completed-today games sit below unfinished games", async ({ page }) => {
-  const today = new Date().toLocaleDateString("en-CA");
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
   const at = (hour: number) => `${today}T${String(hour).padStart(2, "0")}:00:00Z`;
   const base = { season: 20262027, type: 2, date: today, scheduleState: "OK", venue: "Test Arena", broadcasts: ["ESPN (US)"], round: null, end: "REG" };
   const live = { ...base, id: 2026020991, start: at(18), state: "LIVE", home: "EDM", away: "CHI", homeScore: 1, awayScore: 1, period: 2, periodType: "REG", clock: "10:00", intermission: false };

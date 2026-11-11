@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
+import { goTo } from "./nav";
 
 const season = manifest.current;
 const et = (offset: number) => new Date(Date.now() + offset * 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
@@ -43,7 +44,7 @@ test("Last night lists yesterday's finals, away team first, with overtime marked
   await expect(box.locator(".ln-finals li").first()).toContainText("ANA");
   await expect(box.locator(".ln-finals li").first().locator(".ln-score small")).toHaveText("OT");
   await expect(box.locator(".ln-finals li").first().locator(".ln-score strong.win")).toHaveText("5");
-  await expect(box.locator("h2")).toHaveText("Last night in the NHL");
+  await expect(box.getByRole("heading", { level: 1 })).toHaveText("Last night in the NHL");
 });
 
 test("best nights, the goalie of the night, and best and worst with what built each score", async ({ page }) => {
@@ -65,8 +66,7 @@ test("best nights, the goalie of the night, and best and worst with what built e
 
 test("it has its own tab", async ({ page }) => {
   await open(page, "/");
-  if (page.viewportSize()!.width < 700) await page.getByRole("button", { name: "More" }).click();
-  await page.getByRole("button", { name: "Last night", exact: true }).click();
+  await goTo(page, "Last night");
   await expect(page.getByTestId("last-night")).toBeVisible({ timeout: 30000 });
 });
 
@@ -96,7 +96,7 @@ test("a game opens from the list: its own best and worst nights, the game flow, 
   await expect(game.locator(".gr-map")).toHaveCount(2);
   await expect(game.locator(".gr-period").first()).toBeVisible();
   await game.getByRole("button", { name: "xG" }).click();
-  await expect(game.locator(".gr-period .gauge").first()).toContainText(/\d\.\d\d/);
+  await expect(game.locator(".gr-period").first()).toContainText(/\d\.\d\d/);
   await game.getByRole("button", { name: /All of last night/ }).click();
   await expect(box.locator(".ln-finals li")).toHaveCount(3);
 });

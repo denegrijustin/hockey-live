@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-const views = ["scoreboard", "games", "yesterday", "teamschedule", "injuries", "picks", "standings", "trends", "players", "nhlplus", "edge", "odds", "map"];
+const views = ["scoreboard", "games", "teams", "yesterday", "teamschedule", "injuries", "picks", "standings", "trends", "players", "nhlplus", "edge", "odds", "map"];
 
 /** Anything that scrolls sideways by itself: an element that is wider than its box and lets you scroll to the rest. */
-const sidewaysScrollers = () => [...document.querySelectorAll("*")].filter((e) => ["auto", "scroll"].includes(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).display !== "none").map((e) => `${e.tagName.toLowerCase()}.${String((e as HTMLElement).className).split(" ")[0]}`);
+const sidewaysScrollers = () => [...document.querySelectorAll("*")].filter((e) => !e.matches(".ds-rail") && ["auto", "scroll"].includes(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).display !== "none").map((e) => `${e.tagName.toLowerCase()}.${String((e as HTMLElement).className).split(" ")[0]}`);
 
 test.describe("a phone never scrolls sideways", () => {
   test.use({ viewport: { width: 360, height: 740 } });
@@ -21,7 +21,7 @@ test.describe("a phone never scrolls sideways", () => {
     await page.locator("tbody tr").first().waitFor({ timeout: 30000 });
     const heads = await page.locator("thead th:visible").allInnerTexts();
     const names = heads.map((h) => h.trim().toUpperCase());
-    expect(names).toEqual(expect.arrayContaining(["RANK", "TEAM", "GP", "W–L–OT", "PTS", "PTS %", "GD"]));
+    expect(names).toEqual(expect.arrayContaining(["RANK", "TEAM", "GP", "W–L–OTL", "PTS", "P%", "DIFF", "STRK"]));
     expect(names).not.toContain("DIVISION");
     expect(await page.locator("tbody tr:first-child .st-abbr").first().isVisible()).toBe(true);
     await expect(page.locator("tbody tr:first-child .st-sub").first()).toContainText("line");
@@ -78,7 +78,7 @@ test("the desktop tables keep their ordinary table layout", async ({ page }, inf
   await page.goto("/?view=standings");
   await page.locator("tbody tr").first().waitFor({ timeout: 30000 });
   const heads = await page.locator("thead th:visible").allInnerTexts();
-  expect(heads.map((h) => h.trim().toUpperCase())).toEqual(expect.arrayContaining(["DIVISION", "W", "L", "OT", "LAST 5", "ENTRY-LINE GAP"]));
+  expect(heads.map((h) => h.trim().toUpperCase())).toEqual(expect.arrayContaining(["DIVISION", "W", "L", "OTL", "L10", "STRK", "LAST 5", "ENTRY-LINE GAP"]));
   await expect(page.locator(".stk-sort")).toBeHidden();
 });
 

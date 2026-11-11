@@ -1,8 +1,9 @@
 /** Transparent descriptive models. No proprietary WAR or calibrated probabilities. */
+import { isCalledOff } from "./game-data.mjs";
 import { projectGame } from "./projection.mjs";
 export const finished = (g) => ["OFF", "FINAL"].includes(g.state);
 export const signed = (n, digits = 0) =>
-  `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
+  Number.isFinite(n) ? `${n > 0 ? "+" : ""}${n.toFixed(digits)}` : "—"; // a stat the feed left out shows a dash, never a crash
 const gamesBefore = (games, game) =>
   games.filter(
     (candidate) =>
@@ -363,7 +364,7 @@ export function playoffChances(table, games, teams, baseline = {}, options = {})
     teams.map((team) => {
       const current = table[team.id] ?? { gp: 0, pts: 0, rw: 0 };
       const total = games.filter(
-        (game) => game.type === 2 && (game.home === team.id || game.away === team.id),
+        (game) => game.type === 2 && !isCalledOff(game) && (game.home === team.id || game.away === team.id),
       ).length;
       const remaining = Math.max(0, total - current.gp);
       const prior = baseline?.[team.id];

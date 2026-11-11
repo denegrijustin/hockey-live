@@ -1,0 +1,10 @@
+/* Followed games switcher: a single compact row; any overflow scrolls inside the row, never the page. */
+.gc-followed { min-width: 0; max-width: 100%; margin: 0 0 8px; }
+.gc-followed ul { display: flex; flex-wrap: nowrap; gap: 8px; margin: 0; padding: 0 0 2px; list-style: none; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
+.gc-followed li { flex: none; scroll-snap-align: start; }
+.gc-followed-item { display: grid; gap: 1px; align-content: center; justify-items: start; min-width: 44px; min-height: 44px; margin: 0; padding: 4px 12px; border: 1px solid var(--line-3); border-radius: 10px; background: transparent; color: var(--text-3); font: inherit; font-size: .8125rem; text-align: left; cursor: pointer; }
+.gc-followed-item:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; }
+.gc-followed-item[aria-current="true"] { border-color: var(--mint-3); color: var(--text-5); cursor: default; }
+.gc-followed-item[data-live] .gc-followed-status { color: var(--mint-5); }
+.gc-followed-teams { font-weight: 700; white-space: nowrap; }
+.gc-followed-status { font-size: .75rem; color: var(--text-2); white-space: nowrap; }

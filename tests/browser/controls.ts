@@ -21,7 +21,7 @@ export async function teamCount(page: Page) {
   return (await isPhone(page)) ? page.locator(".phone-controls .pc-button b").first() : page.locator(".team-menu summary span");
 }
 
-async function pickTeams(page: Page, name: "All 32" | "My three") {
+async function pickTeams(page: Page, name: "All 32" | "My teams") {
   if (await isPhone(page)) {
     await openTeams(page);
     await page.locator("dialog.sheet").getByRole("button", { name, exact: true }).click();
@@ -31,7 +31,7 @@ async function pickTeams(page: Page, name: "All 32" | "My three") {
   }
 }
 export const selectAllTeams = (page: Page) => pickTeams(page, "All 32");
-export const selectMyThree = (page: Page) => pickTeams(page, "My three");
+export const selectMyThree = (page: Page) => pickTeams(page, "My teams");
 
 /** Opens the game filters (a sheet on phones; the inline panel is already open on desktop, and folds on narrower windows). */
 export async function openFilters(page: Page) {

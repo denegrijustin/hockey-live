@@ -325,17 +325,31 @@ test('ice tilt counts recent unblocked attempts, excludes blocks and shootouts, 
  assert.equal(playMinute({period:5,time:'01:00'},3),81);
 });
 
-test('game flow represents recent momentum and fades older events', () => {
+test('game flow is shot-attempt pressure (Phase 5 definition): shooter credit, fading, hits and penalties excluded', () => {
  const game={type:2,state:'LIVE',home:'EDM',away:'CHI',period:1,clock:'10:00',plays:[
-  {period:1,time:'04:00',type:'goal',team:'CHI'},
-  {period:1,time:'08:00',type:'shot-on-goal',team:'EDM'},
-  {period:1,time:'08:30',type:'hit',team:'EDM'},
-  {period:1,time:'09:00',type:'penalty',team:'CHI'},
+  {id:1,order:1,period:1,time:'04:00',type:'goal',team:'CHI'},
+  {id:2,order:2,period:1,time:'08:00',type:'shot-on-goal',team:'EDM'},
+  {id:3,order:3,period:1,time:'08:30',type:'hit',team:'EDM'},
+  {id:4,order:4,period:1,time:'09:00',type:'penalty',team:'CHI'},
  ]};
  const flow=gameFlow(game);
- assert.ok(flow.current>0,'recent Edmonton pressure and a Chicago penalty favor Edmonton');
+ assert.ok(flow.current>0,'the recent EDM shot outweighs the faded early CHI goal');
+ assert.ok(Math.abs(flow.current)<=1,'values are normalised to [-1, 1]');
  assert.equal(flow.windowMinutes,5);
  assert.equal(gameFlow({...game,plays:undefined}),null);
+ const noExtras=gameFlow({...game,plays:game.plays.filter(p=>!['hit','penalty'].includes(p.type))});
+ assert.deepEqual(noExtras.points,flow.points,'hits and penalties no longer change the number');
  const afterOldGoal=gameFlow({...game,clock:'06:00'});
- assert.ok(afterOldGoal.current>=0,'the early away goal has faded out of the momentum window');
+ assert.equal(afterOldGoal.current,0,'at 14:00 elapsed every attempt is older than the five-minute window');
+});
+
+import { signed as signedFmt } from "../src/lib/model.mjs";
+test("signed() shows a dash for a missing stat and signs the rest", () => {
+  assert.equal(signedFmt(null), "—");
+  assert.equal(signedFmt(undefined), "—");
+  assert.equal(signedFmt(NaN), "—");
+  assert.equal(signedFmt(3), "+3");
+  assert.equal(signedFmt(-2), "-2");
+  assert.equal(signedFmt(0), "0");
+  assert.equal(signedFmt(1.234, 2), "+1.23");
 });

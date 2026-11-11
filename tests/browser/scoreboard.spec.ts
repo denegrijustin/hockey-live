@@ -78,11 +78,10 @@ test.describe("scoreboard home", () => {
     await expect(bar.getByRole("button", { name: /1 in progress/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: /2 completed/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: /2 upcoming/ })).toBeVisible();
-    // Sections, in the order the board reads: the live game is either brewing an upset or in progress, then upcoming. The finals are a compact strip above them.
+    // Sections, in the order the board reads: Live (an upset brewing is a badge on the card, not a group), Upcoming, then the finals as a compact strip.
     const names = await page.locator(".sb-group").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
-    expect(names.at(-1)).toBe("Upcoming");
-    expect(names).not.toContain("Completed");
-    expect(["Upset brewing", "In progress"]).toContain(names[0]);
+    expect(names.slice(0, 2)).toEqual(["Live", "Upcoming"]);
+    expect(names.indexOf("Upcoming")).toBeLessThan(names.indexOf("Completed"));
     // One tap on Completed: only the finals, each already expanded.
     await bar.getByRole("button", { name: /2 completed/ }).click();
     await expect(page.locator(".sb-row")).toHaveCount(2);
@@ -97,14 +96,14 @@ test.describe("scoreboard home", () => {
     await expect(page.locator(".sb-row.final")).toHaveCount(0);
   });
 
-  test("completed games are a compact strip at the top of the board, one chip each, and a chip opens the game center", async ({ page }) => {
+  test("completed games are a compact strip below Live and Upcoming, one compact card each, and a card opens the game center", async ({ page }) => {
     await open(page);
     const strip = page.getByTestId("sb-done");
     await expect(strip).toBeVisible();
     await expect(strip.locator("button")).toHaveCount(2);
-    // Above the live and upcoming sections, and the chips are small (one short row each).
-    const [stripBox, firstGroup] = await Promise.all([strip.boundingBox(), page.locator(".sb-group").first().boundingBox()]);
-    expect(stripBox!.y).toBeLessThan(firstGroup!.y);
+    // Below the live and upcoming sections, and the cards are small (one short row each).
+    const [stripBox, upcoming] = await Promise.all([strip.boundingBox(), page.getByTestId("home-section-upcoming").boundingBox()]);
+    expect(stripBox!.y).toBeGreaterThan(upcoming!.y);
     expect((await strip.locator("button").first().boundingBox())!.height).toBeLessThanOrEqual(72);
     await expect(strip.locator("button").first()).toContainText(/F(\/OT|\/SO)?$/);
     await expect(page.locator(".sb-row.final")).toHaveCount(0); // no full card for them down the page
@@ -125,7 +124,7 @@ test.describe("scoreboard home", () => {
     await expect(chip(9203)).toHaveAttribute("data-upset", "0");
     await expect(chip(9203).locator(".sb-upset-tag")).toHaveCount(0);
     // The upset is visibly different: an amber border, not the plain one.
-    const [plain, hot] = await Promise.all([chip(9203).evaluate((e) => getComputedStyle(e).borderTopColor), chip(9205).evaluate((e) => getComputedStyle(e).borderTopColor)]);
+    const [plain, hot] = await Promise.all([chip(9203).locator(".gcv-compact").evaluate((e) => getComputedStyle(e).borderTopColor), chip(9205).locator(".gcv-compact").evaluate((e) => getComputedStyle(e).borderTopColor)]);
     expect(hot).not.toBe(plain);
     // The cards carry the rank too, and the upset flag on a finished game's card.
     await page.getByRole("group", { name: "Show games by status" }).getByRole("button", { name: /completed/ }).click();
@@ -144,7 +143,7 @@ test.describe("scoreboard home", () => {
     await open(page);
     const slot = page.locator(".sb-group.soon .sb-slot");
     await expect(slot).toHaveCount(1); // both upcoming games drop at the same time
-    await expect(slot.locator(".sb-slot-h")).toContainText("–");
+    await expect(slot.locator(".sb-slot-h")).toHaveCount(0); // one slot: no header
     const scores = await slot.locator(".score-ring strong").allInnerTexts();
     expect(scores).toHaveLength(2);
     expect(Number(scores[0])).toBeGreaterThanOrEqual(Number(scores[1]));
@@ -159,27 +158,20 @@ test.describe("scoreboard home", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
   });
 
-  test("Watch now: the hottest live games first, then the best starting within the hour; close and late glows; a tap opens the Game Center", async ({ page, isMobile }) => {
-    const soon = { ...game(9210, 0, "TBL", "FLA"), start: new Date(Date.now() + 25 * 60000).toISOString() };
-    const live = (id: number, away: string, home: string, score: [number, number], period: number, clock: string) => ({ ...game(id, 0, away, home, "LIVE", score), period, periodType: "REG", clock, start: new Date(Date.now() - 3600000).toISOString() });
-    await open(page, "/", [live(9207, "LAK", "SJS", [1, 0], 2, "10:00"), live(9208, "NSH", "STL", [0, 0], 1, "15:00"), live(9209, "PHI", "PIT", [4, 1], 3, "02:00"), soon]);
-    const strip = page.getByTestId("watch-now");
-    const tiles = strip.locator(".wn-tile");
+  test("Worth watching: the best upcoming games of the day, never a live one; at most 3 on a phone and 5 on desktop; a tile opens the Game Center", async ({ page, isMobile }) => {
+    const soon = (id: number, away: string, home: string, minutes: number) => ({ ...game(id, 0, away, home), start: new Date(Date.now() + minutes * 60000).toISOString() });
+    await open(page, "/", [soon(9210, "TBL", "FLA", 25), soon(9211, "LAK", "SJS", 90), soon(9212, "NSH", "STL", 95), soon(9213, "PHI", "PIT", 100), soon(9214, "OTT", "MTL", 110), soon(9215, "CGY", "VAN", 120)]);
+    const strip = page.getByTestId("home-section-featured");
+    await expect(strip).toHaveAttribute("aria-label", "Worth watching");
+    const tiles = strip.locator(".gcv-tile");
     await expect(tiles.first()).toBeVisible();
-    // At most 3 on a phone, 5 on desktop (5 live and 1 soon exist here, so the live games fill the strip).
     await expect(tiles).toHaveCount(isMobile ? 3 : 5);
-    await expect(tiles.first()).toHaveClass(/live/);
-    // The tied 3rd-period game is close and late: it glows and says so.
-    const hot = strip.locator(`.wn-tile[data-game="9206"]`);
-    await expect(hot).toHaveClass(/hot/);
-    await expect(hot).toContainText(/Close/);
-    // The blowout is the coolest live game: it is not ahead of the tied one.
-    const order = await tiles.evaluateAll((els) => els.map((e) => e.getAttribute("data-game")));
-    expect(order.indexOf("9206")).toBeLessThan(order.indexOf("9209") === -1 ? 99 : order.indexOf("9209"));
-    // A tile shows the score and a win probability.
-    await expect(hot).toContainText("2");
-    await expect(hot.locator(".wn-foot")).toContainText("%");
-    await hot.click();
+    // The live game (9206, tied in the 3rd) is in the Live section, not in the strip; it is flagged close and late on its own card.
+    await expect(strip.locator('[data-game="9206"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid=home-section-live] .sb-row[data-game="9206"] .late-flag')).toContainText(/Close/);
+    // A tile starting within the hour counts down.
+    await expect(strip.locator('[data-game="9210"]')).toContainText(/In \d+ min/);
+    await tiles.first().locator(".sb-main").click();
     await expect(page.locator("dialog.game-dialog, .game-panel").first()).toBeVisible();
   });
 
@@ -224,7 +216,7 @@ test.describe("scoreboard home", () => {
     expect(status!.x + status!.width).toBeLessThanOrEqual(main!.x + 1);
     expect(main!.x + main!.width).toBeLessThanOrEqual(ring!.x + 1);
     expect(ring!.x + ring!.width).toBeLessThanOrEqual(gc!.x + 1);
-    expect(r!.height).toBeLessThan(110);
+    expect(r!.height).toBeLessThan(120); // 32px logos
     // The day switcher and the status filters share one toolbar row.
     const [day, chip] = await Promise.all([page.locator(".sb-days").boundingBox(), page.locator(".sb-chip").first().boundingBox()]);
     expect(Math.abs(day!.y - chip!.y)).toBeLessThan(40);

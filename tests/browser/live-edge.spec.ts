@@ -1,3 +1,4 @@
+import { gcTab } from "./nav";
 import { test, expect } from "@playwright/test";
 import { filterGames, selectAllTeams } from "./controls";
 import { goTo } from "./nav";
@@ -18,6 +19,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   let calls = 0;
   const game = {
     ...scoreboardFixture.games.find((g) => g.id === fixture.id)!,
+    start: new Date(Date.now() - 3600_000).toISOString(), // a live game that started an hour ago (an old start reads as stale-live and is not polled)
     state: "LIVE",
     homeScore: 0,
     intermission: false, // the fixture game is in an intermission, which shows the Zamboni rink instead of the momentum chart
@@ -82,6 +84,7 @@ test("live data updates without collapsing open cards; failure retains last scor
   await shotsGraph.locator('.shot-chart').hover({position:{x:bounds!.width/2,y:bounds!.height/2}});
   await expect(shotsGraph.locator('.pulse-readout')).toContainText('Selected point');
   const previousEstimate = await dialog.locator(".projection .prediction-labels").innerText();
+  await gcTab(page, "Matchup Intelligence");
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Why this game matters" }).click();
   const why = dialog.locator(".game-center-section").filter({ hasText: "Why this game matters" });
   await expect(why).toHaveAttribute("open", "");
@@ -129,7 +132,7 @@ test("EDGE comparison shows source season, league benchmarks and shot data", asy
 test("full game overlay shows projection, ice tilt and a per-team player tracker with ice time", async ({
   page,
 }, info) => {
-  const game = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
+  const game = { ...scoreboardFixture.games.find((g) => g.id === fixture.id)!, start: new Date(Date.now() - 3600_000).toISOString() }; // started an hour ago (an old start reads as stale-live)
   await page.route("**/api/live", (route) =>
     route.fulfill({
       json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] },
@@ -180,7 +183,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   const dialog = page.locator("dialog.game-dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("open", "");
-  await expect(dialog.getByRole("button", { name: "Close full game view" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Close game details" })).toBeFocused();
   expect(await dialog.evaluate((element) => element.scrollTop)).toBe(0);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await expect(dialog.locator(".dialog-team")).toHaveCount(2);
@@ -215,6 +218,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(dialog.locator(".ice-tilt")).toContainText("ICE TILT", { timeout: 20000 });
   await expect(dialog.locator(".shot-chart")).toHaveCount(2);
   // Player tracker: ice time and top/bottom-3 broken out per team.
+  await gcTab(page, "Players");
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Player leaders and trends" }).click();
   await expect(dialog).toContainText("PLAYER TRACKER");
   const trackerTeams = dialog.locator(".tracker-team");
@@ -228,7 +232,7 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
   await expect(trackerTeams.last()).toContainText("CAR Bottom Player");
   await expect(dialog).toContainText("FLA Goalie");
   await expect(dialog).toContainText("CAR Goalie");
-  await dialog.getByRole("button", { name: "Close full game view" }).click();
+  await dialog.getByRole("button", { name: "Close game details" }).click();
   await expect(dialog).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 });

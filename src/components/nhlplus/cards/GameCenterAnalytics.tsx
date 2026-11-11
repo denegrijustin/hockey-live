@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Game, GameFeed, Team } from "../../../types";
 import type { GameLog, Goalie, Line } from "../../../lib/moneypuck-types";
-import { useFeed } from "../../../lib/polling";
+import { useGameFeedData } from "../../../lib/use-game-feed";
 import { useMoneyPuck } from "../../../lib/moneypuck-client";
 import { goalieMetrics, gsax } from "../../../lib/nhlplus.mjs";
 import { isLive } from "../../../lib/game-data.mjs";
@@ -32,7 +32,7 @@ function Section({ title, children, open = false, id }: { title: string; childre
 export function GameCenterAnalytics({ game, away, home, onClose }: { game: Game; away: Team; home: Team; onClose: () => void }) {
   const mp = useGameMoneyPuck(game, { enabled: true, wantShots: true, wantGames: true });
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
-  const { data: feed, error: feedError } = useFeed<GameFeed>(played ? `/api/game/${game.id}?score=${game.awayScore ?? "x"}-${game.homeScore ?? "x"}` : null, isLive(game) ? 30000 : 3600000);
+  const { data: feed, error: feedError } = useGameFeedData(played ? game : null);
   const playsState = !played ? "idle" : feed ? "ready" : feedError ? "unavailable" : "loading";
   const [sit, setSit] = useState<SitFilter>("all");
   const lines = useMoneyPuck(game.season, "lines");

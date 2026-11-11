@@ -1,13 +1,14 @@
 import { useState } from "react";
 import type { Team } from "../types";
+import { useFavorites } from "../hooks/useFavorites";
 import { Sheet } from "./Sheet";
 import { Icon } from "./icons";
 import { TeamLogo } from "./TeamLogo";
 
-const MY_TEAMS = ["EDM", "CHI", "MIN"];
 
 /** Phone team picker: a sheet with search, shortcuts and a checkbox list of every team. */
 export function TeamsSheet({ teams, selected, onChange, onClose }: { teams: Team[]; selected: string[]; onChange: (ids: string[]) => void; onClose: () => void }) {
+  const { favorites: MY_TEAMS } = useFavorites();
   const [filter, setFilter] = useState("");
   const q = filter.trim().toLowerCase();
   const shown = q ? teams.filter((t) => `${t.name} ${t.id}`.toLowerCase().includes(q)) : teams;
@@ -20,7 +21,7 @@ export function TeamsSheet({ teams, selected, onChange, onClose }: { teams: Team
           <input type="search" aria-label="Find a team" placeholder="Find a team" value={filter} onChange={(e) => setFilter(e.target.value)} />
         </label>
         <div className="teams-shortcuts teams-only">
-          {MY_TEAMS.map((id) => (
+          {MY_TEAMS.slice(0, 6).map((id) => (
             <button key={id} className="team-pill" title={`Show ${teams.find((t) => t.id === id)?.name ?? id} only`} aria-pressed={selected.length === 1 && selected[0] === id} onClick={() => { onChange([id]); onClose(); }}>
               <TeamLogo id={id} size={22} />
               {id}
@@ -28,7 +29,7 @@ export function TeamsSheet({ teams, selected, onChange, onClose }: { teams: Team
           ))}
         </div>
         <div className="teams-shortcuts">
-          <button aria-pressed={MY_TEAMS.length === selected.length && MY_TEAMS.every((id) => selected.includes(id))} onClick={() => onChange(MY_TEAMS)}>My three</button>
+          {MY_TEAMS.length > 0 && <button aria-pressed={MY_TEAMS.length === selected.length && MY_TEAMS.every((id) => selected.includes(id))} onClick={() => onChange(MY_TEAMS)}>My teams</button>}
           <button aria-pressed={selected.length === teams.length} onClick={() => onChange(teams.map((t) => t.id))}>All 32</button>
         </div>
       </div>

@@ -1,14 +1,15 @@
 import { finished } from "./model.mjs";
 import { isLive } from "./game-data.mjs";
+import { gameStatus } from "./game-status.mjs";
 
-/** "FINAL", "FINAL / OT", "LIVE P2 12:31", "INT 1", or the start time. */
+/** The ticker status text, from the shared gameStatus: FINAL, FINAL / OT, LIVE P2 12:31, LIVE SO, INT 1, POSTPONED, or the start time. */
 export function tickerStatus(g, locale = "en-US") {
-  if (finished(g)) return g.end && g.end !== "REG" ? `FINAL / ${g.end}` : "FINAL";
-  if (isLive(g)) {
-    const p = g.periodType === "OT" ? "OT" : `P${g.period ?? "—"}`;
-    return g.intermission ? `INT ${g.period ?? ""}`.trim() : `LIVE ${p} ${g.clock ?? ""}`.trim();
-  }
-  return new Date(g.start).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+  const s = gameStatus(g);
+  if (s.kind === "final") return s.label.toUpperCase().replace("/", " / ");
+  if (s.kind === "intermission") return `INT ${g.period ?? ""}`.trim();
+  if (s.kind === "live") return `LIVE ${s.short}`.trim();
+  if (s.kind === "upcoming") return new Date(g.start).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+  return s.label.toUpperCase();
 }
 
 const order = (g) => (isLive(g) ? 0 : finished(g) ? 2 : 1);

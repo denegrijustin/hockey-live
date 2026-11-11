@@ -1,17 +1,21 @@
+import { FavoriteStar } from "./FavoriteStar";
 import { useMemo } from "react";
 import type { Game, Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { buildResumes } from "../lib/resumes.mjs";
 import { teamGames, sideOf } from "../lib/team-schedule.mjs";
+import { teamSummary } from "../lib/team-summary.mjs";
+import { streakText } from "./team/format";
 import { Chip } from "./Resumes";
 import { TeamLogo } from "./TeamLogo";
+import { InjuryList } from "./InjuryList";
 import "./team-profile.css";
 
 const DIV_FILE: Record<string, string> = { Atlantic: "atlantic", Metropolitan: "metro", Central: "central", Pacific: "pacific" };
 type Item = ReturnType<typeof sideOf>;
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-export default function TeamProfileBody({ team, teams, table, games, season, onClose }: { team: Team; teams: Team[]; table: Record<string, any>; games: Game[]; season: number; onClose: () => void }) {
+export default function TeamProfileBody({ team, teams, table, games, season, onClose, onOpenPage }: { team: Team; teams: Team[]; table: Record<string, any>; games: Game[]; season: number; onClose: () => void; onOpenPage?: () => void }) {
   const row = useMemo(() => (buildResumes({ teams, table, games }) as any[]).find((r) => r.team === team.id), [teams, table, games, team.id]);
   const items: Item[] = useMemo(() => teamGames(games, team.id).map((g: Game) => sideOf(g, team.id)), [games, team.id]);
   const recent = items.filter((i) => i.status === "final").slice(-5).reverse();
@@ -19,17 +23,20 @@ export default function TeamProfileBody({ team, teams, table, games, season, onC
   const { data: inj } = useFeed<any>(`/api/injuries/${season}`, 600_000);
   const hurt = (inj?.items ?? []).filter((i: any) => i.team === team.id).slice(0, 6);
   const t = table[team.id];
+  const sum = useMemo(() => teamSummary(team.id, { teams, table, games }), [teams, table, games, team.id]);
   return (
     <>
       <div className="tp-head">
         <TeamLogo id={team.id} size={72} />
         <div>
-          <h2>{team.name}</h2>
+          <h2>{team.name} <FavoriteStar id={team.id} name={team.name} /></h2>
           <p className="tp-sub">
             <img src={`/logos/league/${team.conference === "E" ? "east" : "west"}.webp`} alt={team.conference === "E" ? "Eastern Conference" : "Western Conference"} width="48" height="35" />
             <img src={`/logos/league/${DIV_FILE[team.division] ?? "atlantic"}.webp`} alt={`${team.division} Division`} width="40" height="26" />
           </p>
           {t && <p className="tp-rec"><b>{t.w}–{t.l}–{t.ot}</b> · {t.pts} pts{row ? <> · <b>#{row.rank}</b> in the league</> : null}</p>}
+          {sum && <p className="tp-rec tp-form">Points % <b>{sum.pointsPct == null ? "—" : sum.pointsPct.toFixed(3).replace(/^0/, "")}</b>{sum.streak ? <> · Streak <b>{streakText(sum.streak)}</b></> : null} · {sum.gp} GP</p>}
+          {onOpenPage && <button type="button" className="tp-open" onClick={onOpenPage}>Open full team page</button>}
         </div>
         <button type="button" className="dialog-close tp-close" onClick={onClose} aria-label="Close team profile">Close ×</button>
       </div>
@@ -62,7 +69,7 @@ export default function TeamProfileBody({ team, teams, table, games, season, onC
       </div>
       <section>
         <h3>Injuries</h3>
-        {hurt.length ? <ul className="tp-inj">{hurt.map((i: any) => <li key={i.id}><b>{i.name}</b>{i.pos ? <small> {i.pos}</small> : null}<span className={`gi-sev ${i.severity.level}`}>{i.severity.label}</span><em>{i.kind} · {i.back.text}</em></li>)}</ul> : <p className="rs-none">{inj ? "No injuries reported" : "Loading the injury report…"}</p>}
+        {hurt.length ? <InjuryList items={hurt} season={season} /> :<p className="rs-none">{inj ? "No injuries reported" : "Loading the injury report…"}</p>}
       </section>
     </>
   );

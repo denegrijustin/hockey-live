@@ -1,21 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motionOff } from "../motion";
 import type { Game, Team } from "../types";
-import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, lapState, exitProgress, EXIT_PATH, zamboniColors, resurfacingMotion, FINISH_S } from "../lib/intermission.mjs";
+import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, lapState, exitProgress, EXIT_PATH, zamboniColors, resurfacingMotion, FINISH_S, firstSeenAt } from "../lib/intermission.mjs";
 import { LogoImage } from "./TeamLogo";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
-/** When this intermission was first seen, kept so a reload doesn't restart the fallback clock. */
-function firstSeen(g: Game) {
-  const now = Date.now();
-  try {
-    const saved = Number(localStorage.getItem(SEEN(g)));
-    if (Number.isFinite(saved) && saved > 0 && now - saved < 3 * 3_600_000 && saved <= now) return saved;
-    localStorage.setItem(SEEN(g), String(now));
-  } catch {
-    /* private mode: count from this visit */
-  }
-  return now;
-}
+/** When this intermission was first seen, kept so a reload doesn't restart the fallback clock (storage may be blocked; stale keys are pruned). */
+const firstSeen = (g: Game) => firstSeenAt(() => localStorage, SEEN(g), Date.now());
 
 /** Seconds left of the intermission: the feed's clock, run on between polls. */
 export function useIntermissionLeft(game: Game) {
@@ -95,7 +86,7 @@ export function IntermissionRink({ game, home, away, compact = false }: { game: 
   const { left, deadline } = useIntermissionLeft(game);
   const colors = useMemo(() => zamboniColors(home.cardColor ?? home.color), [home.cardColor, home.color]);
   const route = useMemo(() => resurfacePath(), []);
-  const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const still = motionOff();
   const next = game.period ? (game.period >= 3 ? "overtime" : `period ${game.period + 1}`) : "the next period";
   const { path, paint, sign, gate, machine, root } = useResurfacing(still, deadline);
   const id = `rink-${game.id}${compact ? "-c" : ""}`;

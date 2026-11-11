@@ -1,4 +1,5 @@
 import type { Team } from "../types";
+import { useFavorites } from "../hooks/useFavorites";
 import { TeamLogo } from "./TeamLogo";
 export function TeamPicker({
   teams,
@@ -9,10 +10,11 @@ export function TeamPicker({
   selected: string[];
   onChange: (ids: string[]) => void;
 }) {
+  const { favorites: mine } = useFavorites();
   return (
     <div className="team-picker">
       <div className="quick-teams">
-        {["EDM", "CHI", "MIN"].map((id) => (
+        {mine.slice(0, 6).map((id) => (
           <button
             key={id}
             className="team-pill"
@@ -24,13 +26,15 @@ export function TeamPicker({
             {id}
           </button>
         ))}
-        <button
-          className="text-button"
-          aria-pressed={selected.length === 3 && ["EDM", "CHI", "MIN"].every((id) => selected.includes(id))}
-          onClick={() => onChange(["EDM", "CHI", "MIN"])}
-        >
-          My three
-        </button>
+        {mine.length > 0 && (
+          <button
+            className="text-button"
+            aria-pressed={selected.length === mine.length && mine.every((id) => selected.includes(id))}
+            onClick={() => onChange(mine)}
+          >
+            My teams
+          </button>
+        )}
         <button
           className="text-button"
           aria-pressed={selected.length === teams.length}
@@ -46,7 +50,7 @@ export function TeamPicker({
         </summary>
         <div className="team-options">
           <div className="team-options-heading">
-            <strong>Your teams</strong>
+            <strong>Teams</strong>
             <button onClick={() => onChange([])}>Clear</button>
           </div>
           {teams.map((t) => (

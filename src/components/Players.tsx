@@ -1,46 +1,20 @@
 import { PlayerIdentity } from "./PlayerIdentity";
+import { TeamLink } from "./TeamProfile";
 import { useVisibleInterval } from "../lib/polling";
-import { useEffect, useMemo, useState } from "react";
-import { loadPlayers } from "../lib/api";
+import { useMemo, useState } from "react";
+import { useAllRosters } from "../hooks/useAllRosters";
 import { skaterImpact, goalieImpact, signed } from "../lib/model.mjs";
-import type { Team, PlayerData, PlayerSeason } from "../types";
+import type { Team, PlayerSeason } from "../types";
+import { PageHeader } from "./PageHeader";
 export function Players({ teams, season }: { teams: Team[]; season: number }) {
-  const [data, setData] = useState<PlayerData[]>([]),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(false),
-    [sort, setSort] = useState("impact"),
+  const [sort, setSort] = useState("impact"),
     [minimum, setMinimum] = useState(1),
     [retry, setRetry] = useState(0),
     [goalies, setGoalies] = useState(false);
   useVisibleInterval(() => setRetry((x) => x + 1), 300000);
-  const key = teams.map((t) => t.id).join(",");
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError("");
-    setData([]);
-    let next = 0;
-    const output: PlayerData[] = [];
-    Promise.all(
-      Array.from({ length: 3 }, async () => {
-        while (next < teams.length) {
-          const t = teams[next++];
-          output.push(await loadPlayers(season, t.id, controller.signal));
-        }
-      }),
-    )
-      .then(() => {
-        if (!controller.signal.aborted) setData(output);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted)
-          setError("Some player summaries could not be loaded. Please retry.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [key, season, retry]);
+  const rosters = useAllRosters(season, teams.map((t) => t.id), true, retry);
+  const data = rosters.data, loading = rosters.loading;
+  const error = rosters.error ? "Some player summaries could not be loaded. Please retry." : "";
   const skaters = useMemo(
     () =>
       data
@@ -64,12 +38,12 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
     [data, minimum],
   );
   return (
+    <>
+    <PageHeader title="Players" eyebrow="WHO IS MOVING THE NEEDLE?" />
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">WHO IS MOVING THE NEEDLE?</p>
-          <h2>Player contributions</h2>
-          <p>My three by default · choose any teams or All 32 above. Player selections are independent of the game board.</p>
+          <p>Your favorites by default · choose any teams or All 32 above. Player selections are independent of the game board.</p>
           <p>
             {String(season).slice(0, 4)}–{String(season).slice(6)} regular
             season · team stints, not confirmed current rosters
@@ -117,7 +91,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
       ) : error ? (
         <div className="empty">
           <p>{error}</p>
-          <button onClick={() => setRetry((x) => x + 1)}>Retry</button>
+          <button onClick={rosters.retry}>Retry</button>
         </div>
       ) : !skaters.length && !keepers.length ? (
         <div className="empty">
@@ -158,7 +132,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
                 ? keepers.map((p) => (
                     <tr key={`${p.team}-${p.id}`}>
                       <td><PlayerIdentity p={p} season={season} /></td>
-                      <td>{p.team}</td>
+                      <td><TeamLink id={p.team}>{p.team}</TeamLink></td>
                       <td>{p.gp}</td>
                       <td>{p.savePct != null ? p.savePct.toFixed(3) : "—"}</td>
                       <td>
@@ -176,6 +150,7 @@ export function Players({ teams, season }: { teams: Team[]; season: number }) {
         </div>
       )}
     </section>
+    </>
   );
 }
 function PlayerRow({ p, season }: { p: PlayerSeason; season:number }) {
@@ -185,7 +160,7 @@ function PlayerRow({ p, season }: { p: PlayerSeason; season:number }) {
       <td>
         <PlayerIdentity p={p} season={season} />
       </td>
-      <td>{p.team}</td>
+      <td><TeamLink id={p.team}>{p.team}</TeamLink></td>
       <td>{p.position}</td>
       <td>{p.gp}</td>
       <td>{p.goals}</td>

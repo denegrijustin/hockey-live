@@ -7,6 +7,7 @@ import { GsaxBoard } from "./GsaxBoard";
 import { GoalieGsax } from "./GoalieGsax";
 import { useMoneyPuck } from "../lib/moneypuck-client";
 import { gsaxByGame, rollingMean } from "../lib/gsax.mjs";
+import { PageHeader } from "./PageHeader";
 // Plot area inside the 1000-wide viewBox. The side margins hold axis labels that are drawn at a real 11px (see chartUnit).
 const PLOT_L = 125, PLOT_W = 805;
 
@@ -77,12 +78,12 @@ export function Trends({
   ];
   return (
     <>
+    <PageHeader title="Team trends" eyebrow="FOLLOW THE DIRECTION" />
     <GsaxBoard season={season} teams={leagueTeams} current={current} />
     <GoalieGsax season={season} current={current} />
     <section className="panel trend-panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">FOLLOW THE DIRECTION</p>
           <h2>{metric === "playoffs" ? "Playoff outlook" : "Team momentum"}</h2>
           <p>
             {metric === "playoffs"

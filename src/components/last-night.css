@@ -1,5 +1,3 @@
-.ln-head h2 { margin: 0; font-size: 1.75rem; letter-spacing: .01em; text-transform: uppercase; }
-.ln-head p { margin: 2px 0 12px; color: var(--muted); font-size: .8125rem; }
 .ln h3 { margin: 0 0 8px; font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 650; display: flex; justify-content: space-between; gap: 8px; }
 .ln h3 span, .ln h4 span { font-weight: 400; letter-spacing: .04em; }
 .ln-top { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
@@ -30,7 +28,6 @@
 .ln-seg { position: absolute; top: 0; bottom: 0; } .ln-seg.points { background: #2f62c9; } .ln-seg.onice { background: #3fae7c; } .ln-seg.pen { background: #d9772c; } .ln-seg.other { background: #9aa7bd; }
 .ln-note { margin: 14px 0 0; color: var(--muted); font-size: .6875rem; line-height: 1.5; max-width: 90ch; }
 @media (max-width: 560px) {
-  .ln-head h2 { font-size: 1.375rem; }
   .ln-group ol > li { grid-template-columns: 36px minmax(0, 1fr) 4rem; grid-template-areas: "face who gs" "bar bar bar"; row-gap: 6px; }
   .ln-group ol > li > .ln-face { grid-area: face; } .ln-group ol > li > .ln-who { grid-area: who; } .ln-group ol > li > .ln-gs { grid-area: gs; } .ln-group ol > li > .ln-bar { grid-area: bar; }
   .ln-best ol > li { gap: 10px; } .ln-gs { font-size: 1.25rem; }
@@ -39,13 +36,11 @@
 .ln-gamebtn { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .ln-finals li { padding: 0; } .ln-finals li .ln-gamebtn { padding: 4px 12px; min-height: 52px; }
 .ln-finals li:hover { border-color: var(--mint-4, var(--line-3)); }
-.ln-back { margin: 0 0 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-3); background: transparent; color: var(--mint-5); font: inherit; font-weight: 650; cursor: pointer; }
 .ln-gamehead { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
 .ln-gamehead .ln-side { font-size: 1.25rem; font-weight: 700; color: var(--text-5); } .ln-gamehead .ln-side b { color: var(--text-5); }
 .ln-bigscore { margin: 0; display: flex; align-items: baseline; gap: 8px; position: relative; font-variant-numeric: tabular-nums; }
 .ln-bigscore strong { font-size: 2.5rem; font-weight: 500; color: var(--text-1); } .ln-bigscore strong.win { font-weight: 850; color: var(--text-6); } .ln-bigscore i { font-style: normal; color: var(--text-1); }
 .ln-bigscore small { position: absolute; left: 0; right: 0; top: 100%; text-align: center; font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.ln-gamedate { margin: 22px 0 6px; color: var(--muted); font-size: .8125rem; text-align: center; }
 .ln-flow { margin-top: 16px; } .ln-flow h3 { margin-bottom: 6px; }
 .ln-game .game-recap { margin-top: 18px; }
 @media (max-width: 560px) { .ln-bigscore strong { font-size: 2rem; } .ln-gamehead .ln-side { font-size: 1rem; } .ln-gamehead .ln-side .team-logo { width: 34px; height: 34px; } }

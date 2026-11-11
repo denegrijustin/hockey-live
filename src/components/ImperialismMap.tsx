@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { motionOff } from "../motion";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { Delaunay } from "d3-delaunay";
 import { geoConicConformal, geoPath } from "d3-geo";
@@ -10,6 +11,7 @@ import type { Game, Team } from "../types";
 import "./imperialism.css";
 import { TeamLogo } from "./TeamLogo";
 import { logoUrl } from "../lib/logos";
+import { PageHeader } from "./PageHeader";
 
 type Pt = [number, number];
 type Geo = { cells: Pt[]; land: Topology };
@@ -90,12 +92,12 @@ function lighten(hex: string): string {
 }
 const seasonLabel = (s: number) => `${String(s).slice(0, 4)}–${String(s).slice(6)}`;
 const useReducedMotion = () => {
-  const [v, setV] = useState(() => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [v, setV] = useState(motionOff);
   useEffect(() => {
-    if (typeof matchMedia !== "function") return;
-    const q = matchMedia("(prefers-reduced-motion: reduce)"), f = () => setV(q.matches);
-    q.addEventListener("change", f);
-    return () => q.removeEventListener("change", f);
+    const mo = new MutationObserver(() => setV(motionOff()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-motion"] });
+    setV(motionOff());
+    return () => mo.disconnect();
   }, []);
   return v;
 };
@@ -265,10 +267,9 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
   const path = open != null && result ? conquestPath(result, open, week) : [];
 
   return (
-    <section className="imp-root" aria-labelledby={`${uid}-h`}>
+    <section className="imp-root" aria-label="Imperialism map">
+      <PageHeader title="Imperialism map" eyebrow="NHL CONQUEST MAP" />
       <div className="imp-head">
-        <p className="imp-eyebrow">IMPERIALISM MAP</p>
-        <h2 id={`${uid}-h`}>NHL conquest map</h2>
         <p className="imp-rules">Start from nearest-arena territories; each finished game hands the loser&apos;s entire land to the winner. {seasonLabel(season)}, regular season and playoffs.</p>
       </div>
 

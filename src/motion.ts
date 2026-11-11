@@ -15,16 +15,24 @@ export function initMotion() {
   const root = document.documentElement, nav = navigator as Nav;
   const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)");
   let lowBattery = false;
-  const apply = () => { root.dataset.motion = reduce?.matches || nav.connection?.saveData || lowBattery ? "off" : "on"; };
+  apply = () => { root.dataset.motion = override === "reduce" || (override !== "full" && (reduce?.matches || nav.connection?.saveData || lowBattery)) ? "off" : "on"; };
   const hidden = () => { if (document.hidden) root.setAttribute("data-hidden", ""); else root.removeAttribute("data-hidden"); };
   apply(); hidden();
-  reduce?.addEventListener?.("change", apply);
+  reduce?.addEventListener?.("change", () => apply());
   document.addEventListener("visibilitychange", hidden);
   nav.getBattery?.().then((b) => {
     const check = () => { lowBattery = !b.charging && b.level <= 0.2; apply(); };
     check(); b.addEventListener("levelchange", check); b.addEventListener("chargingchange", check);
   }).catch(() => {});
 }
+
+// The user's Settings choice: "system" (the logic above), "reduce" (always off) or "full" (always on). Set by applyDisplay().
+let override = "system";
+let apply: () => void = () => {};
+export function setMotionPref(m: string) { override = m; if (typeof document !== "undefined") document.documentElement.dataset.motionPref = m; apply(); }
+
+/** True when movement is off (the Settings choice, else reduced-motion, data-saver or low power). Use instead of reading matchMedia directly. */
+export const reducedMotion = motionOff;
 
 /** A short buzz on phones that support it (a game going live). Skipped when motion is off or the tab is hidden. */
 export function haptic(ms = 18) {

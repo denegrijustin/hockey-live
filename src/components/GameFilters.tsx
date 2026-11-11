@@ -27,10 +27,13 @@ interface FieldProps {
   setQuery: (q: string) => void;
   /** The matchup search sits in the phone control row, so the sheet leaves it out. */
   showSearch?: boolean;
+  /** Show one day at a time with a day strip (a specific Eastern day) instead of the Upcoming/Past list and window. */
+  byDay?: boolean;
+  setByDay?: (on: boolean) => void;
 }
 
 /** The game list filters. The same fields appear in the desktop panel and in the phone sheet. */
-export function GameFilterFields({ type, setType, range, setRange, sort, setSort, query, setQuery, showSearch = true }: FieldProps) {
+export function GameFilterFields({ type, setType, range, setRange, sort, setSort, query, setQuery, showSearch = true, byDay, setByDay }: FieldProps) {
   return (
     <>
       <label>
@@ -56,6 +59,12 @@ export function GameFilterFields({ type, setType, range, setRange, sort, setSort
           <option value="importance">Importance to teams + league</option>
         </select>
       </label>
+      {setByDay && (
+        <label className="field-check">
+          <input type="checkbox" checked={!!byDay} onChange={(e) => setByDay(e.target.checked)} />
+          <span>One day at a time</span>
+        </label>
+      )}
       {showSearch && (
         <label className="game-search">
           <span className="field-label">Find a matchup</span>

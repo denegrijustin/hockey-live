@@ -1,0 +1,73 @@
+{
+ "final": {
+  "overview": [
+   "1st period: SEA 8, COL 22|home",
+   "2nd period: SEA 10, COL 22|home",
+   "3rd period: SEA 12, COL 12|even",
+   "Blocks: SEA 10, COL 19|home",
+   "Deserved to win: SEA 11%, COL 89%|home",
+   "Deserved to win: SEA 11%, COL 89%|home",
+   "Expected goals: SEA 1.11, COL 3.59|home",
+   "Faceoffs won: SEA 23, COL 33|home",
+   "Hits: SEA 22, COL 12|away",
+   "Hits: SEA 22, COL 12|away",
+   "Shot attempts: SEA 40, COL 75|home",
+   "Shots on goal: SEA 22, COL 35|home",
+   "Shots on goal: SEA 22, COL 35|home",
+   "Unblocked attempts: SEA 5, COL 8|home",
+   "xG per attempt: SEA .028, COL .048|home"
+  ],
+  "stats": [
+   "Faceoff %: SEA 52.4%, COL 47.6%|away",
+   "Goals / game: SEA 2.73, COL 2.40|home",
+   "Goals against average: SEA 3.03, COL 2.02|home",
+   "Hits: SEA 32, COL 39|home",
+   "Power play: SEA 19.5%, COL 84.6%|home",
+   "Save percentage: SEA .897, COL .921|home",
+   "Shooting: SEA 10.7%, COL 90.8%|home",
+   "Shots for / game: SEA 25.59, COL 26.13|home",
+   "Shots on goal: SEA 23, COL 22|even"
+  ]
+ },
+ "live": {
+  "overview": [
+   "Blocks: FLA 5, CAR 1|away",
+   "Deserved to win: FLA 55%, CAR 45%|away",
+   "Deserved to win: FLA 55%, CAR 45%|away",
+   "Expected goals: FLA 0.56, CAR 0.41|away",
+   "Faceoffs won: FLA 7, CAR 15|home",
+   "Hits: FLA 14, CAR 21|home",
+   "Hits: FLA 14, CAR 21|home",
+   "Projected final score: FLA 2 (44%), CAR 3 (56%)|home",
+   "Shot attempts: FLA 13, CAR 6|away",
+   "Shots on goal: FLA 6, CAR 3|away",
+   "Shots on goal: FLA 6, CAR 3|away",
+   "Unblocked attempts: FLA 3, CAR 1|away",
+   "xG per attempt: FLA .043, CAR .068|home"
+  ],
+  "stats": [
+   "Faceoff %: FLA 52.4%, CAR 47.6%|away",
+   "Goals / game: FLA 2.00, CAR 3.00|home",
+   "Goals against average: FLA 1.27, CAR 1.91|away",
+   "Hits: FLA 32, CAR 39|home",
+   "Power play: FLA 4.3%, CAR 89.5%|home",
+   "Save percentage: FLA .927, CAR .889|away",
+   "Shooting: FLA 7.5%, CAR 85.9%|home",
+   "Shots for / game: FLA 26.75, CAR 21.25|home",
+   "Shots on goal: FLA 23, CAR 22|even"
+  ]
+ },
+ "pregame": {
+  "overview": [
+   "Pregame win chance (model): SEA 46%, COL 54%|home"
+  ],
+  "stats": [
+   "Goals / game: SEA 2.73, COL 2.40|home",
+   "Goals against average: SEA 3.03, COL 2.02|home",
+   "Power play: SEA 19.5%, COL 84.6%|home",
+   "Save percentage: SEA .897, COL .921|home",
+   "Shooting: SEA 10.7%, COL 90.8%|home",
+   "Shots for / game: SEA 25.59, COL 26.13|home"
+  ]
+ }
+}

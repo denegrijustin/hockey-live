@@ -1,5 +1,20 @@
 import { normalizeGame, value } from "./normalize.mjs";
-export const isLive = (g) => ["LIVE", "CRIT"].includes(g.state);
+import { phaseName, phaseOf, isLivePhase, STALE_LIVE_MS } from "./game-state.mjs";
+// The helpers below are thin views of game-state.mjs phaseOf(), the one place that decides where a game stands.
+export { STALE_LIVE_MS };
+export const isLive = (g) => isLivePhase(phaseName(g));
+/** Live and not stale: the only kind of game that should keep fast refresh modes on. */
+export const isFreshLive = (g, now = Date.now()) => isLivePhase(phaseName(g)) && !phaseOf(g, { now }).stale;
+const isFinished = (g) => g.state === "OFF" || g.state === "FINAL";
+/** A game that is not live or finished and whose schedule state says it is postponed, canceled or suspended. */
+export const isCalledOff = (g) => {
+  const p = phaseName(g);
+  return p === "postponed" || p === "cancelled" || p === "suspended";
+};
+/** Still to be played as scheduled: not live, not finished, not postponed/canceled/suspended. Same rule as gameStatus().upcoming. */
+export const isUpcoming = (g) => !isFinished(g) && !isLive(g) && !isCalledOff(g);
+/** Deterministic game order: puck drop, then id (identical start times are common). */
+export const byStartThenId = (a, b) => String(a.start ?? "").localeCompare(String(b.start ?? "")) || a.id - b.id;
 export function normalizeScoreboard(j) {
   return {
     updatedAt: new Date().toISOString(),
@@ -10,6 +25,9 @@ export function normalizeScoreboard(j) {
       periodType: g.periodDescriptor?.periodType ?? null,
       clock: g.clock?.timeRemaining ?? null,
       intermission: g.clock?.inIntermission ?? false,
+      // Additive (Phase 5): the NHL's own clock state. Not in LIVE_FIELDS on purpose: they change every poll and must not defeat mergeScores' referential stability.
+      clockRunning: g.clock?.running ?? null,
+      clockSeconds: g.clock?.secondsRemaining ?? null,
       homeShots: g.homeTeam.sog ?? null,
       awayShots: g.awayTeam.sog ?? null,
     })),
@@ -17,6 +35,9 @@ export function normalizeScoreboard(j) {
 }
 const LIVE_FIELDS = [
   "state",
+  "scheduleState",
+  "start",
+  "date",
   "homeScore",
   "awayScore",
   "period",
@@ -56,25 +77,57 @@ export function normalizeGameFeed(j) {
       `${value(p.firstName)} ${value(p.lastName)}`,
     ]),
   );
-  const plays = (j.plays ?? []).map((p) => ({
-    id: p.eventId,
-    period: p.periodDescriptor.number,
-    periodType: p.periodDescriptor.periodType,
-    time: p.timeInPeriod,
-    type: p.typeDescKey,
-    order: p.sortOrder ?? 0,
-    penalty: p.details?.descKey ?? null,
-    duration: p.details?.duration ?? null,
-    team: team(p.details?.eventOwnerTeamId),
-    x: p.details?.xCoord ?? null,
-    y: p.details?.yCoord ?? null,
-    player:
-      names[p.details?.scoringPlayerId ?? p.details?.shootingPlayerId ?? p.details?.committedByPlayerId] ?? null,
+  const roster = (j.rosterSpots ?? []).map((p) => ({
+    id: p.playerId,
+    name: `${value(p.firstName)} ${value(p.lastName)}`,
+    team: team(p.teamId),
+    number: p.sweaterNumber ?? null,
+    pos: p.positionCode ?? null,
+    headshot: p.headshot ?? null,
   }));
+  const who = (id) => (id != null && names[id] ? { id, name: names[id] } : null);
+  const plays = (j.plays ?? []).map((p) => {
+    const d = p.details ?? {};
+    const primary = d.scoringPlayerId ?? d.shootingPlayerId ?? d.committedByPlayerId;
+    const play = {
+      id: p.eventId,
+      period: p.periodDescriptor.number,
+      periodType: p.periodDescriptor.periodType,
+      time: p.timeInPeriod,
+      type: p.typeDescKey,
+      order: p.sortOrder ?? 0,
+      penalty: d.descKey ?? null,
+      duration: d.duration ?? null,
+      team: team(d.eventOwnerTeamId),
+      x: d.xCoord ?? null,
+      y: d.yCoord ?? null,
+      player: names[primary] ?? null,
+      // Additive detail (Phase 5): everything below is optional and never replaces a field above.
+      pid: primary ?? null,
+      left: p.timeRemaining ?? null,
+      sit: p.situationCode ?? null,
+      zone: d.zoneCode ?? null,
+      shotType: d.shotType ?? null,
+      reason: d.reason ?? null,
+      secondary: who(d.hitteePlayerId ?? d.blockingPlayerId ?? d.losingPlayerId ?? d.servedByPlayerId ?? d.drawnByPlayerId),
+      other: who(d.hittingPlayerId ?? d.playerId ?? d.winningPlayerId),
+    };
+    if (p.typeDescKey === "goal") {
+      play.assists = [d.assist1PlayerId, d.assist2PlayerId].map(who).filter(Boolean);
+      play.goalie = who(d.goalieInNetId);
+      play.score = d.homeScore != null && d.awayScore != null ? { home: d.homeScore, away: d.awayScore } : null;
+    }
+    return play;
+  });
   return {
     ...normalizeScoreboard({ games: [j] }).games[0],
     updatedAt: new Date().toISOString(),
     plays: plays.sort((a, b) => a.order - b.order),
+    roster,
+    clockRunning: j.clock?.running ?? null,
+    clockSeconds: j.clock?.secondsRemaining ?? null,
+    otInUse: j.otInUse ?? null,
+    shootoutInUse: j.shootoutInUse ?? null,
     situation: j.situation ? {
       home: j.situation.homeTeam?.strength ?? null,
       away: j.situation.awayTeam?.strength ?? null,

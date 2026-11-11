@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 // subscribeFeed only needs fetch, document and timers, so it runs under plain Node.
-globalThis.document = { hidden: false, addEventListener() {} };
+const handlers = [];
+globalThis.document = { hidden: false, addEventListener: (_t, h) => handlers.push(h) };
 let calls = 0;
 globalThis.fetch = async () => ({ ok: true, json: async () => ({ n: ++calls }) });
 const { subscribeFeed } = await import("../src/lib/polling.ts");
@@ -42,4 +43,32 @@ test("a failed poll reports an error and keeps the last data", async () => {
   assert.match(seen.at(-1)[1], /unavailable/);
   off();
   globalThis.fetch = real;
+});
+
+test("an interval of Infinity or 0 fetches once and never sets a timer", async () => {
+  const realSet = globalThis.setInterval;
+  let timers = 0;
+  globalThis.setInterval = (...a) => (timers++, realSet(...a));
+  calls = 0;
+  const off = subscribeFeed("/api/final", Infinity, () => {});
+  const off0 = subscribeFeed("/api/final0", 0, () => {});
+  await tick();
+  globalThis.setInterval = realSet;
+  assert.equal(timers, 0);
+  assert.equal(calls, 2);
+  handlers.forEach((h) => h());
+  await tick();
+  assert.equal(calls, 2, "a once-feed with data is not re-polled when the tab is shown");
+  off();
+  off0();
+});
+
+test("showing the tab does not re-poll a feed polled within the share window", async () => {
+  calls = 0;
+  const off = subscribeFeed("/api/fresh", 60000, () => {});
+  await tick();
+  handlers.forEach((h) => h());
+  await tick();
+  assert.equal(calls, 1);
+  off();
 });

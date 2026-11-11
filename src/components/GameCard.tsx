@@ -1,18 +1,23 @@
+import { FavoriteMark } from "./FavoriteStar";
 import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { finished, recordBeforeGame, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
-import { CompactGameFlow, CompactGameProjection, useCardFeed } from "./GameData";
+import { CompactGameFlow, useCardFeed } from "./GameData";
 import { IceView } from "./IceView";
 import { GoalFlash, useGoalFlash } from "./GoalFlash";
 import { NetworkLogos } from "./NetworkLogos";
-import { GoalieComparison } from "./TeamComparison";
-import { IntermissionRink } from "./IntermissionRink";
-import { CardExpanded, CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
+import { CardStrip, useCardNhlPlus } from "./nhlplus/cards/CardNhlPlus";
 import { teamRanks, rankLine, rankTitle } from "../lib/ranks.mjs";
 import { TeamLogo } from "./TeamLogo";
-import { GameInjuries } from "./GameInjuries";
+import { gameStatus } from "../lib/game-status.mjs";
+import { LOGO_SIZE } from "./GameCardView";
 import { usePauseOffscreen } from "../motion";
+import { useGameRoute } from "../hooks/useGameRoute";
+const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
+const GameCardExpanded = lazy(() => import("./GameCardExpanded"));
+const SaveGameButton = lazy(() => import("./SaveGameButton").then((m) => ({ default: m.SaveGameButton })));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 
 export const GameCard = memo(function GameCard({
@@ -29,7 +34,9 @@ export const GameCard = memo(function GameCard({
   playoff: any;
 }) {
   const past = finished(game), live = isLive(game);
-  const [expanded, setExpanded] = useState(false), [gameCenterOpen, setGameCenterOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const gc = useGameRoute();
+  const gameCenterOpen = gc.route?.id === game.id;
   const cardRef = useRef<HTMLElement>(null);
   usePauseOffscreen(cardRef);
   const { ref: feedRef, data: feed } = useCardFeed(game);
@@ -46,6 +53,7 @@ export const GameCard = memo(function GameCard({
   const broadcasts = [...new Set(game.broadcasts)];
   const scoreClass = analysis.score >= 75 ? "high" : analysis.score >= 50 ? "medium" : "low";
   const day = new Date(game.start);
+  const status = gameStatus(game, { withZone: true });
   const importanceSummary = analysis.reasons?.[0] ?? (analysis.score >= 50 ? "A matchup with meaningful standings weight." : "Lower stakes for the teams and league table.");
 
   useEffect(() => {
@@ -57,10 +65,11 @@ export const GameCard = memo(function GameCard({
     return () => document.removeEventListener("pointerdown", outside);
   }, [expanded, gameCenterOpen]);
 
+  useTimeKey();
   const scrollAtOpen = useRef(0);
   const openGameCenter = () => {
     scrollAtOpen.current = window.scrollY;
-    setGameCenterOpen(true);
+    gc.open(game.id);
   };
   return (
     <article
@@ -71,13 +80,10 @@ export const GameCard = memo(function GameCard({
     >
       <div className="game-card-top">
         <span className="game-date">
-          {day.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {past
-            ? `FINAL${game.end !== "REG" ? ` / ${game.end}` : ""}`
-            : live
-              ? `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`
-              : day.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" })}
+          {day.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {status.live && !status.stale && <i className="gc-live-dot" aria-hidden="true" />}{status.label}
         </span>
         <div className="card-top-actions">
+          <Suspense fallback={null}><SaveGameButton game={game} awayName={away.name} homeName={home.name} /></Suspense>
           <button type="button" className="gc-icon" onClick={openGameCenter} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>
         </div>
       </div>
@@ -92,7 +98,7 @@ export const GameCard = memo(function GameCard({
           <div className="matchup-teams">
             {[away, home].map((team, index) => (
               <div className="matchup-team" key={team.id}>
-                <TeamLogo id={team.id} size={40} />
+                <TeamLogo id={team.id} size={LOGO_SIZE.row} /><FavoriteMark id={team.id} />
                 <div>
                   <span>{team.city}</span><h3>{team.short}</h3>
                   <small className="team-record">
@@ -113,7 +119,7 @@ export const GameCard = memo(function GameCard({
         <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span className="tv-network"><NetworkLogos broadcasts={broadcasts} game={game} /></span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
-      {live && game.intermission && <IntermissionRink game={game} home={home} away={away} compact />}
+      {live && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
       <div ref={feedRef} className="card-ice">
         {/* At intermission the animated Zamboni rink is the only rink on the card; the shot-map ice view returns when play does. */}
         {(live || past) && !(live && game.intermission) && <IceView data={feed} home={home} away={away} />}
@@ -124,12 +130,7 @@ export const GameCard = memo(function GameCard({
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">
         <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>
-        <CardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} />
-        <div className="why-watch"><span>WHY IT MATTERS</span><p>{importanceSummary}</p></div>
-        <CompactGameProjection game={game} before={before} baseline={baseline} />
-        <GoalieComparison game={game} away={away} home={home} compact />
-        <GameInjuries away={away} home={home} season={game.season} />
-        <button type="button" className="card-collapse" onClick={() => setExpanded(false)}>Collapse game card</button>
+        <Suspense fallback={null}><GameCardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} before={before} baseline={baseline} summary={importanceSummary} onCollapse={() => setExpanded(false)} /></Suspense>
       </div>}
 
       {gameCenterOpen && <Suspense fallback={null}>
@@ -145,7 +146,10 @@ export const GameCard = memo(function GameCard({
           allGames={allGames}
           series={series}
           returnTo={scrollAtOpen.current}
-          onClose={() => setGameCenterOpen(false)}
+          tab={gc.route?.tab}
+          event={gc.route?.event}
+          onTab={gc.setTab}
+          onClose={gc.close}
         />
       </Suspense>}
     </article>

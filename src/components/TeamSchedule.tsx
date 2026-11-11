@@ -1,4 +1,9 @@
+import { useGameRoute } from "../hooks/useGameRoute";
+import { GameNotFound } from "./gc/GameNotFound";
+import { FavoriteMark, FavoriteStar } from "./FavoriteStar";
 import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { fmtTime } from "../lib/dates.mjs";
+import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
@@ -6,12 +11,15 @@ import { defaultMonth, monthGrid, monthKey, monthLabel, nextIndex, recordOf, sea
 import { useEtToday } from "../hooks/useEtToday";
 import { Icon } from "./icons";
 import { TeamLogo } from "./TeamLogo";
+import { LOGO_SIZE } from "./GameCardView";
+import { PageHeader } from "./PageHeader";
+import { TeamLink } from "./TeamProfile";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
 type Item = ReturnType<typeof sideOf>;
 type Filter = "all" | "final" | "upcoming";
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const time = (iso: string) => fmtTime(iso);
 const dayParts = (date: string) => {
   const d = new Date(`${date}T12:00:00Z`);
   return { wd: d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }), md: d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) };
@@ -23,6 +31,7 @@ interface Props { games: Game[]; teams: Team[]; defaultTeam?: string; analysis: 
 /** A team's whole season: a calendar that opens on this month (the default), or a list of cards that opens on the game closest to being played. */
 export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, baselineTable, sourceSeason }: Props) {
   const [teamId, setTeamId] = useState(defaultTeam && teams.some((t) => t.id === defaultTeam) ? defaultTeam : teams[0]?.id);
+  useTimeKey();
   const [mode, setMode] = useState<"list" | "calendar">("calendar");
   const [filter, setFilter] = useState<Filter>("all");
   const today = useEtToday();
@@ -34,7 +43,8 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
   const shown = useMemo(() => items.filter((i) => (filter === "all" ? true : filter === "final" ? i.status === "final" : i.status !== "final")), [items, filter]);
   const [month, setMonth] = useState(() => defaultMonth(items, today));
   const months = useMemo(() => seasonMonths(items), [items]);
-  const [centerId, setCenterId] = useState<number | null>(null);
+  const gc = useGameRoute();
+  const centerId = gc.route?.id ?? null;
   const scrollAtOpen = useRef(0);
   const root = useRef<HTMLElement>(null);
 
@@ -48,7 +58,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
   useLayoutEffect(() => { setMonth(defaultMonth(items, today)); }, [teamId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const jump = () => root.current?.querySelector<HTMLElement>("[data-next]")?.scrollIntoView({ block: "center", behavior: document.documentElement.dataset.motion === "off" ? "auto" : "smooth" });
-  const open = (g: Game) => { scrollAtOpen.current = window.scrollY; setCenterId(g.id); };
+  const open = (g: Game) => { scrollAtOpen.current = window.scrollY; gc.open(g.id); };
   const teamOf = (id: string) => teams.find((t) => t.id === id)!;
   const centerGame = centerId != null ? games.find((g) => g.id === centerId) : undefined;
   const ranks = useMemo(() => (analysis && centerGame ? teamRanks(analysis.before[centerGame.id], teams) : undefined), [analysis, centerGame, teams]);
@@ -64,7 +74,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
         <button type="button" className={`ts-card ${i.status}${i.result ? ` r-${i.result}` : ""}${first ? " is-next" : ""}`} onClick={() => open(i.game)}
           aria-label={`${wd} ${md}: ${i.home ? "home against" : "at"} ${opp.name}, ${i.status === "upcoming" ? `${time(i.start)}` : i.status === "live" ? `live, ${i.us} to ${i.them}` : `${i.result === "W" ? "won" : i.result === "OTL" ? "lost in overtime" : "lost"} ${i.us} to ${i.them}${i.ot ? ` in ${i.ot === "SO" ? "a shootout" : "overtime"}` : ""}`}. Open Game Center`}>
           <span className="ts-date"><b>{wd}</b><span>{md}</span></span>
-          <span className="ts-opp"><TeamLogo id={opp.id} size={36} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}</b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
+          <span className="ts-opp"><TeamLogo id={opp.id} size={LOGO_SIZE.row} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}<FavoriteMark id={opp.id} /></b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
           <span className="ts-res">
             {i.status === "final" ? <><b className={`ts-badge ${i.result ?? ""}`}>{i.result ?? "–"}</b><span>{resultText(i)}</span></> : i.status === "live" ? <><b className="ts-badge live">LIVE</b><span>{i.us}–{i.them}</span></> : <span className="ts-time">{resultText(i)}</span>}
           </span>
@@ -79,13 +89,12 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
 
   return (
     <section ref={root} className="team-schedule" aria-label="Team schedule">
-      <header className="ts-head">
+      <PageHeader title={team.name} eyebrow="SCHEDULE">
+        <div className="ts-head">
         <div className="ts-team">
           <TeamLogo id={team.id} size={44} />
-          <div>
-            <h1>{team.name}</h1>
-            <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming</p>
-          </div>
+          <FavoriteStar id={team.id} name={team.name} />
+          <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming · <TeamLink id={team.id}>{team.short} profile</TeamLink></p>
         </div>
         <div className="ts-tools">
           <label className="ts-pick"><span className="sr-only">Team</span>
@@ -98,7 +107,8 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
             <button type="button" aria-pressed={mode === "calendar"} onClick={() => setMode("calendar")}>Calendar</button>
           </div>
         </div>
-      </header>
+        </div>
+      </PageHeader>
 
       {mode === "list" ? (
         <>
@@ -126,7 +136,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
                 {d.games.map((i: Item) => (
                   <button key={i.id} type="button" className={`ts-gchip ${i.status}${i.result ? ` r-${i.result}` : ""}`} onClick={() => open(i.game)}
                     aria-label={`${i.home ? "Home against" : "At"} ${teamOf(i.opp).name}, ${i.status === "upcoming" ? time(i.start) : i.status === "live" ? "live" : `${i.result ?? ""} ${i.us} to ${i.them}`}. Open Game Center`}>
-                    <TeamLogo id={i.opp} size={20} />
+                    <TeamLogo id={i.opp} size={LOGO_SIZE.compact} />
                     <span className="ts-gtext"><span className="ts-oppline"><em data-venue={i.home ? "home" : "away"}>{i.home ? "vs" : "@"}</em> <b className="ts-abbr">{i.opp}</b></span> <span className="ts-gres">{i.status === "upcoming" ? time(i.start).replace(" ", "").toLowerCase() : `${i.result ?? ""} ${i.us}–${i.them}`}</span></span>
                   </button>
                 ))}
@@ -151,10 +161,14 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
             allGames={games}
             series={seasonSeriesBeforeGame(games, centerGame)}
             returnTo={scrollAtOpen.current}
-            onClose={() => setCenterId(null)}
+            tab={gc.route?.tab}
+            event={gc.route?.event}
+            onTab={gc.setTab}
+            onClose={gc.close}
           />
         </Suspense>
       )}
+      {gc.route && !centerGame && games.length > 0 && <GameNotFound onClose={() => gc.close({ replace: true })} />}
     </section>
   );
 }

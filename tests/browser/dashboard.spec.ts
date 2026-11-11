@@ -1,7 +1,10 @@
+import { gcTab } from "./nav";
 import { test, expect } from "@playwright/test";
 import { closeTeams, filterGames, isPhone, openTeams, filterValue, pickOnlyTeam, selectAllTeams, selectMyThree, teamCount } from "./controls";
-import { goToAllGames } from "./nav";
+import { goTo, goToAllGames } from "./nav";
 import manifest from "../../public/data/manifest.json" with { type: "json" };
+import { seedPrefs, OLD_DEFAULT } from "./prefs";
+test.beforeEach(({ page }) => seedPrefs(page, OLD_DEFAULT));
 test("default teams, league selection, graphs and season navigation", async ({
   page,
 }) => {
@@ -13,7 +16,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   if (await isPhone(page)) {
     // The team shortcuts live in the Teams sheet on phones; the default is My three.
     await openTeams(page);
-    await expect(page.getByRole("button", { name: "My three", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "My teams", exact: true })).toHaveAttribute("aria-pressed", "true");
     await closeTeams(page);
   } else {
     for (const id of ["EDM", "CHI", "MIN"]) await expect(page.getByRole("button", { name: id, exact: true })).toHaveAttribute("aria-pressed", "true");
@@ -40,21 +43,21 @@ test("default teams, league selection, graphs and season navigation", async ({
     "32 selected teams",
   );
   await selectMyThree(page);
-  await page.getByRole("button", { name: "Team trends", exact: true }).click();
+  await goTo(page, "Team trends");
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
   await expect(page.getByLabel("Metric")).toHaveValue("playoffs");
   await expect(page.locator(".trend-panel")).toContainText("Current season only");
   await expect(page.locator(".chart-wrap image")).toHaveCount(3);
   await goToAllGames(page);
   await page.getByLabel("Season", { exact: true }).selectOption("20252026");
-  await expect(page.locator(".game-card").first()).toContainText("FINAL");
-  await page.getByRole("button", { name: "Team trends", exact: true }).click();
+  await expect(page.locator(".game-card").first()).toContainText(/final/i);
+  await goTo(page, "Team trends");
   await expect(page.locator(".chart-wrap svg")).toBeVisible();
   await expect(page.getByLabel("Metric")).toHaveValue("difference");
   await expect(page.getByLabel("Metric").locator('option[value="playoffs"]')).toHaveCount(0);
-  await page.getByRole("button", { name: "Standings", exact: true }).click();
+  await goTo(page, "Standings");
   await expect(page.locator("tbody tr")).toHaveCount(32);
-  await page.getByRole("button", { name: "Players", exact: true }).click();
+  await goTo(page, "Players");
   await expect(page.locator("tbody tr").first()).toBeVisible();
   expect(errors).toEqual([]);
   expect(
@@ -110,8 +113,8 @@ test("featured team shortcuts filter to exactly one team", async ({ page }) => {
 test("finished-today games collapse into a compact expandable strip", async ({
   page,
 }) => {
-  const today = new Date().toLocaleDateString("en-CA");
-  const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString("en-CA");
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
   const season = manifest.current;
   const snapshot = {
     season,
@@ -189,6 +192,7 @@ test("recent actual game contribution and mobile card layout", async ({
   const card = page.locator(".game-card").first();
   await card.getByRole("button", { name: /Open Game Center for/ }).click();
   const dialog = page.locator("dialog.game-dialog");
+  await gcTab(page, "Players");
   await dialog.locator(".game-center-section > summary").filter({ hasText: "Player leaders and trends" }).click();
   await expect(dialog).toContainText("Final box score");
   await expect(dialog.locator(".impact-row").first()).toBeVisible();

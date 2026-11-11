@@ -6,7 +6,8 @@ import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "j
 // This spec is about animated behaviour; the suite default is reduced motion (see playwright.config.ts).
 test.use({ reducedMotion: "no-preference" });
 
-const base = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
+// A live game that started an hour ago (the recorded fixture game started long ago, and the app treats such a live game as stale and does not poll it).
+const base = { ...scoreboardFixture.games.find((g) => g.id === fixture.id)!, start: new Date(Date.now() - 3600_000).toISOString() };
 const HOME = base.home, AWAY = base.away;
 // Rink coordinates as the feed gives them: the teams switch ends between periods, so the same team's shots come at both signs of x.
 const plays = [
@@ -59,13 +60,13 @@ test("a finished game keeps its ice view, and a game that has not started has no
   await showPeriod(page, "past");
   const card = page.locator(".game-card").first();
   await card.scrollIntoViewIfNeeded(); // the feed is fetched only for a card that is on screen
-  await expect(card).toContainText("FINAL");
+  await expect(card).toContainText(/final/i);
   await expect(card.getByTestId("ice-view")).toContainText("Shot map · final");
   // A game that has not started has no ice view, and so adds nothing to the small card.
   await showPeriod(page, "future");
   const upcoming = page.locator(".game-card").first();
   await upcoming.scrollIntoViewIfNeeded();
-  await expect(upcoming).not.toContainText("FINAL");
+  await expect(upcoming).not.toContainText(/final/i);
   await expect(page.getByTestId("ice-view")).toHaveCount(0);
 });
 

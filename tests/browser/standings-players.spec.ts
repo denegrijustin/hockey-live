@@ -1,5 +1,6 @@
+import { seedPrefs, OLD_DEFAULT } from './prefs';
 import {test,expect} from '@playwright/test';
-import {goToAllGames} from './nav';
+import {goTo,goToAllGames} from './nav';
 import { closeTeams, openTeams, teamCount } from "./controls";
 test('standings groups and projected totals work on all screen sizes',async({page},info)=>{
  await page.goto('/?view=games'); await page.getByRole('button',{name:'Standings',exact:true}).click();
@@ -14,9 +15,10 @@ test('standings groups and projected totals work on all screen sizes',async({pag
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 test('current-season player face, jersey and accessible profile',async({page},info)=>{
+ await seedPrefs(page,OLD_DEFAULT);
  await page.route('**/api/players/**',r=>r.fulfill({json:{season:20262027,gameType:2,updatedAt:new Date().toISOString(),skaters:[{id:8478402,name:'Connor McDavid',team:'EDM',number:97,headshot:'https://assets.nhle.com/mugs/nhl/20262027/EDM/8478402.png',position:'C',gp:1,goals:1,assists:2,shots:4,hits:3,plusMinus:2,pim:0}],goalies:[]}}));
  await page.route('**/api/player/8478402',r=>r.fulfill({json:{name:'Connor McDavid',number:97,team:'EDM',headshot:'https://assets.nhle.com/mugs/nhl/20262027/EDM/8478402.png',position:'C',birthDate:'1997-01-13',height:73,weight:194,shoots:'L',seasons:[]}}));
- await page.goto('/?view=games');await page.getByRole('button',{name:'Players',exact:true}).click();
+ await page.goto('/?view=games');await goTo(page,'Players');
  const button=page.getByRole('button',{name:'View Connor McDavid details'}).first();
  await expect(button).toContainText('#97'); await expect(button.locator('img')).toHaveCount(1);
  if (info.project.use.isMobile) await expect(button.locator("xpath=ancestor::tr").locator("td[data-label=\"Hits\"]")).toHaveCount(1); else await expect(page.getByRole("columnheader",{name:"Hits",exact:true})).toBeVisible();
@@ -27,20 +29,20 @@ test('current-season player face, jersey and accessible profile',async({page},in
  await page.keyboard.press('Escape');await expect(page.locator('dialog[open]')).toHaveCount(0);
  await expect(button).toBeFocused();
 });
-test('Players defaults to My three independently and supports custom teams or All 32',async({page})=>{
- await page.addInitScript(()=>localStorage.setItem('iceboard-teams',JSON.stringify(['FLA','CAR'])));
+test('Players defaults to My teams independently and supports custom teams or All 32',async({page})=>{
+ await seedPrefs(page,{favorites:['FLA','CAR']});
  await page.route('**/api/players/**',r=>r.fulfill({json:{season:20262027,skaters:[],goalies:[]}}));
- await page.goto('/?view=games'); await page.getByRole('button',{name:'Players',exact:true}).click();
- await expect(await teamCount(page)).toHaveText('3');
+ await page.goto('/?view=games'); await goTo(page,'Players');
+ await expect(await teamCount(page)).toHaveText('2');
  await openTeams(page);
  // The picks are checkboxes in both layouts; My three and All 32 are buttons next to them (pills on desktop, in the sheet on phones).
- await expect(page.getByRole('button',{name:'My three',exact:true})).toHaveAttribute('aria-pressed','true');
- await page.getByRole('checkbox',{name:'Florida Panthers',exact:true}).check();
- await expect(await teamCount(page)).toHaveText('4');
+ await expect(page.getByRole('button',{name:'My teams',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('checkbox',{name:'Boston Bruins',exact:true}).check();
+ await expect(await teamCount(page)).toHaveText('3');
  await page.getByRole('button',{name:'All 32',exact:true}).click();
  await expect(page.getByRole('button',{name:'All 32',exact:true})).toHaveAttribute('aria-pressed','true');
- await page.getByRole('button',{name:'My three',exact:true}).click();
- await expect(await teamCount(page)).toHaveText('3');
+ await page.getByRole('button',{name:'My teams',exact:true}).click();
+ await expect(await teamCount(page)).toHaveText('2');
  await closeTeams(page);
  await goToAllGames(page);
  await expect(await teamCount(page)).toHaveText('2');

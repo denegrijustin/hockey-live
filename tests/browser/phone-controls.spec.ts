@@ -1,11 +1,14 @@
+import { seedPrefs, OLD_DEFAULT } from "./prefs";
 import { expect, test, type Page } from "@playwright/test";
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
+import { DATA_DAY, DATA_NOW } from "./clock";
 
+test.beforeEach(({ page, isMobile }) => seedPrefs(page, OLD_DEFAULT).then(() => undefined));
 test.beforeEach(({ isMobile }) => test.skip(!isMobile, "phone layout"));
 
 async function open(page: Page, live: unknown = null) {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
+  await page.clock.setFixedTime(DATA_NOW);
   await page.route("**/api/live", (route) => (live ? route.fulfill({ json: live }) : route.fulfill({ status: 503, body: "{}" })));
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();
@@ -54,7 +57,7 @@ test("a swipe down closes the Filters sheet", async ({ page }) => {
   await expect(sheet).toBeHidden();
 });
 
-test("the Teams sheet searches, picks All 32 and My three, and updates the count", async ({ page }) => {
+test("the Teams sheet searches, picks All 32 and My teams, and updates the count", async ({ page }) => {
   await open(page);
   const count = page.locator(".phone-controls .pc-button b").first();
   await expect(count).toHaveText("3");
@@ -66,8 +69,8 @@ test("the Teams sheet searches, picks All 32 and My three, and updates the count
   await sheet.getByLabel("Find a team").fill("");
   await sheet.getByRole("button", { name: "All 32", exact: true }).click();
   await expect(sheet.getByRole("button", { name: "All 32", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await sheet.getByRole("button", { name: "My three", exact: true }).click();
-  await expect(sheet.getByRole("button", { name: "My three", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await sheet.getByRole("button", { name: "My teams", exact: true }).click();
+  await expect(sheet.getByRole("button", { name: "My teams", exact: true })).toHaveAttribute("aria-pressed", "true");
   await sheet.getByRole("button", { name: "Clear" }).click();
   await sheet.getByRole("button", { name: "Done" }).click();
   await expect(count).toHaveText("0");
@@ -90,8 +93,11 @@ test("the header shows a status pill: saved copy when live scores are down", asy
 });
 
 test("with live scores working there is no banner, and the pill says live when a game is on", async ({ page }) => {
-  const games = scoreboardFixture.games.map((g) => ({ ...g, state: "LIVE", intermission: false, period: 2, periodType: "REG", clock: "10:00" }));
-  await open(page, { ...scoreboardFixture, updatedAt: new Date().toISOString(), games });
+  const started = new Date(DATA_NOW.getTime() - 3600_000).toISOString();
+  const games = scoreboardFixture.games.map((g) => ({ ...g, start: started, state: "LIVE", intermission: false, period: 2, periodType: "REG", clock: "10:00" }));
+  // A worker-served season snapshot (not the saved copy), so the pill is judged on the live feed alone.
+  await page.route("**/api/season/*", async (route) => route.fulfill({ response: await route.fetch({ url: new URL(`/data/seasons/${route.request().url().split("/").pop()}.json`, route.request().url()).toString() }) }));
+  await open(page, { ...scoreboardFixture, date: DATA_DAY, updatedAt: DATA_NOW.toISOString(), games: games.map((g) => ({ ...g, date: DATA_DAY })) });
   await expect(page.locator(".status-pill")).toHaveAttribute("data-state", "live");
   await expect(page.locator(".status-banner")).toHaveCount(0);
   await expect(page.getByTestId("live-dot")).toBeVisible(); // a dot on the Games tab

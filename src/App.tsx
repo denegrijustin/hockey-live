@@ -1,32 +1,51 @@
 import { isLive } from "./lib/game-data.mjs";
+import { relativeDay } from "./lib/dates.mjs";
+import { searchFor } from "./lib/date-nav.mjs";
+import { parseGameRoute } from "./lib/gc-route.mjs";
+import { GameDayStrip, hasDateParam, clearDateParam } from "./components/GameDayStrip";
+import { useEtToday } from "./hooks/useEtToday";
 import { useSeason } from "./hooks/useSeason";
+import { useGameAlerts } from "./hooks/useGameAlerts";
 import { useGameLists } from "./hooks/useGameLists";
 import { useStackedTables } from "./hooks/useStackedTables";
 import { TeamProfileProvider } from "./components/TeamProfile";
+import { PlayerProfileProvider } from "./components/player/PlayerContext";
+import { getPrefs } from "./lib/prefs";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScoreTicker } from "./components/ScoreTicker";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useFavorites } from "./hooks/useFavorites";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NHLPLUS_EVENT } from "./lib/nhlplus-nav";
 import rawTeams from "./data/teams.json";
 import type { Game, Snapshot, Team, Scoreboard } from "./types";
 import { analyzeSeason, finished, playoffChances } from "./lib/model.mjs";
 import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
-import { MainNav, VIEW_IDS } from "./components/MainNav";
+import { MainNav, VIEW_IDS, VIEW_TITLES } from "./components/MainNav";
+import { Teams } from "./components/Teams";
+const TeamPage = lazy(() => import("./components/team/TeamPage"));
+import { PageHeader } from "./components/PageHeader";
 import { Scoreboard as ScoreboardView } from "./components/Scoreboard";
 import { Sheet } from "./components/Sheet";
 import { GameFilterFields, PeriodSwitch } from "./components/GameFilters";
 import { TeamsSheet } from "./components/TeamsSheet";
-import { StatusPill } from "./components/StatusPill";
+import { StatusPill, ago } from "./components/StatusPill";
+import { useOnline } from "./hooks/useOnline";
 import { Icon } from "./components/icons";
+import { NotificationBell } from "./components/alerts/NotificationBell";
+import { SearchPalette } from "./components/SearchPalette";
+import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { Skeleton } from "./components/Skeleton";
+import { setPrefs, usePrefs } from "./lib/prefs.ts";
+// Not lazy: the first-visit banner renders with the board, so a late chunk would push the whole board down (layout shift).
+import Onboarding from "./components/Onboarding";
 import { GameCard } from "./components/GameCard";
-import { Methodology } from "./components/Methodology";
 // Only the "games" tab is needed for first paint; the rest of the tabs
 // (and their per-team API calls) load on demand when a visitor switches
 // to them, keeping the initial bundle smaller.
+const Methodology = lazy(() => import("./components/Methodology").then((m) => ({ default: m.Methodology })));
 const EdgePanel = lazy(() =>
   import("./components/EdgeStats").then((m) => ({ default: m.EdgePanel })),
 );
@@ -46,6 +65,9 @@ const ImperialismMap = lazy(() =>
   import("./components/ImperialismMap").then((m) => ({ default: m.ImperialismMap })),
 );
 const TeamSchedule = lazy(() => import("./components/TeamSchedule").then((m) => ({ default: m.TeamSchedule })));
+const Settings = lazy(() => import("./components/settings/Settings").then((m) => ({ default: m.Settings })));
+const Recommended = lazy(() => import("./components/following/Recommended"));
+const Following = lazy(() => import("./components/following/Following").then((m) => ({ default: m.Following })));
 const Injuries = lazy(() => import("./components/Injuries").then((m) => ({ default: m.Injuries })));
 const LastNight = lazy(() => import("./components/LastNight").then((m) => ({ default: m.LastNight })));
 const Picks = lazy(() => import("./components/Picks").then((m) => ({ default: m.Picks })));
@@ -53,49 +75,66 @@ const NhlPlus = lazy(() =>
   import("./components/nhlplus/NhlPlus").then((m) => ({ default: m.NhlPlus })),
 );
 const teams: Team[] = rawTeams;
-const defaults = ["EDM", "CHI", "MIN"];
-function initialTeams() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("iceboard-teams") ?? "null");
-    return Array.isArray(saved) &&
-      saved.length &&
-      saved.every((x) => teams.some((t) => t.id === x))
-      ? saved
-      : defaults;
-  } catch {
-    return defaults;
-  }
-}
+const allTeamIds = teams.map((t) => t.id);
 const seasonLabel = (s: number) =>
   `${String(s).slice(0, 4)}–${String(s).slice(6)}`;
-// Groups the game-center list under a day heading when sorted chronologically.
-function dayHeading(dateStr: string) {
-  const start = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const diff = Math.round(
-    (start(new Date(`${dateStr}T00:00:00`)) - start(new Date())) / 86400000,
-  );
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  if (diff === -1) return "Yesterday";
-  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
+// Groups the game-center list under a day heading: the game's Eastern day against today's Eastern day, so "Today" is right in every time zone.
+function dayHeading(dateStr: string, today: string) {
+  const rel = relativeDay(dateStr, today);
+  return /^(Today|Tomorrow|Yesterday)$/.test(rel)
+    ? rel
+    : new Date(`${dateStr}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
 }
-const initialView = () => {
+/** The view the address names: ?view=standings, with the bare address as Home. Unknown names open Home. */
+const viewFromAddress = () => {
   try {
-    const v = new URLSearchParams(location.search).get("view");
-    return v && VIEW_IDS.includes(v) ? v : "scoreboard";
+    const q = new URLSearchParams(location.search), v = q.get("view");
+    if (v && VIEW_IDS.includes(v)) return v;
+    const d = getPrefs().display.defaultView; // the plain address opens the view chosen in Settings (never for shared links with other params)
+    return !q.toString() && d !== "settings" && VIEW_IDS.includes(d) ? d : "scoreboard";
   } catch {
     return "scoreboard";
   }
 };
+const initialView = viewFromAddress;
+/** The team page the address names (?view=teams&team=EDM); a missing or unknown team id is the Teams directory. */
+const teamFromAddress = () => {
+  try {
+    const p = new URLSearchParams(location.search), id = p.get("team");
+    return p.get("view") === "teams" && id && teams.some((t) => t.id === id) ? id : null;
+  } catch {
+    return null;
+  }
+};
+/** The address of a view: `?view=…` (Home is the plain address). A picked day (`&date=`) goes along only to Home and Games; `team` only to Teams. */
+const addressFor = (view: string, team: string | null = null, keepGame = false) => {
+  let date: string | null = null;
+  try { date = new URLSearchParams(location.search).get("date"); } catch {}
+  let player: string | undefined;
+  try { player = new URLSearchParams(location.search).get("player") ?? undefined; } catch {}
+  // An open Game Center (?game=&tab=&event=) is kept only when the address is being normalised in place, never when moving to another view.
+  const game = keepGame ? parseGameRoute(location.search) : null;
+  return `${location.pathname}${searchFor(view, date, { team, player, game })}`;
+};
 export default function App() {
-  const [selected, setSelected] = useState<string[]>(initialTeams);
-  const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry } = useSeason();
-  const [playerTeams, setPlayerTeams] = useState<string[]>(defaults);
-  const [view, setView] = useState(initialView),
+  const prefs = usePrefs();
+  const online = useOnline();
+  const { favorites } = useFavorites();
+  const onboarded = prefs.onboarded;
+  const [pickOpen, setPickOpen] = useState(false);
+  useEffect(() => {
+    const open = () => setPickOpen(true);
+    window.addEventListener("iceboard:pick-favorites", open);
+    return () => window.removeEventListener("iceboard:pick-favorites", open);
+  }, []);
+  // No favorites: the whole league. With favorites: they are the default filter until the user picks another set this session.
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const selected = picked ?? (favorites.length ? favorites : allTeamIds);
+  const { manifest, season, setSeason, data, baseline, scoreboard, liveError, hasLive, error, loading, retry, reloadLive, source } = useSeason();
+  useGameAlerts(scoreboard?.games);
+  const [pickedPlayers, setPlayerTeams] = useState<string[] | null>(null);
+  const playerTeams = pickedPlayers ?? (favorites.length ? favorites.slice(0, 3) : allTeamIds);
+  const [view, setViewState] = useState(initialView),
     [period, setPeriod] = useState("future"),
     [type, setType] = useState(2),
     [sort, setSort] = useState("date"),
@@ -103,16 +142,72 @@ export default function App() {
     [query, setQuery] = useState(""),
     [limit, setLimit] = useState(18),
     [filtersOpen, setFiltersOpen] = useState(false),
-    [teamsOpen, setTeamsOpen] = useState(false);
+    [byDay, setByDayState] = useState(() => viewFromAddress() === "games" && hasDateParam()),
+    [gameDate, setGameDate] = useState<string | null>(null),
+    [teamsOpen, setTeamsOpen] = useState(false),
+    [teamId, setTeamId] = useState<string | null>(teamFromAddress);
+  const todayEt = useEtToday();
+  const setByDay = useCallback((on: boolean) => {
+    setByDayState(on);
+    if (!on) { clearDateParam(); setGameDate(null); }
+  }, []);
   const phone = useMedia("(max-width: 720px)");
   const home = view === "scoreboard";
-  // The view is kept in the address (?view=…) so a link opens the same screen; the scoreboard is the plain address.
+  // Every screen has its own address (?view=…; Home is the plain address) and its own history entry, so Back and Forward move between screens,
+  // a link opens the same screen, and a refresh stays put. Each entry remembers how far down it was scrolled.
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const teamRef = useRef(teamId);
+  teamRef.current = teamId;
+  const pushedTeam = useRef(false);
+  const setView = useCallback((next: string) => {
+    if (next === viewRef.current && !teamRef.current) return;
+    try {
+      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: window.scrollY }, "");
+      history.pushState({ view: next, team: null, scroll: 0 }, "", addressFor(next));
+    } catch {}
+    setViewState(next);
+    setTeamId(null);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+  /** Open a team's full page (?view=teams&team=EDM) as its own history entry, so Back returns to where it was opened from. */
+  const openTeam = useCallback((id: string) => {
+    if (!teams.some((t) => t.id === id)) return;
+    try {
+      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: window.scrollY }, "");
+      history.pushState({ view: "teams", team: id, scroll: 0 }, "", addressFor("teams", id));
+      pushedTeam.current = true;
+    } catch {}
+    setViewState("teams");
+    setTeamId(id);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
   useEffect(() => {
     try {
-      history.replaceState(null, "", home ? location.pathname : `?view=${view}`);
+      history.scrollRestoration = "manual";
+      history.replaceState({ ...history.state, view: viewRef.current, team: teamRef.current, scroll: history.state?.scroll ?? 0 }, "", addressFor(viewRef.current, teamRef.current, true));
     } catch {}
+    const pop = (e: PopStateEvent) => {
+      const next = e.state?.view && VIEW_IDS.includes(e.state.view) ? e.state.view : viewFromAddress();
+      setViewState(next);
+      setTeamId(next === "teams" ? (e.state?.view ? (e.state.team ?? null) : teamFromAddress()) : null);
+      const y = Number(e.state?.scroll) || 0;
+      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: y, left: 0, behavior: "instant" })));
+    };
+    window.addEventListener("popstate", pop);
+    return () => window.removeEventListener("popstate", pop);
+  }, []);
+  useEffect(() => {
     document.documentElement.toggleAttribute("data-home", home);
-  }, [view, home]);
+    const teamName = view === "teams" && teamId ? teams.find((t) => t.id === teamId)?.name : null;
+    document.title = home ? "Iceboard · NHL game intelligence" : `${teamName ?? VIEW_TITLES[view] ?? "Iceboard"} · Iceboard`;
+  }, [view, home, teamId]);
+  // After a screen change, move focus to the page so keyboard and screen-reader users start at the top of the new screen.
+  const firstView = useRef(true);
+  useEffect(() => {
+    if (firstView.current) { firstView.current = false; return; }
+    document.getElementById("main")?.focus({ preventScroll: true });
+  }, [view]);
   useStackedTables(view);
   const analysis = useMemo(
     () => (data ? analyzeSeason(data.games, teams) : null),
@@ -142,7 +237,9 @@ export default function App() {
     data?.games.filter(
       (g) => selected.includes(g.home) || selected.includes(g.away),
     ) ?? [];
-  const { games, finishedToday } = useGameLists({ data, analysis, teams, selected, type, period, range, query, sort });
+  const { games, finishedToday } = useGameLists({ data, analysis, teams, selected, type, period, range, query, sort, date: byDay && view === "games" ? gameDate : null });
+  const gameDays = useMemo(() => [...new Set(relevant.filter((g) => g.type === type).map((g) => g.date))].sort(), [data, selected, type]); // eslint-disable-line react-hooks/exhaustive-deps
+  const gameDayCounts = useMemo(() => { const c: Record<string, number> = {}; for (const g of relevant) if (g.type === type) c[g.date] = (c[g.date] ?? 0) + 1; return c; }, [data, selected, type]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(
     () => setLimit(18),
     [season, selected, type, period, range, query, sort],
@@ -152,12 +249,13 @@ export default function App() {
     window.addEventListener(NHLPLUS_EVENT, open);
     return () => window.removeEventListener(NHLPLUS_EVENT, open);
   }, []);
-  const changeTeams = (ids: string[]) => {
-    setSelected(ids);
-    try {
-      localStorage.setItem("iceboard-teams", JSON.stringify(ids));
-    } catch {}
-  };
+  // Search: a team opens its page (openTeam), a game opens its Game Center on Home.
+  useEffect(() => {
+    const onOpenGame = () => setView("scoreboard");
+    window.addEventListener(OPEN_GAME_EVENT, onOpenGame);
+    return () => window.removeEventListener(OPEN_GAME_EVENT, onOpenGame);
+  }, [setView]);
+  const changeTeams = (ids: string[]) => setPicked(ids);
   // Game Center lists games in chronological order by default (live games first, then by start time under day
   // headings); "Importance to teams + league" is one choice away in Sort by, and every card still shows its
   // importance. Completed games move to the finished section. A 30-day window suits a handful of followed teams, but
@@ -174,9 +272,10 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const refresh = useCallback(() => {
     retry();
+    reloadLive();
     window.dispatchEvent(new Event("iceboard:refresh"));
     setManualRefresh(true);
-  }, [retry]);
+  }, [retry, reloadLive]);
   // "Updated just now" once a refresh the viewer asked for (pull, Retry, Refresh data) has finished.
   useEffect(() => {
     if (!manualRefresh || loading) return;
@@ -192,19 +291,21 @@ export default function App() {
   const liveCount = scoreboard ? scoreboard.games.filter(isLive).length : 0;
   const defaultRange = isAllTeams ? "7" : "30";
   // How many filters differ from the defaults: shown on the phone Filters button.
-  const activeFilters = [period !== "future", type !== 2, range !== defaultRange, sort !== "date"].filter(Boolean).length;
+  const activeFilters = [period !== "future", type !== 2, range !== defaultRange, sort !== "date", byDay].filter(Boolean).length;
   const resetFilters = () => {
     setPeriod("future");
     setType(2);
     setRange(defaultRange);
     setSort("date");
+    setByDay(false);
   };
   return (
-    <TeamProfileProvider teams={teams} table={analysis?.table ?? null} games={data?.games ?? []} season={season}>
+    <TeamProfileProvider teams={teams} table={analysis?.table ?? null} games={data?.games ?? []} season={season} onOpenPage={openTeam}>
+    <PlayerProfileProvider>
       <a href="#main" className="skip-link">
         Skip to dashboard
       </a>
-      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && (
+      {data && analysis && !home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && view !== "settings" && view !== "following" && (
         <ScoreTicker
           games={data.games}
           teams={teams}
@@ -215,7 +316,7 @@ export default function App() {
         />
       )}
       <header className="site-header">
-        <a className="brand" href="/" aria-label="Iceboard home">
+        <a className="brand" href="/" aria-label="Iceboard home" onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); setView("scoreboard"); }}>
           <span className="brand-symbol">
             Ⅱ<span>↗</span>
           </span>
@@ -224,7 +325,9 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
-          <StatusPill live={hasLive} offline={!!liveError} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
+          <NotificationBell onNavigate={setView} />
+          <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeam} onView={setView} />
+          <StatusPill live={hasLive && online} online={online} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
           <label className="season-label">
             Season
             <select
@@ -247,15 +350,15 @@ export default function App() {
           </label>
         </div>
       </header>
-      <main id="main" className="page">
-        <MainNav view={view} setView={setView} liveCount={liveCount} onRefresh={refresh} />
+      <main id="main" className="page" tabIndex={-1}>
+        <MainNav view={view} setView={setView} liveCount={liveCount} onRefresh={refresh} onChooseTeams={phone ? () => setTeamsOpen(true) : undefined} />
         {(pull > 0 || refreshing) && (
           <div className="ptr" role="status" style={{ opacity: refreshing ? 1 : Math.min(1, pull) }} data-ready={pull >= 1}>
             <Icon name="refresh" size={20} />
             <span>{refreshing ? "Refreshing…" : pull >= 1 ? "Release to refresh" : "Pull to refresh"}</span>
           </div>
         )}
-        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && !(phone && view === "nhlplus") && (
+        {!home && view !== "picks" && view !== "teamschedule" && view !== "injuries" && view !== "yesterday" && view !== "settings" && view !== "following" && view !== "teams" && !(phone && view === "nhlplus") && (
           <div className="control-dock">
             {phone ? (
               <div className="phone-controls">
@@ -283,8 +386,13 @@ export default function App() {
             )}
           </div>
         )}
+        {!online && (
+          <div className="status-banner" role="status" data-testid="offline-banner">
+            <span>You are offline. {data ? `Scores were last updated ${ago(staleness)}` : "No scores are loaded"} and may be out of date.</span>
+          </div>
+        )}
         {phone || home ? (
-          (liveError || staleness > 86400000) && (
+          online && (liveError || staleness > 86400000) && (
             <div className="status-banner" role="status">
               <span>{liveError ? "Live scores unavailable. Showing saved data." : "Showing a saved copy. Refresh pending."}</span>
               <button onClick={refresh} disabled={loading}>Retry</button>
@@ -309,7 +417,9 @@ export default function App() {
           </button>
         </div>
         )}
-        {error ? (
+        {error && home ? (
+          <ScoreboardView games={[]} teams={teams} analysis={null} baseline={null} sourceSeason={sourceSeason} error={error} onRetry={() => (season ? refresh() : location.reload())} />
+        ) : error ? (
           <div className="empty error">
             <h2>Unable to load data</h2>
             <p>{error}</p>
@@ -337,8 +447,11 @@ export default function App() {
                 {scoreboard.games.filter(isLive).length} games in progress around the league
               </p>
             )}
+            {((view === "scoreboard" && !onboarded && !favorites.length) || pickOpen) && (
+              <Onboarding teams={teams} banner={view === "scoreboard" && !onboarded} open={pickOpen} onOpen={() => setPickOpen(true)} onClose={() => setPickOpen(false)} />
+            )}
             {view === "scoreboard" && (
-              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} onBrowse={() => setView("games")} />
+              <ScoreboardView games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} loading={loading} sim={playoff} onNavigate={setView} onBrowse={() => setView("games")} favorites={prefs.favorites} followedPlayers={prefs.players} density={prefs.display.density} homeOrder={prefs.display.homeOrder} sections={prefs.display.sections} onDensity={(density) => setPrefs((p) => ({ ...p, display: { ...p.display, density } }))} />
             )}
             {view === "yesterday" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading last night" />}>
@@ -347,8 +460,14 @@ export default function App() {
             )}
             {view === "teamschedule" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the team schedule" />}>
-                <TeamSchedule games={data.games} teams={teams} defaultTeam={selected[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
+                <TeamSchedule games={data.games} teams={teams} defaultTeam={favorites[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
               </Suspense></ErrorBoundary>
+            )}
+            {view === "settings" && (
+              <ErrorBoundary resetKey="settings"><Suspense fallback={<Skeleton rows={3} label="Loading settings" />}><Settings /></Suspense></ErrorBoundary>
+            )}
+            {view === "following" && (
+              <ErrorBoundary resetKey="following"><Suspense fallback={<Skeleton rows={3} label="Loading what you follow" />}><Following games={data.games} teams={teams} analysis={analysis} /></Suspense></ErrorBoundary>
             )}
             {view === "injuries" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the injury report" />}>
@@ -372,13 +491,11 @@ export default function App() {
             )}
             {view === "games" && (
               <>
-                {!phone && (
-                  <>
-                    <div className="section-heading">
-                      <div>
-                        <p className="eyebrow">CIRCLE THESE ON THE CALENDAR</p>
-                        <h2>Game center</h2>
-                      </div>
+                <PageHeader
+                  title="Games"
+                  eyebrow="CIRCLE THESE ON THE CALENDAR"
+                  actions={!phone && (
+                    <>
                       <PeriodSwitch period={period} setPeriod={setPeriod} relevant={relevant} type={type} />
                       <button
                         type="button"
@@ -399,12 +516,18 @@ export default function App() {
                       >
                         Filters <b>{games.length}</b> <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
                       </button>
-                    </div>
+                    </>
+                  )}
+                />
+                <Suspense fallback={null}><Recommended games={data.games} teams={teams} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sim={playoff} /></Suspense>
+                {!phone && (
+                  <>
                     <div id="game-filters" className={`game-filters${filtersOpen ? " open" : ""}`}>
-                      <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} />
+                      <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} byDay={byDay} setByDay={setByDay} />
                     </div>
                   </>
                 )}
+                {byDay && <GameDayStrip days={gameDays} counts={gameDayCounts} onDate={setGameDate} />}
                 <div className="results-line">
                   <span role="status">
                     {games.length} games · {selected.length} selected teams
@@ -423,7 +546,7 @@ export default function App() {
                         if (sort === "date" && (i === 0 || arr[i - 1].date !== g.date))
                           elements.push(
                             <div className="game-day-heading" key={`day-${g.date}`}>
-                              {dayHeading(g.date)}
+                              {dayHeading(g.date, todayEt)}
                             </div>,
                           );
                         elements.push(
@@ -535,6 +658,12 @@ export default function App() {
                 )}
               </>
             )}
+            {view === "teams" && !teamId && <Teams teams={teams} table={analysis.table} onSchedule={() => setView("teamschedule")} onOpenTeam={openTeam} />}
+            {view === "teams" && teamId && (
+              <ErrorBoundary resetKey={teamId}><Suspense fallback={<Skeleton rows={3} label="Loading team page" />}>
+                <TeamPage teamId={teamId} teams={teams} table={analysis.table} games={data.games} season={season} today={todayEt} onBack={() => (pushedTeam.current ? history.back() : setView("teams"))} onNavigate={setView} />
+              </Suspense></ErrorBoundary>
+            )}
             {view === "trends" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading team trends" />}>
                 <Trends
@@ -560,7 +689,8 @@ export default function App() {
                   table={analysis.table}
                   games={data.games}
                   baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
-                  selected={selected}
+                  selected={favorites}
+                  onNavigate={setView}
                 />
               </Suspense></ErrorBoundary>
             )}
@@ -582,7 +712,7 @@ export default function App() {
             <ImperialismMap teams={teams} games={data.games} season={season} />
           </Suspense></ErrorBoundary>
         )}
-        {!home && <Methodology />}
+        {!home && <Suspense fallback={null}><Methodology /></Suspense>}
         <footer>
           <span>
             ICEBOARD <b aria-hidden="true"> / </b> Built for the games that matter.
@@ -602,7 +732,7 @@ export default function App() {
             <span>Status</span>
             <PeriodSwitch period={period} setPeriod={setPeriod} relevant={relevant} type={type} />
           </div>
-          <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} showSearch={false} />
+          <GameFilterFields type={type} setType={setType} range={range} setRange={setRange} sort={sort} setSort={setSort} query={query} setQuery={setQuery} showSearch={false} byDay={byDay} setByDay={setByDay} />
         </Sheet>
       )}
       {phone && teamsOpen && (
@@ -613,6 +743,7 @@ export default function App() {
           onClose={() => setTeamsOpen(false)}
         />
       )}
+    </PlayerProfileProvider>
     </TeamProfileProvider>
   );
 }

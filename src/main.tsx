@@ -10,7 +10,9 @@ import "./injuries.css";
 import "./team-schedule.css";
 import "./motion.css";
 import { initMotion } from "./motion";
+import { initDisplay } from "./lib/display";
 initMotion();
+initDisplay();
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

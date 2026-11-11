@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { DATA_DAY, DATA_NOW } from "./clock";
 
 test.use({ serviceWorkers: "allow" });
 
 // With no signal the app shell and the saved /data copy come from the worker, so the board still opens.
 test("the app opens offline after one visit", async ({ page, context }) => {
-  await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
+  await page.clock.setFixedTime(DATA_NOW);
   await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/?view=games");
   await expect(page.locator(".game-card").first()).toBeVisible();

@@ -21,14 +21,14 @@ async function open(page: import("@playwright/test").Page) {
   await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
   await page.route(`**/data/seasons/${season}.json`, (route) => route.fulfill({ json: snapshot }));
   await page.goto("/");
-  await expect(page.locator(".wn-tile").first()).toBeVisible();
+  await expect(page.locator(".sb-row").first()).toBeVisible();
 }
 
 test("motion is on by default: the ring fills in and the late-game glow loops", async ({ page }) => {
   await open(page);
   await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
-  const glow = await page.locator(".wn-tile.hot").evaluate((e) => getComputedStyle(e, "::after").animationName);
-  expect(glow).toBe("late-glow");
+  const glow = await page.locator(".late-flag").first().evaluate((e) => getComputedStyle(e, "::after").animationName);
+  expect(glow).toBe("late-ring"); // the late flag's own halo (the old tile glow is gone with the tiles)
   await expect(page.locator(".sr-fill").first()).toBeVisible();
 });
 
@@ -36,8 +36,8 @@ test("reduced motion switches every effect off and shows the ring already full",
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(page);
   await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
-  expect(await page.locator(".wn-tile.hot").evaluate((e) => getComputedStyle(e, "::after").animationName)).toBe("none");
-  expect(await page.locator(".wn-when i").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
+  expect(await page.locator(".late-flag").first().evaluate((e) => getComputedStyle(e, "::after").animationName)).toBe("none");
+  expect(await page.locator(".late-flag i").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
   const fill = page.locator(".sr-fill").first();
   expect(await fill.evaluate((e) => getComputedStyle(e).transitionDuration)).toBe("0s");
   // Not mid-fill: the dash offset is already at its final value.
@@ -50,15 +50,15 @@ test("a hidden tab pauses the looping animations", async ({ page }) => {
   await open(page);
   await page.evaluate(() => { Object.defineProperty(document, "hidden", { value: true, configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
   await expect(page.locator("html")).toHaveAttribute("data-hidden", "");
-  expect(await page.locator(".wn-when i").first().evaluate((e) => getComputedStyle(e).animationPlayState)).toBe("paused");
+  expect(await page.locator(".late-flag i").first().evaluate((e) => getComputedStyle(e).animationPlayState)).toBe("paused");
 });
 
 test("cards fade up with a stagger, views slide in, and a press gives feedback", async ({ page }) => {
   await open(page);
-  const third = page.locator(".sb-list > li:nth-child(3)").first();
-  await expect(third).toBeVisible();
+  const third = page.locator(".sb-list > li:nth-child(2)").first(); // slots split the three games by half hour, so some list has at least two
+  await expect(third).toBeVisible({ timeout: 15000 });
   expect(await third.evaluate((e) => getComputedStyle(e).animationName)).toBe("card-in");
-  expect(await third.evaluate((e) => getComputedStyle(e).animationDelay)).toBe("0.06s");
+  expect(await third.evaluate((e) => getComputedStyle(e).animationDelay)).toBe("0.03s");
   expect(await page.locator(".view-in").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("view-in");
   const chip = page.locator(".sb-chip").first();
   const box = (await chip.boundingBox())!;
@@ -71,7 +71,7 @@ test("cards fade up with a stagger, views slide in, and a press gives feedback",
 test("the tab underline is one element that slides to the chosen tab", async ({ page, isMobile }) => {
   await open(page);
   if (isMobile) {
-    const bar = page.getByRole("navigation", { name: "Dashboard views" });
+    const bar = page.getByRole("navigation", { name: "Main" });
     await expect(bar).toHaveAttribute("data-slide", "");
     const before = await bar.evaluate((e) => (e as HTMLElement).style.getPropertyValue("--ux"));
     await bar.getByRole("button", { name: "Standings" }).click();

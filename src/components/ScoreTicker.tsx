@@ -3,6 +3,7 @@ import type { Game, Team } from "../types";
 import { finished, seasonSeriesBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
+import { LOGO_SIZE } from "./GameCardView";
 import { tickerSlate, tickerStatus } from "../lib/ticker.mjs";
 import { TeamLogo } from "./TeamLogo";
 import { useMedia } from "../hooks/useMedia";
@@ -65,12 +66,12 @@ export function ScoreTicker({ games, teams, day, analysis, baselineFor, sourceSe
           aria-label={`${a.name} ${showScore ? g.awayScore : ""} at ${h.name} ${showScore ? g.homeScore : ""}, ${status.toLowerCase()}. Open the Game Center.`.replace(/\s+/g, " ")}
         >
           <span className={`ticker-team${winner === "away" ? " won" : winner === "home" ? " lost" : ""}`}>
-            <TeamLogo id={a.id} size={16} eager />
+            <TeamLogo id={a.id} size={LOGO_SIZE.compact} eager />
             {a.id} {showScore && <b>{g.awayScore ?? 0}</b>}
           </span>
           <span className="ticker-at">{showScore ? "–" : "@"}</span>
           <span className={`ticker-team${winner === "home" ? " won" : winner === "away" ? " lost" : ""}`}>
-            <TeamLogo id={h.id} size={16} eager />
+            <TeamLogo id={h.id} size={LOGO_SIZE.compact} eager />
             {h.id} {showScore && <b>{g.homeScore ?? 0}</b>}
           </span>
           <span className="ticker-final">{status}</span>

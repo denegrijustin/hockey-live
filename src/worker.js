@@ -3,6 +3,7 @@ import {
   normalizeScoreboard,
   normalizeGameFeed,
   normalizeEdge,
+  isFreshLive,
 } from "./lib/game-data.mjs";
 import teams from "./data/teams.json";
 import { parseEspnScoreboard } from "./lib/espn-links.mjs";
@@ -36,7 +37,7 @@ async function get(path) {
   const r = await fetch(`${API}${path}`, {
     signal: AbortSignal.timeout(18000),
   });
-  if (!r.ok) throw Error(`NHL returned ${r.status}`);
+  if (!r.ok) throw Object.assign(Error(`NHL returned ${r.status}`), { status: r.status });
   return r.json();
 }
 async function statsGet(report, season, limit = 100) {
@@ -84,8 +85,8 @@ async function refreshSeason(season, env) {
     season,
     updatedAt: new Date().toISOString(),
     source: "NHL schedule feed",
-    games: [...new Map(schedules.map((g) => [g.id, g])).values()].sort((a, b) =>
-      a.start.localeCompare(b.start),
+    games: [...new Map(schedules.map((g) => [g.id, g])).values()].sort(
+      (a, b) => a.start.localeCompare(b.start) || a.id - b.id,
     ),
   };
   if (data.games.length < 100) throw Error("Incomplete NHL season");
@@ -95,7 +96,7 @@ async function refreshSeason(season, env) {
 // ---- Injury report ----
 // ESPN's NHL injury feed, each player's impact judged from NHL box-score production (this season, else last), cached in KV for ten minutes.
 const ESPN_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries";
-const injuriesKey = (season) => `injuries-v1-${season}`;
+const injuriesKey = (season) => `injuries-v2-${season}`;
 async function refreshInjuries(season, env) {
   const prev = season - 10001; // 20262027 -> 20252026
   const [espnResponse, skaters, goalies, prevSkaters, prevGoalies] = await Promise.all([
@@ -195,6 +196,12 @@ async function staticData(env, request, path) {
   if (!r.ok || !r.headers.get("content-type")?.includes("json")) return null;
   return r.json();
 }
+/** The snapshot with the later `updatedAt` (a missing or unparsable stamp loses); KV wins a tie. */
+function newerSnapshot(kv, asset) {
+  if (!kv || !asset) return kv ?? asset ?? null;
+  const t = (x) => Date.parse(x.updatedAt) || 0;
+  return t(asset) > t(kv) ? asset : kv;
+}
 // Routes that read KV on every request; their responses carry a 60 s max-age, so the edge cache can serve repeats.
 const EDGE_CACHED = /^\/api\/(edge|league-matchups)\//;
 async function handle(request, env, ctx) {
@@ -212,18 +219,24 @@ async function handle(request, env, ctx) {
         const hit = await caches.default.match(cacheKey);
         if (hit) return hit;
         const live = url.pathname === "/api/live";
-        const data = live
-          ? normalizeScoreboard(await get("/score/now"))
-          : normalizeGameFeed(
-              await get(
-                `/gamecenter/${url.pathname.split("/").pop()}/play-by-play`,
-              ),
-            );
-        const response = json(
-          data,
-          200,
-          live || !["OFF", "FINAL"].includes(data.state) ? 15 : 3600,
-        );
+        let data;
+        try {
+          data = live
+            ? normalizeScoreboard(await get("/score/now"))
+            : normalizeGameFeed(
+                await get(
+                  `/gamecenter/${url.pathname.split("/").pop()}/play-by-play`,
+                ),
+              );
+        } catch (e) {
+          // A game the NHL has not published yet is "not found", not an outage (the client keeps its normal cadence instead of backing off).
+          if (!live && e?.status === 404) return json({ error: "Play-by-play is not published for this game yet" }, 404, 15);
+          throw e;
+        }
+        // Edge TTL by game state (Phase 5): 15 s while live (the NHL feed's own cache), 120 s for FINAL (late corrections still arrive),
+        // an hour only once the game is OFF.
+        const ttl = live ? 15 : data.state === "OFF" ? 3600 : data.state === "FINAL" ? 120 : 15;
+        const response = json(data, 200, ttl);
         ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
         return response;
       }
@@ -341,14 +354,13 @@ async function handle(request, env, ctx) {
           return json({ error: "Season not supported" }, 400);
         const key = `dashboard-season-${season}`;
         const cached = await env.TEAM_STATS.get(key, { type: "json" });
-        const snapshot =
-          cached ??
-          (await staticData(env, request, `/data/seasons/${season}.json`));
+        // The weekly refresh can commit a static file newer than the KV copy: serve whichever is newer.
+        const asset = await staticData(env, request, `/data/seasons/${season}.json`);
+        const snapshot = newerSnapshot(cached, asset);
         // While any game is live, refresh far more often than the normal
         // 15-minute window so scores keep pace with play.
-        const live = cached?.games?.some((g) =>
-          ["LIVE", "CRIT"].includes(g.state),
-        );
+        // A game "live" more than STALE_LIVE_MS after puck drop is stuck data (one shared rule: game-state.mjs), not a reason to poll fast.
+        const live = cached?.games?.some((g) => isFreshLive(g));
         const staleAfter = live ? 45000 : 900000;
         if (
           season === manifest.current &&
@@ -363,9 +375,13 @@ async function handle(request, env, ctx) {
         const cacheKey = new Request(url.origin + url.pathname);
         const cached = await caches.default.match(cacheKey);
         if (cached) return cached;
-        const data = normalizeBoxscore(
-          await get(`/gamecenter/${match[1]}/boxscore`),
-        );
+        // right-rail carries the official team stats (faceoffs, power play, PIM, hits, blocks...) and shots by period;
+        // if it is unavailable the box score still works and the app labels its team numbers Derived.
+        const [box, rail] = await Promise.all([
+          get(`/gamecenter/${match[1]}/boxscore`),
+          get(`/gamecenter/${match[1]}/right-rail`).catch(() => null),
+        ]);
+        const data = normalizeBoxscore(box, rail);
         if (!data.players.length)
           return json({ error: "No box score published yet" }, 404, 15);
         const response = json(
@@ -382,6 +398,9 @@ async function handle(request, env, ctx) {
         const season = Number(match[1]),
           team = match[2];
         if (!ids.has(team)) return json({ error: "Unknown team" }, 400);
+        // Only seasons the app publishes: an arbitrary 8-digit season would otherwise create KV keys and upstream calls on demand.
+        if (!(await staticData(env, request, "/data/manifest.json"))?.seasons.includes(season))
+          return json({ error: "Season not supported" }, 400);
         const key = `dashboard-players-v3-${season}-${team}`,
           cached = await env.TEAM_STATS.get(key, { type: "json" });
         if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000)
@@ -414,11 +433,30 @@ async function handle(request, env, ctx) {
         return json(data);
       }
       if ((match = url.pathname.match(/^\/api\/player\/(\d{7})$/))) {
-        const key = `profile-${match[1]}`;
+        const key = `profile-v2-${match[1]}`;
         const cached = await env.TEAM_STATS.get(key, {type: "json"});
         if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000) return json(cached);
         const raw = await get(`/player/${match[1]}/landing`);
         const data = { id:raw.playerId, name:`${value(raw.firstName)} ${value(raw.lastName)}`, number:raw.sweaterNumber, headshot:raw.headshot, position:raw.position, team:raw.currentTeamAbbrev, birthDate:raw.birthDate, height:raw.heightInInches, weight:raw.weightInPounds, shoots:raw.shootsCatches, seasons:(raw.seasonTotals ?? []).filter(s=>s.leagueAbbrev === 'NHL'), updatedAt:new Date().toISOString() };
+        // Additive (Phase 3): fields the NHL landing page already returns, passed through only when present.
+        if (raw.last5Games) data.last5Games = raw.last5Games;
+        if (raw.featuredStats) data.featuredStats = raw.featuredStats;
+        if (raw.careerTotals) data.careerTotals = raw.careerTotals;
+        if (raw.isActive !== undefined) data.isActive = raw.isActive;
+        if (raw.birthCity) data.birthCity = raw.birthCity;
+        if (raw.birthCountry) data.birthCountry = raw.birthCountry;
+        ctx.waitUntil(env.TEAM_STATS.put(key,JSON.stringify(data),{expirationTtl:3600}));
+        return json(data);
+      }
+      // A player's regular-season game log (NHL api-web /player/{id}/game-log/{season}/2), reduced to the fields the profile uses and tolerant of a missing list.
+      if ((match = url.pathname.match(/^\/api\/player\/(\d{7})\/log\/(20\d{6})$/))) {
+        const key = `playerlog-${match[1]}-${match[2]}`;
+        const cached = await env.TEAM_STATS.get(key, {type: "json"});
+        if (cached && Date.now() - Date.parse(cached.updatedAt) < 300000) return json(cached);
+        const raw = await get(`/player/${match[1]}/game-log/${match[2]}/2`);
+        const KEEP = ["gameId","gameDate","teamAbbrev","opponentAbbrev","homeRoadFlag","goals","assists","points","plusMinus","shots","toi","pim","powerPlayPoints","decision","gamesStarted","shotsAgainst","goalsAgainst","savePctg","shutouts"];
+        const games = (Array.isArray(raw?.gameLog) ? raw.gameLog : []).map((g) => Object.fromEntries(KEEP.filter((k) => g?.[k] !== undefined).map((k) => [k, g[k]])));
+        const data = { id:Number(match[1]), season:Number(match[2]), games, updatedAt:new Date().toISOString() };
         ctx.waitUntil(env.TEAM_STATS.put(key,JSON.stringify(data),{expirationTtl:3600}));
         return json(data);
       }
@@ -426,7 +464,7 @@ async function handle(request, env, ctx) {
       if (url.pathname === "/api/team-stats") {
         const team = url.searchParams.get("team"),
           season = url.searchParams.get("season") ?? "20252026";
-        if (!ids.has(team)) return json({ error: "Unknown team" }, 400);
+        if (!ids.has(team) || !/^20\d{6}$/.test(season)) return json({ error: "Unknown team or season" }, 400);
         const existing = await env.TEAM_STATS.get(`${team}-${season}`, {
           type: "json",
         });

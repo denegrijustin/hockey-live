@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { goTo } from "./nav";
+import { DATA_DAY, DATA_NOW } from "./clock";
 
 // The app follows the system appearance and contrast setting.
 const lum = (rgb: string) => {
@@ -10,7 +11,7 @@ const lum = (rgb: string) => {
 for (const scheme of ["light", "dark"] as const) {
   test(`${scheme} appearance: page, cards and text follow the system setting, with no sideways scroll`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.clock.setFixedTime(new Date("2026-10-10T12:00:00-05:00"));
+    await page.clock.setFixedTime(DATA_NOW);
     await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
     await page.goto("/?view=games");
     const card = page.locator(".game-card").first();

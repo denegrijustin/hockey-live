@@ -1,17 +1,11 @@
-/** Standings ranks by points percentage (points / 2*GP), then points, regulation wins, goal differential. */
+/** Standings ranks by points percentage (points / 2*GP), then regulation wins, goal differential (compareStandings). */
+import { compareStandings } from "./standings-view.mjs";
 const DIVISION_SHORT = { Atlantic: "ATL", Metropolitan: "MET", Central: "CEN", Pacific: "PAC" };
 const CONFERENCE_NAME = { E: "East", W: "West" };
 const CONFERENCE_LONG = { E: "Eastern", W: "Western" };
-const pct = (r) => (r && r.gp > 0 ? r.pts / (2 * r.gp) : 0);
-/** Positive when a ranks ahead of b. */
-function compare(a, b) {
-  return (
-    pct(a) - pct(b) ||
-    (a?.pts ?? 0) - (b?.pts ?? 0) ||
-    (a?.rw ?? 0) - (b?.rw ?? 0) ||
-    ((a?.gf ?? 0) - (a?.ga ?? 0)) - ((b?.gf ?? 0) - (b?.ga ?? 0))
-  );
-}
+/** Positive when a ranks ahead of b (NHL order via compareStandings: points %, RW, goal differential). */
+const anon = (r) => ({ ...r, id: "", name: "" });
+const compare = (a, b) => -compareStandings(anon(a), anon(b));
 const rankIn = (table, ids, id) =>
   1 + ids.filter((k) => compare(table[k], table[id]) > 0).length;
 /** @returns {Record<string, any> | null} */

@@ -18,6 +18,7 @@
 const PRIOR_GAMES = 20;
 const LEAGUE_RATE = 3;
 const HOME_EDGE = 0.12;
+import { isCalledOff } from "./game-data.mjs";
 const finished = (g) => g.state === "OFF" || g.state === "FINAL";
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 
@@ -71,7 +72,7 @@ export function simulatePlayoffs({ games, teams, table, baseline = {}, sims = 20
   const basePts = Float64Array.from(teams, (t) => table?.[t.id]?.pts ?? 0);
   const baseRw = Float64Array.from(teams, (t) => table?.[t.id]?.rw ?? 0);
 
-  const remaining = games.filter((g) => g.type === 2 && !finished(g) && index.has(g.home) && index.has(g.away));
+  const remaining = games.filter((g) => g.type === 2 && !finished(g) && !isCalledOff(g) && index.has(g.home) && index.has(g.away));
   const m = remaining.length;
   const complete = m === 0;
   const H = new Int32Array(m), A = new Int32Array(m);

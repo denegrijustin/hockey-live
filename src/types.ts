@@ -66,7 +66,19 @@ export type Boxscore = {
   homeShots: number | null;
   awayShots: number | null;
   players: Player[];
+  /** Team totals (additive; absent on old cached responses). */
+  teams?: { home: TeamBox; away: TeamBox };
+  /** Per field: "official" (NHL team stats) or "derived" (summed from player lines). */
+  teamSource?: Partial<Record<keyof TeamBox, "official" | "derived">>;
+  /** Goals and shots by period when the NHL right-rail was available, else null. */
+  periods?: BoxPeriod[] | null;
 };
+export type TeamBox = {
+  sog: number | null; faceoffPct: number | null; faceoffWins: string | null;
+  powerPlay: { goals: number; opportunities: number; pct: number | null } | null;
+  pim: number | null; hits: number | null; blocks: number | null; giveaways: number | null; takeaways: number | null;
+};
+export type BoxPeriod = { number: number; type: string; goals: { home: number | null; away: number | null } | null; shots: { home: number | null; away: number | null } | null };
 export type PlayerSeason = {
   hits?: number | null;
   number?: number | null;
@@ -95,7 +107,13 @@ export type PlayerData = {
 };
 export type Scoreboard = { updatedAt: string; date: string; games: Game[] };
 export type GameFeed = Game & {
-  plays?: { id: number; order: number; period: number; periodType?: string; time: string; type: string; team: string | null; player: string | null; penalty: string | null; duration: number | null; x?: number | null; y?: number | null }[];
+  plays?: { id: number; order: number; period: number; periodType?: string; time: string; type: string; team: string | null; player: string | null; penalty: string | null; duration: number | null; x?: number | null; y?: number | null;
+    /** Phase 5 additive detail (all optional): primary player id, time remaining, strength code ("1551" = 5v5), zone, shot type, reason, secondary/other players, goal assists/goalie/score after. */
+    pid?: number | null; left?: string | null; sit?: string | null; zone?: string | null; shotType?: string | null; reason?: string | null;
+    secondary?: { id: number; name: string } | null; other?: { id: number; name: string } | null;
+    assists?: { id: number; name: string }[]; goalie?: { id: number; name: string } | null; score?: { home: number; away: number } | null }[];
+  roster?: { id: number; name: string; team: string | null; number: number | null; pos: string | null; headshot: string | null }[];
+  clockRunning?: boolean | null; clockSeconds?: number | null; otInUse?: boolean | null; shootoutInUse?: boolean | null;
   situation?: { home: number | null; away: number | null; homePowerPlay: boolean; awayPowerPlay: boolean; seconds: number | null } | null;
   injuryStatus?: string;
   updatedAt: string;

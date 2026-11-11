@@ -4,9 +4,9 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const tokens = readFileSync("src/tokens.css", "utf8");
-// Four value sets: dark, light, and each with "increase contrast". Split on the media rules.
-const [darkCss, ...rest] = tokens.split(/@media[^{]*\{/);
-const sets = { dark: darkCss, light: rest[0], darkMore: rest[1], lightMore: rest[2] };
+// Four value sets: dark, light, and each with "increase contrast". Each block in tokens.css is tagged `/* @set <name> */`; a set may repeat (system and user-chosen selectors).
+const sets = {};
+for (const part of tokens.split(/\/\* @set (\w+) \*\//).slice(1).reduce((a, x, i, all) => (i % 2 ? a : [...a, [x, all[i + 1]]]), [])) sets[part[0]] = (sets[part[0]] ?? "") + part[1];
 const parse = (css) => Object.fromEntries([...css.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8})\s*;/g)].map((m) => [m[1], m[2]]));
 const values = Object.fromEntries(Object.entries(sets).map(([k, v]) => [k, parse(v)]));
 

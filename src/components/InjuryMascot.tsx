@@ -17,10 +17,10 @@ export const POSES: Record<string, Pose> = {
   "goalie-unknown": { file: "goalie-unknown", x: 0.5, y: 0.5, s: 0.16 },
 };
 
-const HEAD = ["head", "neck"], ARM = ["arm"], LEG = ["knee", "calf", "ankle", "foot", "thigh", "hip", "groin", "lower"], TORSO = ["core", "chest", "back"];
+const HEAD = ["head", "neck"], ARM = ["arm"], LEG = ["knee", "calf", "ankle", "foot", "thigh", "hip", "groin"], TORSO = ["core", "chest", "back"];
 /** Which of the ten drawn poses fits where the player is hurt. A goalie has poses for a leg, a shoulder or arm, and "not saying"; any other injury shows the last. */
 export function poseFor(goalie: boolean, zone: string): keyof typeof POSES {
-  if (goalie) return LEG.includes(zone) ? "goalie-leg" : zone === "shoulder" || zone === "arm" || zone === "hand" || zone === "upper" ? "goalie-arm" : "goalie-unknown";
+  if (goalie) return LEG.includes(zone) ? "goalie-leg" : zone === "shoulder" || zone === "arm" || zone === "hand" ? "goalie-arm" : "goalie-unknown";
   if (HEAD.includes(zone)) return "head";
   if (zone === "shoulder") return "shoulder";
   if (ARM.includes(zone)) return "arm";
@@ -70,7 +70,7 @@ async function paint(canvas: HTMLCanvasElement, pose: Pose, team: string) {
  * The injury card's picture: one of ten hand-drawn poses (a skater's head, shoulder, arm, hand, leg or stomach; a goalie's leg or shoulder; or a shrug when the
  * team is not saying), in the team's colours with its logo on the chest. It pops in once when the card scrolls into view.
  */
-export function InjuryMascot({ team, goalie, zone, side, label, size = 150 }: { team: string; goalie: boolean; zone: string; side: "left" | "right" | null; label: string; face?: string | null; size?: number }) {
+export function InjuryMascot({ team, goalie, zone, side, label, name, size = 150 }: { name?: string; team: string; goalie: boolean; zone: string; side: "left" | "right" | null; label: string; face?: string | null; size?: number }) {
   const ref = useRef<HTMLDivElement>(null), canvas = useRef<HTMLCanvasElement>(null);
   const seen = useOnScreen(ref, true);
   const [ready, setReady] = useState(false);
@@ -87,7 +87,7 @@ export function InjuryMascot({ team, goalie, zone, side, label, size = 150 }: { 
   useEffect(() => { setLoaded(false); }, [key, drawn]);
   const shown = drawn ? loaded : ready;
   return (
-    <div ref={ref} className={`inj-figure inj-mascot inj-pose${seen && shown ? " play" : ""}${shown ? " ready" : ""}`} data-zone={zone} data-side={side ?? ""} data-goalie={goalie ? "1" : "0"} data-pose={key} role="img" aria-label={`Injury location: ${label}`}>
+    <div ref={ref} className={`inj-figure inj-mascot inj-pose${seen && shown ? " play" : ""}${shown ? " ready" : ""}`} data-zone={zone} data-side={side ?? ""} data-goalie={goalie ? "1" : "0"} data-pose={key} role="img" aria-label={name ? `Injury location for ${name}: ${label}` : `Injury location: ${label}`}>
       {drawn
         ? <img src={`/injury/teams/${drawn}/${key}.webp`} alt="" style={{ height: size }} decoding="async" onLoad={() => setLoaded(true)} data-testid="inj-art" data-set="team" />
         : <canvas ref={canvas} style={{ width: size }} data-testid="inj-art" data-set="neutral" />}

@@ -17,7 +17,7 @@ const OWN_JOB = "button, a, summary, label, select, [role='button'], [data-no-pr
 const STILL_OPENS = ".rs-row, .team-dialog";
 
 /** One team profile for the whole app. Clicking any team logo, or any name marked as a team link, opens it. */
-export function TeamProfileProvider({ teams, table, games, season, children }: { teams: Team[]; table: Record<string, any> | null; games: Game[]; season: number; children: ReactNode }) {
+export function TeamProfileProvider({ teams, table, games, season, onOpenPage, children }: { teams: Team[]; table: Record<string, any> | null; games: Game[]; season: number; onOpenPage?: (id: string) => void; children: ReactNode }) {
   const [id, setId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const team = id ? teams.find((t) => t.id === id) : undefined;
@@ -48,7 +48,7 @@ export function TeamProfileProvider({ teams, table, games, season, children }: {
     <ctx.Provider value={setId}>
       {children}
       <dialog ref={dialog} className="team-dialog" aria-label={team ? `${team.name} profile` : "Team profile"} onClose={() => setId(null)} onCancel={() => setId(null)} onClick={(e) => { if (e.target === dialog.current) setId(null); }}>
-        {team && table && <Suspense fallback={<p className="rs-none">Loading…</p>}><TeamProfileBody team={team} teams={teams} table={table} games={games} season={season} onClose={() => setId(null)} /></Suspense>}
+        {team && table && <Suspense fallback={<p className="rs-none">Loading…</p>}><TeamProfileBody team={team} teams={teams} table={table} games={games} season={season} onClose={() => setId(null)} onOpenPage={onOpenPage ? () => { setId(null); onOpenPage(team.id); } : undefined} /></Suspense>}
       </dialog>
     </ctx.Provider>
   );

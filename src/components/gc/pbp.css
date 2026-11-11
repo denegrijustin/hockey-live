@@ -1,0 +1,55 @@
+/* Play-by-play pane. Colours come from the tokens (light and dark); team accents are restrained (a 3px left rule). */
+.pbp { display: grid; gap: 12px; min-width: 0; }
+.pbp-controls { display: grid; gap: 8px; min-width: 0; }
+.pbp-row { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.pbp-chip { min-height: 44px; min-width: 44px; padding: 0 12px; border: 1px solid var(--line-1); border-radius: 22px; background: var(--surface-4); color: var(--text-4); font: inherit; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.pbp-chip:hover { border-color: var(--line-3); }
+.pbp-chip:focus-visible, .pbp-player:focus-visible, .pbp-link:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; }
+.pbp-chip[aria-pressed="true"] { background: var(--mint-1); border-color: var(--mint-3); color: var(--text-6); font-weight: 600; }
+.pbp-jump { border-color: var(--mint-3); }
+.pbp-count { color: var(--text-1); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.pbp-goals { display: flex; gap: 6px; overflow-x: auto; margin: 0; padding: 0 0 2px; list-style: none; max-width: 100%; }
+.pbp-goals li { flex: none; }
+.pbp-goalchip { white-space: nowrap; }
+.pbp-goalchip[data-side="away"] { border-left: 3px solid var(--pbp-away); }
+.pbp-goalchip[data-side="home"] { border-left: 3px solid var(--pbp-home); }
+.pbp-goalchip[data-voided] { text-decoration: line-through; opacity: 0.7; }
+.pbp-meta { margin: 0; color: var(--text-1); font-size: 0.8rem; }
+.pbp-state { margin: 8px 0; color: var(--text-2); }
+.pbp-state-err { color: var(--red-4); }
+.pbp-link { min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--mint-5); font: inherit; text-decoration: underline; cursor: pointer; }
+.pbp-period { display: grid; gap: 4px; min-width: 0; scroll-margin-top: 64px; }
+.pbp-period-h { margin: 8px 0 0; font-size: 0.95rem; color: var(--text-5); }
+.pbp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; min-width: 0; }
+.pbp-event { display: grid; grid-template-columns: 3.4rem 24px minmax(0, 1fr); gap: 8px; align-items: start; padding: 6px 8px 6px 10px; border-left: 3px solid transparent; border-bottom: 1px solid var(--line-1); content-visibility: auto; contain-intrinsic-size: auto 56px; scroll-margin-top: 80px; min-width: 0; }
+.pbp-event[data-side="away"] { border-left-color: var(--pbp-away); }
+.pbp-event[data-side="home"] { border-left-color: var(--pbp-home); }
+.pbp-event[data-tier="low"] { color: var(--text-2); font-size: 0.85rem; }
+.pbp-event[data-tier="medium"] { background: var(--surface-3); }
+.pbp-event[data-tier="high"] { background: var(--surface-5); padding-block: 10px; contain-intrinsic-size: auto 96px; font-weight: 700; }
+.pbp-event[data-tier="high"] .pbp-main { font-size: 1.05rem; }
+.pbp-event[data-voided] { opacity: 0.8; }
+.pbp-event[data-focus] { outline: 2px solid var(--amber-4); outline-offset: -2px; background: var(--amber-1); }
+.pbp-event:focus { outline-offset: -2px; }
+.pbp-time { font-variant-numeric: tabular-nums; color: var(--text-1); font-size: 0.8rem; padding-top: 2px; }
+.pbp-icon { color: var(--text-2); display: grid; place-items: center; height: 22px; }
+.pbp-event[data-tier="high"] .pbp-icon { color: var(--mint-5); }
+.pbp-body { min-width: 0; display: grid; gap: 2px; }
+.pbp-body p { margin: 0; }
+.pbp-main { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; overflow-wrap: anywhere; }
+.pbp-goal-tag { background: var(--mint-1); color: var(--mint-6); border: 1px solid var(--mint-3); border-radius: 6px; padding: 0 6px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.pbp-struck { text-decoration: line-through; }
+.pbp-team { font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; padding: 0 4px; }
+.pbp-badge { border: 1px solid var(--line-2); border-radius: 6px; padding: 0 6px; font-size: 0.72rem; color: var(--text-3); font-weight: 500; }
+.pbp-badge-void { border-color: var(--red-3); color: var(--red-4); }
+.pbp-badge-upd { border-color: var(--amber-3); color: var(--amber-5); }
+.pbp-badge[data-kind="power-play"] { border-color: var(--mint-3); color: var(--mint-5); }
+.pbp-people { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; font-weight: 500; }
+.pbp-rel { color: var(--text-1); font-size: 0.78rem; font-weight: 400; }
+.pbp-player { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--text-5); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.pbp-player:hover { text-decoration-color: currentColor; }
+.pbp-num { color: var(--text-1); margin-right: 4px; font-size: 0.8em; }
+.pbp-score { font-variant-numeric: tabular-nums; color: var(--text-5); }
+.pbp-derived { font-size: 0.7rem; color: var(--amber-5); border: 1px solid var(--amber-2); border-radius: 4px; padding: 0 4px; margin-left: 4px; font-weight: 400; }
+@media (max-width: 480px) { .pbp-event { grid-template-columns: 3rem 20px minmax(0, 1fr); gap: 6px; } }
+@media (prefers-reduced-motion: no-preference) { .pbp-event[data-focus] { transition: background 0.4s; } }

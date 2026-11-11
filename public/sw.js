@@ -1,22 +1,37 @@
-// Iceboard service worker: lets the app open with no signal. It never touches /api (the app already falls back to the
-// saved /data copy by itself) and never serves a stale page when the network is up, so a new deploy shows at once.
-const CACHE = "iceboard-v1";
+// Iceboard service worker: lets the app open with no signal. It never touches /api (live scores always come from the
+// network; the app falls back to its saved /data copy by itself) and never serves a stale page when the network is up,
+// so a new deploy shows at once. Routing lives in sw-routes.js (testable); this file is the only worker.
+importScripts("/sw-routes.js");
+// Replaced at build time by the vite "sw-version" plugin with a hash of the build, so each deploy gets its own cache and
+// the activate step deletes the old ones. The literal placeholder only appears when the file is served unbuilt.
+const BUILD = "__BUILD_ID__";
+const CACHE = `iceboard-${BUILD}`;
 const SHELL_WAIT_MS = 4000;
+const MAX_ENTRIES = 250; // runtime cache cap: the oldest entries go first
 
 self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("message", (event) => { if (event.data === "skipWaiting") self.skipWaiting(); });
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("iceboard-") && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
 
+async function trim(cache) {
+  const keys = await cache.keys();
+  for (let i = 0; i < keys.length - MAX_ENTRIES; i++) await cache.delete(keys[i]);
+}
 async function put(request, response) {
-  if (response.ok) (await caches.open(CACHE)).put(request, response.clone());
+  if (response.ok) {
+    const cache = await caches.open(CACHE);
+    await cache.put(request, response.clone());
+    trim(cache).catch(() => {}); // pruning happens in the background
+  }
   return response;
 }
-// Network first; the saved copy answers when the network fails or is slow to reply.
+// Network first; the saved copy answers only when the network fails or is slow to reply.
 async function networkFirst(request, key = request, waitMs = SHELL_WAIT_MS) {
   const saved = caches.match(key);
   try {
@@ -34,14 +49,8 @@ async function cacheFirst(request) {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET") return;
-  const url = new URL(request.url);
-  if (url.origin !== location.origin || url.pathname.startsWith("/api/")) return;
-  if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request, "/"));
-  } else if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/logos/") || url.pathname.startsWith("/network-logos/")) {
-    event.respondWith(cacheFirst(request));
-  } else if (url.pathname.startsWith("/data/")) {
-    event.respondWith(networkFirst(request));
-  }
+  const route = self.iceboardRoutes.routeFor(request.method, request.url, request.mode, location.origin);
+  if (route === "navigate") event.respondWith(networkFirst(request, "/"));
+  else if (route === "static") event.respondWith(cacheFirst(request));
+  else if (route === "data") event.respondWith(networkFirst(request));
 });

@@ -108,3 +108,42 @@ test("Team logos: retro by default, Current switches every logo to the current m
   await group.getByRole("button", { name: "Retro" }).or(group.getByRole("radio", { name: "Retro" })).click();
   await expect.poll(async () => (await srcs()).some((s) => s?.includes("/logos/retro/"))).toBe(true);
 });
+
+test("the header has a one-tap Retro/Current logo toggle on a desktop, and the My team picker has one too", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await seedPrefs(page, { onboarded: true, favorites: ["EDM"], myTeam: "EDM" });
+  await page.goto("/");
+  const toggle = page.getByTestId("logo-toggle");
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  const retro = () => page.locator("img.team-logo").evaluateAll((els) => els.some((e) => (e.getAttribute("src") || "").includes("/logos/retro/")));
+  expect(await retro()).toBe(true);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(retro).toBe(false);
+  expect((await prefsOf(page)).display.logos).toBe("current");
+  await chip(page).click();
+  const sheet = page.getByRole("dialog", { name: "My team" });
+  await sheet.getByRole("group", { name: "Team logos" }).getByRole("button", { name: "Retro" }).click();
+  await expect.poll(retro).toBe(true);
+});
+
+test("the Upcoming status chip keeps its count and word together on one line", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await seedPrefs(page, { onboarded: true });
+  await page.goto("/");
+  const chipEl = page.locator(".sb-chip.soon");
+  await expect(chipEl).toBeVisible({ timeout: 30000 });
+  // The count and the word sit side by side (a gap of a few pixels), centred on one line.
+  const m = await chipEl.evaluate((e) => {
+    const r = e.getBoundingClientRect(), b = e.querySelector("b")!.getBoundingClientRect();
+    const text = [...e.childNodes].find((n) => n.nodeType === 3 && n.textContent!.trim())!;
+    const range = document.createRange(); range.selectNodeContents(text);
+    const t = range.getBoundingClientRect();
+    return { w: r.width, h: r.height, gap: t.left - b.right, dy: Math.abs((b.top + b.height / 2) - (t.top + t.height / 2)) };
+  });
+  expect(m.gap).toBeLessThan(12);
+  expect(m.dy).toBeLessThan(4);
+  expect(m.w).toBeLessThan(170);
+  expect(m.h).toBeLessThan(50);
+});

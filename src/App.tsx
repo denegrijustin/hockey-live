@@ -34,7 +34,7 @@ import { useOnline } from "./hooks/useOnline";
 import { Icon } from "./components/icons";
 import { NotificationBell } from "./components/alerts/NotificationBell";
 import { SearchPalette } from "./components/SearchPalette";
-import { MyTeamChip } from "./components/MyTeam";
+import { LogoToggle, MyTeamChip } from "./components/MyTeam";
 import { useMyTeam } from "./hooks/useMyTeam";
 import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
@@ -328,6 +328,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
+          <LogoToggle />
           <MyTeamChip teams={teams} />
           <NotificationBell onNavigate={setView} />
           <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeam} onView={setView} />

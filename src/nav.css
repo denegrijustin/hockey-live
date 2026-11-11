@@ -660,3 +660,7 @@ main#main:focus { outline: none; }
 .myteam-chip:hover { background: var(--surface-6); }
 .myteam-chip:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 @media (max-width: 900px) { .myteam-chip { padding: 0 8px; } .myteam-chip-text { display: none; } }
+.logo-toggle { display: none; align-items: center; justify-content: center; width: 44px; min-height: 44px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--surface-5); color: var(--text-3); cursor: pointer; }
+.logo-toggle[aria-pressed="true"] { color: var(--mint-6); border-color: var(--mint-5); background: var(--surface-8); }
+.logo-toggle:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+@media (min-width: 1000px) { .logo-toggle { display: inline-flex; } }

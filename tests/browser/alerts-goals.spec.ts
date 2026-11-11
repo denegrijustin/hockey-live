@@ -84,7 +84,6 @@ test("a goal alert opens Play-by-Play at the event (skips until the pbp tab ship
   await page.getByRole("button", { name: "Open play" }).click();
   await expect(page.locator("dialog.game-dialog")).toBeVisible();
   const tab = page.getByRole("tab", { name: "Play-by-Play" });
-  test.skip((await tab.count()) === 0, "Agent 1's Game Center tabs are not merged yet; the Open play deep link itself is asserted in the iceboard:open-game test below");
   await expect(tab).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(`[data-event-id="${shots[0].id}"]`)).toBeVisible();
 });

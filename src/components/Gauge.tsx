@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { LogoImage } from "./TeamLogo";
 import { gaugeColors } from "../lib/kits";
 
+/** compact 120px, standard 190px, expanded 280px (tokens in styles.css); "sm" = compact and "lg" = standard are legacy aliases. */
+export type GaugeSize = "compact" | "standard" | "expanded" | "sm" | "lg";
+
 /**
  * A gas-gauge dial for a two-sided number: the away side fills from the left, the home side from the right, and the needle points
  * at the split. Used for "deserved to win" and for every head-to-head stat, so they all read the same way.
  */
-export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "sm", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle }: {
-  away: number; home: number; awayId: string; homeId: string; label: string; format?: (v: number) => string; percent?: boolean; size?: "sm" | "lg";
+export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "compact", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle }: {
+  away: number; home: number; awayId: string; homeId: string; label: string; format?: (v: number) => string; percent?: boolean; size?: GaugeSize;
   /** For numbers that are not shares of a total (a save percentage, goals against): the gap that swings the needle all the way. */
   span?: number; lowerBetter?: boolean; awayText?: string; homeText?: string;
   /** A smaller second line under each side's number (the win chance under a projected score). */
@@ -25,7 +28,9 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
     const p = (s: number, r: number) => `${(C + r * Math.cos(Math.PI * (1 - s))).toFixed(2)} ${(C - r * Math.sin(Math.PI * (1 - s))).toFixed(2)}`;
     return `M${p(from, R)}A${R} ${R} 0 0 1 ${p(to, R)}`;
   };
-  const L = size === "lg" ? 30 : 38; // the headline dials are drawn much larger, so their logos are smaller in dial units
+  const variant = size === "sm" ? "compact" : size === "lg" ? "standard" : size;
+  const big = variant !== "compact"; // caption type and logo scale: .sm for compact, .lg for standard and expanded
+  const L = big ? 30 : 38; // the headline dials are drawn much larger, so their logos are smaller in dial units
   const gap = 0.012;
   const awayEnd = Math.max(0, share - gap), homeStart = Math.min(1, share + gap);
   const shownA = awayText ?? (percent ? `${away}%` : format(away)), shownH = homeText ?? (percent ? `${home}%` : format(home));
@@ -33,7 +38,7 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   const colors = gaugeColors(awayId, homeId);
   const leader = share > 0.52 ? "away" : share < 0.48 ? "home" : "even";
   return (
-    <figure className={`gauge ${size}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
+    <figure className={`gauge ${big ? "lg" : "sm"} ${variant}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
       <svg viewBox="0 0 200 146" aria-hidden="true">
         <path d={arc(0, 1)} className="gauge-track" strokeWidth={W + 4} />
         {awayEnd > 0 && <path d={arc(0, awayEnd)} className="gauge-away" strokeWidth={W} />}

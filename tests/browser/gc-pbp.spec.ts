@@ -62,7 +62,8 @@ async function openPbp(page: Page, id: number, query = "") {
   await page.goto(`/${query}`);
   if (id === FINAL_ID) await page.getByRole("button", { name: /completed/ }).click();
   await page.locator(`.sb-row[data-game="${id}"] .sb-main`).click();
-  await page.getByRole("tab", { name: "Play-by-Play" }).click(); // the overlay is lazy: wait for the tab rather than probing for it
+  const tab = page.getByRole("tab", { name: "Play-by-Play" });
+  await tab.click(); // the pane lives behind this tab
   const pbp = page.getByTestId("pbp");
   await expect(pbp).toBeVisible();
   await expect(page.getByTestId("pbp-event").first()).toBeVisible();

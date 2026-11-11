@@ -1,16 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ComponentProps } from "react";
 import type { Game, GameFeed, Team } from "../types";
 import { useGameFeedData } from "../lib/use-game-feed";
 import { Projection } from "./Projection";
 import { isLive } from "../lib/game-data.mjs";
 import { LogoImage, TeamLogo } from "./TeamLogo";
-import { Gauge } from "./Gauge";
+import { Gauge, type GaugeSize } from "./Gauge";
 import { gameFlow, iceTilt, playMinute, pulseMinute } from "../lib/pulse.mjs";
 import { useChartUnit } from "../lib/chartUnit";
 import { useVisible, GameFlowChart } from "./GameData";
 import "./gauge.css";
 /** One head-to-head number, drawn as a gas gauge. */
-export function ComparisonBar({ label, away, home, awayId, homeId, format, size = "sm" }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; size?: "sm" | "lg"; awayColor?: string; homeColor?: string }) {
+export function ComparisonBar({ label, away, home, awayId, homeId, format, size = "sm" }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; size?: GaugeSize; awayColor?: string; homeColor?: string }) {
   return <Gauge size={size} away={away} home={home} awayId={awayId} homeId={homeId} label={label} format={format} />;
 }
 export function GameData({
@@ -105,24 +105,25 @@ export function GameData({
           <ShotChart data={data} home={home} away={away} />
           <IceTilt data={data} />
           <div className="gauge-grid game-stat-gauges">
-          <ComparisonBar
+            <div className="gauge-item"><ComparisonBar
+              size="compact"
               label="Shots on goal"
               away={data.awayShots ?? 0}
               home={data.homeShots ?? 0}
               awayId={away.id}
               homeId={home.id}
-            />
+            /></div>
             {data.stats
               .filter((s) => ["hit", "blocked-shot"].includes(s.label))
               .map((s) => (
-                <ComparisonBar
-                  key={s.label}
+                <div key={s.label} className="gauge-item"><ComparisonBar
+                  size="compact"
                   label={s.label === "hit" ? "Hits" : "Blocks"}
                   away={s.away}
                   home={s.home}
                   awayId={away.id}
                   homeId={home.id}
-                />
+                /></div>
               ))}
           </div>
           <p className="feed-time">
@@ -284,6 +285,6 @@ function IceTilt({data}:{data:GameFeed}) {
  const h=tilt.homeShare==null?null:Math.round(tilt.homeShare*100);
  return <div className="ice-tilt"><div className="mini-heading">ICE TILT <span>Shot-pressure proxy · all strengths</span></div>
  <div className="prediction-labels"><span>{data.away} {h==null?'—':`${100-h}%`}</span><span>{data.home} {h==null?'—':`${h}%`}</span></div>
- <ComparisonBar size="lg" label="Unblocked attempts" away={tilt.away} home={tilt.home} awayId={data.away} homeId={data.home} />
+ <div className="gauge-lone"><ComparisonBar size="standard" label="Unblocked attempts" away={tilt.away} home={tilt.home} awayId={data.away} homeId={data.home} /></div>
  <p className="detail-note">{h==null?'No unblocked attempts in this window.':`${h===50?'Even pressure':`${h>50?data.home:data.away} has more shot pressure`}.`} Last {tilt.minutes.toFixed(1)} playing minutes: shots on goal + missed shots (goals counted once). Includes power plays. This estimates pressure, not measured offensive-zone possession or live NHL EDGE zone time.</p></div>;
 }

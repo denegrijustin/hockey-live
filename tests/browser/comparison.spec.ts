@@ -53,7 +53,9 @@ for (const width of [320, 390, 1280]) {
     await page.locator(".game-card").first().getByRole("button", { name: /Open Game Center for/ }).click();
     const dialog = page.locator("dialog.game-dialog");
     await gcTab(page, "Team Stats");
-    await expect(dialog.locator(".crossover-row .gauge").first()).toBeVisible();
+    if (width <= 620) await expect(dialog.locator(".crossover-row .gap-bar").first()).toBeVisible(); // phone: the 86px dial is replaced by an inline split bar
+    else await expect(dialog.locator(".crossover-row .gauge").first()).toBeVisible();
+    await expect(dialog.locator(".crossover-row .gauge")).not.toHaveCount(0);
     await page.addStyleTag({ content: "dialog.game-dialog, dialog.game-dialog * { font-family: 'DejaVu Sans', Verdana, sans-serif !important; }" }); // a wide system font, as on a Mac or Windows machine
     await page.waitForTimeout(300);
     const overlaps = await dialog.locator(".gauge").evaluateAll((figures) => {

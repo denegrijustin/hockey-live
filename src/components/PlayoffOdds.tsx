@@ -1,145 +1,161 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { simulatePlayoffs } from "../lib/playoff-sim.mjs";
+import { TIERS } from "../lib/playoff-tracker.mjs";
 import type { Game, Team } from "../types";
 import "./playoff-odds.css";
 import { TeamLogo } from "./TeamLogo";
 import { TeamLink } from "./TeamProfile";
-import { PlayoffTracker } from "./PlayoffTracker";
 import { PageHeader } from "./PageHeader";
+import { Icon } from "./icons";
 
 const SIMS = 20000;
-const DIV_FILE: Record<string, string> = { Atlantic: "atlantic", Metropolitan: "metro", Central: "central", Pacific: "pacific" };
-const COLS: [string, string, string][] = [["Div 1st", "D1", "Chance to finish first in the division"], ["Div 2nd", "D2", "Chance to finish second in the division"], ["Div 3rd", "D3", "Chance to finish third in the division"], ["WC1", "W1", "Chance to take the first wild-card spot"], ["WC2", "W2", "Chance to take the second wild-card spot"], ["Make it", "Make", "Chance to make the playoffs"], ["#1 in conf.", "#1", "Chance to finish first in the conference"], ["Presidents’ Trophy", "Pres.", "Chance to finish first in the league"]];
-const fmt = (p: number) => (p >= 99.5 ? ">99" : p < 0.5 ? "–" : String(Math.round(p)));
-const Cell = ({ p, cls = "" }: { p: number; cls?: string }) => (
-  <td
-    className={`po-cell ${cls} ${p < 0.5 ? "po-zero" : ""}`}
-    style={{ ["--p" as any]: Math.min(1, p / 100) }}
-    title={`${p.toFixed(1)}%`}
-  >
-    {fmt(p)}
-  </td>
-);
+type TeamOdds = { pPlayoffs: number; pDivision: number[]; pWildCard: number[]; pConferenceFirst: number; pPresidents: number; expPts: number };
+type Metric = "make" | "div" | "conf" | "pres";
+const METRICS: { id: Metric; label: string; short: string; get: (x: TeamOdds) => number; blurb: string }[] = [
+  { id: "make", label: "Make the playoffs", short: "Make it", get: (x) => x.pPlayoffs, blurb: "Division spot or wild card: eight teams a conference get in." },
+  { id: "div", label: "Win the division", short: "Division", get: (x) => x.pDivision[0], blurb: "Finish first in the division." },
+  { id: "conf", label: "Top of the conference", short: "#1 seed", get: (x) => x.pConferenceFirst, blurb: "Finish first in the whole conference." },
+  { id: "pres", label: "Presidents’ Trophy", short: "Trophy", get: (x) => x.pPresidents, blurb: "Finish first in the league." },
+];
+const CONFS = [["all", "Both"], ["E", "East"], ["W", "West"]] as const;
+const DETAIL: [string, (x: TeamOdds) => number, string][] = [
+  ["Division 1st", (x) => x.pDivision[0], "div"], ["Division 2nd", (x) => x.pDivision[1], "div"], ["Division 3rd", (x) => x.pDivision[2], "div"],
+  ["Wild card 1", (x) => x.pWildCard[0], "wc"], ["Wild card 2", (x) => x.pWildCard[1], "wc"], ["Make the playoffs", (x) => x.pPlayoffs, "make"],
+  ["#1 in conference", (x) => x.pConferenceFirst, "conf"], ["Presidents’ Trophy", (x) => x.pPresidents, "pres"],
+];
+const fmt = (p: number) => (p >= 99.5 ? ">99%" : p < 0.5 ? "<1%" : `${Math.round(p)}%`);
+const tierOf = (p: number) => (TIERS.find((t) => p >= t.min) ?? TIERS[TIERS.length - 1]).key;
+const clamp = (p: number) => Math.max(0, Math.min(100, p));
 
-export function PlayoffOdds({
-  teams,
-  games,
-  table,
-  baseline,
-  season,
-}: {
-  teams: Team[];
-  games: Game[];
-  table: Record<string, any>;
-  baseline?: Record<string, any>;
-  season: number;
-}) {
+/** Rows slide to their new place when the ranking changes (Web Animations, skipped for reduced motion). */
+function useFlip(listRef: React.RefObject<HTMLElement | null>, key: string) {
+  const prev = useRef<Map<string, number>>(new Map());
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const next = new Map<string, number>();
+    list.querySelectorAll<HTMLElement>("[data-flip]").forEach((el) => {
+      const top = el.getBoundingClientRect().top;
+      next.set(el.dataset.flip!, top);
+      const was = prev.current.get(el.dataset.flip!);
+      if (!reduce && was != null && Math.abs(was - top) > 1 && el.animate) el.animate([{ transform: `translateY(${was - top}px)` }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.7,.2,1)" });
+    });
+    prev.current = next;
+  }, [listRef, key]);
+}
+
+export function PlayoffOdds({ teams, games, table, baseline, season }: { teams: Team[]; games: Game[]; table: Record<string, any>; baseline?: Record<string, any>; season: number }) {
   const [result, setResult] = useState<any>(null);
+  const [conf, setConf] = useState<"all" | "E" | "W">("all");
+  const [metric, setMetric] = useState<Metric>("make");
+  const [open, setOpen] = useState<string | null>(null);
   const sig = useMemo(() => ({ teams, games, table, baseline }), [teams, games, table, baseline]);
   useEffect(() => {
     let cancelled = false;
-    const run = () => {
-      if (cancelled) return;
-      setResult(simulatePlayoffs({ ...sig, baseline: sig.baseline ?? {}, sims: SIMS, seed: 1 }));
-    };
+    const run = () => { if (!cancelled) setResult(simulatePlayoffs({ ...sig, baseline: sig.baseline ?? {}, sims: SIMS, seed: 1 })); };
     setResult(null);
     const w = window as any;
     const handle = w.requestIdleCallback ? w.requestIdleCallback(run, { timeout: 500 }) : setTimeout(run, 30);
-    return () => {
-      cancelled = true;
-      w.cancelIdleCallback ? w.cancelIdleCallback(handle) : clearTimeout(handle);
-    };
+    return () => { cancelled = true; w.cancelIdleCallback ? w.cancelIdleCallback(handle) : clearTimeout(handle); };
   }, [sig]);
 
   const s = String(season);
   const seasonLabel = s.length === 8 ? `${s.slice(0, 4)}–${s.slice(6)}` : s;
+  const m = METRICS.find((x) => x.id === metric)!;
+  const shown = conf === "all" ? (["E", "W"] as const) : ([conf] as const);
+  const listRef = useRef<HTMLDivElement>(null);
+  useFlip(listRef, `${metric}|${conf}`);
 
   return (
     <>
-    <PageHeader title="Playoff odds" eyebrow="PLAYOFF PICTURE" />
-    <section className="panel po-panel" aria-label="Playoff odds">
-      <div className="panel-heading">
-        <div>
-          <p className="po-note">
-            {result
-              ? result.complete
-                ? `The ${seasonLabel} regular season is complete, so these are final results, not forecasts. `
-                : `Based on ${result.sims.toLocaleString()} simulated seasons with ${result.remainingGames.toLocaleString()} regular-season games remaining. `
-              : "Simulating the rest of the season… "}
-            This is an uncalibrated model of goals scored and allowed, not official odds. Ties in points are broken by
-            regulation wins and then a coin flip; the NHL's full tiebreak procedure is not implemented. Cells show
-            percent chance; “–” means under 0.5%.
-          </p>
+      <PageHeader title="Playoff odds" eyebrow="PLAYOFF PICTURE" />
+      <section className="panel po-panel" aria-label="Playoff odds">
+        <p className="po-note" role={result ? undefined : "status"}>
+          {result
+            ? result.complete
+              ? `The ${seasonLabel} regular season is complete, so these are final results, not forecasts.`
+              : `${result.sims.toLocaleString()} simulated seasons · ${result.remainingGames.toLocaleString()} games left.`
+            : "Running simulations…"}
+          {" "}An uncalibrated model of goals scored and allowed, not official odds.
+        </p>
+        <div className="po-controls">
+          <div className="inj-seg po-seg" role="group" aria-label="Conference">
+            {CONFS.map(([id, label]) => <button key={id} type="button" aria-pressed={conf === id} onClick={() => setConf(id)}>{label}</button>)}
+          </div>
+          <div className="inj-seg po-seg" role="group" aria-label="Rank teams by">
+            {METRICS.map((x) => <button key={x.id} type="button" aria-pressed={metric === x.id} onClick={() => setMetric(x.id)}><span className="po-long">{x.label}</span><span className="po-short">{x.short}</span></button>)}
+          </div>
         </div>
-      </div>
-      {!result && <p className="po-loading" role="status">Running simulations…</p>}
-      {result && <PlayoffTracker teams={teams} result={result} />}
-      {result &&
-        (["E", "W"] as const).map((conf) => {
-          const rows = teams
-            .filter((t) => t.conference === conf)
-            .sort(
-              (a, b) =>
-                result.teams[b.id].pPlayoffs - result.teams[a.id].pPlayoffs ||
-                (table[b.id]?.pts ?? 0) - (table[a.id]?.pts ?? 0) ||
-                a.name.localeCompare(b.name),
-            );
-          return (
-            <div className="po-conf" key={conf}>
-              <h3><img className="po-conf-logo" src={`/logos/league/${conf === "E" ? "east" : "west"}.webp`} alt={conf === "E" ? "Eastern Conference" : "Western Conference"} width="84" height="61" /></h3>
-              <div className="po-grid" data-testid={`po-grid-${conf}`} role="region" aria-label={`${conf === "E" ? "Eastern" : "Western"} Conference playoff probabilities`}>
-                <table className="po-table">
-                  <thead>
-                    <tr>
-                      <th className="po-team" scope="col">Team</th>
-                      <th className="po-rec">Record</th>
-                      <th className="po-rec">Pts</th>
-                      <th className="po-proj" title="Projected points at the end of the season"><span className="po-long">Proj. pts</span><span className="po-short">Proj</span></th>
-                      {COLS.map(([long, short, tip]) => <th key={long} className={long === "#1 in conf." ? "po-first" : ""} title={tip} scope="col"><span className="po-long">{long}</span><span className="po-short">{short}</span></th>)}
-                    </tr>
-                  </thead>
-                  {[...new Set(rows.map((t) => t.division))].sort().map((division) => (
-                    <tbody key={division} className="po-divgroup">
-                      <tr className="po-divrow">
-                        <th colSpan={3 + COLS.length} scope="colgroup">
-                          <span><img className="po-div-logo" src={`/logos/league/${DIV_FILE[division] ?? "atlantic"}.webp`} alt="" width="56" height="37" />{division} Division</span>
-                        </th>
-                      </tr>
-                      {rows.filter((t) => t.division === division).map((t) => {
-                        const x = result.teams[t.id];
-                        const row = table[t.id] ?? { w: 0, l: 0, ot: 0, pts: 0 };
-                        return (
-                          <tr key={t.id}>
-                            <td className="po-team">
-                              <div className="po-team-cell">
-                                <i className="po-accent" style={{ background: t.cardColor ?? t.color }} />
-                                <TeamLogo id={t.id} size={22} />
-                                <span className="po-name"><b><TeamLink id={t.id}>{t.short}</TeamLink></b><small className="po-sub"><span className="po-line">{row.w}–{row.l}–{row.ot} · {row.pts}<span className="po-ptsword"> pts</span></span></small></span>
-                              </div>
-                            </td>
-                            <td className="po-rec">{row.w}–{row.l}–{row.ot}</td>
-                            <td className="po-rec">{row.pts}</td>
-                            <td className="po-proj">{Math.round(x.expPts)}</td>
-                            <Cell p={x.pDivision[0]} />
-                            <Cell p={x.pDivision[1]} />
-                            <Cell p={x.pDivision[2]} />
-                            <Cell p={x.pWildCard[0]} />
-                            <Cell p={x.pWildCard[1]} />
-                            <Cell p={x.pPlayoffs} cls="po-make" />
-                            <Cell p={x.pConferenceFirst} cls="po-first" />
-                            <Cell p={x.pPresidents} cls="po-pres" />
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  ))}
-                </table>
-              </div>
-              <p className="po-legend">Proj = projected points · D1–D3 = finishing 1st–3rd in the division · W1–W2 = wild-card spots · Make = makes the playoffs · #1 = top of the conference · Pres. = Presidents’ Trophy</p>
-            </div>
-          );
-        })}
-    </section>
+        <p className="po-blurb" aria-live="polite">{m.blurb} Tap a team for every number.</p>
+        {!result && <div className="po-skel" aria-hidden="true">{Array.from({ length: 8 }, (_, i) => <i key={i} />)}</div>}
+        {result && (
+          <div className={`po-confs${shown.length === 1 ? " one" : ""}`} ref={listRef}>
+            {shown.map((c) => {
+              const rows = teams.filter((t) => t.conference === c && result.teams[t.id]).sort((a, b) => {
+                const A = result.teams[a.id] as TeamOdds, B = result.teams[b.id] as TeamOdds;
+                return m.get(B) - m.get(A) || B.pPlayoffs - A.pPlayoffs || (table[b.id]?.pts ?? 0) - (table[a.id]?.pts ?? 0) || a.name.localeCompare(b.name);
+              });
+              const inCount = rows.filter((t) => result.teams[t.id].pPlayoffs >= 99.95).length;
+              return (
+                <section className="po-conf" key={c} data-testid={`po-grid-${c}`} aria-label={`${c === "E" ? "Eastern" : "Western"} Conference playoff probabilities`}>
+                  <header>
+                    <img className="po-conf-logo" src={`/logos/league/${c === "E" ? "east" : "west"}.webp`} alt={c === "E" ? "Eastern Conference" : "Western Conference"} width="64" height="47" />
+                    <span><b>{m.label}</b><small>{inCount} of 8 spots clinched</small></span>
+                  </header>
+                  <ol className="po-list">
+                    {rows.map((t, i) => {
+                      const x = result.teams[t.id] as TeamOdds;
+                      const rec = table[t.id] ?? { w: 0, l: 0, ot: 0, pts: 0 };
+                      const p = clamp(m.get(x));
+                      const id = `po-${t.id}`;
+                      const isOpen = open === t.id;
+                      const tier = metric === "make" ? tierOf(x.pPlayoffs) : "metric";
+                      const divP = clamp(x.pDivision[0] + x.pDivision[1] + x.pDivision[2]);
+                      return (
+                        <li key={t.id} data-flip={`${c}-${t.id}`} className={`po-row ${tier}${isOpen ? " open" : ""}`} data-team={t.id} style={{ ["--team" as any]: t.cardColor ?? t.color }}>
+                          {metric === "make" && i === 8 && <div className="po-cut" aria-hidden="true"><span>Playoff line</span></div>}
+                          <button type="button" className="po-btn" aria-expanded={isOpen} aria-controls={id} onClick={() => setOpen(isOpen ? null : t.id)}>
+                            <span className="po-rank">{i + 1}</span>
+                            <TeamLogo id={t.id} size={32} />
+                            <span className="po-who"><b>{t.short}</b><small>{rec.w}–{rec.l}–{rec.ot} · {rec.pts} pts</small></span>
+                            <span className="po-meter" role="img" aria-label={`${t.name}: ${m.label} ${p.toFixed(1)}%`}>
+                              {metric === "make"
+                                ? <><i className="po-fill po-div" style={{ width: `${divP}%` }} /><i className="po-fill po-wc" style={{ left: `${divP}%`, width: `${Math.max(0, p - divP)}%` }} /></>
+                                : <i className="po-fill" style={{ width: `${p}%` }} />}
+                            </span>
+                            <span className="po-pct">{fmt(p)}</span>
+                            <span className="po-chev" aria-hidden="true"><Icon name="chevron" size={16} /></span>
+                          </button>
+                          <div className="po-more" id={id} role="region" aria-label={`${t.name} odds in detail`} inert={!isOpen}>
+                            <div className="po-more-in">
+                              <dl className="po-stats">
+                                {DETAIL.map(([label, get, kind]) => (
+                                  <div key={label} className={`po-stat ${kind}`}>
+                                    <dt>{label}</dt><dd>{fmt(get(x))}</dd>
+                                    <span className="po-bar"><i style={{ width: `${clamp(get(x))}%` }} /></span>
+                                  </div>
+                                ))}
+                              </dl>
+                              <p className="po-foot">Projected finish <b>{Math.round(x.expPts)} pts</b> · <TeamLink id={t.id}>Open {t.short} page</TeamLink></p>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </section>
+              );
+            })}
+          </div>
+        )}
+        {result && (
+          <details className="po-how">
+            <summary>How these are worked out</summary>
+            <p>Each simulated season plays out the remaining games from team scoring rates. Ties in points are broken by regulation wins and then a coin flip; the NHL’s full tiebreak procedure is not implemented. “&lt;1%” means under half a percent. In “Make the playoffs” the bar is green for a division spot and amber for the wild card.</p>
+          </details>
+        )}
+      </section>
     </>
   );
 }

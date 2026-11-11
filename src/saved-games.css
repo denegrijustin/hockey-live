@@ -26,3 +26,13 @@
 .rec ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
 .rec-why { margin: 0; padding: 0 4px 2px; color: var(--text-3); font-size: .8125rem; line-height: 1.4; }
 .rec-note { margin: 6px 0 0; color: var(--text-2); font-size: .75rem; }
+
+/* The compact card outside the Home scoreboard (Recommended, Saved games): a tidy two-line row with the reason under it.
+   Without this the name and score keep their big scoreboard sizes, the favorite star breaks the grid, and the reason sits beside the card instead of under it. */
+.rec .gcv-compact, .sg-list .gcv-compact { flex-wrap: wrap; }
+:is(.rec, .sg-list) .gcv-compact .sb-main { flex: 1 1 100%; }
+:is(.rec, .sg-list) .gcv-compact .sb-team { display: flex; align-items: center; gap: 6px; min-width: 0; }
+:is(.rec, .sg-list) .gcv-compact .team-logo { flex: none; }
+:is(.rec, .sg-list) .gcv-compact .sb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .875rem; }
+:is(.rec, .sg-list) .gcv-compact .sb-score { margin-left: auto; font-size: .875rem; }
+.rec .gcv-compact > .rec-why { flex: 1 0 100%; padding: 0 12px 8px; }

@@ -125,3 +125,24 @@ test("360px: Following and the recommendation do not scroll sideways", async ({ 
   await expect(page.locator("[data-saved-game='2026020201']")).toBeVisible();
   expect(await noOverflow(page)).toBe(true);
 });
+
+test("Recommended and Saved cards are laid out: the reason sits under the game, names stay compact, nothing overlaps (390px)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const prefs = { version: 1, onboarded: true, favorites: ["EDM", "DAL"], games: [{ id: 2026020204, season, away: "NYR", home: "NJD", date: day(1), at: 1 }] };
+  await open(page, "/?view=games", prefs);
+  const rec = page.getByTestId("recommended");
+  await expect(rec).toBeVisible();
+  for (const li of await rec.locator("li").all()) {
+    const main = (await li.locator(".sb-main").boundingBox())!, why = (await li.getByTestId("rec-why").boundingBox())!, card = (await li.locator(".gcv-compact").boundingBox())!;
+    expect(why.y, "the reason starts below the game").toBeGreaterThanOrEqual(main.y + main.height - 1);
+    expect(why.y + why.height, "the reason is inside the card").toBeLessThanOrEqual(card.y + card.height + 1);
+    expect(card.height, "no empty card").toBeLessThan(140);
+    for (const size of await li.locator(".sb-name").evaluateAll((els) => els.map((e) => parseFloat(getComputedStyle(e).fontSize)))) expect(size).toBeLessThanOrEqual(16);
+  }
+  expect(await noOverflow(page)).toBe(true);
+  await open(page, "/?view=following", prefs);
+  await tabGames(page).click();
+  const saved = page.locator(".sg-list .gcv-compact").first();
+  await expect(saved).toBeVisible();
+  for (const size of await saved.locator(".sb-name").evaluateAll((els) => els.map((e) => parseFloat(getComputedStyle(e).fontSize)))) expect(size).toBeLessThanOrEqual(16);
+});

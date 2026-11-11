@@ -17,7 +17,6 @@ import { GameCardView } from "./GameCardView";
 import { DateStrip, DayHeading, fullDate } from "./DateStrip";
 import { InsightLine } from "./InsightLine";
 import { CompletedStrip } from "./home/CompletedStrip";
-import { FeaturedStrip } from "./home/FeaturedStrip";
 import { HomeSection } from "./home/HomeSection";
 import { LeagueIntel, type IntelLink } from "./home/LeagueIntel";
 import { useMedia } from "../hooks/useMedia";
@@ -105,7 +104,7 @@ function useTick(ms: number) {
 
 /**
  * The home screen. Top to bottom: the day (heading and schedule strip), the status filter, then only the sections that have games for that day:
- * Live, Upcoming (by puck-drop slot), Worth watching, Completed, Postponed, League intelligence. A game is in exactly one of Live / Upcoming / Completed.
+ * Live, Upcoming (by puck-drop slot), Completed, Postponed, League intelligence. A game is in exactly one of Live / Upcoming / Completed.
  */
 export function Scoreboard({ games, teams, analysis, baseline, baselineTable, sourceSeason, loading, error, onRetry, onBrowse, onNavigate, sim, favorites = [], followedPlayers = [], density = "comfortable", homeOrder = "favorites", sections, onDensity }: Props) {
   const today = useEtToday();
@@ -143,7 +142,7 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   const teamOf = useCallback((id: string) => teams.find((t) => t.id === id)!, [teams]);
 
   // Each game lands in exactly one list. The order of the tests is the rule: live, then finished, then called off, else upcoming.
-  const sec = { myTeams: sections?.myTeams !== false, myPlayers: sections?.myPlayers !== false, worth: sections?.worth !== false, pulse: sections?.pulse !== false };
+  const sec = { myTeams: sections?.myTeams !== false, myPlayers: sections?.myPlayers !== false, pulse: sections?.pulse !== false };
   const personal = favorites.length > 0;
   const showTeams = personal && sec.myTeams;
   // Dedupe: while My teams is on, a favorite team's games appear only there (the counts below are computed after removal).
@@ -170,11 +169,6 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
     return out;
   }, [dayGames, rated, analysis, teams, games, ranksFor, sim]);
   const insightFor = (g: Game): ReactNode => { const i = insights.get(g.id); return i ? <InsightLine insight={i} variant="card" /> : undefined; };
-
-  const featured = useMemo(() => {
-    if (lists.soon.length < 2) return [];
-    return [...lists.soon].sort((a, b) => (rated.get(b.id)?.score ?? 0) - (rated.get(a.id)?.score ?? 0) || byStartThenId(a, b)).slice(0, phone ? 3 : 5);
-  }, [lists.soon, rated, phone]);
 
   const playerRows = useMemo(() => followedPlayers.map((p) => {
     const g = dayGames.find((x) => x.home === p.team || x.away === p.team);
@@ -253,9 +247,6 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
       })()}
     </HomeSection>
   );
-  const bFeatured = !error && status === "all" && sec.worth && (
-    <FeaturedStrip key="featured" games={featured} teamOf={teamOf} now={now} ranksFor={ranksFor} insightFor={insightFor} onOpen={openCenter} />
-  );
   const bDone = !error && show("final") && lists.done.length > 0 && (status === "all" ? (
     <CompletedStrip key="done" games={lists.done} teamOf={teamOf} ranksFor={ranksFor} upsetOf={(g) => rated.get(g.id)?.upsetWon} onOpen={openCenter} />
   ) : (
@@ -281,8 +272,8 @@ export function Scoreboard({ games, teams, analysis, baseline, baselineTable, so
   );
   // Order: with favorites first (the default) My teams and My players lead; league-first puts Live and Upcoming ahead of them.
   const ordered = homeOrder === "league" && personal
-    ? [bLive, bSoon, bTeams, bPlayers, bFeatured, bPulse, bDone, bOff]
-    : [bTeams, bPlayers, bLive, bSoon, bFeatured, bPulse, bDone, bOff];
+    ? [bLive, bSoon, bTeams, bPlayers, bPulse, bDone, bOff]
+    : [bTeams, bPlayers, bLive, bSoon, bPulse, bDone, bOff];
 
   return (
     <section className={`scoreboard${compact ? " density-compact" : ""}`} aria-label="Scoreboard">

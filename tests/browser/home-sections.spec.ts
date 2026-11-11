@@ -51,12 +51,11 @@ test.describe("home sections", () => {
     await expect(page.locator("[data-testid^=home-section-]")).toHaveCount(0);
   });
 
-  test("Featured (Worth watching) excludes live games and does not repeat a game already shown as the headline", async ({ page }) => {
+  test("there is no Worth watching strip repeating Upcoming games", async ({ page }) => {
     await mockApis(page, { games: full });
     await page.goto("/");
-    const featured = page.getByTestId("home-section-featured");
-    await expect(featured).toHaveAttribute("aria-label", "Worth watching");
-    await expect(featured.locator('[data-game="9901"]')).toHaveCount(0);
+    await expect(page.getByTestId("home-section-upcoming")).toBeVisible();
+    await expect(page.getByTestId("home-section-featured")).toHaveCount(0);
   });
 
   test("League intelligence renders only when it has insight data, and links go to real views", async ({ page }) => {

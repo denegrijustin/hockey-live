@@ -49,3 +49,6 @@
   .gcs > .gcs-gauges { grid-column: 1; }
   .gcs > .gcs-gauges + .gcs-cmp { grid-column: 2; }
 }
+/* The by-period headers ("Goals LAK–VAN") are wider than their fifth-of-the-table cells on a 320px phone with wide fonts: let them wrap and tighten. */
+.gcs-per thead th { white-space: normal; overflow-wrap: anywhere; line-height: 1.2; }
+@media (max-width: 400px) { .gcs-per th, .gcs-per td { padding-inline: 2px; } .gcs-per thead th { font-size: 0.68rem; } }

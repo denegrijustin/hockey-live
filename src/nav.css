@@ -639,11 +639,11 @@
 
 /* ---------- Page header: one title style for every screen ---------- */
 .page-header { display: grid; gap: 6px; margin: 4px 0 14px; min-width: 0; }
-.ph-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-width: 0; }
-.ph-titles { min-width: 0; }
+.ph-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 12px; min-width: 0; }
+.ph-titles { flex: 1 1 8rem; min-width: 0; } /* the title keeps room; wide actions wrap below it instead of squeezing it to nothing */
 .ph-titles h1 { margin: 0; font-size: 1.5rem; line-height: 1.15; letter-spacing: -.01em; }
 .ph-titles .eyebrow { margin: 0 0 2px; }
-.ph-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.ph-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 0 1 auto; max-width: 100%; }
 .ph-back { justify-self: start; display: inline-flex; align-items: center; gap: 2px; min-height: 44px; padding: 0 10px 0 4px; border: 0; background: transparent; color: var(--mint); font: inherit; font-weight: 650; cursor: pointer; }
 .ph-chev { display: inline-flex; transform: rotate(180deg); }
 .ph-back:focus-visible, .nav-item:focus-visible, .tab-item:focus-visible, .menu-item:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }

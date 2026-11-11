@@ -2,17 +2,14 @@ import { useMemo, useState, type ReactNode } from "react";
 import type { Game, Team } from "../../types";
 import { isLive } from "../../lib/game-data.mjs";
 import { localTime } from "../../lib/game-status.mjs";
-import { teamSummary } from "../../lib/team-summary.mjs";
 import { sideOf, teamGames } from "../../lib/team-schedule.mjs";
 import { dayDiff } from "../../lib/dates.mjs";
-import { rankTitle } from "../../lib/ranks.mjs";
 import { GameCardView } from "../GameCardView";
 import { TeamLogo } from "../TeamLogo";
 import { HomeSection } from "./HomeSection";
 import "./home-personal.css";
 
 const PHONE_CAP = 3;
-const WORD: Record<string, string> = { W: "win", L: "loss", OTL: "overtime loss" };
 
 /** "today 7:00 PM", "tomorrow 7:00 PM" or "Thu, Nov 12 7:00 PM", in the viewer's clock. */
 function whenOf(start: string, daysAway: number | null) {
@@ -53,7 +50,7 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
       const shownAbove = !game && mine[0] ? mine[0] : null;
       if (game) placed.add(game.id);
       const n = teamGames(games, id).map((g: Game) => sideOf(g, id)).find((i: any) => i.status === "upcoming") ?? null;
-      return { id, order, game, shownAbove, sum: teamSummary(id, { teams, table, games, today }), next: n && { ...n, daysAway: n.date ? dayDiff(today, n.date) : null } };
+      return { id, order, game, shownAbove, next: n && { ...n, daysAway: n.date ? dayDiff(today, n.date) : null } };
     });
     // Live first, then a game that day, then the order the favorites were added.
     return out.sort((a, b) => Number(!!b.game && isLive(b.game)) - Number(!!a.game && isLive(a.game)) || Number(!!b.game) - Number(!!a.game) || a.order - b.order);
@@ -61,32 +58,14 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
   if (!cards.length) return null;
   const capped = phone && !all && cards.length > PHONE_CAP;
   const shown = capped ? cards.slice(0, PHONE_CAP) : cards;
-  const comfy = density === "comfortable";
 
   return (
     <HomeSection id="myteams" label="My teams" count={cards.length} className={`mt-section density-${density}`}>
       <ul className="mt-list">
-        {shown.map(({ id, game, shownAbove, sum, next }) => {
-          const st = sum?.streak, stand = sum?.standing;
+        {shown.map(({ id, game, shownAbove, next }) => {
           return (
             <li key={id} className="mt-card" data-team={id}>
-              <div className="mt-head">
-                <TeamLogo id={id} size={24} />
-                <span className="sr-only">{teamOf(id).name} ({id})</span>
-                {sum ? (
-                  <>
-                    <span className="mt-rec" title="Record: wins, losses, overtime losses">{sum.record.text}</span>
-                    {st && <span className={`mt-streak mt-${st.type.toLowerCase()}`} title={`Current streak: ${st.count} ${WORD[st.type]}${st.count === 1 ? "" : "s"} in a row`}>{st.type}{st.count}</span>}
-                    {comfy && stand && <span className="mt-stand" title={rankTitle(stand)}>#{stand.division} {teamOf(id).division}</span>}
-                    {comfy && sum.form.length > 0 && (
-                      <span className="mt-form" role="img" aria-label={`Last ${sum.form.length}, newest first: ${sum.form.map((r: string) => WORD[r]).join(", ")}`}>
-                        <small className="mt-form-label" aria-hidden="true">Last {sum.form.length}</small>
-                        {sum.form.map((r: string, i: number) => <i key={i} className={`mt-dot mt-${r.toLowerCase()}`} />)}
-                      </span>
-                    )}
-                  </>
-                ) : <span className="mt-rec">No games played yet</span>}
-              </div>
+              <span className="sr-only">{teamOf(id).name} ({id})</span>
               {game ? (
                 isLive(game) ? <div className="mt-game mt-live">{renderLive(game)}</div> : (
                   <div className="mt-game">
@@ -94,10 +73,10 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
                   </div>
                 )
               ) : shownAbove ? (
-                <p className="mt-next">Plays {teamOf(shownAbove.home === id ? shownAbove.away : shownAbove.home).short} (the game is shown above)</p>
+                <p className="mt-next"><TeamLogo id={id} size={20} /> Plays {teamOf(shownAbove.home === id ? shownAbove.away : shownAbove.home).short} (the game is shown above)</p>
               ) : next ? (
-                <p className="mt-next">Next: {next.home ? "vs" : "at"} {teamOf(next.opp).short} <span>{whenOf(next.start, next.daysAway)}</span></p>
-              ) : <p className="mt-next">No upcoming game on the schedule</p>}
+                <p className="mt-next"><TeamLogo id={id} size={20} /> Next: {next.home ? "vs" : "at"} {teamOf(next.opp).short} <span>{whenOf(next.start, next.daysAway)}</span></p>
+              ) : <p className="mt-next"><TeamLogo id={id} size={20} /> No upcoming game on the schedule</p>}
             </li>
           );
         })}

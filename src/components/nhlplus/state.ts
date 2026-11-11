@@ -8,6 +8,8 @@ export type NpState = {
   highlight: string[];
   // Teams
   teamMetric: string; teamSort: Sort; teamMin: number | null;
+  // Power rankings
+  powerSort: Sort; powerSit: "all" | "5on5";
   // Matchups
   mA: string | null; mB: string | null; mGame: number | null; mWindow: 5 | 10;
   // Goalies
@@ -23,6 +25,7 @@ export type NpState = {
 export const INITIAL: NpState = {
   view: "teams", sit: "5on5", highlight: [],
   teamMetric: "xGPct", teamSort: { key: "xGPct", dir: "desc" }, teamMin: null,
+  powerSort: { key: "power", dir: "desc" }, powerSit: "all",
   mA: null, mB: null, mGame: null, mWindow: 5,
   gSort: { key: "toi", dir: "desc" }, gMin: null, gMinGp: 0, gCmp: [],
   pTab: "skaters", pPos: "all", pTeam: "all", pQuery: "", pSort: { key: "P", dir: "desc" }, pMin: null,

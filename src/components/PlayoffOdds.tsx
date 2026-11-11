@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMyTeam } from "../hooks/useMyTeam";
 import { simulatePlayoffs } from "../lib/playoff-sim.mjs";
 import { TIERS } from "../lib/playoff-tracker.mjs";
 import type { Game, Team } from "../types";
@@ -47,9 +48,12 @@ function useFlip(listRef: React.RefObject<HTMLElement | null>, key: string) {
 
 export function PlayoffOdds({ teams, games, table, baseline, season }: { teams: Team[]; games: Game[]; table: Record<string, any>; baseline?: Record<string, any>; season: number }) {
   const [result, setResult] = useState<any>(null);
-  const [conf, setConf] = useState<"all" | "E" | "W">("all");
+  const { myTeam } = useMyTeam();
+  const mine = teams.find((t) => t.id === myTeam);
+  // My team: open on its conference with its row expanded; "Both" is one tap away.
+  const [conf, setConf] = useState<"all" | "E" | "W">((mine?.conference as "E" | "W" | undefined) ?? "all");
   const [metric, setMetric] = useState<Metric>("make");
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(mine?.id ?? null);
   const sig = useMemo(() => ({ teams, games, table, baseline }), [teams, games, table, baseline]);
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +69,12 @@ export function PlayoffOdds({ teams, games, table, baseline, season }: { teams: 
   const m = METRICS.find((x) => x.id === metric)!;
   const shown = conf === "all" ? (["E", "W"] as const) : ([conf] as const);
   const listRef = useRef<HTMLDivElement>(null);
+  const scrolled = useRef(false);
+  useEffect(() => {
+    if (!result || !myTeam || scrolled.current) return;
+    const row = listRef.current?.querySelector<HTMLElement>(".po-row.mine");
+    if (row) { scrolled.current = true; row.scrollIntoView({ block: "center", behavior: "auto" }); }
+  }, [result, myTeam]);
   useFlip(listRef, `${metric}|${conf}`);
 
   return (
@@ -113,7 +123,7 @@ export function PlayoffOdds({ teams, games, table, baseline, season }: { teams: 
                       const tier = metric === "make" ? tierOf(x.pPlayoffs) : "metric";
                       const divP = clamp(x.pDivision[0] + x.pDivision[1] + x.pDivision[2]);
                       return (
-                        <li key={t.id} data-flip={`${c}-${t.id}`} className={`po-row ${tier}${isOpen ? " open" : ""}`} data-team={t.id} style={{ ["--team" as any]: t.cardColor ?? t.color }}>
+                        <li key={t.id} data-flip={`${c}-${t.id}`} className={`po-row ${tier}${isOpen ? " open" : ""}${t.id === myTeam ? " mine" : ""}`} data-team={t.id} style={{ ["--team" as any]: t.cardColor ?? t.color }}>
                           {metric === "make" && i === 8 && <div className="po-cut" aria-hidden="true"><span>Playoff line</span></div>}
                           <button type="button" className="po-btn" aria-expanded={isOpen} aria-controls={id} onClick={() => setOpen(isOpen ? null : t.id)}>
                             <span className="po-rank">{i + 1}</span>

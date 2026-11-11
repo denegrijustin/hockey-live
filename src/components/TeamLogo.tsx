@@ -1,5 +1,6 @@
 import type { SyntheticEvent } from "react";
 import { currentLogoUrl, logoInk, logoUrl } from "../lib/logos";
+import { usePrefs } from "../lib/prefs";
 
 /** If a vintage file fails to load, show the team's current logo instead (once), and chip it as the light-ink SVG it is. */
 export function onLogoError(e: SyntheticEvent<HTMLImageElement>) {
@@ -12,6 +13,7 @@ export function onLogoError(e: SyntheticEvent<HTMLImageElement>) {
 
 /** A team logo as an <img> with its size fixed (no layout jump) and a contrasting chip where the mark would blend into the page. */
 export function TeamLogo({ id, size, className, alt = "", eager = false }: { id: string; size?: number | string; className?: string; alt?: string; eager?: boolean }) {
+  usePrefs().display.logos; // re-render when the viewer switches between retro and current logos
   return (
     <img
       className={`team-logo${className ? ` ${className}` : ""}`}
@@ -30,6 +32,7 @@ export function TeamLogo({ id, size, className, alt = "", eager = false }: { id:
 
 /** The same inside an SVG chart: a chip behind the logo (colored by CSS from its ink) and the logo itself. */
 export function LogoImage({ id, x, y, size, opacity, title, bare = false }: { id: string; x: number; y: number; size: number; opacity?: number; title?: string; bare?: boolean }) {
+  usePrefs().display.logos;
   // On the ice (white) a vintage logo needs no chip at all: it sits straight on the ice. A current logo is drawn for dark pages, so it keeps a round dark disc.
   const chip = !(bare && logoInk(id) === "retro");
   return (

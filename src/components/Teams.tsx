@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Team } from "../types";
 import { PageHeader } from "./PageHeader";
+import { useMyTeam } from "../hooks/useMyTeam";
 import { useFavorites } from "../hooks/useFavorites";
 import { FavoriteStar } from "./FavoriteStar";
 import { TeamLogo } from "./TeamLogo";
@@ -18,13 +19,14 @@ const CONFERENCES: [string, string, string[]][] = [
  */
 export function Teams({ teams, table, onSchedule, onOpenTeam }: { teams: Team[]; table: Record<string, any> | null; onSchedule: () => void; onOpenTeam: (id: string) => void }) {
   const { favorites: selected } = useFavorites();
+  const { myTeam } = useMyTeam();
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const matches = (t: Team) => !q || `${t.name} ${t.city} ${t.short} ${t.id}`.toLowerCase().includes(q);
   const mine = useMemo(() => teams.filter((t) => selected.includes(t.id) && matches(t)), [teams, selected, q]);
   const record = (t: Team) => { const s = table?.[t.id]; return s?.gp ? `${s.w}–${s.l}–${s.ot} · ${s.pts} pts` : "No games yet"; };
   const card = (t: Team) => (
-    <li key={t.id} className="tm-card" data-team={t.id} data-mine={selected.includes(t.id) ? "1" : undefined}>
+    <li key={t.id} className={`tm-card${t.id === myTeam ? " mine" : ""}`} data-team={t.id} data-mine={selected.includes(t.id) ? "1" : undefined}>
       <button type="button" className="tm-link" data-team-open={t.id} onClick={() => onOpenTeam(t.id)}>
         <TeamLogo id={t.id} size={44} />
         <span className="tm-name">

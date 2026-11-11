@@ -34,6 +34,8 @@ import { useOnline } from "./hooks/useOnline";
 import { Icon } from "./components/icons";
 import { NotificationBell } from "./components/alerts/NotificationBell";
 import { SearchPalette } from "./components/SearchPalette";
+import { MyTeamChip } from "./components/MyTeam";
+import { useMyTeam } from "./hooks/useMyTeam";
 import { OPEN_GAME_EVENT } from "./lib/open-game";
 import { useMedia } from "./hooks/useMedia";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
@@ -120,6 +122,7 @@ export default function App() {
   const prefs = usePrefs();
   const online = useOnline();
   const { favorites } = useFavorites();
+  const { myTeam } = useMyTeam();
   const onboarded = prefs.onboarded;
   const [pickOpen, setPickOpen] = useState(false);
   useEffect(() => {
@@ -325,6 +328,7 @@ export default function App() {
           </span>
         </a>
         <div className="header-right">
+          <MyTeamChip teams={teams} />
           <NotificationBell onNavigate={setView} />
           <SearchPalette teams={teams} games={data?.games ?? []} onTeam={openTeam} onView={setView} />
           <StatusPill live={hasLive && online} online={online} offline={!!liveError || source === "saved"} updatedAt={scoreboard?.updatedAt ?? data?.updatedAt} />
@@ -460,7 +464,7 @@ export default function App() {
             )}
             {view === "teamschedule" && (
               <ErrorBoundary resetKey={String(season)}><Suspense fallback={<Skeleton rows={3} label="Loading the team schedule" />}>
-                <TeamSchedule games={data.games} teams={teams} defaultTeam={favorites[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
+                <TeamSchedule games={data.games} teams={teams} defaultTeam={myTeam || favorites[0]} analysis={analysis} baseline={baseline} baselineTable={baselineAnalysis?.table} sourceSeason={sourceSeason} />
               </Suspense></ErrorBoundary>
             )}
             {view === "settings" && (

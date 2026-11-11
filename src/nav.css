@@ -655,3 +655,8 @@ main#main:focus { outline: none; }
   .ph-titles .eyebrow { display: none; }
 }
 .ph-sub { margin: 4px 0 0; font-size: .8125rem; line-height: 1.5; color: var(--text-1); max-width: 70ch; }
+/* The My team control in the header: logo and abbreviation (logo only on a phone). */
+.myteam-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--surface-5); color: var(--text-5); font: inherit; font-size: .8125rem; font-weight: 650; cursor: pointer; }
+.myteam-chip:hover { background: var(--surface-6); }
+.myteam-chip:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+@media (max-width: 900px) { .myteam-chip { padding: 0 8px; } .myteam-chip-text { display: none; } }

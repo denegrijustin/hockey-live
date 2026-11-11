@@ -1,5 +1,6 @@
 import { FavoriteMark } from "./FavoriteStar";
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useMyTeam } from "../hooks/useMyTeam";
 import { projectedStandings } from "../lib/standings-projection.mjs";
 import type { Game, Team } from "../types";
 import { signed, entryLine } from "../lib/model.mjs";
@@ -68,9 +69,18 @@ export function Standings({
   baseline: any;
   onNavigate?: (view: string) => void;
 }) {
-  const [group, setGroup] = useState<View>("league"), [mode, setMode] = useState<Mode>("current"), [tab, setTab] = useState<"table" | "resumes">("table");
+  const { myTeam } = useMyTeam();
+  const mine = teams.find((t) => t.id === myTeam);
+  // My team: open on its conference (the race it is in) and bring its row into view once.
+  const [group, setGroup] = useState<View>(mine ? (mine.conference === "E" ? "east" : "west") : "league"), [mode, setMode] = useState<Mode>("current"), [tab, setTab] = useState<"table" | "resumes">("table");
   const projected = useMemo(() => projectedStandings(teams, table, games, baseline), [teams, table, games, baseline]);
   const rows = useMemo(() => withRow(table, games), [table, games]);
+  const scrolled = useRef(false);
+  useEffect(() => {
+    if (!myTeam || scrolled.current) return;
+    const row = document.querySelector<HTMLElement>(`.standings-table tr[data-team="${myTeam}"]`);
+    if (row) { scrolled.current = true; row.scrollIntoView({ block: "center", behavior: "auto" }); }
+  });
   // The same table in "projected" form for the playoff picture: projected points over projected games played.
   const projRows = useMemo(
     () => Object.fromEntries(teams.map((t) => [t.id, { ...rows[t.id], pts: projected[t.id].projected, gp: rows[t.id].gp + projected[t.id].remaining }])),
@@ -110,7 +120,7 @@ export function Standings({
     const s = table[t.id], sk = streak(s.results), l10 = lastN(s.results, 10), gih = gamesInHand(table, t.id, refGp);
     const pct = pointsPct(s);
     return (
-      <tr key={t.id} data-team={t.id} className={selected.includes(t.id) ? "highlighted" : ""}>
+      <tr key={t.id} data-team={t.id} className={`${selected.includes(t.id) ? "highlighted" : ""}${t.id === myTeam ? " mine" : ""}`.trim()}>
         <td>{rank ?? ""}</td>
         <td>
           <div className="table-team">

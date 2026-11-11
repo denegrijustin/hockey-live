@@ -8,12 +8,13 @@ export const LEGACY_TEAMS_KEY = "iceboard-teams";
 export const defaultPrefsRecord = () => ({
   version: 1,
   favorites: [] as string[],
+  myTeam: "",
   onboarded: false,
   players: [] as unknown[],
   games: [] as unknown[],
   display: {
     theme: "system", contrast: "system", motion: "system", textSize: "m", timeZone: "auto", hour12: "auto",
-    density: "comfortable", defaultView: "scoreboard", homeOrder: "favorites",
+    density: "comfortable", defaultView: "scoreboard", homeOrder: "favorites", logos: "retro",
     sections: { myTeams: true, myPlayers: true, worth: true, pulse: true },
   },
   alerts: { enabled: false, start: true, period: false, final: true, schedule: true, scope: { teams: true, players: true, saved: true } },

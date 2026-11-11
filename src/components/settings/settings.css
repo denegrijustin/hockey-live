@@ -31,3 +31,4 @@
 .st-teamlist input { width: 22px; height: 22px; accent-color: var(--mint-4); }
 .st-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .settings .methodology { margin: 0; }
+.st-myteam { display: flex; align-items: center; gap: 8px; margin: 4px 0 8px; color: var(--text-5); }

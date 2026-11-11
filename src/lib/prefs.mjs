@@ -14,16 +14,18 @@ const TEXT = ["s", "m", "l", "xl"];
 const HOUR = ["auto", "12", "24"];
 const DENSITY = ["comfortable", "compact"];
 const ORDER = ["favorites", "league"];
+const LOGOS = ["retro", "current"];
 
 export const defaultPrefs = () => ({
   version: 1,
   favorites: [],
+  myTeam: "",
   onboarded: false,
   players: [],
   games: [],
   display: {
     theme: "system", contrast: "system", motion: "system", textSize: "m", timeZone: "auto", hour12: "auto",
-    density: "comfortable", defaultView: "scoreboard", homeOrder: "favorites",
+    density: "comfortable", defaultView: "scoreboard", homeOrder: "favorites", logos: "retro",
     sections: { myTeams: true, myPlayers: true, worth: true, pulse: true },
   },
   alerts: { enabled: false, start: true, period: false, final: true, schedule: true, goal: true, ot: true, scope: { teams: true, players: true, saved: true } },
@@ -64,6 +66,7 @@ export function sanitize(raw, teamIds) {
   return {
     version: 1,
     favorites,
+    myTeam: ids.has(raw.myTeam) ? raw.myTeam : "",
     onboarded: bool(raw.onboarded, false),
     players,
     games,
@@ -72,7 +75,7 @@ export function sanitize(raw, teamIds) {
       motion: pick(x.motion, MOTIONS, d.display.motion), textSize: pick(x.textSize, TEXT, d.display.textSize),
       timeZone: validZone(x.timeZone) ? x.timeZone : "auto", hour12: pick(x.hour12, HOUR, "auto"),
       density: pick(x.density, DENSITY, d.display.density), defaultView: str(x.defaultView, 24).replace(/[^a-z]/g, "") || "scoreboard",
-      homeOrder: pick(x.homeOrder, ORDER, d.display.homeOrder),
+      homeOrder: pick(x.homeOrder, ORDER, d.display.homeOrder), logos: pick(x.logos, LOGOS, d.display.logos),
       sections: { myTeams: bool(s.myTeams, true), myPlayers: bool(s.myPlayers, true), worth: bool(s.worth, true), pulse: bool(s.pulse, true) },
     },
     alerts: {
@@ -104,6 +107,14 @@ export const serialize = (prefs) => JSON.stringify(prefs);
 /** Pure reducers: each returns a new record. */
 export const isFavorite = (p, id) => p.favorites.includes(id);
 export const toggleFavorite = (p, id) => ({ ...p, favorites: p.favorites.includes(id) ? p.favorites.filter((t) => t !== id) : [...p.favorites, id].slice(0, LIMITS.favorites) });
+/**
+ * My team: the one team the app opens on first (schedule, standings, playoff odds, players, Home). "" means none chosen, and the app
+ * stays league-wide. Choosing a team also follows it and puts it first in the favorites; clearing it leaves the favorites alone.
+ */
+export const myTeamOf = (p) => (p.myTeam && /^[A-Z]{2,3}$/.test(p.myTeam) ? p.myTeam : "");
+export const setMyTeam = (p, id) => (id
+  ? { ...p, myTeam: id, favorites: [id, ...p.favorites.filter((t) => t !== id)].slice(0, LIMITS.favorites), onboarded: true }
+  : { ...p, myTeam: "" });
 export const isFollowing = (p, id) => p.players.some((x) => x.id === Number(id));
 export const toggleFollow = (p, ref) =>
   isFollowing(p, ref.id) ? { ...p, players: p.players.filter((x) => x.id !== Number(ref.id)) }

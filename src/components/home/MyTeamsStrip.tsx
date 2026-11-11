@@ -4,6 +4,7 @@ import { isLive } from "../../lib/game-data.mjs";
 import { localTime } from "../../lib/game-status.mjs";
 import { sideOf, teamGames } from "../../lib/team-schedule.mjs";
 import { dayDiff } from "../../lib/dates.mjs";
+import { useMyTeam } from "../../hooks/useMyTeam";
 import { GameCardView } from "../GameCardView";
 import { TeamLogo } from "../TeamLogo";
 import { HomeSection } from "./HomeSection";
@@ -41,6 +42,7 @@ interface Props {
  * else when it plays next. A game between two favorites is shown once, under the first.
  */
 export default function MyTeamsStrip({ favorites, teams, table, games, dayGames, today, teamOf, ranksFor, renderLive, onOpen, phone, density }: Props) {
+  const { myTeam } = useMyTeam();
   const [all, setAll] = useState(false);
   const cards = useMemo(() => {
     const placed = new Set<number>();
@@ -52,9 +54,9 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
       const n = teamGames(games, id).map((g: Game) => sideOf(g, id)).find((i: any) => i.status === "upcoming") ?? null;
       return { id, order, game, shownAbove, next: n && { ...n, daysAway: n.date ? dayDiff(today, n.date) : null } };
     });
-    // Live first, then a game that day, then the order the favorites were added.
-    return out.sort((a, b) => Number(!!b.game && isLive(b.game)) - Number(!!a.game && isLive(a.game)) || Number(!!b.game) - Number(!!a.game) || a.order - b.order);
-  }, [favorites, teams, table, games, dayGames, today]);
+    // My team first, then live, then a game that day, then the order the favorites were added.
+    return out.sort((a, b) => Number(b.id === myTeam) - Number(a.id === myTeam) || Number(!!b.game && isLive(b.game)) - Number(!!a.game && isLive(a.game)) || Number(!!b.game) - Number(!!a.game) || a.order - b.order);
+  }, [favorites, teams, table, games, dayGames, today, myTeam]);
   if (!cards.length) return null;
   const capped = phone && !all && cards.length > PHONE_CAP;
   const shown = capped ? cards.slice(0, PHONE_CAP) : cards;

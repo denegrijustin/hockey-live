@@ -72,7 +72,7 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
             <li key={id} className="mt-card" data-team={id}>
               <div className="mt-head">
                 <TeamLogo id={id} size={24} />
-                <b className="mt-abbr" title={teamOf(id).name}>{id}</b>
+                <span className="sr-only">{teamOf(id).name} ({id})</span>
                 {sum ? (
                   <>
                     <span className="mt-rec" title="Record: wins, losses, overtime losses">{sum.record.text}</span>

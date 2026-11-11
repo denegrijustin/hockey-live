@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { EXIT_PATH, EXIT_S, FINISH_S, INTERMISSION_MS, exitProgress, resurfaceProgress, lapState, PASSES, zamboniColors, zamboniPose, clockText, intermissionLeft, parseClock, resurfacePath, resurfacingMotion } from "../src/lib/intermission.mjs";
+import { ENTER_PATH, ENTER_S, enterProgress, EXIT_PATH, EXIT_S, FINISH_S, INTERMISSION_MS, exitProgress, resurfaceProgress, lapState, PASSES, zamboniColors, zamboniPose, clockText, intermissionLeft, parseClock, resurfacePath, resurfacingMotion } from "../src/lib/intermission.mjs";
 
 test("an intermission is 17 minutes", () => assert.equal(INTERMISSION_MS, 17 * 60_000));
 test("the feed's clock is read as minutes and seconds", () => {
@@ -128,4 +128,20 @@ test("first-seen storage never throws when storage is blocked, full or unreadabl
   assert.equal(firstSeenAt(() => full, "iceboard-int-1-1", now), now);
   const bad = { length: 1, key: () => { throw new Error("no"); }, getItem: () => { throw new Error("no"); }, setItem() {}, removeItem() {} };
   assert.equal(firstSeenAt(() => bad, "iceboard-int-1-1", now), now);
+});
+
+test("the Zamboni drives in through the gate during the first 8 seconds, so it never pops onto the ice", () => {
+  assert.equal(ENTER_S, 8);
+  assert.equal(enterProgress(1020), 0); // the intermission has just begun: at the gate
+  assert.equal(enterProgress(1016), 0.5);
+  assert.equal(enterProgress(1012), 1); // arrived
+  assert.equal(enterProgress(500), 1); // seen later: already on the ice, no jump
+  assert.equal(enterProgress(1100), 0); // an over-long clock waits at the gate
+  // It comes in off the left edge and arrives where the first pass starts, heading east like that pass.
+  const nums = ENTER_PATH.match(/-?\d+(\.\d+)?/g).map(Number);
+  assert.ok(Math.min(...nums) < -15);
+  assert.ok(ENTER_PATH.startsWith("M-18 42.5") && ENTER_PATH.endsWith("30 10"));
+  // The laps are paced from its arrival: the first pass starts when it is on the ice and the last still ends with 18 seconds left.
+  assert.deepEqual(lapState(1012, 1020 - ENTER_S), { progress: 0, laid: false });
+  assert.equal(lapState(18, 1020 - ENTER_S).progress, 1);
 });

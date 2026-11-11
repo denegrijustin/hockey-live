@@ -30,11 +30,12 @@ test("a game in intermission shows the feed's countdown and the Zamboni on its c
   await expect(int.locator(".int-zamboni")).toBeVisible();
   await expect(int.locator(".int-sign")).toBeVisible();
   await expect(int.locator("image")).toHaveAttribute("href", `/logos/retro/${base.home}.png`);
-  // It is in the home team's colors.
-  const hex = (await int.locator(".int-zamboni").evaluate((e) => getComputedStyle(e).getPropertyValue("--z-body"))).trim();
-  expect(hex).toBe(zamboniColors(homeTeam.cardColor ?? homeTeam.color).body);
+  // A realistic red machine with the home team's colors on its stripes and placard.
+  const hex = (await int.locator(".int-zamboni").evaluate((e) => getComputedStyle(e).getPropertyValue("--z-accent"))).trim();
+  expect(hex).toBe(zamboniColors(homeTeam.cardColor ?? homeTeam.color).accent);
+  expect(await int.locator(".int-zbody").first().evaluate((e) => getComputedStyle(e).fill)).toBe("rgb(200, 32, 47)");
   const n = parseInt(hex.slice(1), 16);
-  expect(await int.locator(".int-zbody").evaluate((e) => getComputedStyle(e).fill)).toBe(`rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`);
+  expect(await int.locator(".int-zstripe").evaluate((e) => getComputedStyle(e).stroke)).toBe(`rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`);
   // The card header says so too.
   await expect(card.locator(".game-date")).toContainText("Intermission");
   // The Zamboni rink is the only rink on the card: no second shot-map rink while the ice is being resurfaced.

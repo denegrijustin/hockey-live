@@ -91,6 +91,12 @@ export function lapState(left, total = INTERMISSION_MS / 1000) {
 }
 /** How far through its drive off the ice (0 to 1): it leaves after the laps and is gone with 10 seconds left. */
 export const exitProgress = (left) => Math.min(1, Math.max(0, (FINISH_S + EXIT_S - left) / EXIT_S));
+/** The machine drives in through the gate to the first pass during the first ENTER_S seconds of the intermission, and the laps start when it arrives. */
+export const ENTER_S = 8;
+/** The way on: from the gate to the start of the first pass, arriving heading east like the first pass does (the exit path, mirrored and reversed). */
+export const ENTER_PATH = "M-18 42.5H5C18 42.5 10 10 30 10";
+/** How far through its drive on (0 to 1): 0 while it waits at the gate, 1 once the intermission is ENTER_S old (or was seen later than that). */
+export const enterProgress = (left, total = INTERMISSION_MS / 1000) => Math.min(1, Math.max(0, (total - left) / ENTER_S));
 /** The way off the ice: from the last lap's end to the gate in the left boards. */
 export const EXIT_PATH = "M30 75C10 75 18 42.5 5 42.5H-18";
 /** Where the Zamboni is, which way it faces and how much fresh ice lies behind it, `p` (0..1) of the way along its route between points `a` and `b`. */

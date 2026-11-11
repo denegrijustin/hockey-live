@@ -212,11 +212,14 @@ test.describe("scoreboard home", () => {
     const row = page.locator(".sb-row.soon").first();
     await expect(row).toBeVisible();
     const [r, status, main, ring, gc] = await Promise.all([row.boundingBox(), row.locator(".sb-status").boundingBox(), row.locator(".sb-main").boundingBox(), row.locator(".score-ring").boundingBox(), row.getByRole("button", { name: /Open Game Center/ }).boundingBox()]);
-    // One horizontal line of columns: status, teams and probability, ring, actions, left to right.
-    expect(status!.x + status!.width).toBeLessThanOrEqual(main!.x + 1);
+    // Upcoming is two columns of compact cards: a header line (time, buttons), the teams and win chance beneath it, the ring at the right.
+    expect(status!.y + status!.height).toBeLessThanOrEqual(main!.y + 1);
     expect(main!.x + main!.width).toBeLessThanOrEqual(ring!.x + 1);
-    expect(ring!.x + ring!.width).toBeLessThanOrEqual(gc!.x + 1);
-    expect(r!.height).toBeLessThan(120); // 32px logos
+    expect(status!.x).toBeLessThan(gc!.x);
+    expect(gc!.y + gc!.height).toBeLessThanOrEqual(ring!.y + ring!.height);
+    expect(r!.height).toBeLessThan(180);
+    const second = await page.locator(".sb-row.soon").nth(1).boundingBox();
+    expect(second!.x).toBeGreaterThan(r!.x + r!.width - 1); // the second game sits beside the first
     // The day switcher and the status filters share one toolbar row.
     const [day, chip] = await Promise.all([page.locator(".sb-days").boundingBox(), page.locator(".sb-chip").first().boundingBox()]);
     expect(Math.abs(day!.y - chip!.y)).toBeLessThan(40);
@@ -233,13 +236,12 @@ test.describe("scoreboard home", () => {
     await expect(row).toBeVisible();
     const box = (l: ReturnType<typeof row.locator>) => l.boundingBox();
     const tv = (await box(row.locator(".tv-network")))!, gc = (await box(row.getByRole("button", { name: /Open Game Center/ })))!;
-    if (width && width < 1400) expect(tv.y, "on a narrower desktop the channels sit below the Game Center button").toBeGreaterThanOrEqual(gc.y + gc.height - 1);
-    else expect(tv.x + tv.width, "TV pill ends before the GC button").toBeLessThanOrEqual(gc.x + 1);
+    expect(tv.x + tv.width, "TV pill ends before the GC button").toBeLessThanOrEqual(gc.x + 1);
     if (!isMobile) {
-      const ring = (await box(row.locator(".score-ring")))!, prob = (await box(row.locator(".sb-prob")))!;
-      expect(prob.x + prob.width, "the probability bar ends before the ring").toBeLessThanOrEqual(ring.x + 1);
-      expect(ring.x + ring.width, "the ring ends before the GC button").toBeLessThanOrEqual(gc.x + 1);
-      if (width >= 1400) expect(ring.x + ring.width, "ring ends before the TV pill").toBeLessThanOrEqual(tv.x + 1);
+      const ring = (await box(row.locator(".score-ring")))!, prob = (await box(row.locator(".sb-prob")))!, status = (await box(row.locator(".sb-status")))!, venue = (await box(row.locator(".sb-venue")))!;
+      const apart = (a: { x: number; y: number; width: number; height: number }, b: typeof a) => a.x + a.width <= b.x + 1 || b.x + b.width <= a.x + 1 || a.y + a.height <= b.y + 1 || b.y + b.height <= a.y + 1;
+      const named: [string, typeof ring][] = [["ring", ring], ["bar", prob], ["status", status], ["venue", venue], ["TV pill", tv], ["GC button", gc]];
+      for (let i = 0; i < named.length; i++) for (let j = i + 1; j < named.length; j++) expect(apart(named[i][1], named[j][1]), `${named[i][0]} and ${named[j][0]} must not overlap`).toBe(true);
     }
     // The pill holds all its logos inside its own box.
     const inside = await row.locator(".tv-network").evaluate((e) => [...e.querySelectorAll(".network-logo, .network-more")].every((c) => { const a = c.getBoundingClientRect(), b = e.getBoundingClientRect(); return a.left >= b.left - 1 && a.right <= b.right + 1; }));

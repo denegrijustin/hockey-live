@@ -9,3 +9,7 @@
 .mtp-grid button[aria-pressed="true"] { border-color: var(--mint); background: var(--surface-6); color: var(--text-6); font-weight: 700; }
 .mtp-grid button:focus-visible, .mtp-clear:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 .mtp-clear { min-height: 44px; padding: 0 10px; border: 0; background: transparent; color: var(--text-3); font: inherit; font-size: .8125rem; cursor: pointer; }
+.mtp-logos { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; color: var(--text-3); font-size: .8125rem; }
+.mtp-logos span { margin-right: auto; }
+.mtp-logos button { min-height: 44px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--surface-5); color: var(--text-4); font: inherit; cursor: pointer; }
+.mtp-logos button[aria-pressed="true"] { border-color: var(--mint); background: var(--surface-6); color: var(--text-6); font-weight: 700; }

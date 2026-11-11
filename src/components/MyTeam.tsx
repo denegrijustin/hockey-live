@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { Team } from "../types";
+import { setPrefs, usePrefs } from "../lib/prefs";
 import { PICK_MY_TEAM_EVENT, openMyTeamPicker, useMyTeam } from "../hooks/useMyTeam";
 import { TeamLogo } from "./TeamLogo";
 import { Icon } from "./icons";
@@ -25,5 +26,16 @@ export function MyTeamChip({ teams }: { teams: Team[] }) {
       </button>
       {open && <Suspense fallback={null}><Picker teams={teams} onClose={() => setOpen(false)} /></Suspense>}
     </>
+  );
+}
+
+/** One tap between retro and current team logos (also in Settings and the My team picker). Hidden on narrow screens, where the header has no room. */
+export function LogoToggle() {
+  const retro = usePrefs().display.logos !== "current";
+  return (
+    <button type="button" className="logo-toggle" data-testid="logo-toggle" aria-pressed={retro} onClick={() => setPrefs((p) => ({ ...p, display: { ...p.display, logos: retro ? "current" : "retro" } }))}
+      aria-label="Retro team logos" title={retro ? "Retro logos on: tap for current logos" : "Current logos: tap for retro logos"}>
+      <Icon name="history" size={20} />
+    </button>
   );
 }

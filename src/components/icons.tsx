@@ -1,4 +1,4 @@
-import { Bell, Bookmark, BriefcaseMedical, Star, Settings, Calendar, ChevronRight, Ellipsis, Globe, House, ListOrdered, Moon, Percent, RefreshCw, Search, Settings2, Target, TrendingUp, Trophy, User, Users, Zap, CirclePlus, X, type LucideIcon } from "lucide-react";
+import { History, Bell, Bookmark, BriefcaseMedical, Star, Settings, Calendar, ChevronRight, Ellipsis, Globe, House, ListOrdered, Moon, Percent, RefreshCw, Search, Settings2, Target, TrendingUp, Trophy, User, Users, Zap, CirclePlus, X, type LucideIcon } from "lucide-react";
 
 /** Lucide icons under this app's own names, so every screen draws the same set. They take their colour from the text (currentColor). */
 const icons = {
@@ -27,6 +27,7 @@ const icons = {
   bell: Bell,
   bookmark: Bookmark,
   close: X,
+  history: History,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof icons;

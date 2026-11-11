@@ -154,7 +154,7 @@ test("box score not published yet: a clear message, no crash", async ({ page }) 
   await page.goto("/");
   await openCard(page, FINAL_ID);
   const t = page.getByRole("tab", { name: "Players" });
-  if (await t.count()) await t.click();
+  await t.click();
   await expect(page.getByTestId("gc-players")).toContainText("not published yet");
   await expect(page.getByTestId("gc-team-stats")).toContainText("not published yet");
 });

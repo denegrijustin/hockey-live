@@ -73,12 +73,12 @@ test("failures keep the page, back off with jitter and recover; stale shows only
   expect(failed).toBeGreaterThanOrEqual(3);
   await expect(page.locator("dialog.game-dialog")).toBeVisible(); // the last data stays
   const status = await gcStatus(page);
-  if (status) await expect(status).toHaveAttribute("data-status", /stale/);
+  if (status) await expect(status).toHaveAttribute("data-state", /stale/);
   feed.fail(false);
   feed.mark();
   await run(page, 70_000);
   expect(feed.since(), "recovers: requests resume").toBeGreaterThanOrEqual(1);
-  if (status) await expect(status).not.toHaveAttribute("data-status", /stale/);
+  if (status) await expect(status).not.toHaveAttribute("data-state", /stale/);
 });
 
 test("final game: one fetch and one recheck about 3 minutes later, then silence", async ({ page }) => {

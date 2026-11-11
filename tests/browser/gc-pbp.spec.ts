@@ -63,7 +63,7 @@ async function openPbp(page: Page, id: number, query = "") {
   if (id === FINAL_ID) await page.getByRole("button", { name: /completed/ }).click();
   await page.locator(`.sb-row[data-game="${id}"] .sb-main`).click();
   const tab = page.getByRole("tab", { name: "Play-by-Play" });
-  if (await tab.count()) await tab.click(); // once the Game Center tabs exist
+  await tab.click(); // the pane lives behind this tab
   const pbp = page.getByTestId("pbp");
   await expect(pbp).toBeVisible();
   await expect(page.getByTestId("pbp-event").first()).toBeVisible();

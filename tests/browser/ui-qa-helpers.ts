@@ -131,5 +131,12 @@ export const NEEDS = "needs ui-close/ui-gauge";
 
 /** Every gauge's accessible label plus its leader flag, per pane: the fingerprint of the gauge calculations. */
 export async function gaugeFingerprint(page: Page, scope: string = GAME_DIALOG) {
-  return page.locator(`${scope} .gauge`).evaluateAll((figs) => figs.filter((f) => f.getClientRects().length).map((f) => `${f.getAttribute("aria-label")}|${f.getAttribute("data-leader")}`).sort());
+  return page.locator(`${scope} .gauge, ${scope} .gr-period, ${scope} .split-row`).evaluateAll((figs) => figs.filter((f) => f.getClientRects().length).map((f) => `${f.getAttribute("aria-label")}|${f.getAttribute("data-leader")}`).sort());
 }
+
+/** Labels the redesign moved from dials to text-first rows (`.gr-period`, goalie `.split-row`): their numbers must still equal the baseline, only the leader flag may go. */
+export const REPLACED = /^(\d+(st|nd|rd|th|OT|SO)\w* period|Save percentage|Goals against average)\b|period:/;
+export const splitFingerprint = (list: string[]) => ({
+  dials: list.filter((e) => !REPLACED.test(e)),
+  rows: list.filter((e) => REPLACED.test(e)).map((e) => e.replace(/\|[^|]*$/, "")).sort(),
+});

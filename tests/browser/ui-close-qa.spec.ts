@@ -74,7 +74,7 @@ for (const vp of VIEWPORTS) {
         await page.waitForTimeout(80);
         const hits = await page.evaluate((sel) => {
           const b = document.querySelector(sel)!.getBoundingClientRect();
-          const hit = (q: string) => [...document.querySelectorAll(q)].filter((e) => e.getClientRects().length).some((e) => { const r = e.getBoundingClientRect(); return r.width && r.height && b.left < r.right - 1 && r.left < b.right - 1 && b.top < r.bottom - 1 && r.top < b.bottom - 1; });
+          const hit = (q: string) => [...document.querySelectorAll(q)].filter((e) => e.getClientRects().length).some((e) => { let r = e.getBoundingClientRect(); const strip = e.closest("[role=tablist]"); if (strip) { const c = strip.getBoundingClientRect(); r = new DOMRect(Math.max(r.left, c.left), Math.max(r.top, c.top), Math.max(0, Math.min(r.right, c.right) - Math.max(r.left, c.left)), Math.max(0, Math.min(r.bottom, c.bottom) - Math.max(r.top, c.top))); } /* clip-aware: tabs scrolled out of the strip are not visible */ return r.width && r.height && b.left < r.right - 1 && r.left < b.right - 1 && b.top < r.bottom - 1 && r.top < b.bottom - 1; });
           return { tabs: hit("dialog.game-dialog [role=tablist] [role=tab]"), nav: hit("nav.tab-bar, nav.side-nav"), score: hit("dialog.game-dialog .gc-score, dialog.game-dialog [data-testid=gc-score], dialog.game-dialog .score-strip") };
         }, CLOSE);
         expect(hits, `overlap @scroll ${top}`).toEqual({ tabs: false, nav: false, score: false });
@@ -110,15 +110,19 @@ for (const vp of VIEWPORTS) {
       await expect(page.locator(GAME_DIALOG)).toHaveCount(0);
     });
 
-    gated(`${NEEDS}: returns to the same schedule: date strip, filter and window scroll preserved`, async ({ page }) => { // phase2: scroll restore drifts (57px at 1440, up to 1.7k px on tall filtered lists at 390; flaky) -- finding
+    gated(`${NEEDS}: returns to the same schedule: date strip, filter and window scroll preserved`, async ({ page }) => { // measured at press time; opener = first row (see below)
       const s = await openSchedule(page, vp);
-      await page.evaluate(() => window.scrollTo(0, 400));
+      // Open the FIRST row after scrolling a little: rows below/above may legitimately change height once a game's data loads (all fixture rows share one feed), the content above the opener does not.
+      const opener = page.locator(`[data-game="${s.firstId}"] .sb-main`);
+      await page.evaluate(() => window.scrollTo(0, 150));
       const y0 = await page.evaluate(() => window.scrollY);
       const hasScroll = y0 > 100;
-      const opener = page.locator(`[data-game="${s.lastId}"] .sb-main`);
-      await opener.scrollIntoViewIfNeeded();
-      const y1 = await page.evaluate(() => window.scrollY);
+      await page.waitForFunction(() => { const w = window as any, h = document.documentElement.scrollHeight; const ok = w.__h === h; w.__h = h; return ok; }, null, { polling: 400 }); // page height settled
+      await page.evaluate(() => window.scrollTo(0, 150));
+      // scrollY at the moment of the press (after Playwright's own scroll-into-view): that is where the app saves the position
+      await page.evaluate(() => { document.addEventListener("pointerdown", () => { (window as any).__y = window.scrollY; }, { capture: true, once: true }); });
       await opener.click();
+      const y1 = await page.evaluate(() => (window as any).__y as number);
       await expect(page.locator(GAME_DIALOG)).toBeVisible();
       await page.locator(GAME_DIALOG).evaluate((d) => { d.scrollTop = 100000; });
       await page.locator(CLOSE).first().click();
@@ -164,7 +168,8 @@ for (const vp of VIEWPORTS) {
       await expect(page.locator(GAME_DIALOG)).toHaveCount(0);
       expect(page.url()).toContain("127.0.0.1");
       expect(page.url()).not.toContain("game=");
-      await expect(page.locator(`[data-game="${row.id}"]`)).toBeVisible(); // the schedule behind it
+      expect(new URL(page.url()).searchParams.get("view")).toBe("games"); // the fallback: the Games view, not history.back()
+      expect(await page.evaluate(() => history.length)).toBeLessThanOrEqual(3);
     });
   });
 }

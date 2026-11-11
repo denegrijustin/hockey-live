@@ -119,6 +119,8 @@ export function createGamePoller(initialGame, env = {}) {
       failures,
       loading: !raw && !error,
       leader,
+      /** The last response's own play list (before event-store retention), for consumers with their own debounce (goal alerts). */
+      rawPlays: raw?.plays ?? null,
     };
   }
   function emit() {
@@ -330,4 +332,38 @@ export function acquireGamePoller(game, env) {
       drop?.unref?.();
     },
   };
+}
+
+/**
+ * One fresh read of a game's feed THROUGH the shared per-tab poller (used by the goal-alert engine), so an open card or Game Center on the same game
+ * and the alert check are one request stream: a copy at most `maxAge` ms old is returned at once, otherwise the poller fetches (joining a request in
+ * flight) and its result also becomes the card's data. Never rejects: {data: null, error} on failure, hidden tab or timeout.
+ */
+export function fetchGameFeedOnce(game, maxAge = 2000, timeout = 8000, env = {}) {
+  const doc = env.doc ?? (typeof document !== "undefined" ? document : null);
+  if (doc?.hidden) return Promise.resolve({ data: null, error: "hidden" });
+  const handle = acquireGamePoller(game, env.poller);
+  const p = handle.poller;
+  const t0 = Date.now();
+  const first = p.getSnapshot();
+  const out = (s) => ({ ...s.feed, plays: s.rawPlays ?? s.feed.plays });
+  if (first.feed && first.lastOkAt && Date.now() - first.lastOkAt <= maxAge && !first.error) { handle.release(); return Promise.resolve({ data: out(first), error: "" }); }
+  return new Promise((resolve) => {
+    let off = null, done = false;
+    const finish = (data, error) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      setTimeout(() => { off?.(); handle.release(); }, 0);
+      resolve({ data: error ? null : data, error });
+    };
+    const timer = setTimeout(() => finish(null, "timeout"), timeout);
+    const check = () => {
+      const s = p.getSnapshot();
+      if (s.lastOkAt && s.lastOkAt >= t0 && s.feed) finish(out(s), "");
+      else if (s.error && !s.loading) finish(null, s.error);
+    };
+    off = p.subscribe(check, { passive: true });
+    p.retry();
+  });
 }

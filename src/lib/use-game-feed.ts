@@ -66,6 +66,7 @@ export function useGameFeed(game: Game | null, { passive = false } = {}): GameFe
 /** Drop-in for `useFeed<GameFeed>(\`/api/game/${id}...\`)`: `{data, error}` from the shared poller. null game = idle. */
 export function useGameFeedData(game: Game | null) {
   // Passive: small cards read the shared feed without raising its cadence (see game-poller.mjs); a Game Center on the same game does.
-  const s = useGameFeed(game, { passive: true });
+  // A stale-live row (live more than 8 h after puck drop: stuck data) is not worth a request from a small card; only an open Game Center recovers it.
+  const s = useGameFeed(game && !phaseOf(game).stale ? game : null, { passive: true });
   return { data: s.feed, error: s.error ?? "" };
 }

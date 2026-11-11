@@ -141,10 +141,13 @@ test("two tabs of one browser watching the same game make one request stream", a
   const tick = async (n: number) => { for (let i = 0; i < n; i++) { await Promise.all([a.clock.runFor(1000), b.clock.runFor(1000)]); await a.waitForTimeout(10); } };
   await tick(8); // the election settles (a tab that has not heard its peer yet may fetch once)
   feeds.forEach((f) => f.mark());
+  const t0 = await a.evaluate(() => Date.now());
   await tick(95);
+  const elapsed = ((await a.evaluate(() => Date.now())) - t0) / 1000; // the page clock also runs in real time, so fake seconds elapsed > 95: measure them
   const [x, y] = [feeds[0].since(), feeds[1].since()];
-  // One stream: the page clock also runs in real time, so the count is only bounded loosely; the proof is that the follower makes no request.
+  // One stream: the follower makes no request and the leader polls at the 15 s live cadence (not twice that, which two independent pollers would give).
   expect(Math.min(x, y), `the follower makes no requests (${x} + ${y})`).toBe(0);
-  expect(x + y).toBeGreaterThanOrEqual(2);
-  expect(x + y).toBeLessThanOrEqual(8);
+  const expected = elapsed / 15;
+  expect(x + y, `${x + y} requests in ${elapsed.toFixed(0)} s`).toBeGreaterThanOrEqual(Math.floor(expected) - 1);
+  expect(x + y, `${x + y} requests in ${elapsed.toFixed(0)} s`).toBeLessThanOrEqual(Math.ceil(expected) + 1);
 });

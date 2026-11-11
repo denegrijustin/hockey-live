@@ -1,5 +1,5 @@
 import { ALERTS_KEY, createAlertStore, diffGames, diffGoals, goalFetchPlan, memoryStorage, relevantEvents, scoreFallback } from "../../lib/alerts.mjs";
-import { fetchFeedOnce } from "../../lib/polling";
+import { fetchGameFeedOnce } from "../../lib/game-poller.mjs";
 import type { Prefs } from "../../lib/prefs.ts";
 import type { Game, GameFeed } from "../../types";
 import { feed, type AlertItem } from "./alertFeed";
@@ -43,7 +43,7 @@ async function goalEvents(prev: Map<number, unknown>, games: Game[], prefs: Pref
       const job = plan[next++];
       const { game } = job;
       const st = goalStates.get(game.id) ?? { ids: null, quiet: 0 };
-      const { data } = await fetchFeedOnce<GameFeed>(`/api/game/${game.id}`);
+      const { data } = (await fetchGameFeedOnce(game)) as { data: GameFeed | null; error: string };
       const plays = data?.plays;
       if (plays && plays.length) {
         const r = diffGoals(st.ids, plays, game, now, { prevTotal: job.prevTotal ?? undefined, quiet: st.quiet });

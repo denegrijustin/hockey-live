@@ -33,3 +33,18 @@ test("sw.js uses the shared router, a build-stamped cache name and a capped cach
   assert.match(sw, /MAX_ENTRIES/);
   assert.doesNotMatch(sw, /startsWith\("\/api/);
 });
+
+test("an HTML page answering an asset URL is recognised (a deploy's single-page fallback), real assets are not", () => {
+  const { isPageForAsset: bad } = ctx.self.iceboardRoutes;
+  assert.equal(bad(O + "/assets/index-abc.js", "text/html; charset=utf-8"), true);
+  assert.equal(bad(O + "/assets/index-abc.css", "text/html"), true);
+  assert.equal(bad(O + "/logos/EDM.svg", "TEXT/HTML"), true);
+  assert.equal(bad(O + "/assets/index-abc.js", "text/javascript"), false);
+  assert.equal(bad(O + "/assets/index-abc.css", "text/css"), false);
+  assert.equal(bad(O + "/assets/x.js", null), false);
+});
+test("the worker's cache-first path refuses to cache or serve such a page", () => {
+  const sw = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
+  assert.match(sw, /isPageForAsset/);
+  assert.match(sw, /cache: "reload"/);
+});

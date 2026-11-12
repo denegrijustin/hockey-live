@@ -119,16 +119,16 @@ function SplitBar({ away, home, share, label, text, shownA, shownH, colors, lead
   const a = Math.max(0.04, Math.min(0.96, share));
   return (
     <figure className="gauge sbar" data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home, "--ink-away": inkOn(colors.away), "--ink-home": inkOn(colors.home) } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
-      <div className="sb-row">
-        <span className="sb-team"><TeamLogo id={away} size={32} /><b>{away}</b></span>
-        <div className="sb-track">
-          <span className="sb-a" style={{ flexGrow: a * 1000 }}><i>{shownA}</i></span>
-          <span className="sb-h" style={{ flexGrow: (1 - a) * 1000 }}><i>{shownH}</i></span>
-          <u className="sb-mid" aria-hidden="true" />
+      <div className="spl-row">
+        <span className="spl-team"><TeamLogo id={away} size={32} /><b>{away}</b></span>
+        <div className="spl-track">
+          <span className="spl-a" style={{ flexGrow: a * 1000 }}><i>{shownA}</i></span>
+          <span className="spl-h" style={{ flexGrow: (1 - a) * 1000 }}><i>{shownH}</i></span>
+          <u className="spl-mid" aria-hidden="true" />
         </div>
-        <span className="sb-team home"><b>{home}</b><TeamLogo id={home} size={32} /></span>
+        <span className="spl-team home"><b>{home}</b><TeamLogo id={home} size={32} /></span>
       </div>
-      <span className="sb-even">Even</span>
+      <span className="spl-even">Even</span>
     </figure>
   );
 }

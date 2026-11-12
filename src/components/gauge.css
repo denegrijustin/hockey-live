@@ -138,12 +138,12 @@
   .gauge.proj .pj-dial { width: 100%; }
   .gauge.proj .pj-side { align-self: end; padding-bottom: 6px; }
 }
-.sb-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; }
-.sb-team { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: .02em; } .sb-team b { font-size: 1.05rem; }
-.sb-track { position: relative; display: flex; height: 40px; border-radius: 20px; overflow: hidden; background: var(--line-2); }
-.sb-a, .sb-h { display: flex; align-items: center; min-width: 3.4rem; flex-basis: 0; font-variant-numeric: tabular-nums; } .sb-a { background: var(--g-away); color: var(--ink-away); padding-left: 14px; } .sb-h { background: var(--g-home); color: var(--ink-home); justify-content: flex-end; padding-right: 14px; }
-.sb-a i, .sb-h i { font-style: normal; font-weight: 800; font-size: 1.25rem; }
-.sb-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--text-5); opacity: .85; transform: translateX(-1px); }
-.sb-even { justify-self: center; font-size: .8125rem; color: var(--text-2); margin-top: 4px; }
-@container (max-width: 480px) { .sb-team b { display: none; } .sb-track { height: 34px; } .sb-a i, .sb-h i { font-size: 1.05rem; } }
+.spl-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; }
+.spl-team { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: .02em; } .spl-team b { font-size: 1.05rem; }
+.spl-track { position: relative; display: flex; height: 40px; border-radius: 20px; overflow: hidden; background: var(--line-2); }
+.spl-a, .spl-h { display: flex; align-items: center; min-width: 3.4rem; flex-basis: 0; font-variant-numeric: tabular-nums; } .spl-a { background: var(--g-away); color: var(--ink-away); padding-left: 14px; } .spl-h { background: var(--g-home); color: var(--ink-home); justify-content: flex-end; padding-right: 14px; }
+.spl-a i, .spl-h i { font-style: normal; font-weight: 800; font-size: 1.25rem; }
+.spl-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--text-5); opacity: .85; transform: translateX(-1px); }
+.spl-even { justify-self: center; font-size: .8125rem; color: var(--text-2); margin-top: 4px; }
+@container (max-width: 480px) { .spl-team b { display: none; } .spl-track { height: 34px; } .spl-a i, .spl-h i { font-size: 1.05rem; } }
 @media (prefers-reduced-motion: reduce) { .pj-needle { transition: none; } }

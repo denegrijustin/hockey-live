@@ -39,7 +39,7 @@ test("the countdown runs down between polls", async ({ page }) => {
   await page.clock.install();
   const card = await open(page, { intermission: true, clock: "13:48" });
   const t = card.locator(".int-t");
-  await expect(t).toHaveText(/^13:[34]\d$/);
+  await expect(t).toHaveText(/^13:[34]\d$/, { timeout: 30000 }); // the rink is a lazy chunk: give it time to load before the clock is moved
   const secs = async () => { const [m, s] = (await t.innerText()).split(":").map(Number); return m * 60 + s; };
   const before = await secs();
   await page.clock.fastForward(10_000);
@@ -118,11 +118,9 @@ test("when WebGL draws it, fresh ice is brighter than worn ice and the Zamboni's
     }, png);
   };
   const worn = await luma();
-  await page.unroute("**/api/live");
-  const game = { ...base, state: "LIVE", period: 1, periodType: "REG", intermission: true, clock: "0:44" };
-  await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] } }));
-  await page.reload();
-  await selectAllTeams(page); await filterGames(page, { competition: String(game.type), window: "all" });
+  // the same rink again at 0:44, opened fresh with the same helper (a clean profile, so the team and filter pickers start from their defaults)
+  await page.evaluate(() => { try { localStorage.clear(); } catch { /* ignore */ } });
+  await open(page, { intermission: true, clock: "0:44" });
   await settled(page);
   expect(await luma()).toBeGreaterThan(worn + 8);
   // the artwork is a texture of the vehicle's model, not part of the page or the rink boards

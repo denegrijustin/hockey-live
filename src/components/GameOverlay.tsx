@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { icePrepActive } from "../lib/ice-plan.mjs";
 import { fmtDay, fmtTime } from "../lib/dates.mjs";
 import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
@@ -220,7 +221,7 @@ export function GameOverlay({
               overview: (
                 <>
                   {live && game.intermission && <IntermissionRink game={game} home={home} away={away} />}
-                  {!live && !past && <IcePrep game={game} home={home} away={away} />}
+                  {!live && !past && icePrepActive(game) && <IcePrep game={game} home={home} away={away} />}
                   <div className="gc-cols">
                     <div className="gc-col"><OverviewPane home={home} away={away} dayGames={dayGames} /></div>
                     <div className="gc-col">

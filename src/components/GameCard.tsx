@@ -1,4 +1,5 @@
 import { FavoriteMark } from "./FavoriteStar";
+import { icePrepActive } from "../lib/ice-plan.mjs";
 import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
@@ -121,7 +122,7 @@ export const GameCard = memo(function GameCard({
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
       {live && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
-      {!live && !past && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
+      {!live && !past && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
       <div ref={feedRef} className="card-ice">
         {/* At intermission the animated Zamboni rink is the only rink on the card; the shot-map ice view returns when play does. */}
         {(live || past) && !(live && game.intermission) && <IceView data={feed} home={home} away={away} />}

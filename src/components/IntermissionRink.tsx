@@ -105,7 +105,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       // what the animation is showing, for tests and for anyone inspecting it
       const r = route(), pose = poseAt(st.s);
       host.dataset.phase = st.phase;
-      host.dataset.clean = String(Math.round((1000 * ((scene?.cleanedDistance ?? st.clean) - r.enterEnd)) / (r.spiralEnd - r.enterEnd)) / 10);
+      host.dataset.clean = String(Math.round((1000 * (st.clean - r.enterEnd)) / (r.spiralEnd - r.enterEnd)) / 10);
       host.dataset.left = String(Math.round(shown * 10) / 10);
       host.dataset.pose = `${pose.x.toFixed(1)},${pose.y.toFixed(1)},${((pose.heading * 180) / Math.PI).toFixed(1)}`;
       const sec = Math.max(0, Math.floor(target));

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { icePrepActive } from "../lib/ice-plan.mjs";
 import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { finished, seasonSeriesBeforeGame } from "../lib/model.mjs";
@@ -389,7 +390,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
       ) : null}
       below={<>
         {kind === "live" && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
-        {kind === "soon" && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
+        {kind === "soon" && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
         <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
         {open && <Suspense fallback={null}><RowDetails game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} feed={feed} recapText={recapText} showFlow={kind !== "soon"} onFull={onFull} /></Suspense>}
       </>}

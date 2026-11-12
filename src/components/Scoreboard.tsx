@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { icePrepActive } from "../lib/ice-plan.mjs";
 import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
 import { finished, seasonSeriesBeforeGame } from "../lib/model.mjs";
@@ -35,6 +36,7 @@ let pendingOpen: { id: number; tab?: GcTab; event?: number; at: number } | null 
 if (typeof window !== "undefined") window.addEventListener(OPEN_GAME_EVENT, (e) => { const d = (e as CustomEvent).detail; if (Number.isFinite(d?.id)) pendingOpen = { id: d.id, tab: d.tab, event: d.event, at: Date.now() }; });
 
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
+const IcePrep = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IcePrep })));
 const RowDetails = lazy(() => import("./home/RowDetails"));
 const MyTeamsStrip = lazy(() => import("./home/MyTeamsStrip"));
 const MyPlayersStrip = lazy(() => import("./home/MyPlayersStrip"));
@@ -357,6 +359,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
   compact?: boolean; game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: Rated; ranks?: Record<string, any> | null; analysisRow?: any; insight?: ReactNode; open: boolean; onFull: () => void;
 }) {
   useTimeKey();
+  const covered = useGameRoute().route?.id === game.id; // the Game Center for this game is open on top: it draws its own rink, so this row draws none
   const gs = gameStatus(game);
   const kind = gs.final ? "final" : gs.live ? "live" : "soon";
   const showScore = kind !== "soon" && game.awayScore != null && game.homeScore != null;
@@ -387,7 +390,8 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
         </div>
       ) : null}
       below={<>
-        {kind === "live" && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
+        {kind === "live" && game.intermission && !covered && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
+        {kind === "soon" && !covered && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
         <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
         {open && <Suspense fallback={null}><RowDetails game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} feed={feed} recapText={recapText} showFlow={kind !== "soon"} onFull={onFull} /></Suspense>}
       </>}

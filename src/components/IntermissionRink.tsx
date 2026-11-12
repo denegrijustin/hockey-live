@@ -1,186 +1,195 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motionOff } from "../motion";
 import type { Game, Team } from "../types";
-import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, resurfacePath, lapState, exitProgress, EXIT_PATH, ENTER_PATH, ENTER_S, enterProgress, zamboniColors, resurfacingMotion, FINISH_S, firstSeenAt } from "../lib/intermission.mjs";
-import { LogoImage } from "./TeamLogo";
+import { INTERMISSION_MS, clockText, firstSeenAt, parseClock } from "../lib/intermission.mjs";
+import { FINISH_LEFT, INTERMISSION_S, PREGAME_S, icePrepActive, poseAt, route, sessionKey, smoothLeft, stateAt, sweptQuads } from "../lib/ice-plan.mjs";
+import type { Ice3D } from "../lib/ice3d";
+import type { Look } from "../lib/ice-textures";
+import { logoUrl } from "../lib/logos";
+import { usePrefs } from "../lib/prefs";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
-/** When this intermission was first seen, kept so a reload doesn't restart the fallback clock (storage may be blocked; stale keys are pruned). */
-const firstSeen = (g: Game) => firstSeenAt(() => localStorage, SEEN(g), Date.now());
-
-/** Seconds left of the intermission: the feed's clock, run on between polls. */
-export function useIntermissionLeft(game: Game) {
-  const base = parseClock(game.clock);
-  const reading = useRef({ base, at: Date.now() });
-  if (reading.current.base !== base) reading.current = { base, at: Date.now() };
-  const [seenAt] = useState(() => firstSeen(game));
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => !document.hidden && setNow(Date.now()), 1000);
-    setNow(Date.now());
-    return () => clearInterval(t);
-  }, []);
-  const deadline = useRef(0);
-  deadline.current = reading.current.base != null ? reading.current.at + reading.current.base * 1000 : seenAt + INTERMISSION_MS;
-  return { left: intermissionLeft({ base: reading.current.base, at: reading.current.at, seenAt, now }), deadline };
-}
-
-/** Drives the Zamboni along its route and lays the fresh ice down behind it, together, from one clock. */
-function useResurfacing(still: boolean, deadline: { current: number }) {
-  const path = useRef<SVGPathElement>(null);
-  const paint = useRef<SVGPathElement>(null);
-  const sign = useRef<SVGGElement>(null);
-  const gate = useRef<SVGPathElement>(null);
-  const inlet = useRef<SVGPathElement>(null);
-  const sheen = useRef<SVGPathElement>(null);
-  const machine = useRef<SVGGElement>(null);
-  const root = useRef<SVGSVGElement>(null);
-  useEffect(() => {
-    const route = path.current, out = gate.current, inn = inlet.current, z = machine.current, svg = root.current;
-    if (still || !route || !out || !inn || !z || !svg) return;
-    const len = route.getTotalLength(), outLen = out.getTotalLength();
-    const motion = resurfacingMotion((s: number) => route.getPointAtLength(s), len);
-    const exit = resurfacingMotion((s: number) => out.getPointAtLength(s), outLen);
-    const enter = resurfacingMotion((s: number) => inn.getPointAtLength(s), inn.getTotalLength());
-    paint.current?.setAttribute("d", motion.trail);
-    sheen.current?.setAttribute("d", motion.trail);
-    let raf = 0, visible = true, last = 0, lastQ = -1, lastFresh = "";
-    const frame = (now: number) => {
-      raf = requestAnimationFrame(frame);
-      // 30 frames a second is smooth at this speed and halves the style and paint work (several rinks can be on screen at once).
-      if (!visible || document.hidden || now - last < 33) return;
-      last = now;
-      // The job is paced to the clock: it starts with the intermission and is done when 10 seconds are left.
-      const left = (deadline.current - Date.now()) / 1000;
-      // It drives in through the gate for the first ENTER_S seconds (the laps are paced from when it arrives), so it never pops onto the ice.
-      const e = enterProgress(left), lap = lapState(left, INTERMISSION_MS / 1000 - ENTER_S), p = lap.progress, q = exitProgress(left);
-      // With the laps done it drives off through the gate and is out of sight (past the boards) with 10 seconds left.
-      const pose = q > 0 ? exit.at(q) : e < 1 ? enter.at(e) : motion.at(p);
-      z.setAttribute("transform", `translate(${pose.x.toFixed(3)} ${pose.y.toFixed(3)}) rotate(${pose.deg.toFixed(3)})`);
-      // Keep the roof placard level and legible even during a U-turn.
-      sign.current?.setAttribute("transform", `rotate(${-pose.deg})`);
-      const fresh = String(q > 0 || lap.laid ? 0 : e < 1 ? 100 : pose.fresh);
-      if (paint.current && fresh !== lastFresh) paint.current.style.strokeDashoffset = sheen.current!.style.strokeDashoffset = lastFresh = fresh;
-      // A custom property on the root restyles everything under it, so it is only written when it changes.
-      if (q !== lastQ) svg.style.setProperty("--ice-finish", String((lastQ = q)));
-    };
-    const io = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([e]) => (visible = e.isIntersecting));
-    io?.observe(svg);
-    raf = requestAnimationFrame(frame);
-    return () => {
-      cancelAnimationFrame(raf);
-      io?.disconnect();
-    };
-  }, [still]);
-  return { path, paint, sheen, sign, gate, inlet, machine, root };
-}
-
-// Scuffs in the ice, drawn in a fixed pattern (the fresh strip paints over them as the Zamboni passes).
-const SCUFFS = Array.from({ length: 46 }, (_, i) => {
-  const x = 8 + ((i * 73) % 184);
-  const y = 6 + ((i * 41) % 74);
-  const w = 6 + ((i * 17) % 10);
-  return `M${x} ${y}q${w / 2} ${-3 - (i % 3)} ${w} ${(i % 2 ? 1 : -1) * 2}`;
-});
+const SCOUTS = "/logos/kc-scouts.png";
+const ASPECT = 0.51;                  // the picture's height / width (fixed camera)
+const hashOf = (id: number | string) => { let h = 2166136261; for (const ch of String(id)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
 
 /**
- * Between periods: the countdown to the next period and a Zamboni resurfacing the ice, continuous lengthwise passes,
- * leaving a fresh, glossy strip behind it. It finishes once, then drives through the gate. Still (no moving Zamboni) for reduced motion.
+ * The seconds left to the next period (or to puck drop) as a plain function of the clock, so the animation can ask for it every frame without
+ * a React re-render. Intermission: the feed's clock, run on between polls (or 18 minutes from when it was first seen). Pregame: the scheduled start.
  */
-export function IntermissionRink({ game, home, away, compact = false }: { game: Game; home: Team; away: Team; compact?: boolean }) {
-  const { left, deadline } = useIntermissionLeft(game);
-  const colors = useMemo(() => zamboniColors(home.cardColor ?? home.color), [home.cardColor, home.color]);
-  const route = useMemo(() => resurfacePath(), []);
-  const still = motionOff();
+function useDeadline(game: Game, mode: "intermission" | "pregame") {
+  const base = mode === "intermission" ? parseClock(game.clock) : null;
+  const reading = useRef({ base, at: Date.now() });
+  if (reading.current.base !== base) reading.current = { base, at: Date.now() };
+  const [seenAt] = useState(() => (mode === "intermission" ? firstSeenAt(() => localStorage, SEEN(game), Date.now()) : Date.now()));
+  const deadline = useRef(0);
+  deadline.current = mode === "pregame" ? Date.parse(game.start) : reading.current.base != null ? reading.current.at + reading.current.base * 1000 : seenAt + INTERMISSION_MS;
+  return deadline;
+}
+
+/**
+ * At most this many 3D rinks are alive at once. A night with several games in intermission would otherwise run several WebGL scenes together, which is heavy for a phone
+ * (and for any software renderer); the rest keep their countdown and labels and take over a rink as soon as one frees up. A rink also waits until it is on screen.
+ */
+const MAX_SCENES = 2;
+let sceneCount = 0;
+const waiting = new Set<() => void>();
+const takeSlot = () => (sceneCount < MAX_SCENES ? (sceneCount++, true) : false);
+const freeSlot = () => { sceneCount = Math.max(0, sceneCount - 1); for (const wake of [...waiting]) { waiting.delete(wake); wake(); if (sceneCount >= MAX_SCENES) break; } };
+
+const loadImage = (src: string) => new Promise<HTMLImageElement | null>((resolve) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = () => resolve(null); i.src = src; });
+
+type Labels = { k: string; l: string; cap: string };
+function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, phase: string, away: Team, home: Team): Labels {
   const next = game.period ? (game.period >= 3 ? "overtime" : `period ${game.period + 1}`) : "the next period";
-  const { path, paint, sheen, sign, gate, inlet, machine, root } = useResurfacing(still, deadline);
-  const id = `rink-${game.id}${compact ? "-c" : ""}`;
+  const working = phase === "enter" || phase === "clean" || phase === "wait";
+  const leaving = phase === "exit";
+  if (mode === "pregame") {
+    return working || leaving
+      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${away.short} at ${home.short} · ${leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
+      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: `${away.short} at ${home.short} · the ice is ready` };
+  }
+  return {
+    k: `INTERMISSION${game.period ? ` · END OF P${game.period}` : ""}`,
+    l: left > 0 ? `until ${next}` : `${next} about to start`,
+    cap: `${away.short} at ${home.short} · ${working ? "the Zamboni is resurfacing the ice" : leaving ? "the Zamboni is leaving the ice" : "fresh ice for the next period"}`,
+  };
+}
+
+/**
+ * Between periods (and for the 20 minutes before puck drop): the countdown and a Zamboni resurfacing the ice. One route and one timeline
+ * (lib/ice-plan.mjs) place the machine, point it and decide which ice is clean; this component only feeds it the countdown and draws.
+ * The drawing loop lives outside React state, so re-renders and countdown updates never restart it.
+ */
+export function IntermissionRink({ game, home, away, compact = false, mode = "intermission" }: { game: Game; home: Team; away: Team; compact?: boolean; mode?: "intermission" | "pregame" }) {
+  const deadline = useDeadline(game, mode);
+  const logos = usePrefs().display.logos;
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const root = useRef<HTMLElement>(null);
+  const kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
+  const gameRef = useRef(game); gameRef.current = game;
+  const teams = useRef({ home, away }); teams.current = { home, away };
+  const session = sessionKey(mode, game.id, game.period);
+  const color = home.cardColor ?? home.color;
+  const initial = useMemo(() => labelsFor(mode, game, (deadline.current - Date.now()) / 1000, stateAt((deadline.current - Date.now()) / 1000, mode === "pregame" ? PREGAME_S : INTERMISSION_S).phase, away, home), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const left0 = Math.max(0, (deadline.current - Date.now()) / 1000);
+
+  // the scene: built once per intermission (or pregame) and per home team; the loop reads everything else through refs
+  useEffect(() => {
+    const el = canvas.current, host = root.current;
+    if (!el || !host) return;
+    const look: Look = { homeId: home.id, homeName: home.name, color: color || "#1d428a", accent: "#f1b82c", seed: hashOf(`${game.id}`), logo: null, scouts: null };
+    let scene: Ice3D | null = null;
+    const dpr = () => Math.min(2.5, window.devicePixelRatio || 1);
+    const quality = compact || window.matchMedia?.("(max-width: 700px)").matches ? "low" : "high";
+    let alive = true;
+    host.dataset.render = "loading";
+    let started = false, holdsSlot = false;
+    const tryStart = async () => {
+      if (started || !alive) return;
+      if (!takeSlot()) { host.dataset.render = "none"; waiting.add(tryStartIfSeen); return; }
+      started = true; holdsSlot = true;
+      try {
+        // the 3D scene (Three.js) loads only when a rink is on screen, and only once the browser has painted what the person just asked for (a Game Center opening, say)
+        await new Promise<void>((done) => { const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback; if (ric) ric(() => done(), { timeout: 1500 }); else setTimeout(done, 300); });
+        if (!alive) return;
+        const { Ice3D: Scene } = await import("../lib/ice3d");
+        if (!alive) return;
+        const sc = new Scene(el, look, { poseAt, sweptQuads, enterEnd: route().enterEnd }, quality);
+        await sc.init("/models/zamboni.glb");
+        if (!alive) { sc.dispose(); return; }
+        sc.resize(host.clientWidth || 600, Math.round((host.clientWidth || 600) * ASPECT), dpr());
+        scene = sc; sceneRef.current = sc; lookRef.current = look;
+        host.dataset.render = "webgl";
+        const [homeLogo, scouts] = await Promise.all([loadImage(logoUrl(home.id)), loadImage(SCOUTS)]);
+        if (alive) { lookRef.current = { ...look, logo: homeLogo, scouts }; sc.setLook(lookRef.current); }
+      } catch {
+        host.dataset.render = "none"; // no WebGL: the countdown and the labels still work
+        if (holdsSlot) { holdsSlot = false; freeSlot(); }
+      }
+    };
+    let seen = typeof IntersectionObserver === "undefined";
+    const tryStartIfSeen = () => { if (seen) void tryStart(); };
+    const total = (() => { const first = (deadline.current - Date.now()) / 1000; return Math.max(mode === "pregame" ? PREGAME_S : INTERMISSION_S, first); })();
+    let display: number | null = null, last = performance.now(), raf = 0, visible = typeof IntersectionObserver === "undefined", lastSecond = -1, lastPhase = "";
+    const reduced = motionOff();
+    const tick = (now: number) => {
+      const dt = Math.min(5, Math.max(0, (now - last) / 1000)); last = now;
+      const target = (deadline.current - Date.now()) / 1000;
+      // after a pause (hidden tab, off screen) or a big gap, show the true state at once instead of replaying; otherwise absorb corrections smoothly
+      const shown: number = display == null || dt > 1 || reduced ? target : smoothLeft(display, target, dt);
+      display = shown;
+      const st = stateAt(shown, total);
+      scene?.render(st);
+      // what the animation is showing, for tests and for anyone inspecting it
+      const r = route(), pose = poseAt(st.s);
+      host.dataset.phase = st.phase;
+      host.dataset.clean = String(Math.round((1000 * (st.clean - r.enterEnd)) / (r.spiralEnd - r.enterEnd)) / 10);
+      host.dataset.left = String(Math.round(shown * 10) / 10);
+      host.dataset.pose = `${pose.x.toFixed(1)},${pose.y.toFixed(1)},${((pose.heading * 180) / Math.PI).toFixed(1)}`;
+      const sec = Math.max(0, Math.floor(target));
+      if (sec !== lastSecond || st.phase !== lastPhase) {
+        lastSecond = sec; lastPhase = st.phase;
+        const L = labelsFor(mode, gameRef.current, target, st.phase, teams.current.away, teams.current.home);
+        if (tRef.current) tRef.current.textContent = clockText(Math.max(0, target));
+        if (kRef.current) kRef.current.textContent = L.k;
+        if (lRef.current) lRef.current.textContent = L.l;
+        if (capRef.current) capRef.current.lastChild!.textContent = ` ${L.cap}`;
+      }
+    };
+    // A frame costs a couple of milliseconds on a GPU, but a software renderer or a weak phone can take hundreds, which would stall the whole page. So the loop
+    // times its own frames and spaces them out to use about a quarter of the main thread at most; on normal hardware this never skips a frame.
+    let cost = 0, nextAt = 0;
+    const loop = (now: number) => {
+      raf = requestAnimationFrame(loop);
+      if (!visible || document.hidden || now < nextAt) return;
+      const t0 = performance.now();
+      tick(now);
+      const spent = performance.now() - t0;
+      cost = cost ? cost * 0.6 + spent * 0.4 : spent;
+      nextAt = cost > 12 ? now + Math.min(800, cost * 3) : 0;
+    };
+    tick(performance.now()); // the first reading is always taken (labels, stage, countdown), even for a rink that is not on screen yet
+    if (!reduced) raf = requestAnimationFrame(loop);
+    const slow = reduced ? window.setInterval(() => tick(performance.now()), 1000) : 0;
+    const io = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) { display = null; seen = true; void tryStart(); } });
+    io?.observe(host);
+    if (!io) void tryStart();
+    const onShow = () => { if (!document.hidden) { display = null; last = performance.now(); } };
+    document.addEventListener("visibilitychange", onShow);
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => { const w = host.clientWidth || 600; scene?.resize(w, Math.round(w * ASPECT), dpr()); });
+    ro?.observe(host);
+    return () => { alive = false; waiting.delete(tryStartIfSeen); scene?.dispose(); sceneRef.current = null; if (holdsSlot) freeSlot(); cancelAnimationFrame(raf); clearInterval(slow); io?.disconnect(); ro?.disconnect(); document.removeEventListener("visibilitychange", onShow); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, home.id, color, mode]);
+
+  // a change of logo style swaps the logo on the sheet (and the boards) without restarting anything: the cleaned ice stays as it is
+  const sceneRef = useRef<Ice3D | null>(null), lookRef = useRef<Look | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadImage(logoUrl(home.id)).then((img) => { if (alive && sceneRef.current && lookRef.current && lookRef.current.logo !== img) { lookRef.current = { ...lookRef.current, logo: img }; sceneRef.current.setLook(lookRef.current); } });
+    return () => { alive = false; };
+  }, [logos, home.id]);
+
   return (
-    <section className={`intermission${compact ? " compact" : ""}`} data-testid="intermission" aria-label={`Intermission after period ${game.period ?? ""}. ${left > 0 ? `${clockText(left)} until ${next}` : `${next} about to start`}. The Zamboni is resurfacing the ice.`}>
+    <section ref={root} className={`intermission ice-prep-${mode}${compact ? " compact" : ""}`} data-testid="intermission" data-mode={mode} aria-label={`${initial.k}. ${clockText(left0)} ${initial.l}`}>
       <div className="int-count" aria-hidden="true">
-        <span className="int-k">INTERMISSION{game.period ? ` · END OF P${game.period}` : ""}</span>
-        <strong className="int-t">{clockText(left)}</strong>
-        <span className="int-l">{left > 0 ? `until ${next}` : `${next} about to start`}</span>
+        <span className="int-k" ref={kRef}>{initial.k}</span>
+        <strong className="int-t" ref={tRef}>{clockText(left0)}</strong>
+        <span className="int-l" ref={lRef}>{initial.l}</span>
       </div>
-      <svg ref={root} viewBox="0 0 200 85" className="int-rink" aria-hidden="true">
-        <defs>
-          <clipPath id={`${id}-ice`}><rect x="3" y="3" width="194" height="79" rx="26" /></clipPath>
-        </defs>
-        {/* boards, with the yellow kick plate */}
-        <rect x="0.8" y="0.8" width="198.4" height="83.4" rx="29" className="int-boards" />
-        <rect x="2.4" y="2.4" width="195.2" height="80.2" rx="27" className="int-kick" />
-        <g clipPath={`url(#${id}-ice)`}>
-          <rect x="0" y="0" width="200" height="85" className="int-ice" />
-          <g className="int-scuffs">{SCUFFS.map((d, i) => <path key={i} d={d} />)}</g>
-          {/* the fresh ice the Zamboni leaves: it draws along the route as the machine moves */}
-          <path ref={gate} d={EXIT_PATH} fill="none" stroke="none" />
-          <path ref={inlet} d={ENTER_PATH} fill="none" stroke="none" />
-          <path ref={path} d={route} fill="none" stroke="none" />
-          <path ref={paint} d={route} pathLength={100} className={`int-fresh${still ? " done" : ""}`} />
-          {/* a faint lighter sheen down the middle of each fresh pass: resurfaced ice is smoother and catches the light */}
-          <path ref={sheen} d={route} pathLength={100} className={`int-sheen${still ? " done" : ""}`} />
-          <rect width="200" height="85" className={`int-finish${still ? " done" : ""}`} />
-          {/* markings */}
-          <g className="int-marks">
-            <path d="M11 3V82M189 3V82" className="int-goal" />
-            <path d="M75 3V82M125 3V82" className="int-blue" />
-            <path d="M100 3V82" className="int-red" />
-            {[[31, 20.5], [31, 64.5], [169, 20.5], [169, 64.5]].map(([x, y]) => (
-              <g key={x + "-" + y}><circle cx={x} cy={y} r="15" className="int-circle" /><circle cx={x} cy={y} r="1.3" className="int-dot" /></g>
-            ))}
-            {[[80, 20.5], [80, 64.5], [120, 20.5], [120, 64.5]].map(([x, y]) => <circle key={x + "-" + y} cx={x} cy={y} r="1.3" className="int-dot" />)}
-            <circle cx="100" cy="42.5" r="15" className="int-circle blue" />
-            <path d="M11 36.5a6 6 0 0 1 0 12M189 36.5a6 6 0 0 0 0 12" className="int-crease" />
-            <rect x="5.5" y="38.5" width="5.5" height="8" rx="1" className="int-net" />
-            <rect x="189" y="38.5" width="5.5" height="8" rx="1" className="int-net" />
-          </g>
-          <LogoImage id={home.id} x={89} y={31.5} size={22} bare />
-        </g>
-        <rect x="0.6" y="36" width="4.4" height="13" rx="0.8" className="int-gate" />
-        {!still && (
-          <g>
-            <g ref={machine} className="int-zamboni" style={{ "--z-body": colors.body, "--z-cab": colors.cab, "--z-edge": colors.edge, "--z-sign": colors.sign, "--z-accent": colors.accent } as React.CSSProperties}>
-              <ellipse cx="0.8" cy="1.2" rx="13.4" ry="7.2" className="int-zshadow" />
-              {/* the wash-water film the blade leaves, then the conditioner: steel housing as wide as the strip it resurfaces, blade lip, auger */}
-              <path d="M-12.3 -5.8v11.6" className="int-water" />
-              <path d="M-8.3 -3.3h1.2M-8.3 3.3h1.2" className="int-hitch" />
-              <rect x="-11.8" y="-6.75" width="3.6" height="13.5" rx="0.9" className="int-cond" />
-              <path d="M-11.8 -6.2V6.2" className="int-blade" />
-              <path d="M-10.3 -6V6" className="int-auger" />
-              {/* tires showing beside the body: drive wheels at the back, steering wheels at the front */}
-              {[[-6.9, -6.5], [-6.9, 4.6], [6.4, -6.1], [6.4, 4.4]].map(([x, y]) => <rect key={x + "," + y} x={x} y={y} width="4.6" height="1.9" rx="0.6" className="int-tire" />)}
-              <g className="int-chassis">
-                {/* snow tank (ribbed lid) behind the operator, hood and nose in front */}
-                <rect x="-8.4" y="-5" width="11.2" height="10" rx="1.7" className="int-zbody" />
-                <rect x="-7.3" y="-3.9" width="9" height="7.8" rx="1.1" className="int-lid" />
-                <path d="M-5 -3.9V3.9M-2.6 -3.9V3.9M-0.2 -3.9V3.9" className="int-rib" />
-                <path d="M2.6 -4.5H11.2Q13.9 -4.5 13.9 -2V2Q13.9 4.5 11.2 4.5H2.6Z" className="int-zbody" />
-                <path d="M3.4 -3.5H11.4M3.4 3.5H11.4" className="int-zstripe" />
-                <path d="M-6.5 -4.3H10.8" className="int-body-shine" />
-                {/* operator's seat, the operator in a jacket and cap, steering wheel and column */}
-                <rect x="3.5" y="-2.8" width="3.6" height="5.6" rx="1" className="int-seat" />
-                <ellipse cx="5.1" cy="0" rx="1.5" ry="2.5" className="int-driver-coat" />
-                <circle cx="5.4" cy="0" r="1.05" className="int-driver" />
-                <path d="M4.6 -0.9Q5.4 -1.7 6.2 -0.9" className="int-cap" />
-                <path d="M7.1 0H8.5" className="int-col" />
-                <ellipse cx="8.8" cy="0" rx="0.6" ry="1.9" className="int-wheel" />
-                <rect x="13" y="-3.3" width="0.9" height="1.5" rx="0.3" className="int-lamp" />
-                <rect x="13" y="1.8" width="0.9" height="1.5" rx="0.3" className="int-lamp" />
-                <path d="M14 -3.9V3.9" className="int-bumper" />
-                <circle cx="-7" cy="-3.6" r="0.7" className="int-beacon" />
-              </g>
-              {/* the roof placard rides on the tank lid and stays level through turns */}
-              <g transform="translate(-2.9 0)">
-                <g ref={sign} className="int-placard">
-                  <rect x="-5.8" y="-1.4" width="11.6" height="2.8" rx="0.7" className="int-sign" />
-                  <text x="0" y="0.45" className="int-sign-t" textAnchor="middle" textLength="10.4" lengthAdjust="spacingAndGlyphs">BRING NHL TO KC</text>
-                </g>
-              </g>
-            </g>
-          </g>
-        )}
-      </svg>
-      <p className="int-cap"><span aria-hidden="true">🧊</span> {away.short} at {home.short} · {left > FINISH_S ? "the Zamboni is resurfacing the ice" : "fresh ice for the next period"}</p>
+      <canvas ref={canvas} className="ice-canvas" aria-hidden="true" data-logos={logos} />
+      <p className="int-cap" ref={capRef}><span aria-hidden="true">🧊</span> {initial.cap}</p>
     </section>
   );
 }
+
+/** For an upcoming game: nothing until the ice-preparation window opens (20 minutes before puck drop), then the Zamboni preparing the ice, until the game starts. */
+export function IcePrep({ game, home, away, compact = false }: { game: Game; home: Team; away: Team; compact?: boolean }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 5000); return () => clearInterval(t); }, []);
+  if (!icePrepActive(game, now)) return null;
+  return <IntermissionRink game={game} home={home} away={away} compact={compact} mode="pregame" />;
+}
+
+export { FINISH_LEFT };

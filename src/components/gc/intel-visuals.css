@@ -1,0 +1,48 @@
+/* Matchup Intelligence graphics. Tokens only; the two team colours come from --ca (away) and --ch (home). */
+.iv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; min-width: 0; }
+.iv-card { min-width: 0; padding: 12px; border: 1px solid var(--line-2); border-radius: 14px; background: var(--surface-5); }
+.iv-card h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-4); }
+.iv-card h3 small { font-size: .6875rem; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--text-2); }
+.iv-h2h, .iv-goals, .iv-minis { grid-column: 1 / -1; }
+.iv-minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.iv-sides { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.iv-sides span { display: inline-flex; align-items: center; gap: 6px; color: var(--text-6); }
+.iv-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.iv-h2h li { display: grid; grid-template-columns: 3.6rem minmax(0, 1fr) 3.6rem; align-items: center; gap: 8px; }
+.iv-h2h li > b { font-variant-numeric: tabular-nums; font-size: .875rem; color: var(--text-3); font-weight: 600; }
+.iv-h2h li > b:last-child { text-align: right; }
+.iv-h2h li > b.lead { color: var(--text-6); font-weight: 800; }
+.iv-mid { display: grid; gap: 3px; min-width: 0; text-align: center; }
+.iv-mid i { font-style: normal; font-size: .6875rem; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iv-bar { display: flex; gap: 3px; height: 10px; }
+.iv-bar em { height: 100%; border-radius: 999px 0 0 999px; background: var(--ca); transition: width .5s cubic-bezier(.2,.7,.2,1); }
+.iv-bar em:last-child { flex: 1; border-radius: 0 999px 999px 0; background: var(--ch); }
+.iv-form-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; color: var(--text-6); }
+.iv-dots { display: inline-flex; gap: 5px; margin-left: auto; }
+.iv-dot { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-style: normal; font-size: .625rem; font-weight: 800; color: #fff; }
+.iv-dot.o-w { background: #1f9d6b; } .iv-dot.o-ot { background: #b7791f; } .iv-dot.o-l { background: #c43b53; }
+.iv-track { display: grid; gap: 4px; margin: 8px 0 14px; }
+.iv-track-label { font-size: .75rem; color: var(--text-3); }
+.iv-rail { position: relative; display: block; height: 46px; margin: 0 14px; }
+.iv-rail::before { content: ""; position: absolute; left: 0; right: 0; top: 22px; height: 4px; border-radius: 999px; background: linear-gradient(90deg, var(--mint-5), var(--amber-5) 55%, #c43b53); opacity: .55; }
+.iv-pin { position: absolute; display: grid; justify-items: center; transform: translateX(-50%); line-height: 1; }
+.iv-pin.away { top: -2px; } .iv-pin.home { top: 24px; flex-direction: column-reverse; }
+.iv-pin.home small { order: 2; }
+.iv-pin small { font-size: .625rem; color: var(--text-4); font-variant-numeric: tabular-nums; }
+.iv-pin.away small { order: 2; }
+.iv-gap { display: grid; grid-template-columns: 22px minmax(0, 1fr) 2.4rem; align-items: center; gap: 4px 8px; margin: 8px 0; }
+.iv-gap small { grid-column: 2 / -1; color: var(--text-2); font-size: .6875rem; }
+.iv-gap b { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-6); }
+.iv-gapbar { position: relative; height: 10px; border-radius: 999px; background: var(--surface-7); }
+.iv-gapbar .iv-zero { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; background: var(--line-4); }
+.iv-gapbar em { position: absolute; top: 0; bottom: 0; transition: width .5s cubic-bezier(.2,.7,.2,1), left .5s; }
+.iv-gapbar em.up { background: var(--mint-5); border-radius: 0 999px 999px 0; } .iv-gapbar em.down { background: #c43b53; border-radius: 999px 0 0 999px; }
+.iv-goals svg { display: block; width: 100%; height: auto; }
+.iv-tick { stroke: var(--line-3); stroke-width: 1; stroke-dasharray: 3 3; } .iv-axis { stroke: var(--line-4); stroke-width: 2; }
+.iv-plabel, .iv-tl { fill: var(--text-2); font-size: 12px; } .iv-tl { font-weight: 700; fill: var(--text-4); }
+.iv-stem { stroke: var(--line-4); stroke-width: 1.5; }
+.iv-goal.away circle { fill: var(--ca); } .iv-goal.home circle { fill: var(--ch); }
+.iv-goal circle { stroke: var(--surface-5); stroke-width: 2; }
+.iv-goal text { fill: #fff; font-size: 12px; font-weight: 800; pointer-events: none; }
+@media (max-width: 480px) { .iv-h2h li { grid-template-columns: 3rem minmax(0, 1fr) 3rem; gap: 6px; } .iv-dot { width: 26px; height: 26px; } }
+@media (prefers-reduced-motion: reduce) { .iv-bar em, .iv-gapbar em { transition: none; } }

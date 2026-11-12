@@ -21,7 +21,7 @@ function Deserved({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   return (
     <section className="gr-deserved" aria-label={`Deserved to win: ${away.id} ${a} percent, ${home.id} ${h} percent`}>
       <h4>Deserved to win <small>from the chances each side created</small></h4>
-      <Gauge size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
+      <Gauge stretch size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
     </section>
   );
 }
@@ -101,7 +101,7 @@ function Compare({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   return (
     <section className="gr-compare" aria-label={`Team numbers, ${away.id} against ${home.id}`}>
       <div className="gauge-grid gr-cgrid">
-        {rows.filter((x) => x.a != null && x.h != null).map((x) => <div key={x.label} className="gauge-item"><Gauge size="compact" away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} /></div>)}
+        {rows.filter((x) => x.a != null && x.h != null).map((x) => <div key={x.label} className="gauge-item"><Gauge stretch size="compact" away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} /></div>)}
       </div>
     </section>
   );

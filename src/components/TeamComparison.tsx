@@ -83,7 +83,7 @@ function Crossover({ offenseTeam, defenseTeam, snapshot }: {
           </div>
           <div className="metric-gap">
             <GapBar offense={offenseMetric} defense={defenseMetric} offenseId={offenseTeam.id} defenseId={defenseTeam.id} />
-            <Gauge away={strength(offenseMetric)} home={strength(defenseMetric)} awayId={offenseTeam.id} homeId={defenseTeam.id} label={offenseMetric?.label?.replace(" scored", "") ?? "Metric"} awayText={displayValue(offenseMetric)} homeText={displayValue(defenseMetric)} />
+            <Gauge stretch away={strength(offenseMetric)} home={strength(defenseMetric)} awayId={offenseTeam.id} homeId={defenseTeam.id} label={offenseMetric?.label?.replace(" scored", "") ?? "Metric"} awayText={displayValue(offenseMetric)} homeText={displayValue(defenseMetric)} />
             <RankGap offense={offenseMetric} defense={defenseMetric} />
           </div>
           <div className="metric-side metric-defense">

@@ -78,3 +78,41 @@
   .gr-hero { padding: 10px 6px 6px; }
   .gr-model .gauge.lg .gauge-side i { font-size: 2rem; }
 }
+
+/* Stretch gauge: a wide, flat dial that fills the width it is given (drawn in real pixels by StretchDial). The needle leans toward the higher value and is longer the further it leans. */
+.gauge.stretch { max-width: none; width: 100%; gap: 6px; justify-items: stretch; --gauge-w: none; }
+.gauge.stretch .sg-label { text-align: center; font-size: .75rem; color: var(--text-2); font-weight: 650; }
+.sg-chart { position: relative; min-width: 0; }
+.sg-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sg-arc-track, .sg-arc { fill: none; stroke-linecap: round; }
+.sg-arc-track { stroke: var(--line-2); stroke-width: 12; opacity: .7; }
+.sg-arc { stroke-width: 12; }
+.sg-guide { stroke: var(--line-3); stroke-width: 1; stroke-dasharray: 3 4; }
+.sg-tick { stroke: var(--text-3); stroke-width: 1.5; }
+.sg-needle-line { stroke-width: 3; stroke-linecap: round; }
+.sg-needle-dot { fill: var(--text-6); stroke: var(--surface-5); stroke-width: 2; }
+.sg-hub { fill: var(--text-5); stroke: var(--surface-5); stroke-width: 2; }
+.sg-even { fill: var(--text-2); font-size: 11px; }
+.sg-end { position: absolute; bottom: 2px; display: inline-flex; align-items: center; gap: 6px; color: var(--text-4); font-size: .75rem; font-weight: 700; letter-spacing: .04em; }
+.sg-end.away { left: 0; } .sg-end.home { right: 0; }
+.sg-logo { flex: none; width: 28px; height: 28px; }
+.sg-end.away .sg-logo { box-shadow: 0 0 0 2px var(--g-away); border-radius: 6px; } .sg-end.home .sg-logo { box-shadow: 0 0 0 2px var(--g-home); border-radius: 6px; }
+.sg-values { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.sg-values .gauge-side { grid-row: auto; }
+.sg-values .gauge-side.home { justify-content: flex-end; }
+.sg-values .gauge-side i { font-size: 1.15rem; }
+.sg-higher { font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
+.gauge.stretch[data-leader="away"] .gauge-side.away i, .gauge.stretch[data-leader="home"] .gauge-side.home i { color: var(--text-6); }
+.gauge.stretch .gauge-side b { display: none; }
+@media (max-width: 480px) { .gauge.stretch .sg-label { font-size: .6875rem; } .sg-logo { width: 22px; height: 22px; } .sg-values .gauge-side i { font-size: 1rem; } }
+
+/* Where a stretch gauge sits: the Team comparison rows (the values stay in the side cells), the Game Center stats list, the recap. */
+.metric-gap .gauge.stretch .sg-values, .metric-gap .gauge.stretch .sg-end b { display: none; }
+.metric-gap .gauge.stretch .sg-end { display: none; }
+.gauge-grid:has(.gauge.stretch) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); justify-items: stretch; gap: 14px; max-width: none; }
+.gcs-gauges .gauge-item:has(.gauge.stretch), .gauge-grid .gauge-item:has(.gauge.stretch) { max-width: none; }
+.gr-hero > :only-child:has(.gauge.stretch) { max-width: none; }
+.gr-hero .gauge.stretch .sg-label { display: none; }
+.gr-hero .gauge.stretch .sg-values .gauge-side i { font-size: 1.6rem; }
+.gr-hero .gauge.stretch .sg-needle-line { stroke-width: 4; }
+@media (min-width: 621px) { .crossover .crossover-row { grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr) minmax(0, 1fr); } }

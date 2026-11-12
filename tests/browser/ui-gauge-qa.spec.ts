@@ -22,11 +22,12 @@ test.describe("gauge calculations are unchanged", () => {
       const g = page.locator(`${STATS} [data-testid=gc-gauge-${r.key}] [role=img]`);
       await expect(g).toHaveAttribute("aria-label", new RegExp(`^${r.label.replace(/[%]/g, "\\$&")}: [A-Z]{2,3} ${r.awayText.replace(/[%.]/g, "\\$&")}, [A-Z]{2,3} ${r.homeText.replace(/[%.]/g, "\\$&")}$`));
     }
-    // The needle points at the share of the total: rotate((0.5 - share) * 180deg).
+    // The stretch gauge leans toward the higher value, and how far it leans is how lopsided the two numbers are (0 at 50/50, 1 when one side has it all).
     for (const r of rows) {
       const share = r.away! / (r.away! + r.home!);
-      const angle = await page.locator(`${STATS} [data-testid=gc-gauge-${r.key}] .gauge-needle`).evaluate((n) => { const m = new DOMMatrixReadOnly(getComputedStyle(n).transform); return (Math.atan2(m.b, m.a) * 180) / Math.PI; });
-      expect(angle).toBeCloseTo((0.5 - share) * 180, 0);
+      const fig = page.locator(`${STATS} [data-testid=gc-gauge-${r.key}] .gauge.stretch`);
+      await expect(fig).toHaveAttribute("data-lopsided", Math.min(1, Math.abs(share - 0.5) * 2).toFixed(2));
+      await expect(fig).toHaveAttribute("data-leader", share > 0.52 ? "away" : share < 0.48 ? "home" : "even");
     }
   });
 
@@ -151,7 +152,7 @@ test("long labels wrap inside their dial and never escape it", async ({ page }) 
     await page.setViewportSize(size(width));
     await openGameCenter(page, "final");
     await openTab(page, "Team Stats");
-    await page.locator(`${STATS} .gauge .gauge-label, ${STATS} .gauge figcaption span:nth-child(2)`).first().evaluate((e) => { e.textContent = "Average shot distance on unblocked attempts at even strength, last ten games"; });
+    await page.locator(`${STATS} .gauge .sg-label, ${STATS} .gauge .gauge-label`).first().evaluate((e) => { e.textContent = "Average shot distance on unblocked attempts at even strength, last ten games"; });
     await page.waitForTimeout(100);
     expect(await clippedCaptions(page)).toEqual([]);
     await noOverflow(page);
@@ -195,7 +196,7 @@ for (const scheme of ["dark", "light"] as const) {
     const lum = (rgb: string) => { const [r, g, b] = (rgb.match(/[\d.]+/g) ?? []).slice(0, 3).map((v) => { const c = Number(v) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
     const c = await page.locator(`${STATS} .gauge`).first().evaluate((f) => {
       let bg = ""; for (let e: Element | null = f; e; e = e.parentElement) { const b = getComputedStyle(e).backgroundColor; if (b && b !== "rgba(0, 0, 0, 0)" && b !== "transparent") { bg = b; break; } }
-      return { bg, text: getComputedStyle(f.querySelector("figcaption i")!).color, away: getComputedStyle(f.querySelector(".gauge-away")!).stroke, home: getComputedStyle(f.querySelector(".gauge-home") ?? f.querySelector(".gauge-away")!).stroke };
+      return { bg, text: getComputedStyle(f.querySelector(".sg-values i, figcaption i")!).color, away: getComputedStyle(f.querySelector(".sg-needle-line, .gauge-away")!).stroke, home: getComputedStyle(f.querySelector(".sg-needle-line, .gauge-home") ?? f.querySelector(".gauge-away")!).stroke };
     });
     const contrast = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
     expect(c.bg).not.toBe("");

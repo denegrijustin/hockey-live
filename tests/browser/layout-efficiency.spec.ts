@@ -34,14 +34,15 @@ const measure = (page: Page) => page.evaluate(() => {
 });
 
 // Ceilings chosen from the "before" measurement (see docs/ui-layouts.md).
-const CEIL = { 390: 420, 1440: 220 } as const;
+// Stretch gauges (flat dials that fill their cell) replaced the compact dials: two per row on a phone, more on a wide pane.
+const CEIL = { 390: 520, 1440: 320 } as const;
 
 for (const w of [390, 360]) {
-  test(`team stats: at least 3 gauges share a row at ${w}px`, async ({ page }) => {
+  test(`team stats: at least 2 gauges share a row at ${w}px`, async ({ page }) => {
     await open(page, w);
     const m = await measure(page);
     console.log("MEASURE", w, JSON.stringify(m));
-    expect(m.maxPerRow).toBeGreaterThanOrEqual(3);
+    expect(m.maxPerRow).toBeGreaterThanOrEqual(2);
     expect(m.scrollW).toBeLessThanOrEqual(0);
   });
 }

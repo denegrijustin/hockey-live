@@ -62,7 +62,9 @@ test("a final shows postgame flow and standings impact from the real pregame tab
   const n = await items.count();
   expect(n).toBeGreaterThanOrEqual(4);
   for (let i = 0; i < n; i++) await expect(items.nth(i).locator(".gc-basis")).toHaveText(/^(Official|Derived|Historical|Projection)$/);
-  await expect(pane.getByRole("term").filter({ hasText: "Derived" })).toBeVisible(); // the legend
+  await pane.getByText("What the labels mean").click(); // the legend is folded away until asked for
+  await expect(pane.getByRole("term").filter({ hasText: "Derived" })).toBeVisible();
+  await clinch.locator("summary").click(); // the working and the links open with the fact
   await expect(pane.getByRole("button", { name: /Avalanche profile/ }).first()).toBeVisible();
 });
 
@@ -98,7 +100,41 @@ test("the pane fits 360px without sideways scroll and its links are tap sized", 
   });
   expect(over.pane).toBeLessThanOrEqual(0);
   expect(over.doc).toBeLessThanOrEqual(0);
+  await pane.locator(".gc-intel-item:has(.gc-intel-link) summary").first().click();
   const link = pane.locator(".gc-intel-link").first();
+  await expect(link).toBeVisible();
   expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   void dialog;
 });
+
+test("the Matchup Intelligence tab leads with graphics: head-to-head bars, last-five form and the goal timeline, with the facts folded to one line each", async ({ page }) => {
+  const { pane } = await open(page, REAL_ID);
+  const visuals = pane.getByTestId("gc-intel-visuals");
+  await expect(visuals).toBeVisible();
+  await expect(visuals.locator(".iv-h2h li")).toHaveCount(3);
+  await expect(visuals.locator(".iv-form-row")).toHaveCount(2);
+  await expect(visuals.locator(".iv-form-row").first().locator(".iv-dot")).toHaveCount(5);
+  await expect(visuals.locator(".iv-goal")).toHaveCount(5); // the five regulation and overtime goals of the final
+  // The facts are one line each; the working is folded away until asked for.
+  const item = pane.locator('[data-intel-id="game-winner"]');
+  await expect(item.locator(".gc-intel-detail")).toBeHidden();
+  await item.locator("summary").click();
+  await expect(item.locator(".gc-intel-detail")).toBeVisible();
+  // The pictures come before the words.
+  const order = await pane.evaluate((el) => { const v = el.querySelector('[data-testid="gc-intel-visuals"]')!, f = el.querySelector("[data-intel-id]")!; return v.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING; }, await pane.elementHandle());
+  expect(order).toBeTruthy();
+});
+
+for (const width of [320, 360, 768, 1440]) {
+  test(`the graphics fit ${width}px with no sideways scroll`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const { pane } = await open(page, REAL_ID);
+    await expect(pane.getByTestId("gc-intel-visuals")).toBeVisible();
+    const over = await page.evaluate(() => {
+      const p = document.querySelector('[data-testid="gc-intel"]') as HTMLElement;
+      const dialog = document.querySelector("dialog.game-dialog") as HTMLElement;
+      return { pane: p.scrollWidth - p.clientWidth, dialog: dialog.scrollWidth - dialog.clientWidth, doc: document.documentElement.scrollWidth - innerWidth };
+    });
+    expect(over.pane).toBeLessThanOrEqual(1); expect(over.dialog).toBeLessThanOrEqual(1); expect(over.doc).toBeLessThanOrEqual(1);
+  });
+}

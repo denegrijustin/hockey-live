@@ -1,15 +1,73 @@
-import { useEffect, useState } from "react";
-import { LogoImage } from "./TeamLogo";
+import { useEffect, useRef, useState } from "react";
+import { LogoImage, TeamLogo } from "./TeamLogo";
 import { gaugeColors } from "../lib/kits";
 
 /** compact 120px, standard 190px, expanded 280px (tokens in styles.css); "sm" = compact and "lg" = standard are legacy aliases. */
 export type GaugeSize = "compact" | "standard" | "expanded" | "sm" | "lg";
 
 /**
+ * The stretched gauge: a wide, flat dial that fills the width it is given. The needle leans toward the team with the higher number and is
+ * longer the further it leans (short at 50/50, reaching the arc when one side has it all). The arc is coloured from the centre ("Even")
+ * out to the needle in the leader's colour. Drawn in real pixels (measured width) so text and strokes keep their size.
+ */
+function StretchDial({ away, home, share, shown, label, text, shownA, shownH, awaySub, homeSub, colors, leader, variant }: {
+  away: string; home: string; share: number; shown: number; label: string; text: string; shownA: string; shownH: string; awaySub?: string; homeSub?: string;
+  colors: { away: string; home: string }; leader: string; variant: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [w, setW] = useState(320);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const read = () => setW(Math.max(200, Math.round(el.getBoundingClientRect().width)));
+    read();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const lopTarget = Math.min(1, Math.abs(share - 0.5) * 2);
+  const lean = (shown - 0.5) * 2;                       // +1 (away has it all, leans left) .. -1 (home has it all, leans right): toward the higher value
+  const lop = Math.min(1, Math.abs(lean));
+  const pad = 16, rx = (w - pad * 2) / 2, ry = Math.max(26, Math.min(rx * 0.24, 72)), cx = w / 2, cy = ry + 14, hgt = cy + 34;
+  const MAX = (74 * Math.PI) / 180;
+  const phi = Math.PI / 2 + lean * MAX;                  // direction of the needle: pi/2 = straight up, toward pi = the away end
+  const pt = (f: number, ph: number) => ({ x: cx + f * rx * Math.cos(ph), y: cy - f * ry * Math.sin(ph) });
+  const f = 0.4 + 0.6 * lop;                             // longer needle the more it leans
+  const tip = pt(f, phi), top = pt(1, Math.PI / 2), tipEdge = pt(1, phi);
+  const arc = (from: number, to: number) => { const a = pt(1, from), b = pt(1, to); return `M${a.x.toFixed(1)} ${a.y.toFixed(1)}A${rx.toFixed(1)} ${ry.toFixed(1)} 0 0 ${to < from ? 1 : 0} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`; };
+  const color = lean >= 0 ? colors.away : colors.home;
+  return (
+    <figure className={`gauge stretch ${variant}`} data-leader={leader} data-lopsided={lopTarget.toFixed(2)} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
+      <figcaption className="sg-label">{label}</figcaption>
+      <div ref={ref} className="sg-chart">
+        <svg width={w} height={hgt} viewBox={`0 0 ${w} ${hgt}`} aria-hidden="true">
+          <path d={arc(Math.PI, 0)} className="sg-arc-track" />
+          {lop > 0.01 && <path d={arc(Math.PI / 2, phi)} className="sg-arc" style={{ stroke: color }} />}
+          <line x1={cx} y1={cy} x2={top.x} y2={top.y} className="sg-guide" />
+          <line x1={cx} y1={cy} x2={tip.x} y2={tip.y} className="sg-needle-line" style={{ stroke: color }} />
+          <circle cx={tip.x} cy={tip.y} r="5" className="sg-needle-dot" />
+          <circle cx={cx} cy={cy} r="5" className="sg-hub" />
+          <text x={cx} y={cy + 20} textAnchor="middle" className="sg-even">Even</text>
+          <circle cx={tipEdge.x} cy={tipEdge.y} r="0" />
+        </svg>
+        <span className="sg-end away"><TeamLogo id={away} size={28} className="sg-logo" /><b>{away}</b></span>
+        <span className="sg-end home"><b>{home}</b><TeamLogo id={home} size={28} className="sg-logo" /></span>
+      </div>
+      <div className="sg-values">
+        <span className="gauge-side away"><i>{shownA}</i>{awaySub && <em>{awaySub}</em>}</span>
+        <span className="sg-higher">{leader === "even" ? "Even" : `${leader === "away" ? away : home} higher`}</span>
+        <span className="gauge-side home"><i>{shownH}</i>{homeSub && <em>{homeSub}</em>}</span>
+      </div>
+    </figure>
+  );
+}
+
+/**
  * A gas-gauge dial for a two-sided number: the away side fills from the left, the home side from the right, and the needle points
  * at the split. Used for "deserved to win" and for every head-to-head stat, so they all read the same way.
  */
-export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "compact", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle }: {
+export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "compact", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle, stretch = false }: {
   away: number; home: number; awayId: string; homeId: string; label: string; format?: (v: number) => string; percent?: boolean; size?: GaugeSize;
   /** For numbers that are not shares of a total (a save percentage, goals against): the gap that swings the needle all the way. */
   span?: number; lowerBetter?: boolean; awayText?: string; homeText?: string;
@@ -17,6 +75,8 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   awaySub?: string; homeSub?: string;
   /** Where the needle points (the away side's share, 0..1) when it is not simply the split of the two numbers shown. */
   needle?: number;
+  /** A horizontal gauge instead of the dial: its length grows with how lopsided the two numbers are (shortest at 50/50, full width when one side has it all). */
+  stretch?: boolean;
 }) {
   const total = away + home;
   // The away side's share, 0..1. Counts split by their total; rates by how far apart they are.
@@ -37,6 +97,7 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   const text = `${awayId} ${shownA}${awaySub ? ` (${awaySub})` : ""}, ${homeId} ${shownH}${homeSub ? ` (${homeSub})` : ""}`;
   const colors = gaugeColors(awayId, homeId);
   const leader = share > 0.52 ? "away" : share < 0.48 ? "home" : "even";
+  if (stretch) return <StretchDial away={awayId} home={homeId} share={share} shown={shown} label={label} text={text} shownA={shownA} shownH={shownH} awaySub={awaySub} homeSub={homeSub} colors={colors} leader={leader} variant={variant} />;
   return (
     <figure className={`gauge ${big ? "lg" : "sm"} ${variant}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
       <svg viewBox="0 0 200 146" aria-hidden="true">

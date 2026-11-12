@@ -30,12 +30,14 @@ html[data-home] {
   margin: 0;
   padding: 0;
   display: grid;
+  /* A column that can shrink: with the default 1fr a long no-wrap line in one row (an insight, a venue) set the width of the whole list and pushed a phone sideways */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   align-items: start;
 }
 @media (min-width: 900px) {
   .sb-list {
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
   }
 }
 

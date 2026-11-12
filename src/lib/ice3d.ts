@@ -83,11 +83,15 @@ export class Ice3D {
 
   /** Builds the scene and loads the vehicle model. Resolves when it can render. */
   async init(modelUrl = "/models/zamboni.glb") {
+    // setup is the heavy part (environment map, big textures, the model): each step yields to the browser so the page stays responsive while it builds
+    const yieldNow = () => new Promise<void>((r) => setTimeout(r, 0));
     const r = this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: "high-performance", alpha: false });
     r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.0; r.setClearColor(0x050a18, 1);
     const pmrem = new THREE.PMREMGenerator(r);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; this.scene.environment = env; this.scene.environmentIntensity = 0.5; pmrem.dispose();
-    this.buildIce(); this.buildRink(); this.buildLights();
+    await yieldNow(); if (this.disposed) return;
+    this.buildIce(); await yieldNow(); if (this.disposed) return;
+    this.buildRink(); this.buildLights(); await yieldNow(); if (this.disposed) return;
     this.maskRT = new THREE.WebGLRenderTarget(this.quality === "high" ? 2048 : 1024, this.quality === "high" ? 870 : 435, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false, format: THREE.RGBAFormat });
     this.maskRT.texture.generateMipmaps = false;
     this.maskMesh = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));

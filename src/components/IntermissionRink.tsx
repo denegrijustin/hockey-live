@@ -27,6 +27,16 @@ function useDeadline(game: Game, mode: "intermission" | "pregame") {
   return deadline;
 }
 
+/**
+ * At most this many 3D rinks are alive at once. A night with several games in intermission would otherwise run several WebGL scenes together, which is heavy for a phone
+ * (and for any software renderer); the rest keep their countdown and labels and take over a rink as soon as one frees up. A rink also waits until it is on screen.
+ */
+const MAX_SCENES = 2;
+let sceneCount = 0;
+const waiting = new Set<() => void>();
+const takeSlot = () => (sceneCount < MAX_SCENES ? (sceneCount++, true) : false);
+const freeSlot = () => { sceneCount = Math.max(0, sceneCount - 1); for (const wake of [...waiting]) { waiting.delete(wake); wake(); if (sceneCount >= MAX_SCENES) break; } };
+
 const loadImage = (src: string) => new Promise<HTMLImageElement | null>((resolve) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = () => resolve(null); i.src = src; });
 
 type Labels = { k: string; l: string; cap: string };
@@ -74,9 +84,15 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
     const quality = compact || window.matchMedia?.("(max-width: 700px)").matches ? "low" : "high";
     let alive = true;
     host.dataset.render = "loading";
-    (async () => {
+    let started = false, holdsSlot = false;
+    const tryStart = async () => {
+      if (started || !alive) return;
+      if (!takeSlot()) { host.dataset.render = "none"; waiting.add(tryStartIfSeen); return; }
+      started = true; holdsSlot = true;
       try {
-        // the 3D scene (Three.js) loads only when a rink is on screen
+        // the 3D scene (Three.js) loads only when a rink is on screen, and only once the browser has painted what the person just asked for (a Game Center opening, say)
+        await new Promise<void>((done) => { const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback; if (ric) ric(() => done(), { timeout: 1500 }); else setTimeout(done, 300); });
+        if (!alive) return;
         const { Ice3D: Scene } = await import("../lib/ice3d");
         if (!alive) return;
         const sc = new Scene(el, look, { poseAt, sweptQuads, enterEnd: route().enterEnd }, quality);
@@ -89,10 +105,13 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
         if (alive) { lookRef.current = { ...look, logo: homeLogo, scouts }; sc.setLook(lookRef.current); }
       } catch {
         host.dataset.render = "none"; // no WebGL: the countdown and the labels still work
+        if (holdsSlot) { holdsSlot = false; freeSlot(); }
       }
-    })();
+    };
+    let seen = typeof IntersectionObserver === "undefined";
+    const tryStartIfSeen = () => { if (seen) void tryStart(); };
     const total = (() => { const first = (deadline.current - Date.now()) / 1000; return Math.max(mode === "pregame" ? PREGAME_S : INTERMISSION_S, first); })();
-    let display: number | null = null, last = performance.now(), raf = 0, visible = true, lastSecond = -1, lastPhase = "";
+    let display: number | null = null, last = performance.now(), raf = 0, visible = typeof IntersectionObserver === "undefined", lastSecond = -1, lastPhase = "";
     const reduced = motionOff();
     const tick = (now: number) => {
       const dt = Math.min(5, Math.max(0, (now - last) / 1000)); last = now;
@@ -118,16 +137,29 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
         if (capRef.current) capRef.current.lastChild!.textContent = ` ${L.cap}`;
       }
     };
-    const loop = (now: number) => { raf = requestAnimationFrame(loop); if (!visible || document.hidden) return; tick(now); };
-    if (reduced) { tick(performance.now()); } else raf = requestAnimationFrame(loop);
+    // A frame costs a couple of milliseconds on a GPU, but a software renderer or a weak phone can take hundreds, which would stall the whole page. So the loop
+    // times its own frames and spaces them out to use about a quarter of the main thread at most; on normal hardware this never skips a frame.
+    let cost = 0, nextAt = 0;
+    const loop = (now: number) => {
+      raf = requestAnimationFrame(loop);
+      if (!visible || document.hidden || now < nextAt) return;
+      const t0 = performance.now();
+      tick(now);
+      const spent = performance.now() - t0;
+      cost = cost ? cost * 0.6 + spent * 0.4 : spent;
+      nextAt = cost > 12 ? now + Math.min(800, cost * 3) : 0;
+    };
+    tick(performance.now()); // the first reading is always taken (labels, stage, countdown), even for a rink that is not on screen yet
+    if (!reduced) raf = requestAnimationFrame(loop);
     const slow = reduced ? window.setInterval(() => tick(performance.now()), 1000) : 0;
-    const io = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) display = null; });
+    const io = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) { display = null; seen = true; void tryStart(); } });
     io?.observe(host);
+    if (!io) void tryStart();
     const onShow = () => { if (!document.hidden) { display = null; last = performance.now(); } };
     document.addEventListener("visibilitychange", onShow);
     const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => { const w = host.clientWidth || 600; scene?.resize(w, Math.round(w * ASPECT), dpr()); });
     ro?.observe(host);
-    return () => { alive = false; scene?.dispose(); sceneRef.current = null; cancelAnimationFrame(raf); clearInterval(slow); io?.disconnect(); ro?.disconnect(); document.removeEventListener("visibilitychange", onShow); };
+    return () => { alive = false; waiting.delete(tryStartIfSeen); scene?.dispose(); sceneRef.current = null; if (holdsSlot) freeSlot(); cancelAnimationFrame(raf); clearInterval(slow); io?.disconnect(); ro?.disconnect(); document.removeEventListener("visibilitychange", onShow); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, home.id, color, mode]);
 

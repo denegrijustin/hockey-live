@@ -359,6 +359,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
   compact?: boolean; game: Game; away: Team; home: Team; before: any; baseline: any; allGames: Game[]; rating?: Rated; ranks?: Record<string, any> | null; analysisRow?: any; insight?: ReactNode; open: boolean; onFull: () => void;
 }) {
   useTimeKey();
+  const covered = useGameRoute().route?.id === game.id; // the Game Center for this game is open on top: it draws its own rink, so this row draws none
   const gs = gameStatus(game);
   const kind = gs.final ? "final" : gs.live ? "live" : "soon";
   const showScore = kind !== "soon" && game.awayScore != null && game.homeScore != null;
@@ -389,8 +390,8 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
         </div>
       ) : null}
       below={<>
-        {kind === "live" && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
-        {kind === "soon" && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
+        {kind === "live" && game.intermission && !covered && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
+        {kind === "soon" && !covered && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
         <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
         {open && <Suspense fallback={null}><RowDetails game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} feed={feed} recapText={recapText} showFlow={kind !== "soon"} onFull={onFull} /></Suspense>}
       </>}

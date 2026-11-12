@@ -121,8 +121,8 @@ export const GameCard = memo(function GameCard({
         <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span className="tv-network"><NetworkLogos broadcasts={broadcasts} game={game} /></span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
-      {live && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
-      {!live && !past && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
+      {live && game.intermission && !gameCenterOpen && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
+      {!live && !past && !gameCenterOpen && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
       <div ref={feedRef} className="card-ice">
         {/* At intermission the animated Zamboni rink is the only rink on the card; the shot-map ice view returns when play does. */}
         {(live || past) && !(live && game.intermission) && <IceView data={feed} home={home} away={away} />}

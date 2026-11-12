@@ -122,14 +122,14 @@ export class Ice3D {
     const p = geo.attributes.position, uv = geo.attributes.uv;
     for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / W, 1 - -p.getY(i) / H);
     geo.rotateX(-Math.PI / 2);
-    const m = this.iceMat = new THREE.MeshStandardMaterial({ map: this.dirtyTex, roughness: 0.9, metalness: 0.0, envMapIntensity: 0.55 });
+    const m = this.iceMat = new THREE.MeshStandardMaterial({ map: this.dirtyTex, roughness: 0.9, metalness: 0.0, envMapIntensity: 0.22 });
     m.onBeforeCompile = (sh) => {
       sh.uniforms.cleanMap = { value: this.cleanTex }; sh.uniforms.maskMap = { value: this.maskRT?.texture ?? null };
       m.userData.shader = sh;
       sh.fragmentShader = sh.fragmentShader
         .replace("#include <common>", "#include <common>\nuniform sampler2D cleanMap; uniform sampler2D maskMap;")
         .replace("#include <map_fragment>", "float cleanM = texture2D(maskMap, vMapUv).r; cleanM = smoothstep(0.35, 0.65, cleanM); vec4 dirtyC = texture2D(map, vMapUv); dirtyC.rgb = mix(dirtyC.rgb, vec3(dot(dirtyC.rgb, vec3(0.3, 0.55, 0.15))), 0.35) * vec3(0.80, 0.83, 0.87); vec4 cleanC = texture2D(cleanMap, vMapUv); cleanC.rgb *= vec3(0.98, 1.0, 1.04); diffuseColor *= mix(dirtyC, cleanC, cleanM);")
-        .replace("#include <roughnessmap_fragment>", "float roughnessFactor = mix(0.9, 0.11, cleanM);")
+        .replace("#include <roughnessmap_fragment>", "float roughnessFactor = mix(0.9, 0.32, cleanM);")
         .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n// the worn surface is slightly pitted, the fresh one is flat\n");
     };
     const ice = new THREE.Mesh(geo, m); ice.position.y = 0; ice.receiveShadow = false; this.scene.add(ice);

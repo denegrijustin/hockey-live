@@ -52,3 +52,28 @@ test("postponed and canceled games do not count as remaining in the model or the
   assert.equal(simulatePlayoffs({ games: sched([called]), teams, table, sims: 50 }).remainingGames, 1);
   assert.equal(simulatePlayoffs({ games: sched([{ ...called, scheduleState: "OK" }]), teams, table, sims: 50 }).remainingGames, 2);
 });
+
+test("the goal list outranks lagging team totals: a goal the NHL has listed but not yet added to the score is shown (PHI 1, EDM 2 at the second intermission)", async () => {
+  const { scoreFromLanding, reconcileLiveScores } = await import("../src/lib/game-data.mjs");
+  const landing = { summary: { scoring: [{ goals: [] }, { goals: [{ awayScore: 0, homeScore: 1 }, { awayScore: 0, homeScore: 2 }, { awayScore: 1, homeScore: 2 }] }] } };
+  assert.deepEqual(scoreFromLanding(landing), { away: 1, home: 2 });
+  assert.equal(scoreFromLanding({ summary: { scoring: [] } }), null);
+  assert.equal(scoreFromLanding(null), null);
+  const board = { games: [
+    { id: 1, state: "LIVE", period: 2, awayScore: 0, homeScore: 2 },
+    { id: 2, state: "LIVE", period: 1, awayScore: 1, homeScore: 0 },   // landing fails: unchanged
+    { id: 3, state: "FUT", period: null, awayScore: null, homeScore: null }, // not live: never fetched
+    { id: 4, state: "LIVE", period: 3, awayScore: 3, homeScore: 2 },   // totals ahead of a stale goal list: never lowered
+  ] };
+  const asked = [];
+  const out = await reconcileLiveScores(board, async (id) => {
+    asked.push(id);
+    if (id === 2) throw new Error("down");
+    return id === 4 ? { summary: { scoring: [{ goals: [{ awayScore: 2, homeScore: 2 }] }] } } : landing;
+  });
+  assert.deepEqual(asked.sort(), [1, 2, 4]);
+  assert.deepEqual([out.games[0].awayScore, out.games[0].homeScore], [1, 2]);
+  assert.equal(out.games[1], board.games[1]);
+  assert.equal(out.games[2], board.games[2]);
+  assert.deepEqual([out.games[3].awayScore, out.games[3].homeScore], [3, 2]);
+});

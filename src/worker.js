@@ -4,6 +4,7 @@ import {
   normalizeGameFeed,
   normalizeEdge,
   isFreshLive,
+  reconcileLiveScores,
 } from "./lib/game-data.mjs";
 import teams from "./data/teams.json";
 import { parseEspnScoreboard } from "./lib/espn-links.mjs";
@@ -222,7 +223,7 @@ async function handle(request, env, ctx) {
         let data;
         try {
           data = live
-            ? normalizeScoreboard(await get("/score/now"))
+            ? await reconcileLiveScores(normalizeScoreboard(await get("/score/now")), (id) => get(`/gamecenter/${id}/landing`))
             : normalizeGameFeed(
                 await get(
                   `/gamecenter/${url.pathname.split("/").pop()}/play-by-play`,

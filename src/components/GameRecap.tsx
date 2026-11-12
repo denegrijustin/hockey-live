@@ -20,8 +20,8 @@ function Deserved({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   const a = Math.round(r.deserved.away * 100), h = 100 - a;
   return (
     <section className="gr-deserved" aria-label={`Deserved to win: ${away.id} ${a} percent, ${home.id} ${h} percent`}>
-      <h4>Deserved to win <small>from the chances each side created</small></h4>
-      <Gauge stretch size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
+      <h4>Deserved to Win <small>Based on the quality and quantity of chances each team created</small></h4>
+      <Gauge look="bar" size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
     </section>
   );
 }

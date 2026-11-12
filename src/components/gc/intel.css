@@ -16,3 +16,19 @@
 .gc-intel-legend div { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
 .gc-intel-legend dt { flex: none; }
 .gc-intel-legend dd { margin: 0; min-width: 0; opacity: 0.8; }
+
+/* Fewer words: each fact is one line with an icon; the working is one tap away. */
+.gc-intel-item { padding: 6px 0; }
+.gc-intel-text { flex-wrap: nowrap; align-items: center; font-weight: 600; }
+.gc-intel-text > span:nth-child(2) { flex: 1; min-width: 0; }
+.gc-intel-icon { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 8px; background: var(--surface-7); color: var(--mint-5); }
+.gc-intel-how summary, .gc-intel-legend-wrap summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; color: var(--text-2); font-size: .75rem; }
+
+.gc-intel-legend-wrap { margin-top: 4px; }
+@media (max-width: 480px) { .gc-intel-text { flex-wrap: wrap; } }
+.gc-intel-how > summary { list-style: none; cursor: pointer; }
+.gc-intel-how > summary::-webkit-details-marker { display: none; }
+.gc-intel-how > summary:focus-visible { outline: 2px solid var(--mint-5); outline-offset: 2px; border-radius: 6px; }
+.gc-intel-how > summary::after { content: "+"; flex: none; width: 20px; text-align: center; color: var(--text-2); font-weight: 400; }
+.gc-intel-how[open] > summary::after { content: "–"; }
+.gc-intel-how .gc-intel-detail, .gc-intel-how .gc-intel-links { margin-left: 36px; }

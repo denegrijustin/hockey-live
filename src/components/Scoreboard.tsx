@@ -35,6 +35,7 @@ let pendingOpen: { id: number; tab?: GcTab; event?: number; at: number } | null 
 if (typeof window !== "undefined") window.addEventListener(OPEN_GAME_EVENT, (e) => { const d = (e as CustomEvent).detail; if (Number.isFinite(d?.id)) pendingOpen = { id: d.id, tab: d.tab, event: d.event, at: Date.now() }; });
 
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
+const IcePrep = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IcePrep })));
 const RowDetails = lazy(() => import("./home/RowDetails"));
 const MyTeamsStrip = lazy(() => import("./home/MyTeamsStrip"));
 const MyPlayersStrip = lazy(() => import("./home/MyPlayersStrip"));
@@ -388,6 +389,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
       ) : null}
       below={<>
         {kind === "live" && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
+        {kind === "soon" && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
         <div ref={feedRef} className="sb-flow">{flowShown && <CompactGameFlow data={feed} home={home} away={away} />}</div>
         {open && <Suspense fallback={null}><RowDetails game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} feed={feed} recapText={recapText} showFlow={kind !== "soon"} onFull={onFull} /></Suspense>}
       </>}

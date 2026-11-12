@@ -16,6 +16,7 @@ import { LOGO_SIZE } from "./GameCardView";
 import { usePauseOffscreen } from "../motion";
 import { useGameRoute } from "../hooks/useGameRoute";
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
+const IcePrep = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IcePrep })));
 const GameCardExpanded = lazy(() => import("./GameCardExpanded"));
 const SaveGameButton = lazy(() => import("./SaveGameButton").then((m) => ({ default: m.SaveGameButton })));
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
@@ -120,6 +121,7 @@ export const GameCard = memo(function GameCard({
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
       </button>
       {live && game.intermission && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
+      {!live && !past && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
       <div ref={feedRef} className="card-ice">
         {/* At intermission the animated Zamboni rink is the only rink on the card; the shot-map ice view returns when play does. */}
         {(live || past) && !(live && game.intermission) && <IceView data={feed} home={home} away={away} />}

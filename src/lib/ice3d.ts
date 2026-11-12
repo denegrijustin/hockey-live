@@ -212,7 +212,7 @@ export class Ice3D {
   }
   /** The fixed camera: raised and set back on the near side, looking across the rink, its field of view set so the rink fills 96% of the width. */
   /** Where the fixed camera sits and what it looks at (feet); a tool may change it before resize(). */
-  pose = { pos: [100, 105, 228] as [number, number, number], look: [100, 0, 34] as [number, number, number], shift: 0.04, fill: 0.96 };
+  pose = { pos: [100, 130, 235] as [number, number, number], look: [100, 0, 34] as [number, number, number], shift: 0.05, fill: 0.96 };
   private fit() {
     const c = this.camera; c.position.set(...this.pose.pos); c.up.set(0, 1, 0); c.lookAt(...this.pose.look);
     let lo = 8, hi = 70;

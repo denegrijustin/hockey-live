@@ -3412,7 +3412,7 @@ select,
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1200 / 612;
+  aspect-ratio: 1000 / 510;
   border-radius: 10px;
   background: #0a1530;
 }

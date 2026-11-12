@@ -14,10 +14,11 @@ let totalJs = 0;
 for (const f of list("assets/", ".js")) {
   const size = gz(new URL(`assets/${f}`, dist));
   totalJs += size;
-  limits.push([`assets/${f}`, size, 135 * KB]);
+  // The 3D ice scene (Three.js) is one lazy chunk that loads only when a rink is on screen (intermission or ice preparation): it gets its own, larger limit.
+  limits.push([`assets/${f}`, size, (f.startsWith("ice3d-") ? 165 : 135) * KB]);
 }
 // Total JS counts every lazy chunk (a visitor downloads only the views they open). Raised 300 -> 350 KB for Phase 5 (Game Center play-by-play, stats, momentum, intelligence, live-data engine); the per-file 135 KB limit is unchanged.
-limits.push(["all JavaScript", totalJs, 350 * KB]);
+limits.push(["all JavaScript", totalJs, 520 * KB]); // raised 350 -> 520 KB for the lazy 3D ice scene (about 155 KB gzip)
 for (const f of list("assets/", ".css")) limits.push([`assets/${f}`, gz(new URL(`assets/${f}`, dist)), 32 * KB]);
 // Fetched data: the season files grow all season, so they get the most room.
 const dataFiles = (dir) => list(dir, ".json");

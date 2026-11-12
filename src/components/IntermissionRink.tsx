@@ -2,13 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motionOff } from "../motion";
 import type { Game, Team } from "../types";
 import { INTERMISSION_MS, clockText, firstSeenAt, parseClock } from "../lib/intermission.mjs";
-import { FINISH_LEFT, INTERMISSION_S, PREGAME_S, icePrepActive, poseAt, route, sessionKey, smoothLeft, stateAt } from "../lib/ice-plan.mjs";
-import { IceScene, type Look } from "../lib/ice-draw";
+import { FINISH_LEFT, INTERMISSION_S, PREGAME_S, icePrepActive, poseAt, route, sessionKey, smoothLeft, stateAt, sweptQuads } from "../lib/ice-plan.mjs";
+import type { Ice3D } from "../lib/ice3d";
+import type { Look } from "../lib/ice-textures";
 import { logoUrl } from "../lib/logos";
 import { usePrefs } from "../lib/prefs";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
 const SCOUTS = "/logos/kc-scouts.png";
+const ASPECT = 0.51;                  // the picture's height / width (fixed camera)
 const hashOf = (id: number | string) => { let h = 2166136261; for (const ch of String(id)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
 
 /**
@@ -67,12 +69,28 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
     const el = canvas.current, host = root.current;
     if (!el || !host) return;
     const look: Look = { homeId: home.id, homeName: home.name, color: color || "#1d428a", accent: "#f1b82c", seed: hashOf(`${game.id}`), logo: null, scouts: null };
-    const scene = new IceScene(el, look);
-    sceneRef.current = scene; lookRef.current = look;
+    let scene: Ice3D | null = null;
     const dpr = () => Math.min(2.5, window.devicePixelRatio || 1);
-    scene.resize(host.clientWidth || 600, dpr());
+    const quality = compact || window.matchMedia?.("(max-width: 700px)").matches ? "low" : "high";
     let alive = true;
-    Promise.all([loadImage(logoUrl(home.id)), loadImage(SCOUTS)]).then(([homeLogo, scouts]) => { if (alive) { lookRef.current = { ...look, logo: homeLogo, scouts }; scene.setLook(lookRef.current); } });
+    host.dataset.render = "loading";
+    (async () => {
+      try {
+        // the 3D scene (Three.js) loads only when a rink is on screen
+        const { Ice3D: Scene } = await import("../lib/ice3d");
+        if (!alive) return;
+        const sc = new Scene(el, look, { poseAt, sweptQuads, enterEnd: route().enterEnd }, quality);
+        await sc.init("/models/zamboni.glb");
+        if (!alive) { sc.dispose(); return; }
+        sc.resize(host.clientWidth || 600, Math.round((host.clientWidth || 600) * ASPECT), dpr());
+        scene = sc; sceneRef.current = sc; lookRef.current = look;
+        host.dataset.render = "webgl";
+        const [homeLogo, scouts] = await Promise.all([loadImage(logoUrl(home.id)), loadImage(SCOUTS)]);
+        if (alive) { lookRef.current = { ...look, logo: homeLogo, scouts }; sc.setLook(lookRef.current); }
+      } catch {
+        host.dataset.render = "none"; // no WebGL: the countdown and the labels still work
+      }
+    })();
     const total = (() => { const first = (deadline.current - Date.now()) / 1000; return Math.max(mode === "pregame" ? PREGAME_S : INTERMISSION_S, first); })();
     let display: number | null = null, last = performance.now(), raf = 0, visible = true, lastSecond = -1, lastPhase = "";
     const reduced = motionOff();
@@ -83,11 +101,11 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       const shown: number = display == null || dt > 1 || reduced ? target : smoothLeft(display, target, dt);
       display = shown;
       const st = stateAt(shown, total);
-      scene.render(st, now);
+      scene?.render(st);
       // what the animation is showing, for tests and for anyone inspecting it
       const r = route(), pose = poseAt(st.s);
       host.dataset.phase = st.phase;
-      host.dataset.clean = String(Math.round((1000 * (scene.cleanedDistance - r.enterEnd)) / (r.spiralEnd - r.enterEnd)) / 10);
+      host.dataset.clean = String(Math.round((1000 * ((scene?.cleanedDistance ?? st.clean) - r.enterEnd)) / (r.spiralEnd - r.enterEnd)) / 10);
       host.dataset.left = String(Math.round(shown * 10) / 10);
       host.dataset.pose = `${pose.x.toFixed(1)},${pose.y.toFixed(1)},${((pose.heading * 180) / Math.PI).toFixed(1)}`;
       const sec = Math.max(0, Math.floor(target));
@@ -107,14 +125,14 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
     io?.observe(host);
     const onShow = () => { if (!document.hidden) { display = null; last = performance.now(); } };
     document.addEventListener("visibilitychange", onShow);
-    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => { scene.resize(host.clientWidth || 600, dpr()); });
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => { const w = host.clientWidth || 600; scene?.resize(w, Math.round(w * ASPECT), dpr()); });
     ro?.observe(host);
-    return () => { alive = false; cancelAnimationFrame(raf); clearInterval(slow); io?.disconnect(); ro?.disconnect(); document.removeEventListener("visibilitychange", onShow); };
+    return () => { alive = false; scene?.dispose(); sceneRef.current = null; cancelAnimationFrame(raf); clearInterval(slow); io?.disconnect(); ro?.disconnect(); document.removeEventListener("visibilitychange", onShow); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, home.id, color, mode]);
 
   // a change of logo style swaps the logo on the sheet (and the boards) without restarting anything: the cleaned ice stays as it is
-  const sceneRef = useRef<IceScene | null>(null), lookRef = useRef<Look | null>(null);
+  const sceneRef = useRef<Ice3D | null>(null), lookRef = useRef<Look | null>(null);
   useEffect(() => {
     let alive = true;
     loadImage(logoUrl(home.id)).then((img) => { if (alive && sceneRef.current && lookRef.current && lookRef.current.logo !== img) { lookRef.current = { ...lookRef.current, logo: img }; sceneRef.current.setLook(lookRef.current); } });

@@ -50,9 +50,9 @@ async function measure(dialog: ReturnType<Page["locator"]>) {
   return dialog.evaluate((d) => {
     const dialogW = d.clientWidth;
     const gauges = [...d.querySelectorAll<HTMLElement>(".gauge")].filter((g) => g.getBoundingClientRect().width > 0).map((g) => {
-      const r = g.querySelector("svg")!.getBoundingClientRect(), p = g.parentElement!.getBoundingClientRect(), f = g.getBoundingClientRect();
+      const r = (g.querySelector("svg") ?? g).getBoundingClientRect(), p = g.parentElement!.getBoundingClientRect(), f = g.getBoundingClientRect();
       const max = parseFloat(getComputedStyle(g).getPropertyValue("--gauge-w")), variant = `${g.className} (max ${max})`;
-      return { stretch: g.classList.contains("stretch"), variant, max, svgW: r.width, svgH: r.height, parentW: p.width, figW: f.width, label: g.getAttribute("aria-label")?.slice(0, 30) };
+      return { stretch: g.classList.contains("stretch") || g.classList.contains("proj") || g.classList.contains("sbar"), variant, max, svgW: r.width, svgH: r.height, parentW: p.width, figW: f.width, label: g.getAttribute("aria-label")?.slice(0, 30) };
     });
     return { dialogW, scrollW: d.scrollWidth, gauges };
   });
@@ -73,16 +73,16 @@ for (const width of [390, 360, 320, 1440, 1920]) {
   });
 }
 
-for (const width of [390, 360]) {
-  test(`the two headline dials share one row at ${width}px, each about half the width`, async ({ page }) => {
+// The hero card (after the reference design): projected final score on top, deserved to win beneath, each the full width of the card.
+for (const width of [390, 360, 320]) {
+  test(`the hero card stacks the projected score over deserved to win at ${width}px, both inside the card`, async ({ page }) => {
     const dialog = await openGame(page, width);
     const hero = dialog.getByTestId("deserved-hero");
-    await expect(hero.locator(".gr-model .gauge")).toBeVisible();
-    const [a, b] = await Promise.all([hero.locator(".gr-deserved .gauge").boundingBox(), hero.locator(".gr-model .gauge").boundingBox()]);
-    expect(Math.min(a!.y + a!.height, b!.y + b!.height) - Math.max(a!.y, b!.y), "same row: the dials overlap vertically").toBeGreaterThan(a!.height * 0.8); // a longer heading may sit one dial lower, never in another row
-    expect(a!.x + a!.width).toBeLessThanOrEqual(b!.x + 1); // side by side, not overlapping
-    expect(a!.width).toBeLessThan(width / 2);
-    expect(a!.height).toBeLessThan(200); // not the ~280px-wide, ~250px-tall stacked dials of before
+    await expect(hero.locator(".gr-model .gauge.proj")).toBeVisible();
+    const [card, a, b] = await Promise.all([hero.boundingBox(), hero.locator(".gr-model .gauge").boundingBox(), hero.locator(".gr-deserved .gauge").boundingBox()]);
+    expect(a!.y + a!.height).toBeLessThanOrEqual(b!.y + 1); // stacked
+    for (const r of [a!, b!]) { expect(r.x).toBeGreaterThanOrEqual(card!.x - 0.5); expect(r.x + r.width).toBeLessThanOrEqual(card!.x + card!.width + 0.5); }
+    expect(a!.width).toBeGreaterThan(card!.width * 0.7);
   });
 }
 
@@ -91,12 +91,8 @@ for (const width of [1440, 1920]) {
     const dialog = await openGame(page, width, 1000);
     const m = await measure(dialog);
     for (const g of m.gauges.filter((x) => !x.stretch)) expect(g.svgW, g.label).toBeLessThanOrEqual(Math.min(g.max, EXPANDED) + 0.5); // dials stay capped; a stretch gauge fills its box on purpose
-    const lone = await dialog.evaluate((d) => {
-      const h = d.querySelector<HTMLElement>(".gr-hero")!;
-      const first = h.querySelector<HTMLElement>(".gauge")!;
-      return { stretch: first.classList.contains("stretch"), kids: h.children.length, w: h.getBoundingClientRect().width, g: first.getBoundingClientRect().width };
-    });
-    if (lone.stretch) expect(lone.g, "a stretch gauge fills its share of the hero").toBeGreaterThan(lone.w * 0.3);
-    else expect(lone.g).toBeLessThan(lone.w * (lone.kids === 1 ? 0.5 : 0.7)); // a lone dial is centred and capped, never the whole row
+    // the projected-score dial stays a dial (capped at 360px) however wide the card is; the deserved-to-win bar is meant to fill it
+    const dial = await dialog.locator(".gr-model .gauge.proj svg.pj-dial").boundingBox();
+    expect(dial!.width).toBeLessThanOrEqual(361);
   });
 }

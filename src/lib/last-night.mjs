@@ -44,7 +44,7 @@ export function nightsOf(boxes, { minToi = 8 } = {}) {
     for (const p of box?.players ?? []) {
       if (p.position === "G" || minutes(p.toi) < minToi) continue;
       const { total, parts } = gameScore(p);
-      out.push({ id: p.id, name: p.name, team: p.team, headshot: p.headshot, gameId: box.id, goals: n(p.goals), assists: n(p.assists), shots: n(p.shots), total, parts });
+      out.push({ id: p.id, name: p.name, team: p.team, headshot: p.headshot, gameId: box.id, goals: n(p.goals), assists: n(p.assists), shots: n(p.shots), toi: p.toi ?? null, plusMinus: n(p.plusMinus), pim: n(p.pim), hits: n(p.hits), blocks: n(p.blocks), takeaways: n(p.takeaways), giveaways: n(p.giveaways), total, parts });
     }
   }
   return out.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -69,6 +69,14 @@ export function goalieOfTheNight(mpGames, gameIds, { minShots = 15 } = {}) {
   }
   return best;
 }
+
+/** The box-score line shown when a best or worst night is hovered or focused: label and value pairs, in reading order. */
+/** @param {any} p @returns {[string, string][]} */
+export const statLine = (p) => [
+  ["Time on ice", p.toi ?? "–"], ["Goals", String(p.goals ?? 0)], ["Assists", String(p.assists ?? 0)], ["Shots", String(p.shots ?? 0)],
+  ["Plus-minus", p.plusMinus > 0 ? `+${p.plusMinus}` : String(p.plusMinus ?? 0)], ["Penalty min", String(p.pim ?? 0)],
+  ["Hits", String(p.hits ?? 0)], ["Blocks", String(p.blocks ?? 0)], ["Takeaways", String(p.takeaways ?? 0)], ["Giveaways", String(p.giveaways ?? 0)],
+];
 
 /** A short line under a name: "1G 2A · 2 SOG". */
 export const lineOf = (p) => [p.goals ? `${p.goals}G` : "", p.assists ? `${p.assists}A` : ""].filter(Boolean).join(" ") || "no points";

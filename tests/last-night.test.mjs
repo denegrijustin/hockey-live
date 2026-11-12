@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { lastNightDate, finalsOn, gameScore, nightsOf, bestAndWorst, goalieOfTheNight, lineOf } from "../src/lib/last-night.mjs";
+import { lastNightDate, finalsOn, gameScore, nightsOf, bestAndWorst, goalieOfTheNight, lineOf, statLine } from "../src/lib/last-night.mjs";
 
 const g = (id, date, state = "FINAL", hs = 3, as = 2, end = "REG", start = `${date}T23:00:00Z`) => ({ id, type: 2, date, state, homeScore: hs, awayScore: as, end, start, home: "TOR", away: "BOS" });
 const now = Date.parse("2026-10-25T15:00:00Z"); // 11 a.m. Eastern on the 25th
@@ -48,4 +48,15 @@ test("the goalie of the night has the most goals saved above expected, with enou
   assert.equal(best.name, "D"); // +2.2 beats +1.9; the 6-shot shutout is too small to count
   assert.equal(best.saves, 29);
   assert.equal(goalieOfTheNight(null, [1]), null);
+});
+
+test("a night carries its box-score line, and statLine lists time on ice, penalty minutes and the rest in reading order", () => {
+  const p = { id: 1, name: "A", team: "TOR", position: "C", toi: "18:42", goals: 1, assists: 2, shots: 4, plusMinus: 3, pim: 4, hits: 5, blocks: 1, takeaways: 2, giveaways: 0 };
+  const [night] = nightsOf([{ id: 7, players: [p] }]);
+  const line = Object.fromEntries(statLine(night));
+  assert.equal(line["Time on ice"], "18:42");
+  assert.equal(line["Penalty min"], "4");
+  assert.equal(line["Plus-minus"], "+3");
+  assert.equal(line["Hits"], "5");
+  assert.deepEqual(statLine(night).map(([k]) => k).slice(0, 2), ["Time on ice", "Goals"]);
 });

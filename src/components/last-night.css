@@ -44,3 +44,12 @@
 .ln-flow { margin-top: 16px; } .ln-flow h3 { margin-bottom: 6px; }
 .ln-game .game-recap { margin-top: 18px; }
 @media (max-width: 560px) { .ln-bigscore strong { font-size: 2rem; } .ln-gamehead .ln-side { font-size: 1rem; } .ln-gamehead .ln-side .team-logo { width: 34px; height: 34px; } }
+
+/* Hover / focus / tap: the box-score line behind a best or worst night. */
+.ln-hov { position: relative; cursor: default; }
+.ln-hov:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 2px; }
+.ln-tip { display: none; position: absolute; z-index: 20; left: 8px; right: 8px; top: calc(100% - 4px); padding: 10px 12px; border: 1px solid var(--line, rgba(128,128,128,.35)); border-radius: 10px; background: var(--surface-raised, var(--surface, Canvas)); color: var(--text, CanvasText); box-shadow: 0 8px 24px rgba(0,0,0,.35); font-size: .8125rem; pointer-events: none; }
+.ln-tip b { display: block; margin-bottom: 6px; } .ln-tip b small { color: var(--muted); font-weight: 400; }
+.ln-tip dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 6px 10px; margin: 0; }
+.ln-tip dl div { display: grid; } .ln-tip dt { color: var(--muted); font-size: .6875rem; text-transform: uppercase; letter-spacing: .04em; } .ln-tip dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ln-hov:hover > .ln-tip, .ln-hov:focus > .ln-tip, .ln-hov:focus-within > .ln-tip { display: block; }

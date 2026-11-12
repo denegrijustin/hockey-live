@@ -64,6 +64,34 @@ test("best nights, the goalie of the night, and best and worst with what built e
   await expect(chart.locator(".ln-note")).toContainText("box score");
 });
 
+test("hovering or focusing a best or worst night shows the player's time on ice, penalty minutes and box-score line", async ({ page }) => {
+  await open(page);
+  const box = page.getByTestId("last-night");
+  const worst = box.locator(".ln-chart .ln-group").nth(1).locator("li").first();
+  await expect(worst).toContainText("Mukhamadullin", { timeout: 30000 });
+  const tip = worst.locator(".ln-tip");
+  await expect(tip).toBeHidden();
+  await worst.hover();
+  await expect(tip).toBeVisible();
+  await expect(tip).toContainText("Time on ice");
+  await expect(tip).toContainText("17:00");
+  await expect(tip).toContainText("Penalty min");
+  await expect(tip).toContainText("Giveaways");
+  const pm = tip.locator("div").filter({ hasText: "Plus-minus" });
+  await expect(pm).toContainText("-4");
+  await page.mouse.move(0, 0);
+  await expect(tip).toBeHidden();
+  // keyboard and tap reach it too
+  const best = box.locator(".ln-best li").first();
+  await best.focus();
+  await expect(best.locator(".ln-tip")).toBeVisible();
+  await expect(best.locator(".ln-tip")).toContainText("Time on ice");
+  // the popover stays inside the viewport width
+  const b = await best.locator(".ln-tip").boundingBox();
+  const vw = page.viewportSize()!.width;
+  expect(b!.x).toBeGreaterThanOrEqual(0); expect(b!.x + b!.width).toBeLessThanOrEqual(vw + 1);
+});
+
 test("it has its own tab", async ({ page }) => {
   await open(page, "/");
   await goTo(page, "Last night");

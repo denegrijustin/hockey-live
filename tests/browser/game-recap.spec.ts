@@ -40,7 +40,7 @@ test("an opened live card shows the game recap, filling in from the live feed", 
   await expect(recap).toBeVisible();
   await expect(recap.locator(".mini-heading")).toContainText("Updating as it is played");
   await expect(recap).toHaveAttribute("data-source", "estimate");
-  await expect(recap.locator(".gr-deserved")).toContainText("Deserved to win");
+  await expect(recap.locator(".gr-deserved")).toContainText("Deserved to Win");
   await expect(recap.locator(".gr-race svg")).toBeVisible();
   await expect(recap.locator(".gr-goal")).toHaveCount(2); // both goals are on the race chart
   await expect(recap.locator(".gr-map")).toHaveCount(2);
@@ -128,11 +128,16 @@ test("the Game Center has the shot chart for a live game and for a finished one"
     await expect(section.locator(".gr-map")).toHaveCount(2); // both teams' shot charts
     await expect(section.locator("circle.gr-shot").first()).toBeVisible();
     await expect(section.locator(".gr-deserved")).toBeVisible();
-    // The first thing in the Game Center is the deserved-to-win gauge (stats and flow), not the model's win chance.
+    // The hero card: the projected final score on top (when the model has one), deserved to win beneath it as a split bar.
     const hero = dialog.getByTestId("deserved-hero");
     await expect(hero).toBeVisible();
-    await expect(hero.locator(".gauge").first()).toHaveAttribute("aria-label", /^Deserved to win:/);
-    if (g === live) await expect(hero.locator(".gr-model .gauge")).toHaveAttribute("aria-label", /^(Projected final score|Model win chance)/); // beside it, in one row (a game with no season table yet has no model to show)
+    await expect(hero.locator(".gr-deserved .gauge")).toHaveAttribute("aria-label", /^Deserved to win:/);
+    await expect(hero.locator(".gr-deserved .gauge.sbar")).toBeVisible();
+    if (g === live) {
+      await expect(hero.locator(".gr-model .gauge")).toHaveAttribute("aria-label", /^(Projected final score|Model win chance)/); // a game with no season table yet has no model to show
+      const [m, d] = await Promise.all([hero.locator(".gr-model").boundingBox(), hero.locator(".gr-deserved").boundingBox()]);
+      expect(m!.y + m!.height, "the projection sits above deserved to win").toBeLessThanOrEqual(d!.y + 1);
+    }
     await expect(dialog.locator('.projection .gauge[aria-label^="Estimated win chance"]')).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);

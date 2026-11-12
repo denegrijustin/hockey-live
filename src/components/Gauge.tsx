@@ -63,11 +63,81 @@ function StretchDial({ away, home, share, shown, label, text, shownA, shownH, aw
   );
 }
 
+/** Black or white, whichever reads on the team colour behind the number. */
+function inkOn(hex: string) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return "#fff";
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? "#10151c" : "#fff";
+}
+
+/**
+ * Projected final score: a half-circle dial that splits at the win chance (away colour from the left, home from the right), a needle that leans toward the
+ * higher side and grows as it leans, and each team's logo tile with its big number and win probability beside it.
+ */
+function ProjDial({ away, home, share, shown, label, text, shownA, shownH, awaySub, homeSub, colors, leader }: {
+  away: string; home: string; share: number; shown: number; label: string; text: string; shownA: string; shownH: string; awaySub?: string; homeSub?: string;
+  colors: { away: string; home: string }; leader: string;
+}) {
+  const C = 120, R = 100, W = 15;
+  const pt = (f: number, ph: number) => ({ x: C + f * R * Math.cos(ph), y: C - f * R * Math.sin(ph) });
+  const arc = (from: number, to: number, r = R) => { const a = pt(r / R, from), b = pt(r / R, to); return `M${a.x.toFixed(1)} ${a.y.toFixed(1)}A${r} ${r} 0 0 ${to < from ? 1 : 0} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`; };
+  const split = Math.PI * (1 - shown);                       // the away colour runs from the left end (pi) down to here
+  const lean = (shown - 0.5) * 2, lop = Math.min(1, Math.abs(lean));
+  const phi = Math.PI / 2 + lean * ((72 * Math.PI) / 180);   // toward the higher side
+  const tip = pt(0.4 + 0.52 * lop, phi);
+  const gap = 0.018;
+  const ticks = Array.from({ length: 9 }, (_, i) => Math.PI * (1 - i / 8));
+  return (
+    <figure className="gauge proj" data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
+      <div className="pj-row">
+        <div className="pj-side away">
+          <span className="pj-tile"><TeamLogo id={away} size={44} /></span>
+          <span className="pj-val"><b>{shownA}</b>{awaySub && <i>{awaySub}</i>}{awaySub && <small>Win Probability</small>}</span>
+        </div>
+        <svg className="pj-dial" viewBox="0 0 240 132" aria-hidden="true">
+          <path d={arc(Math.PI, 0)} className="pj-track" strokeWidth={W + 2} />
+          {split < Math.PI - 0.01 && <path d={arc(Math.PI, Math.min(Math.PI, split + gap))} className="pj-away" strokeWidth={W} style={{ stroke: colors.away }} />}
+          {split > 0.01 && <path d={arc(Math.max(0, split - gap), 0)} className="pj-home" strokeWidth={W} style={{ stroke: colors.home }} />}
+          {ticks.map((a, i) => { const p1 = pt(0.78, a), p2 = pt(i % 4 === 0 ? 0.64 : 0.7, a); return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} className="pj-tick" />; })}
+          <line x1={C} y1={C} x2={tip.x} y2={tip.y} className="pj-needle" />
+          <circle cx={C} cy={C} r="7" className="pj-hub" />
+        </svg>
+        <div className="pj-side home">
+          <span className="pj-val"><b>{shownH}</b>{homeSub && <i>{homeSub}</i>}{homeSub && <small>Win Probability</small>}</span>
+          <span className="pj-tile"><TeamLogo id={home} size={44} /></span>
+        </div>
+      </div>
+    </figure>
+  );
+}
+
+/** Deserved to win: one split bar, each team's share in its own colour with the number inside, an Even mark in the middle. */
+function SplitBar({ away, home, share, label, text, shownA, shownH, colors, leader }: {
+  away: string; home: string; share: number; label: string; text: string; shownA: string; shownH: string; colors: { away: string; home: string }; leader: string;
+}) {
+  const a = Math.max(0.04, Math.min(0.96, share));
+  return (
+    <figure className="gauge sbar" data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home, "--ink-away": inkOn(colors.away), "--ink-home": inkOn(colors.home) } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>
+      <div className="spl-row">
+        <span className="spl-team"><TeamLogo id={away} size={32} /><b>{away}</b></span>
+        <div className="spl-track">
+          <span className="spl-a" style={{ flexGrow: a * 1000 }}><i>{shownA}</i></span>
+          <span className="spl-h" style={{ flexGrow: (1 - a) * 1000 }}><i>{shownH}</i></span>
+          <u className="spl-mid" aria-hidden="true" />
+        </div>
+        <span className="spl-team home"><b>{home}</b><TeamLogo id={home} size={32} /></span>
+      </div>
+      <span className="spl-even">Even</span>
+    </figure>
+  );
+}
+
 /**
  * A gas-gauge dial for a two-sided number: the away side fills from the left, the home side from the right, and the needle points
  * at the split. Used for "deserved to win" and for every head-to-head stat, so they all read the same way.
  */
-export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "compact", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle, stretch = false }: {
+export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "compact", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle, stretch = false, look }: {
   away: number; home: number; awayId: string; homeId: string; label: string; format?: (v: number) => string; percent?: boolean; size?: GaugeSize;
   /** For numbers that are not shares of a total (a save percentage, goals against): the gap that swings the needle all the way. */
   span?: number; lowerBetter?: boolean; awayText?: string; homeText?: string;
@@ -77,6 +147,8 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   needle?: number;
   /** A horizontal gauge instead of the dial: its length grows with how lopsided the two numbers are (shortest at 50/50, full width when one side has it all). */
   stretch?: boolean;
+  /** "proj": the projected-final-score dial with logo tiles and big numbers; "bar": the deserved-to-win split bar. */
+  look?: "proj" | "bar";
 }) {
   const total = away + home;
   // The away side's share, 0..1. Counts split by their total; rates by how far apart they are.
@@ -97,6 +169,8 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   const text = `${awayId} ${shownA}${awaySub ? ` (${awaySub})` : ""}, ${homeId} ${shownH}${homeSub ? ` (${homeSub})` : ""}`;
   const colors = gaugeColors(awayId, homeId);
   const leader = share > 0.52 ? "away" : share < 0.48 ? "home" : "even";
+  if (look === "proj") return <ProjDial away={awayId} home={homeId} share={share} shown={shown} label={label} text={text} shownA={shownA} shownH={shownH} awaySub={awaySub} homeSub={homeSub} colors={colors} leader={leader} />;
+  if (look === "bar") return <SplitBar away={awayId} home={homeId} share={share} label={label} text={text} shownA={shownA} shownH={shownH} colors={colors} leader={leader} />;
   if (stretch) return <StretchDial away={awayId} home={homeId} share={share} shown={shown} label={label} text={text} shownA={shownA} shownH={shownH} awaySub={awaySub} homeSub={homeSub} colors={colors} leader={leader} variant={variant} />;
   return (
     <figure className={`gauge ${big ? "lg" : "sm"} ${variant}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties} role="img" aria-label={`${label}: ${text}`}>

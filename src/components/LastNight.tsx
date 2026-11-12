@@ -3,7 +3,7 @@ import { useFeed } from "../lib/polling";
 import type { Boxscore, Game, GameFeed, Team } from "../types";
 import { loadBox } from "../lib/api";
 import { useMoneyPuck } from "../lib/moneypuck-client";
-import { bestAndWorst, finalsOn, goalieOfTheNight, lastNightDate, lineOf, nightsOf } from "../lib/last-night.mjs";
+import { bestAndWorst, finalsOn, goalieOfTheNight, lastNightDate, lineOf, nightsOf, statLine } from "../lib/last-night.mjs";
 import { Skeleton } from "./Skeleton";
 import { GameRecap } from "./GameRecap";
 import { CompactGameFlow } from "./GameData";
@@ -21,6 +21,16 @@ function Face({ src, name, size = 44 }: { src?: string; name: string; size?: num
   return src && !bad
     ? <img className="ln-face" src={src} alt="" width={size} height={size} loading="lazy" decoding="async" onError={() => setBad(true)} />
     : <span className="ln-face ln-ph" style={{ width: size, height: size }} aria-hidden="true">{initials(name)}</span>;
+}
+
+/** The player's box-score line, shown on hover, keyboard focus or tap of a best or worst night. */
+function Tip({ n, id }: { n: Night; id: string }) {
+  return (
+    <span className="ln-tip" role="tooltip" id={id}>
+      <b>{n.name} <small>{n.team}</small></b>
+      <dl>{statLine(n).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+    </span>
+  );
 }
 
 /** One night as a bar that starts at zero: what added to the score goes right, what took away goes left. */
@@ -58,11 +68,12 @@ function NightsChart({ best, worst, title }: { best: Night[]; worst: Night[]; ti
               <h4>{title}<span>Game score</span></h4>
               <ol>
                 {rows.map((n) => (
-                  <li key={`${title}${n.gameId}-${n.id}`}>
+                  <li key={`${title}${n.gameId}-${n.id}`} className="ln-hov" tabIndex={0} aria-describedby={`tip-${title}-${n.gameId}-${n.id}`} data-player={n.id}>
                     <Face src={n.headshot} name={n.name} size={36} />
                     <span className="ln-who"><b>{n.name}</b><small>{n.team} · {lineOf(n)}</small></span>
                     <Bar n={n} left={left} right={right} />
                     <strong className={`ln-gs ${n.total >= 0 ? "pos" : "neg"}`}>{signed(n.total)}</strong>
+                    <Tip n={n} id={`tip-${title}-${n.gameId}-${n.id}`} />
                   </li>
                 ))}
               </ol>
@@ -123,10 +134,11 @@ export function LastNight({ games, teams, season, current = true }: { games: Gam
           {boxes === null ? <Skeleton rows={3} label="Loading the box scores" /> : best.length ? (
             <ol>
               {best.map((n) => (
-                <li key={`${n.gameId}-${n.id}`} data-player={n.id}>
+                <li key={`${n.gameId}-${n.id}`} data-player={n.id} className="ln-hov" tabIndex={0} aria-describedby={`tip-best-${n.gameId}-${n.id}`}>
                   <Face src={n.headshot} name={n.name} />
                   <span className="ln-who"><b>{n.name}</b><small>{n.team} · {lineOf(n)}{n.shots ? ` · ${n.shots} SOG` : ""}</small></span>
                   <strong className="ln-gs pos">{signed(n.total)}</strong>
+                  <Tip n={n} id={`tip-best-${n.gameId}-${n.id}`} />
                 </li>
               ))}
             </ol>

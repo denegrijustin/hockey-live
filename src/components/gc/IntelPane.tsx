@@ -4,6 +4,8 @@ import { useGameCenter } from "./GameCenterContext";
 import { useLeagueMatchups } from "../useLeagueMatchups";
 import { TeamLink } from "../TeamProfile";
 import { BASIS_HELP, BASIS_LABEL, buildIntel, intelPhase } from "../../lib/game-intel.mjs";
+import { Icon } from "../icons";
+import { IntelVisuals } from "./IntelVisuals";
 import "./intel.css";
 
 /**
@@ -26,6 +28,7 @@ export type IntelPaneProps = {
 };
 
 type Item = { id: string; kind: string; phase: "pre" | "live" | "post"; priority: number; text: string; detail: string; basis: "official" | "derived" | "historical" | "projection"; link?: { team?: string; section?: string } };
+const KIND_ICON: Record<string, "trends" | "edge" | "standings" | "picks"> = { flow: "trends", special: "edge", standings: "standings", stakes: "picks" };
 const GROUPS = { pre: "Pregame", live: "Live", post: "Postgame" } as const;
 
 export default function IntelPane({ before = null, teams = [], allGames = [], matchups, exclude = [] }: IntelPaneProps) {
@@ -54,18 +57,22 @@ export default function IntelPane({ before = null, teams = [], allGames = [], ma
       {needsFeed && <p className="gc-intel-note" role="status">Loading play-by-play...</p>}
       {error && !feed && (phase === "live" || phase === "post") && <p className="gc-intel-note" role="status">Play-by-play is unavailable right now, so goal-flow facts are left out.</p>}
       {live && stale && <p className="gc-intel-note" role="status">Live data may be out of date; the facts below are from the last update.</p>}
+      <IntelVisuals game={game} before={before} snapshot={snapshot} teams={teams} plays={plays} phase={phase} />
       {groups.map((g) => (
         <section key={g} className="gc-intel-group" aria-labelledby={`gc-intel-${g}`} data-group={g}>
           <h3 id={`gc-intel-${g}`}>{GROUPS[g]}</h3>
           <ul>
             {items.filter((i) => i.phase === g).map((i) => (
               <li key={i.id} className="gc-intel-item" data-intel-id={i.id} data-kind={i.kind} data-basis={i.basis}>
-                <p className="gc-intel-text">
-                  <span>{i.text}</span>
-                  <span className={`gc-basis gc-basis-${i.basis}`} title={BASIS_HELP[i.basis as keyof typeof BASIS_HELP]}>{BASIS_LABEL[i.basis as keyof typeof BASIS_LABEL]}</span>
-                </p>
-                <p className="gc-intel-detail">{i.detail}</p>
-                <Links item={i} lens={lens} name={names} />
+                <details className="gc-intel-how">
+                  <summary className="gc-intel-text">
+                    <span className="gc-intel-icon" aria-hidden="true"><Icon name={KIND_ICON[i.kind] ?? "trends"} size={16} /></span>
+                    <span>{i.text}</span>
+                    <span className={`gc-basis gc-basis-${i.basis}`} title={BASIS_HELP[i.basis as keyof typeof BASIS_HELP]}>{BASIS_LABEL[i.basis as keyof typeof BASIS_LABEL]}</span>
+                  </summary>
+                  <p className="gc-intel-detail">{i.detail}</p>
+                  <Links item={i} lens={lens} name={names} />
+                </details>
               </li>
             ))}
           </ul>
@@ -73,11 +80,13 @@ export default function IntelPane({ before = null, teams = [], allGames = [], ma
       ))}
       {noGoals && <p className="gc-intel-note" role="status">{items.length ? "No goals yet, so there is no goal-flow to report." : "No goals in the play-by-play, so there is no goal-flow to report."}</p>}
       {groups.length === 0 && !needsFeed && phase !== null && !noGoals && <p className="gc-intel-note" role="status">Nothing to add beyond what the sections above show.</p>}
+      <details className="gc-intel-legend-wrap"><summary>What the labels mean</summary>
       <dl className="gc-intel-legend" aria-label="What the labels mean">
         {(Object.keys(BASIS_LABEL) as (keyof typeof BASIS_LABEL)[]).filter((b) => used.has(b) || !items.length).map((b) => (
           <div key={b}><dt className={`gc-basis gc-basis-${b}`}>{BASIS_LABEL[b]}</dt><dd>{BASIS_HELP[b]}</dd></div>
         ))}
       </dl>
+      </details>
     </section>
   );
 }

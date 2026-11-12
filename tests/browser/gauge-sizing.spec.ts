@@ -52,7 +52,7 @@ async function measure(dialog: ReturnType<Page["locator"]>) {
     const gauges = [...d.querySelectorAll<HTMLElement>(".gauge")].filter((g) => g.getBoundingClientRect().width > 0).map((g) => {
       const r = g.querySelector("svg")!.getBoundingClientRect(), p = g.parentElement!.getBoundingClientRect(), f = g.getBoundingClientRect();
       const max = parseFloat(getComputedStyle(g).getPropertyValue("--gauge-w")), variant = `${g.className} (max ${max})`;
-      return { variant, max, svgW: r.width, svgH: r.height, parentW: p.width, figW: f.width, label: g.getAttribute("aria-label")?.slice(0, 30) };
+      return { stretch: g.classList.contains("stretch"), variant, max, svgW: r.width, svgH: r.height, parentW: p.width, figW: f.width, label: g.getAttribute("aria-label")?.slice(0, 30) };
     });
     return { dialogW, scrollW: d.scrollWidth, gauges };
   });
@@ -64,8 +64,9 @@ for (const width of [390, 360, 320, 1440, 1920]) {
     const m = await measure(dialog);
     expect(m.gauges.length).toBeGreaterThan(1);
     for (const g of m.gauges) {
-      expect(g.svgW, `${g.label} svg vs variant ${g.variant}`).toBeLessThanOrEqual(Math.min(g.max, EXPANDED) + 0.5);
       expect(g.figW, `${g.label} figure vs parent`).toBeLessThanOrEqual(g.parentW + 0.5);
+      if (g.stretch) { expect(g.svgW, `${g.label} stretch gauge stays inside its figure`).toBeLessThanOrEqual(g.figW + 0.5); continue; } // a stretch gauge fills its parent by design
+      expect(g.svgW, `${g.label} svg vs variant ${g.variant}`).toBeLessThanOrEqual(Math.min(g.max, EXPANDED) + 0.5);
       expect(g.svgH / g.svgW).toBeCloseTo(146 / 200, 1); // aspect is kept
     }
     expect(m.scrollW).toBeLessThanOrEqual(m.dialogW + 1);
@@ -89,11 +90,13 @@ for (const width of [1440, 1920]) {
   test(`no dial fills a wide row on its own at ${width}px`, async ({ page }) => {
     const dialog = await openGame(page, width, 1000);
     const m = await measure(dialog);
-    for (const g of m.gauges) expect(g.svgW, g.label).toBeLessThanOrEqual(Math.min(g.max, EXPANDED) + 0.5);
+    for (const g of m.gauges.filter((x) => !x.stretch)) expect(g.svgW, g.label).toBeLessThanOrEqual(Math.min(g.max, EXPANDED) + 0.5); // dials stay capped; a stretch gauge fills its box on purpose
     const lone = await dialog.evaluate((d) => {
       const h = d.querySelector<HTMLElement>(".gr-hero")!;
-      return { kids: h.children.length, w: h.getBoundingClientRect().width, g: h.querySelector(".gauge")!.getBoundingClientRect().width };
+      const first = h.querySelector<HTMLElement>(".gauge")!;
+      return { stretch: first.classList.contains("stretch"), kids: h.children.length, w: h.getBoundingClientRect().width, g: first.getBoundingClientRect().width };
     });
-    expect(lone.g).toBeLessThan(lone.w * (lone.kids === 1 ? 0.5 : 0.7)); // a lone dial is centred and capped, never the whole row
+    if (lone.stretch) expect(lone.g, "a stretch gauge fills its share of the hero").toBeGreaterThan(lone.w * 0.3);
+    else expect(lone.g).toBeLessThan(lone.w * (lone.kids === 1 ? 0.5 : 0.7)); // a lone dial is centred and capped, never the whole row
   });
 }

@@ -204,8 +204,9 @@ test("gauges are drawn in the two teams' own colours, told apart and visible on 
   await page.locator(`.sb-row[data-game="${live.id}"] .sb-main`).click();
   const gauge = page.locator("dialog.game-dialog").getByTestId("game-recap").locator(".gauge").first();
   await expect(gauge).toBeVisible();
-  const rgb = async (sel: string) => (await gauge.locator(sel).evaluate((e) => getComputedStyle(e).stroke)).match(/\d+/g)!.map(Number);
-  const [away, home] = [await rgb(".gauge-away"), await rgb(".gauge-home")];
+  // Each team's colour is set on the gauge (--g-away / --g-home); the stretch gauge rings each end logo with it and draws the needle and arc in the leader's.
+  const hex = async (v: string) => { const h = (await gauge.evaluate((e, n) => getComputedStyle(e).getPropertyValue(n).trim(), v)).replace("#", ""); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
+  const [away, home] = [await hex("--g-away"), await hex("--g-home")];
   expect(away[0]).toBeGreaterThan(180); // Boston: its gold, not the black jersey that would vanish on a dark page
   expect(away[2]).toBeLessThan(120);
   expect(home[2]).toBeGreaterThan(home[0]); // Toronto: its blue, lifted so it shows

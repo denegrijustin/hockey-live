@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
 import { filterGames, selectAllTeams } from "./controls";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
@@ -187,4 +188,21 @@ test("when the feed says play has started the ice-preparation rink is replaced b
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: today(), games: [{ ...base, date: today(), state: "LIVE", period: 1, periodType: "REG", intermission: false, clock: "19:30" }] } }));
   await page.reload();
   await expect(page.locator(`.sb-row[data-game="${base.id}"]`).getByTestId("intermission")).toHaveCount(0);
+});
+
+// The site is served with a strict Content-Security-Policy (public/_headers) that the test server does not apply. The 3D rink needs WebAssembly (model decoder) and blob: (its textures).
+test("under the production Content-Security-Policy the 3D rink still starts", async ({ page }) => {
+  const csp = /Content-Security-Policy:\s*(.+)/.exec(readFileSync("public/_headers", "utf8"))![1].trim();
+  const consoleErrors: string[] = [];
+  page.on("console", (m) => { if (m.type() === "error") consoleErrors.push(m.text()); });
+  await page.route("**/*", async (route) => {
+    if (route.request().resourceType() !== "document") return route.fallback();
+    const res = await route.fetch();
+    await route.fulfill({ response: res, headers: { ...res.headers(), "content-security-policy": csp } });
+  });
+  await open(page, { intermission: true, clock: "12:00" });
+  await settled(page);
+  test.skip((await rink(page).getAttribute("data-render")) === "none" && consoleErrors.every((e) => !/Content Security Policy/.test(e)), "no WebGL in this browser");
+  expect(consoleErrors.filter((e) => /Content Security Policy/.test(e)), "nothing the rink needs is blocked").toEqual([]);
+  await expect(rink(page)).toHaveAttribute("data-render", "webgl");
 });

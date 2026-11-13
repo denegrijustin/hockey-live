@@ -28,16 +28,27 @@ function SplitRow({ label, away, home, awayId, homeId, span, lowerBetter, format
   );
 }
 
-/** One row of the rank comparison: the offense's league rank against the defense's, big at the sides, a bar split by the rank gap, "+N RANKS" on the split. */
+/** How strong a side is in this matchup row, from its league rank (first of the pool is the most). */
+const strength = (m: RankedMatchupMetric | null) => (m?.rank == null || m.pool == null ? 0 : m.pool - m.rank + 1);
+
+/** One row of the rank comparison: the offense's league rank against the defense's, big at the sides, a bar split by the rank gap. */
 function CrossRow({ offense, defense, offenseTeam, defenseTeam }: { offense: RankedMatchupMetric | null; defense: RankedMatchupMetric | null; offenseTeam: Team; defenseTeam: Team }) {
   const gap = offense?.rank != null && defense?.rank != null ? defense.rank - offense.rank : null; // positive: the offense is ranked better
   const pool = Math.max(2, offense?.pool ?? defense?.pool ?? 32);
-  const share = gap == null || Math.abs(gap) <= 0 ? 0.5 : 0.5 + (Math.sign(gap) * 0.47 * Math.min(1, Math.abs(gap) / (pool - 1)));
+  const share = gap == null || gap === 0 ? 0.5 : 0.5 + (Math.sign(gap) * 0.47 * Math.min(1, Math.abs(gap) / (pool - 1)));
+  // the same split of rank strengths the old dial used, so the leader flag and label carry over unchanged
+  const a = strength(offense), d = strength(defense), lead = a + d > 0 ? a / (a + d) : 0.5;
+  const leader = lead > 0.52 ? "away" : lead < 0.48 ? "home" : "even";
+  const metric = offense?.label?.replace(" scored", "") ?? "Metric";
   const side = (m: RankedMatchupMetric | null, team: Team, role: string) => {
     const tier = rankBadge(m);
     return { id: team.id, big: m?.rank == null ? "—" : `${m.tied ? "T" : ""}#${m.rank}`, sub: <>{m?.label ?? "Unavailable"} ({role})<br />{displayValue(m)}</>, tier: tier as { tone: "good" | "bad"; label: string } | null };
   };
-  return <Versus away={side(offense, offenseTeam, "Offense")} home={side(defense, defenseTeam, "Defense")} share={share} label={offense?.label?.replace(" scored", "").replace(" / Game", "") ?? "Metric"} />;
+  return (
+    <figure className="gauge versus stretch" data-leader={leader} role="img" aria-label={`${metric}: ${offenseTeam.id} ${displayValue(offense)}, ${defenseTeam.id} ${displayValue(defense)}`} style={{ margin: 0 }}>
+      <Versus away={side(offense, offenseTeam, "Offense")} home={side(defense, defenseTeam, "Defense")} share={share} label={metric.replace(" / Game", "")} />
+    </figure>
+  );
 }
 
 function Crossover({ offenseTeam, defenseTeam, snapshot }: {

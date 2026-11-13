@@ -79,7 +79,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
   const viewRef = useRef(view); viewRef.current = view;
   const canvas = useRef<HTMLCanvasElement>(null);
   const root = useRef<HTMLElement>(null);
-  const kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
+  const tagRef = useRef<HTMLDivElement>(null), kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
   const gameRef = useRef(game); gameRef.current = game;
   const teams = useRef({ home, away }); teams.current = { home, away };
   const session = sessionKey(mode, game.id, game.period);
@@ -135,6 +135,15 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       display = shown;
       const st = stateAt(shown, total);
       scene?.render(st);
+      // in the whole-rink view the lettering on the machine is too small to read, so a label rides above it
+      const tag = tagRef.current, at = scene?.machineAt;
+      if (tag) {
+        if (viewRef.current === "overview" && at) {
+          const cw = el.clientWidth || at.w, ch = el.clientHeight || at.h, mx = (at.x / at.w) * cw, my = (at.y / at.h) * ch; // the picture is shown at its CSS size, which is capped on wide screens
+          const half = tag.offsetWidth / 2 || 70, x = Math.max(half + 4, Math.min(cw - half - 4, mx)), y = Math.max(tag.offsetHeight + 8, Math.min(ch, my) - 12);
+          tag.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`; tag.hidden = false;
+        } else tag.hidden = true;
+      }
       // what the animation is showing, for tests and for anyone inspecting it
       const r = route(), pose = poseAt(st.s);
       host.dataset.phase = st.phase;
@@ -196,6 +205,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       </div>
       <div className="ice-stage">
         <canvas ref={canvas} className="ice-canvas" aria-hidden="true" data-logos={logos} />
+        <div className="ice-tag" ref={tagRef} hidden aria-hidden="true"><img src="/logos/kc-scouts.png" alt="" width="20" height="20" /><span>BRING <b>NHL</b> TO KC</span></div>
         <button type="button" className="ice-view-btn" aria-label={view === "follow" ? "Show the whole rink" : "Show the close-up that follows the Zamboni"} onClick={() => setView(view === "follow" ? "overview" : "follow")}>
           <span aria-hidden="true">{view === "follow" ? "⤢ Full rink" : "⌖ Close-up"}</span>
         </button>

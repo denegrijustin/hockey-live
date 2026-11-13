@@ -103,3 +103,31 @@ test("20,000 sims over a full remaining slate finish well under 3 s", () => {
   assert.ok(r.remainingGames > 1200);
   assert.ok(ms < 3000);
 });
+
+test("the playoff rounds: 16 teams, 8 win round 1, 4 win round 2, 2 win the conference, 1 wins the Cup; only a playoff team can advance", () => {
+  const t = tableOf(replay.filter((g) => g.type === 2));
+  const r = simulatePlayoffs({ games: replay, teams, table: t, sims: 6000, seed: 3 });
+  const sum = (k) => Object.values(r.teams).reduce((x, o) => x + o[k], 0);
+  assert.ok(Math.abs(sum("pPlayoffs") - 1600) < 1e-6);
+  assert.ok(Math.abs(sum("pRound2") - 800) < 1e-6);
+  assert.ok(Math.abs(sum("pRound3") - 400) < 1e-6);
+  assert.ok(Math.abs(sum("pFinal") - 200) < 1e-6);
+  assert.ok(Math.abs(sum("pCup") - 100) < 1e-6);
+  for (const o of Object.values(r.teams)) {
+    // each round is reached only from the one before, so the chances can only fall
+    assert.ok(o.pRound2 <= o.pPlayoffs + 1e-9 && o.pRound3 <= o.pRound2 + 1e-9 && o.pFinal <= o.pRound3 + 1e-9 && o.pCup <= o.pFinal + 1e-9);
+  }
+  // each conference sends exactly one team to the Final
+  for (const c of ["E", "W"]) assert.ok(Math.abs(teams.filter((x) => x.conference === c).reduce((x, tm) => x + r.teams[tm.id].pFinal, 0) - 100) < 1e-6);
+});
+
+test("a stronger team is likelier to win the Cup; the same seed gives the same answer; a league that is not two conferences of two divisions has no rounds", () => {
+  const t = tableOf(replay.filter((g) => g.type === 2));
+  const a = simulatePlayoffs({ games: replay, teams, table: t, sims: 4000, seed: 5 }), b = simulatePlayoffs({ games: replay, teams, table: t, sims: 4000, seed: 5 });
+  assert.deepEqual(a.teams.COL, b.teams.COL);
+  const ids = Object.keys(a.teams), byPts = [...ids].sort((x, y) => t[y].pts - t[x].pts), best = byPts.slice(0, 4), worst = byPts.slice(-8);
+  const avg = (xs) => xs.reduce((s, id) => s + a.teams[id].pCup, 0) / xs.length;
+  assert.ok(avg(best) > avg(worst) * 3, "the top four by points are far likelier to win it than the bottom eight");
+  const toy = simulatePlayoffs({ games: [], teams: [{ id: "X", conference: "E", division: "A" }, { id: "Y", conference: "W", division: "B" }], table: {}, sims: 50, seed: 1 });
+  assert.equal(toy.teams.X.pCup, null);
+});

@@ -8,9 +8,10 @@ import { TeamLogo } from "./TeamLogo";
 import { TeamLink } from "./TeamProfile";
 import { PageHeader } from "./PageHeader";
 import { Icon } from "./icons";
+import { PlayoffWheel } from "./PlayoffWheel";
 
 const SIMS = 20000;
-type TeamOdds = { pPlayoffs: number; pDivision: number[]; pWildCard: number[]; pConferenceFirst: number; pPresidents: number; expPts: number };
+type TeamOdds = { pPlayoffs: number; pDivision: number[]; pWildCard: number[]; pConferenceFirst: number; pPresidents: number; expPts: number; pRound2: number | null; pRound3: number | null; pFinal: number | null; pCup: number | null };
 type Metric = "make" | "div" | "conf" | "pres";
 const METRICS: { id: Metric; label: string; short: string; get: (x: TeamOdds) => number; blurb: string }[] = [
   { id: "make", label: "Make the playoffs", short: "Make it", get: (x) => x.pPlayoffs, blurb: "Division spot or wild card: eight teams a conference get in." },
@@ -98,6 +99,13 @@ export function PlayoffOdds({ teams, games, table, baseline, season }: { teams: 
           </div>
         </div>
         <p className="po-blurb" aria-live="polite">{m.blurb} Tap a team for every number.</p>
+        {result && Object.values<any>(result.teams).some((x) => x.pCup != null) && (
+          <section className="po-wheel-sec" aria-label="Path to the Stanley Cup">
+            <h2>Path to the Cup</h2>
+            <p className="po-blurb">Every team’s chance to get in and to win each round. Simulated from the regular-season standings; series already played are not counted.</p>
+            <PlayoffWheel teams={teams} odds={result.teams} initial={myTeam} />
+          </section>
+        )}
         {!result && <div className="po-skel" aria-hidden="true">{Array.from({ length: 8 }, (_, i) => <i key={i} />)}</div>}
         {result && (
           <div className={`po-confs${shown.length === 1 ? " one" : ""}`} ref={listRef}>

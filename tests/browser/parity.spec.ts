@@ -62,6 +62,24 @@ test("Playoff odds is interactive: a row opens to every number, the filters re-r
   await expect(page.getByTestId("po-grid-W").locator(".po-row")).toHaveCount(16);
 });
 
+for (const width of [360, 1280]) {
+  test(`Playoff wheel at ${width}px: 32 wedges, five rings each, tap shows that team's path, no sideways scroll`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?view=games");
+    await goTo(page, "Playoff odds");
+    const wheel = page.getByTestId("playoff-wheel");
+    await expect(wheel).toBeVisible({ timeout: 30000 });
+    await expect(wheel.locator(".pw-wedge")).toHaveCount(32);
+    await expect(wheel.locator(".pw-wedge").first().locator(".pw-cell")).toHaveCount(5);
+    await wheel.locator('.pw-wedge[data-team="COL"]').click({ force: true });
+    await expect(wheel.locator(".pw-detail h3")).toContainText(/Colorado/);
+    await expect(wheel.locator(".pw-rows li")).toHaveCount(5);
+    const w = await wheel.locator(".pw-svg").boundingBox();
+    expect(w!.width).toBeGreaterThanOrEqual(Math.min(width - 80, 280));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
+
 test("Imperialism map renders, time-travels and opens a region card", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));

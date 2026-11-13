@@ -1,7 +1,7 @@
 // Imperialism Map engine. Pure functions, no DOM and no JSON imports (Node-testable).
 // Rules: week 0 = nearest-arena split. Each finished regular-season/playoff game (in start order):
 // the loser's ENTIRE current land goes to the winner. A landless loser transfers nothing; a landless
-// winner beating a land-holder takes all of that team's land. Only games between two teams in the layer count.
+// winner (one with no land of its own) beating a land-holder takes all of that team's land. Only games between two teams in the layer count.
 
 const R = 6371.0088;
 const rad = Math.PI / 180;
@@ -87,12 +87,13 @@ export function buildImperialism({ games, teams, arenas, cells, layer = "full" }
       const homeWon = g.homeScore > g.awayScore;
       const winner = homeWon ? g.home : g.away, loser = homeWon ? g.away : g.home;
       const w = idx.get(winner), l = idx.get(loser);
-      const moved = land[l];
+      const moved = land[l], winnerHeld = land[w].length;
       for (const c of moved) owner[c] = w;
       for (const c of moved) land[w].push(c);
       land[l] = [];
       const hi = Math.max(g.homeScore, g.awayScore), lo = Math.min(g.homeScore, g.awayScore);
-      ledger.push({ week, game: g.id, date: g.date, winner, loser, score: `${hi}-${lo}`, end: g.end ?? null, transferred: moved.slice().sort((a, b) => a - b) });
+      // gained: cells the win moved; winnerHeld: what the winner ruled before the game; revived: a team with no land at all that took the loser's land
+      ledger.push({ week, game: g.id, date: g.date, winner, loser, score: `${hi}-${lo}`, end: g.end ?? null, transferred: moved.slice().sort((a, b) => a - b), gained: moved.length, winnerHeld, revived: winnerHeld === 0 && moved.length > 0 });
     }
     close();
   }

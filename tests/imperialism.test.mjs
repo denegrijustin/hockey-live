@@ -115,3 +115,11 @@ for (const layer of ["full", "east", "west"]) {
     console.log(`final top-5 (${layer}, ${r.ledger.length} games, ${r.weeks.length - 1} weeks):`, top.map(([t, n]) => `${t} ${n}`).join(", "));
   });
 }
+
+test("the ledger says what each win did: cells gained, what the winner held before, and whether a team with no land at all took land", () => {
+  const r = run([game("AAA", "BBB", 3, 1), game("CCC", "BBB", 2, 1), game("BBB", "AAA", 4, 2)]);
+  assert.equal(r.ledger[0].gained, 2); assert.equal(r.ledger[0].winnerHeld, 2); assert.equal(r.ledger[0].revived, false);   // AAA 2 cells takes BBB's 2
+  assert.equal(r.ledger[1].gained, 0); assert.equal(r.ledger[1].revived, false);                                           // BBB has no land: nothing to take
+  assert.equal(r.ledger[2].gained, 4); assert.equal(r.ledger[2].winnerHeld, 0); assert.equal(r.ledger[2].revived, true);    // BBB, with no land, takes all of AAA's 4
+  assert.equal(r.ledger[2].gained, r.ledger[2].transferred.length);
+});

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+type LedgerRow = { week: number; game: number; winner: string; loser: string; score: string; end: string | null; gained: number; winnerHeld: number; revived: boolean };
 import { motionOff } from "../motion";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { Delaunay } from "d3-delaunay";
@@ -260,6 +261,9 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
     return { ranked, landless: wk.landless as string[] };
   }, [wk, prev, result]);
   const total = geo?.cells.length ?? 0;
+  const weekGames = useMemo(() => (result && week > 0 ? (result.ledger as LedgerRow[]).filter((e) => e.week === week).sort((a, b) => Number(b.gained > 0) - Number(a.gained > 0)) : []), [result, week]); // the wins that moved land first
+  const [allResults, setAllResults] = useState(false);
+  useEffect(() => { setAllResults(false); }, [week, layer]);
   const gamesThisWeek = result && week > 0 ? result.ledger.filter((e: { week: number }) => e.week === week).length : 0;
   const name = (id: string) => byId.get(id)?.name ?? id;
   const logo = (id: string, cls = "imp-chip-logo") => <TeamLogo id={id} size={20} className={cls} />;
@@ -270,7 +274,7 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
     <section className="imp-root" aria-label="Imperialism map">
       <PageHeader title="Imperialism map" eyebrow="NHL CONQUEST MAP" />
       <div className="imp-head">
-        <p className="imp-rules">Start from nearest-arena territories; each finished game hands the loser&apos;s entire land to the winner. {seasonLabel(season)}, regular season and playoffs.</p>
+        <p className="imp-rules">Start from nearest-arena territories; each finished game hands the loser&apos;s entire land to the winner, even when the winner has no land of its own. A team with no land has nothing left to lose. {seasonLabel(season)}, regular season and playoffs.</p>
       </div>
 
       <div className="imp-controls">
@@ -381,6 +385,34 @@ export function ImperialismMap({ teams, games, season }: { teams: Team[]; games:
             </p>
           </div>
           </div>
+
+          <section className="imp-results" data-testid="imp-results" aria-label={week === 0 ? "Results" : `Results, week ${week}`}>
+            <h3>Results <span>{week === 0 ? "Start" : `Week ${week} · ${wk?.label ?? ""}`}</span></h3>
+            {week === 0 && <p className="imp-note">The map starts as the nearest-arena split. Pick a later week to see what each win did.</p>}
+            {week > 0 && weekGames.length === 0 && <p className="imp-note">No games counted this week.</p>}
+            {weekGames.length > 0 && (
+              <ul className="imp-res-list">
+                {(allResults ? weekGames : weekGames.slice(0, 8)).map((e) => (
+                  <li key={e.game} className={`imp-res${e.revived ? " imp-res-revived" : ""}`} data-revived={e.revived ? "yes" : "no"} data-gained={e.gained}>
+                    <span className="imp-res-teams">
+                      {logo(e.winner)}<b>{e.winner}</b> beat {logo(e.loser)}<b>{e.loser}</b>
+                      <small>{e.score}{e.end && e.end !== "REG" ? ` ${e.end}` : ""}</small>
+                    </span>
+                    <span className="imp-res-take">
+                      {e.gained > 0
+                        ? <>took over {e.gained} cell{e.gained === 1 ? "" : "s"}{e.revived ? <strong>, from no land at all</strong> : null}</>
+                        : <>no land left to take</>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {weekGames.length > 8 && (
+              <button type="button" className="imp-more" aria-expanded={allResults} onClick={() => setAllResults((v) => !v)}>
+                {allResults ? "Show fewer" : `Show all ${weekGames.length} games`}
+              </button>
+            )}
+          </section>
         </>
       )}
 

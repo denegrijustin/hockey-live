@@ -1,0 +1,26 @@
+/* Playoff wheel: one wedge per team, five rings out to in. Tokens only; numbers get an outline so they read on any team colour. */
+.po-wheel-sec { margin: 4px 0 20px; min-width: 0; }
+.po-wheel-sec h2 { margin: 0; font-size: 1rem; color: var(--text-6); }
+.pw { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; }
+@media (min-width: 900px) { .pw { grid-template-columns: minmax(0, 560px) minmax(260px, 1fr); gap: 24px; } }
+.pw-svg { width: 100%; height: auto; max-width: 560px; margin: 0 auto; display: block; overflow: visible; }
+.pw-wedge { cursor: pointer; outline: none; }
+.pw-cell { stroke: none; transition: opacity .15s; }
+.pw-hit { fill: transparent; stroke: none; }
+.pw-svg:has(.pw-wedge.on) .pw-wedge:not(.on) .pw-cell { opacity: .55; }
+.pw-wedge.on .pw-hit, .pw-wedge:focus-visible .pw-hit { stroke: var(--text-6); stroke-width: 2; }
+.pw-num { display: none; font-size: 7.5px; font-weight: 700; fill: #fff; stroke: rgba(0, 0, 0, .6); stroke-width: 1.6px; paint-order: stroke; font-variant-numeric: tabular-nums; pointer-events: none; }
+.pw-hub { fill: var(--surface-4); stroke: var(--line-2); }
+.pw-cup path { fill: var(--amber-5, #e0b341); }
+.pw-cup .pw-cup-h { fill: none; stroke: var(--amber-5, #e0b341); stroke-width: 3; }
+.pw-side { min-width: 0; display: grid; gap: 10px; }
+.pw-detail { border: 1px solid var(--line-2); border-radius: 14px; background: var(--surface-4); padding: 12px 14px; }
+.pw-detail h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 1rem; color: var(--text-6); }
+.pw-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pw-rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: .8125rem; color: var(--text-3); }
+.pw-rows b { color: var(--text-6); font-variant-numeric: tabular-nums; }
+.pw-bar { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--surface-7); overflow: hidden; }
+.pw-bar i { display: block; height: 100%; background: var(--mint-5); border-radius: inherit; }
+.pw-hint, .pw-key { margin: 0; color: var(--text-2); font-size: .75rem; line-height: 1.5; }
+/* Cell numbers are too small to read on a phone: the tint carries the odds there, and the selected team's exact numbers are in the panel. */
+@media (min-width: 640px) { .pw-num { display: block; } }

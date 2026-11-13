@@ -11,6 +11,11 @@
  * Playoff format: 16 teams; per conference the top 3 of each division plus the
  * 2 best remaining teams. Division seeds are ordered by points.
  *
+ * Playoff rounds: the 16 teams are then played through the NHL bracket (division winner with the better record plays the lower wild card, the other
+ * division winner the higher wild card, 2nd v 3rd inside each division; division finals; conference finals; the Final), each series best of seven with
+ * home ice (games 1, 2, 5, 7) for the team with the better regular-season record, each game won with the same Poisson model. It is played from the
+ * regular-season standings: series already played in a real postseason are not tracked.
+ *
  * Tiebreaks: points, then regulation wins, then a seeded coin flip. The NHL's
  * full procedure (head-to-head points, regulation+OT wins, goal differential)
  * is NOT implemented. This is an uncalibrated model, not official odds.
@@ -90,18 +95,39 @@ export function simulatePlayoffs({ games, teams, table, baseline = {}, sims = 20
     [...new Set(confTeams[ci].map((i) => teams[i].division))].map((d) => confTeams[ci].filter((i) => teams[i].division === d)),
   );
 
-  const nSims = complete ? 1 : sims;
+  // Playoff bracket: needs two conferences of two divisions, each with at least three teams (not true of the toy worlds in the tests).
+  const bracketOk = confs.length === 2 && divs.every((d) => d.length === 2 && d.every((x) => x.length >= 3));
+  let pw = null; // pw[h * n + a]: chance the home team h beats a in one game
+  if (bracketOk) {
+    pw = new Float64Array(n * n);
+    for (let h = 0; h < n; h++) for (let a = 0; a < n; a++) if (h !== a) pw[h * n + a] = gameProbs(strength[h], strength[a])[1];
+  }
+  const nSims = complete ? Math.min(sims, 10000) : sims; // a finished regular season is fixed, but the bracket still needs many plays
   const counts = {
     div: [new Float64Array(n), new Float64Array(n), new Float64Array(n)],
     wc: [new Float64Array(n), new Float64Array(n)],
     conf1: new Float64Array(n),
     pres: new Float64Array(n),
+    r2: new Float64Array(n), r3: new Float64Array(n), fin: new Float64Array(n), cup: new Float64Array(n),
   };
   const sumPts = new Float64Array(n), sumRw = new Float64Array(n);
   const pts = new Float64Array(n), rw = new Float64Array(n), key = new Float64Array(n);
   const rand = mulberry32(seed);
   const byKey = (a, b) => key[b] - key[a];
   const taken = new Uint8Array(n);
+  /** Best of seven; the team with the higher key has home ice in games 1, 2, 5 and 7. Returns the winner. */
+  const series = (x, y) => {
+    const hi = key[x] >= key[y] ? x : y, lo = hi === x ? y : x;
+    let hw = 0, lw = 0, g = 0;
+    while (hw < 4 && lw < 4) {
+      const hiHome = g === 0 || g === 1 || g === 4 || g === 6;
+      const p = hiHome ? pw[hi * n + lo] : 1 - pw[lo * n + hi];
+      if (rand() < p) hw++; else lw++;
+      g++;
+    }
+    return hw === 4 ? hi : lo;
+  };
+  const divTop = confs.map(() => []), wcOf = confs.map(() => []);
 
   for (let s = 0; s < nSims; s++) {
     pts.set(basePts); rw.set(baseRw);
@@ -121,20 +147,38 @@ export function simulatePlayoffs({ games, teams, table, baseline = {}, sims = 20
     let best = -1;
     for (let ci = 0; ci < confs.length; ci++) {
       const conf = confTeams[ci];
+      if (bracketOk) divTop[ci] = []; // fresh every simulation
       for (const div of divs[ci]) {
         const order = [...div].sort(byKey);
         for (let r = 0; r < 3 && r < order.length; r++) {
           counts.div[r][order[r]]++; taken[order[r]] = 1;
         }
+        if (bracketOk) divTop[ci].push(order);
       }
       const rest = conf.filter((i) => !taken[i]).sort(byKey);
       for (let r = 0; r < 2 && r < rest.length; r++) counts.wc[r][rest[r]]++;
+      if (bracketOk) wcOf[ci] = rest.slice(0, 2);
       let top = conf[0];
       for (const i of conf) if (key[i] > key[top]) top = i;
       counts.conf1[top]++;
     }
     for (let i = 0; i < n; i++) if (best < 0 || key[i] > key[best]) best = i;
     counts.pres[best]++;
+    if (bracketOk) {
+      const champs = [];
+      for (let ci = 0; ci < confs.length; ci++) {
+        // the better division winner plays the lower wild card, the other division winner the higher one; 2nd v 3rd inside each division
+        const [d0, d1] = divTop[ci];
+        const aTop = key[d0[0]] >= key[d1[0]], A = aTop ? d0 : d1, B = aTop ? d1 : d0, [wc1, wc2] = wcOf[ci];
+        const a1 = series(A[0], wc2), b1 = series(B[0], wc1), a2 = series(A[1], A[2]), b2 = series(B[1], B[2]);
+        counts.r2[a1]++; counts.r2[b1]++; counts.r2[a2]++; counts.r2[b2]++;
+        const a3 = series(a1, a2), b3 = series(b1, b2);
+        counts.r3[a3]++; counts.r3[b3]++;
+        const champ = series(a3, b3);
+        counts.fin[champ]++; champs.push(champ);
+      }
+      counts.cup[series(champs[0], champs[1])]++;
+    }
   }
 
   const pct = (x) => (x / nSims) * 100;
@@ -149,6 +193,9 @@ export function simulatePlayoffs({ games, teams, table, baseline = {}, sims = 20
       pDivision, pWildCard,
       pConferenceFirst: pct(counts.conf1[i]),
       pPresidents: pct(counts.pres[i]),
+      // the rounds (null when the league is not two conferences of two divisions): win round 1, win round 2, win the conference, win the Cup
+      pRound2: bracketOk ? pct(counts.r2[i]) : null, pRound3: bracketOk ? pct(counts.r3[i]) : null,
+      pFinal: bracketOk ? pct(counts.fin[i]) : null, pCup: bracketOk ? pct(counts.cup[i]) : null,
       expPts: sumPts[i] / nSims,
       expRegWins: sumRw[i] / nSims,
     };

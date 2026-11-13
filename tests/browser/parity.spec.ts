@@ -62,6 +62,25 @@ test("Playoff odds is interactive: a row opens to every number, the filters re-r
   await expect(page.getByTestId("po-grid-W").locator(".po-row")).toHaveCount(16);
 });
 
+for (const width of [360, 1280]) {
+  test(`Playoff wheel at ${width}px: 32 wedges, five rings each, tap shows that team's path, no sideways scroll`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?view=games");
+    await goTo(page, "Playoff odds");
+    const wheel = page.getByTestId("playoff-wheel");
+    await expect(wheel).toBeVisible({ timeout: 30000 });
+    await expect(wheel.locator(".pw-wedge")).toHaveCount(32);
+    await expect(wheel.locator(".pw-wedge").first().locator(".pw-cell")).toHaveCount(5);
+    // A wedge is a curved shape: the centre of its bounding box can sit on a neighbour, so send the click to the wedge itself.
+    await wheel.locator('.pw-wedge[data-team="COL"]').dispatchEvent("click");
+    await expect(wheel.locator(".pw-detail h3")).toContainText(/Colorado/);
+    await expect(wheel.locator(".pw-rows li")).toHaveCount(5);
+    const w = await wheel.locator(".pw-svg").boundingBox();
+    expect(w!.width).toBeGreaterThanOrEqual(Math.min(width - 80, 280));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
+
 test("Imperialism map renders, time-travels and opens a region card", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -79,8 +98,22 @@ test("Imperialism map renders, time-travels and opens a region card", async ({ p
   expect(max).toBeGreaterThan(10);
   await slider.fill("0");
   const first = await cells.first().evaluate((e) => (e as SVGElement).style.fill || e.getAttribute("fill"));
+  const results = page.getByTestId("imp-results");
+  await expect(results).toContainText("nearest-arena split"); // week 0: nothing has been played
   await slider.fill(String(max));
   await expect(page.getByTestId("imp-standings")).toBeVisible();
+  // the selected week lists its games and what each win did, whether or not the winner had land
+  const rows = results.locator(".imp-res");
+  await expect(rows.first()).toBeVisible();
+  for (const row of await rows.all()) await expect(row).toContainText(/took over \d+ cells?|no land left to take/);
+  await expect(page.locator(".imp-rules")).toContainText("even when the winner has no land of its own");
+  // somewhere in the season a team with no land at all took the loser's land: find that week and check it is marked
+  let revivedSeen = false;
+  for (let w = 1; w <= max && !revivedSeen; w++) {
+    await slider.fill(String(w));
+    if ((await results.locator(".imp-res-revived").count()) > 0) { revivedSeen = true; await expect(results.locator(".imp-res-revived").first()).toContainText("from no land at all"); }
+  }
+  await slider.fill(String(max));
   await cells.nth(10).click();
   await expect(page.getByTestId("imp-card")).toBeVisible();
   await page.keyboard.press("Escape");

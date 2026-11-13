@@ -141,7 +141,7 @@ function GoalieCard({ team, goalie, status }: { team: Team; goalie: MatchupGoali
   );
 }
 
-export function GoalieComparison({ game, away, home, compact = false }: { game: Game; away: Team; home: Team; compact?: boolean }) {
+export function GoalieComparison({ game, away, home, compact = false, lean = false }: { game: Game; away: Team; home: Team; compact?: boolean; /** Cards and gauges only, no explanatory note. */ lean?: boolean }) {
   const { data, error } = useLeagueMatchups(game.season);
   const [actual, setActual] = useState<Record<string, number>>({});
   const played = finished(game) || isLive(game);
@@ -176,7 +176,7 @@ export function GoalieComparison({ game, away, home, compact = false }: { game: 
           {cards[0].goalie.gaa != null && cards[1].goalie.gaa != null && <SplitRow label="Goals against average" away={cards[0].goalie.gaa} home={cards[1].goalie.gaa} awayId={away.id} homeId={home.id} span={1.5} lowerBetter format={(v) => v.toFixed(2)} />}
         </div>
       )}
-      <p className="cmp-note">{error || "Pregame status is projected from season starts until the NHL box score identifies the starter. Recent-form and individual-rest data are not available reliably in the official summary report."}</p>
+      {!lean && <p className="cmp-note">{error || "Pregame status is projected from season starts until the NHL box score identifies the starter. Recent-form and individual-rest data are not available reliably in the official summary report."}</p>}
     </section>
   );
 }

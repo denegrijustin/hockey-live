@@ -17,7 +17,7 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   await expect(card.locator(".card-expanded")).toBeVisible();
   await expect(card.locator(".why-watch")).toBeVisible();
   await expect(card.locator(".projection")).toBeVisible();
-  await expect(card.locator(".lineup-brief")).toBeVisible();
+  await expect(card.locator(".goalie-comparison")).toBeVisible();
   await expect(card.locator(".matchup-comparison")).toHaveCount(0);
 
   await page.locator(".site-header").click({ position: { x: 4, y: 4 } });

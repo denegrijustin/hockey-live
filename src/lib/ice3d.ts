@@ -75,6 +75,9 @@ export class Ice3D {
   private cssW = 0; private cssH = 0; private disposed = false;
   // the camera: the whole rink while the machine is off the ice, a close follow shot while it works (so its artwork can be read)
   private overview = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 30 };
+  /** "follow": the close shot that tracks the machine while it works; "overview": the whole rink at all times (the progress of the whole sheet in one view). */
+  private viewMode: "follow" | "overview" = "follow";
+  setView(v: "follow" | "overview") { this.viewMode = v; }
   private zoom = 0; private follow = new THREE.Vector3(); private followReady = false; private camClock = 0;
   /** The camera, for tools that want a different view (the app uses the fixed one set by resize()). */
   get cam() { return this.camera; }
@@ -227,7 +230,8 @@ export class Ice3D {
    * Places the camera for this frame: the overview, or (while the machine is on the ice) a follow shot about 38 ft wide with the machine in the middle, blended
    * smoothly in and out. Time passes by the clock, so a frame skipped on a slow device does not make the camera lurch.
    */
-  private placeCamera(on: boolean, x: number, z: number, heading: number) {
+  private placeCamera(machineOn: boolean, x: number, z: number, heading: number) {
+    const on = machineOn && this.viewMode === "follow";
     const now = performance.now(), dt = this.camClock ? Math.min(0.5, (now - this.camClock) / 1000) : 1; this.camClock = now;
     this.zoom += ((on ? 1 : 0) - this.zoom) * (1 - Math.exp(-dt * 2.4));
     if (this.zoom < 0.002) this.zoom = 0;

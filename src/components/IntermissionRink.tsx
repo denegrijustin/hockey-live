@@ -37,6 +37,17 @@ const waiting = new Set<() => void>();
 const takeSlot = () => (sceneCount < MAX_SCENES ? (sceneCount++, true) : false);
 const freeSlot = () => { sceneCount = Math.max(0, sceneCount - 1); for (const wake of [...waiting]) { waiting.delete(wake); wake(); if (sceneCount >= MAX_SCENES) break; } };
 
+/** Which picture each person prefers: the close shot that follows the machine, or the whole rink at once. Kept on this device and shared by every rink on the page. */
+type RinkView = "follow" | "overview";
+const VIEW_KEY = "iceboard-rink-view", VIEW_EVENT = "iceboard-rink-view";
+let rinkView: RinkView = (() => { try { return localStorage.getItem(VIEW_KEY) === "overview" ? "overview" : "follow"; } catch { return "follow"; } })();
+function useRinkView(): [RinkView, (v: RinkView) => void] {
+  const [v, setV] = useState<RinkView>(rinkView);
+  useEffect(() => { const on = () => setV(rinkView); window.addEventListener(VIEW_EVENT, on); return () => window.removeEventListener(VIEW_EVENT, on); }, []);
+  const set = (n: RinkView) => { rinkView = n; try { localStorage.setItem(VIEW_KEY, n); } catch { /* storage unavailable: the choice still holds for this visit */ } window.dispatchEvent(new Event(VIEW_EVENT)); };
+  return [v, set];
+}
+
 const loadImage = (src: string) => new Promise<HTMLImageElement | null>((resolve) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = () => resolve(null); i.src = src; });
 
 type Labels = { k: string; l: string; cap: string };
@@ -64,6 +75,8 @@ function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, p
 export function IntermissionRink({ game, home, away, compact = false, mode = "intermission" }: { game: Game; home: Team; away: Team; compact?: boolean; mode?: "intermission" | "pregame" }) {
   const deadline = useDeadline(game, mode);
   const logos = usePrefs().display.logos;
+  const [view, setView] = useRinkView();
+  const viewRef = useRef(view); viewRef.current = view;
   const canvas = useRef<HTMLCanvasElement>(null);
   const root = useRef<HTMLElement>(null);
   const kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
@@ -99,6 +112,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
         await sc.init("/models/zamboni.glb");
         if (!alive) { sc.dispose(); return; }
         sc.resize(host.clientWidth || 600, Math.round((host.clientWidth || 600) * ASPECT), dpr());
+        sc.setView(viewRef.current);
         scene = sc; sceneRef.current = sc; lookRef.current = look;
         host.dataset.render = "webgl";
         const [homeLogo, scouts] = await Promise.all([loadImage(logoUrl(home.id)), loadImage(SCOUTS)]);
@@ -134,7 +148,8 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
         if (tRef.current) tRef.current.textContent = clockText(Math.max(0, target));
         if (kRef.current) kRef.current.textContent = L.k;
         if (lRef.current) lRef.current.textContent = L.l;
-        if (capRef.current) capRef.current.lastChild!.textContent = ` ${L.cap}`;
+        const done = Number(host.dataset.clean), progress = (st.phase === "clean" || st.phase === "exit") && done >= 1 ? ` · ${Math.min(100, Math.round(done))}% done` : "";
+        if (capRef.current) capRef.current.lastChild!.textContent = ` ${L.cap}${progress}`;
       }
     };
     // A frame costs a couple of milliseconds on a GPU, but a software renderer or a weak phone can take hundreds, which would stall the whole page. So the loop
@@ -165,6 +180,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
 
   // a change of logo style swaps the logo on the sheet (and the boards) without restarting anything: the cleaned ice stays as it is
   const sceneRef = useRef<Ice3D | null>(null), lookRef = useRef<Look | null>(null);
+  useEffect(() => { sceneRef.current?.setView(view); }, [view]);
   useEffect(() => {
     let alive = true;
     loadImage(logoUrl(home.id)).then((img) => { if (alive && sceneRef.current && lookRef.current && lookRef.current.logo !== img) { lookRef.current = { ...lookRef.current, logo: img }; sceneRef.current.setLook(lookRef.current); } });
@@ -172,13 +188,18 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
   }, [logos, home.id]);
 
   return (
-    <section ref={root} className={`intermission ice-prep-${mode}${compact ? " compact" : ""}`} data-testid="intermission" data-mode={mode} aria-label={`${initial.k}. ${clockText(left0)} ${initial.l}`}>
+    <section ref={root} className={`intermission ice-prep-${mode}${compact ? " compact" : ""}`} data-testid="intermission" data-mode={mode} data-view={view} aria-label={`${initial.k}. ${clockText(left0)} ${initial.l}`}>
       <div className="int-count" aria-hidden="true">
         <span className="int-k" ref={kRef}>{initial.k}</span>
         <strong className="int-t" ref={tRef}>{clockText(left0)}</strong>
         <span className="int-l" ref={lRef}>{initial.l}</span>
       </div>
-      <canvas ref={canvas} className="ice-canvas" aria-hidden="true" data-logos={logos} />
+      <div className="ice-stage">
+        <canvas ref={canvas} className="ice-canvas" aria-hidden="true" data-logos={logos} />
+        <button type="button" className="ice-view-btn" aria-label={view === "follow" ? "Show the whole rink" : "Show the close-up that follows the Zamboni"} onClick={() => setView(view === "follow" ? "overview" : "follow")}>
+          <span aria-hidden="true">{view === "follow" ? "⤢ Full rink" : "⌖ Close-up"}</span>
+        </button>
+      </div>
       <p className="int-cap" ref={capRef}><span aria-hidden="true">🧊</span> {initial.cap}</p>
     </section>
   );

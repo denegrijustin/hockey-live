@@ -98,12 +98,20 @@ test("saved states: upcoming, postponed, finished group, and a game gone from th
   expect(await noOverflow(page)).toBe(true);
 });
 
+/** On a phone the recommendation opens as one row; open it to see the games. */
+async function expandRec(page: import("@playwright/test").Page) {
+  const toggle = page.getByTestId("recommended").locator(".rec-toggle");
+  if ((await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+}
+
 test("Recommended for you appears only with context and its explanation matches the facts", async ({ page }) => {
   await open(page, "/?view=games");
   await expect(page.getByTestId("recommended")).toHaveCount(0);
   await open(page, "/?view=games", { version: 1, favorites: ["EDM"], games: [{ id: 2026020202, season, away: "MIN", home: "DAL", date: day(0), at: 1 }] });
   const rec = page.getByTestId("recommended");
   await expect(rec).toBeVisible();
+  await expandRec(page);
   const whys = rec.getByTestId("rec-why");
   await expect(whys.first()).toContainText(/^Your team: EDM/);
   const edm = rec.locator("[data-game-id='2026020201'] [data-testid='rec-why']");
@@ -120,6 +128,8 @@ test("360px: Following and the recommendation do not scroll sideways", async ({ 
   await open(page, "/?view=games", { version: 1, favorites: ["EDM"], games: [{ id: 2026020201, season, away: "CHI", home: "EDM", date: day(0), at: 1 }, { id: 2026029999, season, away: "OTT", home: "MTL", date: day(1), at: 1 }] });
   await expect(page.getByTestId("recommended")).toBeVisible();
   expect(await noOverflow(page)).toBe(true);
+  await expandRec(page);
+  expect(await noOverflow(page)).toBe(true);
   await page.goto("/?view=following");
   await tabGames(page).click();
   await expect(page.locator("[data-saved-game='2026020201']")).toBeVisible();
@@ -132,6 +142,8 @@ test("Recommended and Saved cards are laid out: the reason sits under the game, 
   await open(page, "/?view=games", prefs);
   const rec = page.getByTestId("recommended");
   await expect(rec).toBeVisible();
+  await expandRec(page);
+  expect(await rec.locator("li").count(), "there are recommendations to lay out").toBeGreaterThan(0);
   for (const li of await rec.locator("li").all()) {
     const main = (await li.locator(".sb-main").boundingBox())!, why = (await li.getByTestId("rec-why").boundingBox())!, card = (await li.locator(".gcv-compact").boundingBox())!;
     expect(why.y, "the reason starts below the game").toBeGreaterThanOrEqual(main.y + main.height - 1);
@@ -145,4 +157,33 @@ test("Recommended and Saved cards are laid out: the reason sits under the game, 
   const saved = page.locator(".sg-list .gcv-compact").first();
   await expect(saved).toBeVisible();
   for (const size of await saved.locator(".sb-name").evaluateAll((els) => els.map((e) => parseFloat(getComputedStyle(e).fontSize)))) expect(size).toBeLessThanOrEqual(16);
+});
+
+test("on a phone the recommendation opens as one short row so the games come first; it expands on tap and remembers the choice", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const prefs = { version: 1, onboarded: true, favorites: ["EDM", "DAL"], games: [{ id: 2026020204, season, away: "NYR", home: "NJD", date: day(1), at: 1 }] };
+  await open(page, "/?view=games", prefs);
+  const rec = page.getByTestId("recommended");
+  const toggle = rec.locator(".rec-toggle");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(rec.locator("li")).toHaveCount(0);
+  const closed = (await rec.boundingBox())!;
+  expect(closed.height, "one row, not a block of cards").toBeLessThanOrEqual(64);
+  await expect(toggle).toContainText(/\d/); // how many
+  expect((await toggle.boundingBox())!.height).toBeGreaterThanOrEqual(44); // a proper touch target
+  expect(await noOverflow(page)).toBe(true);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  expect(await rec.locator("li").count()).toBeGreaterThan(0);
+  expect((await rec.boundingBox())!.height).toBeGreaterThan(closed.height + 60);
+  await page.reload();
+  await expect(page.getByTestId("recommended").locator(".rec-toggle")).toHaveAttribute("aria-expanded", "true"); // remembered
+});
+
+test("on a wide screen the recommendation stays open", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await open(page, "/?view=games", { version: 1, onboarded: true, favorites: ["EDM"], games: [] });
+  const rec = page.getByTestId("recommended");
+  await expect(rec.locator(".rec-toggle")).toHaveAttribute("aria-expanded", "true");
+  expect(await rec.locator("li").count()).toBeGreaterThan(0);
 });

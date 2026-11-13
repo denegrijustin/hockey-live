@@ -15,6 +15,13 @@
 .sg-remove, .sg-finished button, .fw-tabs button { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-3); background: transparent; color: var(--text-3); font: inherit; font-size: .8125rem; cursor: pointer; }
 .sg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 8px; }
 .sg-head h2, .rec h2 { margin: 0; font-size: 1rem; }
+.rec-toggle { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 6px 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface-5); color: var(--text-4); font: inherit; text-align: left; cursor: pointer; }
+.rec-title { font-weight: 700; font-size: 1rem; white-space: nowrap; }
+.rec-count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--surface-7); font-size: .75rem; }
+.rec-peek { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); font-size: .75rem; font-weight: 500; }
+.rec-chev { margin-left: auto; color: var(--text-2); }
+.rec.is-open .rec-toggle { border-color: transparent; background: transparent; padding-left: 0; min-height: 36px; }
+.rec.is-open .rec-chev { margin-left: 8px; }
 .sg-pill { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line-3); font-size: .6875rem; font-weight: 750; text-transform: uppercase; color: var(--amber-5); }
 .sg-device { margin: 4px 0 0; color: var(--text-2); font-size: .75rem; }
 

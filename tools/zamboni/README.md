@@ -18,7 +18,7 @@ python3 tools/zamboni/make_textures.py /tmp/zam/tex
 blender -b -P tools/zamboni/build_zamboni.py -- /tmp/zam/tex /tmp/zam/zamboni_raw.glb [--preview /tmp/zam/prev]
 npx gltf-transform optimize /tmp/zam/zamboni_raw.glb public/models/zamboni.glb --join false --compress meshopt --texture-compress webp --texture-size 2048
 ```
-Units are feet (1 Blender unit = 1 ft = 1 scene unit). The KC Scouts logo and BRING HOCKEY TO KC exist only as decals on this model.
+Units are feet (1 Blender unit = 1 ft = 1 scene unit). The KC Scouts logo and BRING NHL TO KC exist only as decals on this model (the side of the snow tank, its flat top, and the rear).
 Gotcha fixed along the way: every mesh joined into one object must share the same UV layer name, or the join collapses the decals' UVs.
 
 ## Prototype

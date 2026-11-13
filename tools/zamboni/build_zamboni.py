@@ -3,7 +3,7 @@
 
 Units: 1 Blender unit = 1 foot (the app's ground plane is in feet). Forward is +X, up +Z (the glTF exporter turns that into +X forward, +Y up).
 The model's origin is on the ground under the centre of the resurfacing blade's trailing edge is NOT used: the origin is the vehicle centre; the
-blade's centre line sits 9 ft behind it (see BLADE_BACK in src/lib/ice-plan.mjs). The KC Scouts logo and BRING HOCKEY TO KC decals exist only here.
+blade's centre line sits 9 ft behind it (see BLADE_BACK in src/lib/ice-plan.mjs). The KC Scouts logo and BRING NHL TO KC decals exist only here.
 """
 import bpy, bmesh, math, sys, os
 from mathutils import Vector
@@ -62,6 +62,7 @@ SEAT = mat("seat", srgb("#23262d"), 0.0, 0.7)
 HOSE = mat("hose", srgb("#b8651f"), 0.3, 0.5)
 DECAL_SIDE = mat("decal_side", (1, 1, 1), alpha_tex=os.path.join(TEX, "decal_side.png"))
 DECAL_REAR = mat("decal_rear", (1, 1, 1), alpha_tex=os.path.join(TEX, "decal_rear.png"))
+DECAL_TOP = mat("decal_top", (1, 1, 1), alpha_tex=os.path.join(TEX, "decal_top.png"))
 
 parts = []
 def finish(obj, m, bevel=0.0, seg=3, smooth=True):
@@ -122,8 +123,7 @@ for x in (-3.7, 4.9):
 # ---------------------------------------------------------------- body: snow tank, hood, cab
 box("tank", -5.6, 0.4, -3.3, 3.3, 2.2, 6.8, PAINT, 0.16)
 box("tank_lid", -5.3, 0.1, -2.9, 2.9, 6.78, 7.0, PAINT_D, 0.1)
-for i, x in enumerate((-4.6, -3.4, -2.2, -1.0)):
-    box(f"lid_rib_{i}", x - 0.08, x + 0.08, -2.7, 2.7, 6.98, 7.08, STEEL_D, 0.03)
+# (no ribs across the lid: its top carries the Scouts logo and BRING NHL TO KC, which show from above)
 box("hatch", -5.62, -5.5, -2.0, 2.0, 5.0, 6.4, PAINT_D, 0.05)
 box("hood", 2.4, 7.4, -3.1, 3.1, 2.2, 4.7, PAINT, 0.24)
 box("hood_top", 2.9, 7.0, -2.6, 2.6, 4.68, 4.84, PAINT_D, 0.12)
@@ -174,19 +174,21 @@ for side in (-1, 1):
 # wash water bar and tow hitch
 cyl("water_bar", -8.0, 0, 2.9, 0.1, 7.2, STEEL, "Y", 0.02, 10)
 box("hitch", -5.9, -5.62, -0.6, 0.6, 1.4, 1.9, STEEL_D, 0.04)
-# beacon, mirrors, rails
-cyl("beacon_base", -3.0, 0, 7.1, 0.28, 0.2, PLASTIC, "Z", 0.02, 16)
-cyl("beacon", -3.0, 0, 7.4, 0.24, 0.4, AMBER, "Z", 0.02, 16)
+# beacon (in the rear corner of the lid, clear of the roof lettering), mirrors, rails
+cyl("beacon_base", -4.85, 2.3, 7.1, 0.28, 0.2, PLASTIC, "Z", 0.02, 16)
+cyl("beacon", -4.85, 2.3, 7.4, 0.24, 0.4, AMBER, "Z", 0.02, 16)
 for side in (-1, 1):
     box(f"mirror_arm_{side}", 2.3, 2.4, side * 3.1, side * 3.7, 4.6, 4.7, STEEL_D, 0.02)
     box(f"mirror_{side}", 2.2, 2.5, side * 3.7 - 0.05, side * 3.7 + 0.05, 4.4, 5.1, PLASTIC, 0.03)
     cyl(f"rail_{side}", 0.4, side * 3.0, 3.5, 0.05, 2.1, STEEL, "X", 0.0, 8)
 
-# ---------------------------------------------------------------- decals (KC Scouts logo and BRING HOCKEY TO KC): sharp textures, this vehicle only
-x0, x1, z0, z1 = -5.45, -0.25, 4.38, 6.42
+# ---------------------------------------------------------------- decals (KC Scouts logo and BRING NHL TO KC): sharp textures, this vehicle only
+x0, x1, z0, z1 = -5.5, 0.3, 4.3, 6.6   # the side of the snow tank above the stripes
 e = 0.016
 quad("decal_side_R", [(x0, -3.3 - e, z0), (x1, -3.3 - e, z0), (x1, -3.3 - e, z1), (x0, -3.3 - e, z1)], [(0, 0), (1, 0), (1, 1), (0, 1)], DECAL_SIDE)
 quad("decal_side_L", [(x1, 3.3 + e, z0), (x0, 3.3 + e, z0), (x0, 3.3 + e, z1), (x1, 3.3 + e, z1)], [(0, 0), (1, 0), (1, 1), (0, 1)], DECAL_SIDE)
+# the flat top of the snow tank (seen from above)
+quad("decal_top", [(-5.2, -2.8, 7.0 + e), (0.0, -2.8, 7.0 + e), (0.0, 2.8, 7.0 + e), (-5.2, 2.8, 7.0 + e)], [(0, 0), (1, 0), (1, 1), (0, 1)], DECAL_TOP)
 quad("decal_rear", [(-5.62 - e, 2.6, 3.0), (-5.62 - e, -2.6, 3.0), (-5.62 - e, -2.6, 5.8), (-5.62 - e, 2.6, 5.8)], [(0, 0), (1, 0), (1, 1), (0, 1)], DECAL_REAR)
 
 # ---------------------------------------------------------------- group into a few nodes the renderer can move: body, conditioner (lifts), four wheels (front ones steer)
@@ -227,7 +229,7 @@ if PREVIEW:
     scene.render.engine = "CYCLES"; scene.cycles.samples = 48; scene.cycles.device = "CPU"
     scene.render.resolution_x, scene.render.resolution_y = 1400, 800
     scene.cycles.use_denoising = False
-    for name, loc in (("front_right", (22, -18, 11)), ("rear_left", (-24, 17, 11)), ("side", (0, -30, 7))):
+    for name, loc in (("front_right", (22, -18, 11)), ("rear_left", (-24, 17, 11)), ("side", (0, -30, 7)), ("above", (-2.6, -9, 24))):
         bpy.ops.object.camera_add(location=loc)
         cam = bpy.context.active_object
         d = Vector((0, 0, 3.8)) - cam.location

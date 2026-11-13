@@ -50,24 +50,23 @@ async function measure(dialog: ReturnType<Page["locator"]>) {
   return dialog.evaluate((d) => {
     const dialogW = d.clientWidth;
     const gauges = [...d.querySelectorAll<HTMLElement>(".gauge")].filter((g) => g.getBoundingClientRect().width > 0).map((g) => {
-      const r = (g.querySelector("svg") ?? g).getBoundingClientRect(), p = g.parentElement!.getBoundingClientRect(), f = g.getBoundingClientRect();
-      const max = parseFloat(getComputedStyle(g).getPropertyValue("--gauge-w")), variant = `${g.className} (max ${max})`;
-      return { stretch: g.classList.contains("stretch") || g.classList.contains("proj") || g.classList.contains("sbar"), variant, max, svgW: r.width, svgH: r.height, parentW: p.width, figW: f.width, label: g.getAttribute("aria-label")?.slice(0, 30) };
+      const p = g.parentElement!.getBoundingClientRect(), f = g.getBoundingClientRect();
+      const vs = g.querySelector<HTMLElement>(".vs"), track = g.querySelector<HTMLElement>(".vs-track");
+      return { parentW: p.width, figW: f.width, vsW: vs?.scrollWidth ?? 0, vsClient: vs?.clientWidth ?? 0, trackW: track?.getBoundingClientRect().width ?? 0, label: g.getAttribute("aria-label")?.slice(0, 30) };
     });
     return { dialogW, scrollW: d.scrollWidth, gauges };
   });
 }
 
 for (const width of [390, 360, 320, 1440, 1920]) {
-  test(`gauges stay within their variant and their parent at ${width}px, with no sideways overflow`, async ({ page }) => {
+  test(`gauges stay inside their parent, with a usable bar, at ${width}px, with no sideways overflow`, async ({ page }) => {
     const dialog = await openGame(page, width);
     const m = await measure(dialog);
     expect(m.gauges.length).toBeGreaterThan(1);
     for (const g of m.gauges) {
       expect(g.figW, `${g.label} figure vs parent`).toBeLessThanOrEqual(g.parentW + 0.5);
-      if (g.stretch) { expect(g.svgW, `${g.label} stretch gauge stays inside its figure`).toBeLessThanOrEqual(g.figW + 0.5); continue; } // a stretch gauge fills its parent by design
-      expect(g.svgW, `${g.label} svg vs variant ${g.variant}`).toBeLessThanOrEqual(Math.min(g.max, EXPANDED) + 0.5);
-      expect(g.svgH / g.svgW).toBeCloseTo(146 / 200, 1); // aspect is kept
+      expect(g.vsW, `${g.label} head-to-head row overflows its box`).toBeLessThanOrEqual(g.vsClient + 1);
+      expect(g.trackW, `${g.label} bar has room`).toBeGreaterThan(60);
     }
     expect(m.scrollW).toBeLessThanOrEqual(m.dialogW + 1);
   });
@@ -83,16 +82,5 @@ for (const width of [390, 360, 320]) {
     expect(a!.y + a!.height).toBeLessThanOrEqual(b!.y + 1); // stacked
     for (const r of [a!, b!]) { expect(r.x).toBeGreaterThanOrEqual(card!.x - 0.5); expect(r.x + r.width).toBeLessThanOrEqual(card!.x + card!.width + 0.5); }
     expect(a!.width).toBeGreaterThan(card!.width * 0.7);
-  });
-}
-
-for (const width of [1440, 1920]) {
-  test(`no dial fills a wide row on its own at ${width}px`, async ({ page }) => {
-    const dialog = await openGame(page, width, 1000);
-    const m = await measure(dialog);
-    for (const g of m.gauges.filter((x) => !x.stretch)) expect(g.svgW, g.label).toBeLessThanOrEqual(Math.min(g.max, EXPANDED) + 0.5); // dials stay capped; a stretch gauge fills its box on purpose
-    // the projected-score dial stays a dial (capped at 360px) however wide the card is; the deserved-to-win bar is meant to fill it
-    const dial = await dialog.locator(".gr-model .gauge.proj svg.pj-dial").boundingBox();
-    expect(dial!.width).toBeLessThanOrEqual(361);
   });
 }

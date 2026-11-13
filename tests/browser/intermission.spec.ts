@@ -244,3 +244,24 @@ test("a toggle on the rink switches between the close-up and the whole rink; the
   await rink(page).locator(".ice-view-btn").click();
   await expect(rink(page)).toHaveAttribute("data-view", "follow");
 });
+
+test("in the whole-rink view a BRING NHL TO KC label with the KC Scouts logo rides above the machine and stays inside the picture; the close-up has no label", async ({ page }) => {
+  test.slow();
+  await open(page, { intermission: true, clock: "9:00" });
+  await settled(page);
+  test.skip((await rink(page).getAttribute("data-render")) !== "webgl", "no WebGL in this browser");
+  const tag = rink(page).locator(".ice-tag");
+  await expect(rink(page)).toHaveAttribute("data-view", "follow");
+  await expect(tag).toBeHidden(); // the lettering on the machine can be read in the close-up
+  await rink(page).locator(".ice-view-btn").click();
+  await expect(tag).toBeVisible({ timeout: 15000 });
+  await expect(tag).toContainText("BRING NHL TO KC");
+  await expect(tag.locator("img")).toHaveAttribute("src", "/logos/kc-scouts.png");
+  const [t, c] = await Promise.all([tag.boundingBox(), rink(page).locator("canvas").boundingBox()]);
+  expect(t!.x, "inside the picture on the left").toBeGreaterThanOrEqual(c!.x - 1);
+  expect(t!.x + t!.width, "inside the picture on the right").toBeLessThanOrEqual(c!.x + c!.width + 1);
+  expect(t!.y, "inside the picture at the top").toBeGreaterThanOrEqual(c!.y - 1);
+  expect(t!.y + t!.height, "above the bottom of the picture").toBeLessThanOrEqual(c!.y + c!.height);
+  await rink(page).locator(".ice-view-btn").click();
+  await expect(tag).toBeHidden();
+});

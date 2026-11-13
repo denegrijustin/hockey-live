@@ -78,6 +78,8 @@ export class Ice3D {
   /** "follow": the close shot that tracks the machine while it works; "overview": the whole rink at all times (the progress of the whole sheet in one view). */
   private viewMode: "follow" | "overview" = "follow";
   setView(v: "follow" | "overview") { this.viewMode = v; }
+  /** The machine's position in the picture, in CSS px (null while it is off the ice). */
+  machineAt: { x: number; y: number; w: number; h: number } | null = null;
   private zoom = 0; private follow = new THREE.Vector3(); private followReady = false; private camClock = 0;
   /** The camera, for tools that want a different view (the app uses the fixed one set by resize()). */
   get cam() { return this.camera; }
@@ -276,6 +278,8 @@ export class Ice3D {
     } else this.wet.visible = false;
     this.placeCamera(on, pose.x, pose.y, pose.heading);
     this.renderer.render(this.scene, this.camera);
+    // where the machine is in the picture (CSS px), for a label that follows it
+    if (on) { const v = new THREE.Vector3(pose.x, 6, pose.y).project(this.camera); this.machineAt = { x: (v.x * 0.5 + 0.5) * this.cssW, y: (-v.y * 0.5 + 0.5) * this.cssH, w: this.cssW, h: this.cssH }; } else this.machineAt = null;
     const i = this.renderer.info; this.stats.frames++; this.stats.drawCalls = i.render.calls; this.stats.triangles = i.render.triangles; this.stats.geometries = i.memory.geometries; this.stats.textures = i.memory.textures;
   }
 

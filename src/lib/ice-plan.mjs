@@ -16,6 +16,7 @@ export const FINISH_LEFT = 45;          // cleaning is complete, and the machine
 export const ENTER_S = 18;              // drive in
 export const INTERMISSION_S = 18 * 60;
 export const PREGAME_S = 20 * 60;
+export const DELAY_GRACE_S = 45 * 60;   // how long past the scheduled puck drop a game that has not started keeps its "ice ready" rink
 
 const R_MIN = 3.9;
 const D_OUT = BLADE / 2 - 0.1;          // blade lane centre inset from the boards on the outer lap
@@ -226,12 +227,12 @@ export function makeCamera(w, h) {
 
 /**
  * Is the ice-preparation window open for an upcoming game? From PREGAME_S before the scheduled puck drop until the feed says play has started
- * (a delayed start keeps the window open, for up to three hours past the scheduled time). Postponed, canceled and finished games never qualify.
+ * (a delayed start keeps the window open for up to 45 minutes past the scheduled time; a game still "not started" after that is a postponement or stale data, and a rink for it would only mislead). Postponed, canceled and finished games never qualify.
  */
 export function icePrepActive(game, now = Date.now()) {
   if (!game || game.scheduleState && game.scheduleState !== "OK") return false;
   if (game.state !== "FUT" && game.state !== "PRE") return false;
   const start = Date.parse(game.start);
   if (!Number.isFinite(start)) return false;
-  return start - now <= PREGAME_S * 1000 && now - start <= 3 * 3600 * 1000;
+  return start - now <= PREGAME_S * 1000 && now - start <= DELAY_GRACE_S * 1000;
 }

@@ -1,5 +1,6 @@
 /* The head-to-head look (after the rank-comparison reference): big numbers at the sides, a split bar between with a marker on the split. Tokens plus the teams' own colours. */
-.vs { container-type: inline-size; display: grid; grid-template-columns: minmax(64px, .9fr) minmax(0, 2.6fr) minmax(64px, .9fr); gap: 4px 12px; align-items: center; width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+.vs-wrap { container-type: inline-size; width: 100%; min-width: 0; }
+.vs { display: grid; grid-template-columns: minmax(64px, .9fr) minmax(0, 2.6fr) minmax(64px, .9fr); gap: 4px 12px; align-items: center; width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
 .vs-side { display: grid; justify-items: center; align-content: center; gap: 2px; text-align: center; min-width: 0; }
 .vs-big { font-size: 1.625rem; font-weight: 850; line-height: 1.05; color: var(--text-5); }
 .vs[data-leader="away"] .vs-a .vs-big, .vs[data-leader="home"] .vs-h .vs-big { color: var(--text-6); }
@@ -46,3 +47,5 @@
 /* the comparison rows and goalie rows hold a Versus: no grid of their own */
 div.mp-cmp, div.split-row { display: block; padding: 6px 0; }
 div.mp-cmp-compact { padding: 4px 0; }
+/* the rank comparison's row holds one Versus; it no longer needs its own three columns */
+.crossover .crossover-row { display: block; grid-template-columns: none; padding: 8px 0; }

@@ -34,7 +34,7 @@ export function Versus({ away, home, share, label, density = "row", className = 
     </div>
   );
   return (
-    <div className={`vs vs-${density} ${className}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home, "--ink-away": inkOn(colors.away), "--ink-home": inkOn(colors.home) } as CSSProperties}>
+    <div className="vs-wrap"><div className={`vs vs-${density} ${className}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home, "--ink-away": inkOn(colors.away), "--ink-home": inkOn(colors.home) } as CSSProperties}>
       {side(away, "vs-a")}
       <div className="vs-mid">
         {label != null && <span className="vs-label gauge-label">{label}</span>}
@@ -46,7 +46,7 @@ export function Versus({ away, home, share, label, density = "row", className = 
         <span className="vs-even" aria-hidden="true">Even</span>
       </div>
       {side(home, "vs-h")}
-    </div>
+    </div></div>
   );
 }
 

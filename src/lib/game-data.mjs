@@ -33,6 +33,46 @@ export function normalizeScoreboard(j) {
     })),
   };
 }
+/**
+ * The NHL's team totals (score/now, boxscore, landing) can trail its own goal list by minutes, most visibly at an intermission: a goal sits in the
+ * scoring summary with its running score (1-2) while the team field still says 0. The goal list is the more current of the two, so this returns the
+ * running score of the latest goal in a landing page's scoring summary, or null when there is none.
+ * @returns {{ away: number, home: number } | null}
+ */
+export function scoreFromLanding(j) {
+  let best = null;
+  for (const period of j?.summary?.scoring ?? []) {
+    for (const goal of period?.goals ?? []) {
+      const away = Number(goal?.awayScore), home = Number(goal?.homeScore);
+      if (!Number.isFinite(away) || !Number.isFinite(home)) continue;
+      if (!best || away + home > best.away + best.home) best = { away, home };
+    }
+  }
+  return best;
+}
+/**
+ * Raises each live game's score to its goal list when the team totals lag. Only ever raises a side (a score does not go down), and a failed or empty
+ * landing page leaves the game as the scoreboard had it.
+ * @param {{ games: any[] }} scoreboard @param {(id: number) => Promise<any>} fetchLanding
+ */
+export async function reconcileLiveScores(scoreboard, fetchLanding) {
+  const live = (scoreboard?.games ?? []).filter((g) => (g.state === "LIVE" || g.state === "CRIT") && (g.period ?? 0) >= 1).slice(0, 24);
+  const found = new Map();
+  await Promise.allSettled(live.map(async (g) => {
+    const score = scoreFromLanding(await fetchLanding(g.id));
+    if (score) found.set(g.id, score);
+  }));
+  if (!found.size) return scoreboard;
+  return {
+    ...scoreboard,
+    games: scoreboard.games.map((g) => {
+      const f = found.get(g.id);
+      if (!f) return g;
+      const away = Math.max(g.awayScore ?? 0, f.away), home = Math.max(g.homeScore ?? 0, f.home);
+      return away === g.awayScore && home === g.homeScore ? g : { ...g, awayScore: away, homeScore: home };
+    }),
+  };
+}
 const LIVE_FIELDS = [
   "state",
   "scheduleState",

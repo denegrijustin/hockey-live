@@ -210,7 +210,7 @@ test.describe("scoreboard home", () => {
     expect(status!.x).toBeLessThan(gc!.x);
     expect(gc!.y + gc!.height).toBeLessThanOrEqual(ring!.y + ring!.height);
     // (a game that is about to start, or has just, also carries its ice-preparation rink: that is measured separately and capped)
-    const rinkBox = await row.getByTestId("intermission").boundingBox();
+    const rinkBox = (await row.getByTestId("intermission").count()) > 0 ? await row.getByTestId("intermission").boundingBox() : null; // boundingBox() waits for an element that may not exist
     expect(r!.height - (rinkBox?.height ?? 0)).toBeLessThan(180);
     if (rinkBox) expect(rinkBox.height, "a rink in a row stays a sensible size on a wide screen").toBeLessThan(340);
     const second = await page.locator(".sb-row.soon").nth(1).boundingBox();

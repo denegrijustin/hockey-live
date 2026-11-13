@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { canvasOf, cleanTexture, dirtyTexture, rng, type Look } from "./ice-textures";
+import { canvasOf, cleanTexture, dirtyTexture, type Look } from "./ice-textures";
 
 export type Pt = { x: number; y: number };
 export type Pose = { x: number; y: number; heading: number; bx: number; by: number };
@@ -73,6 +73,9 @@ export class Ice3D {
   private wet!: THREE.Mesh; private wetCap = 0;
   private cleaned: number; private lastS = 0; private odo = 0;
   private cssW = 0; private cssH = 0; private disposed = false;
+  // the camera: the whole rink while the machine is off the ice, a close follow shot while it works (so its artwork can be read)
+  private overview = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 30 };
+  private zoom = 0; private follow = new THREE.Vector3(); private followReady = false; private camClock = 0;
   /** The camera, for tools that want a different view (the app uses the fixed one set by resize()). */
   get cam() { return this.camera; }
   readonly stats = { frames: 0, drawCalls: 0, triangles: 0, geometries: 0, textures: 0 };
@@ -86,7 +89,7 @@ export class Ice3D {
     // setup is the heavy part (environment map, big textures, the model): each step yields to the browser so the page stays responsive while it builds
     const yieldNow = () => new Promise<void>((r) => setTimeout(r, 0));
     const r = this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: "high-performance", alpha: false });
-    r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.0; r.setClearColor(0x050a18, 1);
+    r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.0; r.setClearColor(0x0a1322, 1);
     const pmrem = new THREE.PMREMGenerator(r);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; this.scene.environment = env; this.scene.environmentIntensity = 0.5; pmrem.dispose();
     await yieldNow(); if (this.disposed) return;
@@ -141,7 +144,7 @@ export class Ice3D {
 
   private clearMask() {
     const r = this.renderer; const prev = r.getRenderTarget();
-    r.setRenderTarget(this.maskRT); r.setClearColor(0x000000, 1); r.clear(); r.setRenderTarget(prev); r.setClearColor(0x050a18, 1);
+    r.setRenderTarget(this.maskRT); r.setClearColor(0x000000, 1); r.clear(); r.setRenderTarget(prev); r.setClearColor(0x0a1322, 1);
     this.cleaned = this.plan.enterEnd;
     const sh = this.iceMat.userData.shader as { uniforms: Record<string, { value: unknown }> } | undefined; if (sh) sh.uniforms.maskMap.value = this.maskRT.texture;
   }
@@ -168,7 +171,6 @@ export class Ice3D {
   // --------------------------------------------------------------------------------------------------------------- arena
   private buildRink() {
     const look = this.look, team = hex(look.color || "#1d428a");
-    const r = rng(look.seed + 3);
     // boards: white faces, a team-coloured band, the yellow kick plate; glass above with stanchions
     const face = new THREE.MeshStandardMaterial({ color: 0xe8eef4, roughness: 0.5, metalness: 0.0, side: THREE.DoubleSide });
     this.scene.add(wall(0, 4, 0, face, true));
@@ -186,20 +188,14 @@ export class Ice3D {
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(110, 1.6), new THREE.MeshBasicMaterial({ map: label(look.homeName, 110, 1.6), transparent: true, depthWrite: false }));
     sign.position.set(100, 3.1, 0.2); this.scene.add(sign);
     const sign2 = sign.clone(); sign2.position.set(70, 3.1, H + 0.3); sign2.scale.set(0.9, 1, 1); this.scene.add(sign2);
-    // arena: dark stands with the crowd as small points, behind the far boards and at both ends
-    const c = canvasOf(2048, 512), x = c.getContext("2d")!; const g = x.createLinearGradient(0, 0, 0, 512); g.addColorStop(0, "#050a18"); g.addColorStop(1, "#0c1d46"); x.fillStyle = g; x.fillRect(0, 0, 2048, 512);
-    for (let row = 0; row < 12; row++) { x.fillStyle = `rgba(${20 + row * 3},${40 + row * 5},${90 + row * 6},0.3)`; x.fillRect(0, 120 + row * 28, 2048, 10); }
-    for (let i = 0; i < 5000; i++) { const t = r(); x.fillStyle = t > 0.94 ? "rgba(255,230,160,0.95)" : t > 0.5 ? `rgba(${90 + r() * 60},${110 + r() * 60},${170 + r() * 70},0.6)` : "rgba(30,50,100,0.7)"; x.fillRect(r() * 2048, 100 + r() * 400, 3, 4); }
-    const crowd = new THREE.CanvasTexture(c); crowd.colorSpace = THREE.SRGBColorSpace;
-    const back = new THREE.Mesh(new THREE.PlaneGeometry(420, 100), new THREE.MeshBasicMaterial({ map: crowd })); back.position.set(100, 34, -22); back.rotation.x = -0.35; this.scene.add(back);
-    for (const sx of [-1, 1]) { const side = new THREE.Mesh(new THREE.PlaneGeometry(260, 110), new THREE.MeshBasicMaterial({ map: crowd })); side.position.set(100 + sx * 190, 44, 20); side.rotation.y = -sx * Math.PI / 2.4; this.scene.add(side); }
+    // no stands: the picture is the ice and the boards, on a plain dark floor
     // the floor beyond the boards, with the dark rubber mat leading to the service gate
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 400), new THREE.MeshStandardMaterial({ color: 0x0c1019, roughness: 0.95 })); floor.rotation.x = -Math.PI / 2; floor.position.set(100, -0.1, 100); this.scene.add(floor);
     const mat = new THREE.Mesh(new THREE.PlaneGeometry(16, 60), new THREE.MeshStandardMaterial({ color: 0x090b0f, roughness: 0.95 })); mat.rotation.x = -Math.PI / 2; mat.position.set(GATE.x, 0, 105); this.scene.add(mat);
     // gate frame
     const post = new THREE.MeshStandardMaterial({ color: 0xcfd6de, metalness: 0.5, roughness: 0.4 });
     for (const sx of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.4, 0.5), post); p.position.set(GATE.x + sx * GATE.half, 2.2, 86.5); this.scene.add(p); }
-    this.scene.background = hex("#050a18");
+    this.scene.background = hex("#0a1322");
   }
 
   private buildLights() {
@@ -211,19 +207,45 @@ export class Ice3D {
   // --------------------------------------------------------------------------------------------------------------- frame
   resize(cssW: number, cssH: number, dpr: number) {
     this.cssW = cssW; this.cssH = cssH;
-    this.renderer.setPixelRatio(Math.min(dpr, this.quality === "high" ? 2 : 1.5)); this.renderer.setSize(cssW, cssH, false);
+    this.renderer.setPixelRatio(Math.min(dpr, 2)); // the picture is small, and the vehicle's lettering needs the sharpness this.renderer.setSize(cssW, cssH, false);
     this.camera.aspect = cssW / cssH; this.fit();
   }
   /** The fixed camera: raised and set back on the near side, looking across the rink, its field of view set so the rink fills 96% of the width. */
   /** Where the fixed camera sits and what it looks at (feet); a tool may change it before resize(). */
-  pose = { pos: [100, 130, 235] as [number, number, number], look: [100, 0, 34] as [number, number, number], shift: 0.05, fill: 0.96 };
+  pose = { pos: [100, 142, 125] as [number, number, number], look: [100, 0, 42.5] as [number, number, number], shift: 0, fill: 0.97 };
   private fit() {
     const c = this.camera; c.position.set(...this.pose.pos); c.up.set(0, 1, 0); c.lookAt(...this.pose.look);
     let lo = 8, hi = 70;
     for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2; c.fov = mid; c.updateProjectionMatrix(); c.updateMatrixWorld(true); const v = new THREE.Vector3(0, 0, H).project(c); if (Math.abs(v.x) > this.pose.fill) lo = mid; else hi = mid; }
     c.fov = (lo + hi) / 2; c.updateProjectionMatrix();
+    this.overview.pos.copy(c.position); this.overview.look.set(...this.pose.look); this.overview.fov = c.fov;
     // shift the picture so the far glass sits near the top and the gate's floor stays in view
     c.setViewOffset(this.cssW, this.cssH, 0, -this.cssH * this.pose.shift, this.cssW, this.cssH);
+  }
+
+  /**
+   * Places the camera for this frame: the overview, or (while the machine is on the ice) a follow shot about 38 ft wide with the machine in the middle, blended
+   * smoothly in and out. Time passes by the clock, so a frame skipped on a slow device does not make the camera lurch.
+   */
+  private placeCamera(on: boolean, x: number, z: number, heading: number) {
+    const now = performance.now(), dt = this.camClock ? Math.min(0.5, (now - this.camClock) / 1000) : 1; this.camClock = now;
+    this.zoom += ((on ? 1 : 0) - this.zoom) * (1 - Math.exp(-dt * 2.4));
+    if (this.zoom < 0.002) this.zoom = 0;
+    if (on) {
+      // lead a little along the heading so the blade's boundary and the ice ahead are both in view
+      const tx = x - Math.cos(heading) * 4, tz = z - Math.sin(heading) * 4 - 3; // and aim a little past it so the whole roof stays in frame
+      if (!this.followReady || dt >= 0.5) { this.follow.set(tx, 0, tz); this.followReady = true; }
+      else { const k = 1 - Math.exp(-dt * 4.5); this.follow.x += (tx - this.follow.x) * k; this.follow.z += (tz - this.follow.z) * k; }
+    } else this.followReady = false;
+    const e = this.zoom * this.zoom * (3 - 2 * this.zoom), c = this.camera;
+    const fov = 28, aspect = this.cssW / Math.max(1, this.cssH), hf = 2 * Math.atan(Math.tan((fov * Math.PI) / 360) * aspect);
+    const dist = 19 / Math.tan(hf / 2);                            // half the 38 ft window
+    const el = (40 * Math.PI) / 180;
+    const fp = new THREE.Vector3(this.follow.x, Math.sin(el) * dist, this.follow.z + Math.cos(el) * dist), fl = new THREE.Vector3(this.follow.x, 0, this.follow.z);
+    c.position.lerpVectors(this.overview.pos, fp, e); const look = new THREE.Vector3().lerpVectors(this.overview.look, fl, e);
+    c.up.set(0, 1, 0); c.lookAt(look);
+    c.fov = this.overview.fov + (fov - this.overview.fov) * e; c.aspect = aspect; c.updateProjectionMatrix();
+    c.setViewOffset(this.cssW, this.cssH, 0, -this.cssH * this.pose.shift * (1 - e), this.cssW, this.cssH);
   }
 
   render(state: Frame) {
@@ -248,6 +270,7 @@ export class Ice3D {
       const cond = this.parts.conditioner; if (cond) cond.rotation.z = -(1 - Math.max(0, Math.min(1, state.bladeDown))) * 0.28;
       this.updateWet(state);
     } else this.wet.visible = false;
+    this.placeCamera(on, pose.x, pose.y, pose.heading);
     this.renderer.render(this.scene, this.camera);
     const i = this.renderer.info; this.stats.frames++; this.stats.drawCalls = i.render.calls; this.stats.triangles = i.render.triangles; this.stats.geometries = i.memory.geometries; this.stats.textures = i.memory.textures;
   }

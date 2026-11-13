@@ -106,25 +106,28 @@ test("the Scoreboard home shows the rink on a game in intermission, without open
 
 test("when WebGL draws it, fresh ice is brighter than worn ice and the Zamboni's artwork is on the vehicle only", async ({ page }) => {
   test.slow(); // software WebGL, two renders and a reload
-  await open(page, { intermission: true, clock: "17:50" });
+  await open(page, { intermission: true, clock: "16:30" });
   await settled(page);
   test.skip((await rink(page).getAttribute("data-render")) !== "webgl", "no WebGL in this browser");
-  const luma = async () => {
+  // The average brightness of the ice in the picture, leaving out the dark floor and the vehicle's shadows (the camera follows the machine while it works and shows the whole rink after it has gone, so a fixed patch would not compare like with like).
+  const iceBrightness = async () => {
     await page.waitForTimeout(1500);
     const png = (await rink(page).locator("canvas").screenshot()).toString("base64");
     return page.evaluate(async (b64) => {
       const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
       const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const x = c.getContext("2d")!; x.drawImage(img, 0, 0);
-      const d = x.getImageData(Math.floor(img.width * 0.15), Math.floor(img.height * 0.45), Math.floor(img.width * 0.7), Math.floor(img.height * 0.3)).data;
-      let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; return s / (d.length / 4);
+      const d = x.getImageData(0, 0, img.width, img.height).data;
+      let sum = 0, n = 0; for (let i = 0; i < d.length; i += 4) { const l = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; if (l > 110) { sum += l; n++; } } return n ? sum / n : 0;
     }, png);
   };
-  const worn = await luma();
-  // the same rink again at 0:44, opened fresh with the same helper (a clean profile, so the team and filter pickers start from their defaults)
+  const worn = await iceBrightness();
+  // the same rink again after the machine has gone, opened fresh with the same helper (a clean profile, so the team and filter pickers start from their defaults)
   await page.evaluate(() => { try { localStorage.clear(); } catch { /* ignore */ } });
-  await open(page, { intermission: true, clock: "0:44" });
+  await open(page, { intermission: true, clock: "0:20" });
   await settled(page);
-  expect(await luma()).toBeGreaterThan(worn + 8);
+  const fresh = await iceBrightness();
+  console.log("ice brightness worn", worn.toFixed(1), "fresh", fresh.toFixed(1));
+  expect(fresh).toBeGreaterThan(worn + 12);
   // the artwork is a texture of the vehicle's model, not part of the page or the rink boards
   const glb = await page.request.get("/models/zamboni.glb"); expect(glb.ok()).toBe(true);
   expect(glb.headers()["content-type"] ?? "").toMatch(/octet|model|binary|gltf/i);

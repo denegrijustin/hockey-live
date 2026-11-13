@@ -33,13 +33,11 @@ function CrossRow({ offense, defense, offenseTeam, defenseTeam }: { offense: Ran
   const gap = offense?.rank != null && defense?.rank != null ? defense.rank - offense.rank : null; // positive: the offense is ranked better
   const pool = Math.max(2, offense?.pool ?? defense?.pool ?? 32);
   const share = gap == null || Math.abs(gap) <= 0 ? 0.5 : 0.5 + (Math.sign(gap) * 0.47 * Math.min(1, Math.abs(gap) / (pool - 1)));
-  const who = gap == null || gap === 0 ? null : gap > 0 ? offenseTeam : defenseTeam;
-  const badge = gap == null ? <b>—</b> : gap === 0 ? <b>EVEN</b> : <><b>+{Math.abs(gap)} RANK{Math.abs(gap) === 1 ? "" : "S"}</b><small>{who!.short} advantage</small></>;
   const side = (m: RankedMatchupMetric | null, team: Team, role: string) => {
     const tier = rankBadge(m);
     return { id: team.id, big: m?.rank == null ? "—" : `${m.tied ? "T" : ""}#${m.rank}`, sub: <>{m?.label ?? "Unavailable"} ({role})<br />{displayValue(m)}</>, tier: tier as { tone: "good" | "bad"; label: string } | null };
   };
-  return <Versus away={side(offense, offenseTeam, "Offense")} home={side(defense, defenseTeam, "Defense")} share={share} badge={badge} label={offense?.label?.replace(" scored", "").replace(" / Game", "") ?? "Metric"} />;
+  return <Versus away={side(offense, offenseTeam, "Offense")} home={side(defense, defenseTeam, "Defense")} share={share} label={offense?.label?.replace(" scored", "").replace(" / Game", "") ?? "Metric"} />;
 }
 
 function Crossover({ offenseTeam, defenseTeam, snapshot }: {

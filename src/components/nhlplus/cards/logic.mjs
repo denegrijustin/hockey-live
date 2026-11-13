@@ -160,3 +160,11 @@ export function lineColors(awayColor, homeColor) {
   return dist < 90 ? { away: "#7be1c6", home: "#e9c67d" } : { away: toHex(a), home: toHex(h) };
 }
 export const niceMax = (v) => (v <= 1 ? 1 : v <= 3 ? Math.ceil(v * 2) / 2 : Math.ceil(v));
+
+/** A team's league rank on a season number (1 = best) among every team in the summary, or null when it has no value. */
+export function leagueRank(summary, team, pick, higherIsBetter = true) {
+  const vals = Object.entries(summary?.teams ?? {}).map(([t, s]) => [t, pick(s)]).filter(([, v]) => v != null && Number.isFinite(v));
+  const mine = vals.find(([t]) => t === team)?.[1];
+  if (mine == null || vals.length < 8) return null;
+  return { rank: vals.filter(([, v]) => (higherIsBetter ? v > mine : v < mine)).length + 1, pool: vals.length };
+}

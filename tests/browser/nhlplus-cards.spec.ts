@@ -124,9 +124,9 @@ test("expanded card: aligned comparisons with exact values, definitions, NHL+ bu
   for (const h of ["Chance creation", "Defensive suppression", "Special teams", "Goaltending"]) await expect(ex).toContainText(h);
   // The last row (recent trend) comes from a second request that finishes after the season profile, so wait for it.
   await expect.poll(() => ex.locator(".mp-cmp").count()).toBeGreaterThanOrEqual(7);
-  await expect(ex).toContainText(/\d+ GP · [\d.]+ min/);
+  await expect(ex.locator('.vs-side[title*=" GP · "]').first()).toHaveAttribute('title', /\d+ GP · [\d.]+ min/); // sample sizes sit in each side's tooltip, off the screen
   await expect(ex.getByText("Recent trend")).toBeVisible();
-  await expect(ex).toContainText(/derived from shot-level data|Recent games are not available/);
+  await expect.poll(async () => (await ex.locator('.mp-cmp[title*="derived from shot-level data"]').count()) + (await ex.getByText("Recent games are not available").count())).toBeGreaterThan(0); // the unit now sits in the row's tooltip
   // NHL+ button precedes "Why it matters" and does not collapse the card
   const before = await c.evaluate((el) => { const b = el.querySelector(".nhlp-expanded .nhlp-btn")!, w = el.querySelector(".why-watch")!; return !!(b.compareDocumentPosition(w) & Node.DOCUMENT_POSITION_FOLLOWING); });
   expect(before).toBe(true);

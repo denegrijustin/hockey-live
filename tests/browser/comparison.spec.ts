@@ -28,8 +28,8 @@ test("rank line, crossover comparison at 320px, team swapping and ESPN link", as
   await expect(cmp.locator(".crossover")).toHaveCount(1);
   expect(await cmp.locator(".crossover").getAttribute("aria-label")).not.toBe(firstView);
   await expect(cmp.locator(".comparison-title h3")).toContainText(/offense vs\. .* defense/);
-  const left = await cmp.locator(".metric-offense").first().boundingBox();
-  const right = await cmp.locator(".metric-defense").first().boundingBox();
+  const left = await cmp.locator(".crossover-row .vs-a").first().boundingBox();
+  const right = await cmp.locator(".crossover-row .vs-h").first().boundingBox();
   expect(left!.x).toBeLessThan(right!.x);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -53,15 +53,14 @@ for (const width of [320, 390, 1280]) {
     await page.locator(".game-card").first().getByRole("button", { name: /Open Game Center for/ }).click();
     const dialog = page.locator("dialog.game-dialog");
     await gcTab(page, "Team Stats");
-    if (width <= 620) await expect(dialog.locator(".crossover-row .gap-bar").first()).toBeVisible(); // phone: the 86px dial is replaced by an inline split bar
-    else await expect(dialog.locator(".crossover-row .gauge").first()).toBeVisible();
-    await expect(dialog.locator(".crossover-row .gauge")).not.toHaveCount(0);
+    await expect(dialog.locator(".crossover-row .vs").first()).toBeVisible(); // every row is a head-to-head bar with a rank each side
+    await expect(dialog.locator(".crossover-row .vs-track")).not.toHaveCount(0);
     await page.addStyleTag({ content: "dialog.game-dialog, dialog.game-dialog * { font-family: 'DejaVu Sans', Verdana, sans-serif !important; }" }); // a wide system font, as on a Mac or Windows machine
     await page.waitForTimeout(300);
-    const overlaps = await dialog.locator(".gauge").evaluateAll((figures) => {
+    const overlaps = await dialog.locator(".vs").evaluateAll((figures) => {
       const hits: string[] = [];
       for (const f of figures) {
-        const boxes = [...f.querySelectorAll("figcaption b, figcaption i, figcaption .gauge-label")].filter((e) => e.getClientRects().length > 0).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
+        const boxes = [...f.querySelectorAll(".vs-big, .vs-sub, .vs-tier, .vs-label")].filter((e) => e.getClientRects().length > 0).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
         for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
           const a = boxes[i].r, b = boxes[j].r;
           if (a.width && b.width && a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) hits.push(`${boxes[i].t} | ${boxes[j].t}`);

@@ -24,12 +24,15 @@ export function PregameExpanded({ game, away, home, summary, games, hideButton =
         <span className="nhlp-title">Season profile<em> · {seasonLabel(game.season)} season</em></span>
         {!hideButton && <NhlPlusButton game={game} away={away} home={home} before={beforeOpen} className="nhlp-btn-lg" />}
       </header>
-      {!data || !p ? <DataStatus state={summary.state} updated={null} what="Season profile" onRetry={summary.retry} /> : <>
+      {!data || !p ? <DataStatus state={summary.state} updated={null} what="Season profile" onRetry={summary.retry} /> : <div className="nhlp-body">
+        <div className="nhlp-grp">
         <h4 className="nhlp-h">Chance creation</h4>
         <CompareRow label="5-on-5 xG share" tip="xGPct" left={{ team: away.id, value: p.away.xGPct, text: fmtPct(p.away.xGPct), sub: sample(p.away, p.away.m5, "5v5") }} right={{ team: home.id, value: p.home.xGPct, text: fmtPct(p.home.xGPct), sub: sample(p.home, p.home.m5, "5v5") }} diffPct />
         <CompareRow label="5-on-5 xG for" tip="xGF60" unit="per 60" left={{ team: away.id, value: p.away.m5?.xGF60 ?? null, text: fmt(p.away.m5?.xGF60) }} right={{ team: home.id, value: p.home.m5?.xGF60 ?? null, text: fmt(p.home.m5?.xGF60) }} />
         <h4 className="nhlp-h">Defensive suppression</h4>
         <CompareRow label="5-on-5 xG against" tip="xGA60" unit="per 60, lower is better" higherIsBetter={false} left={{ team: away.id, value: p.away.m5?.xGA60 ?? null, text: fmt(p.away.m5?.xGA60) }} right={{ team: home.id, value: p.home.m5?.xGA60 ?? null, text: fmt(p.home.m5?.xGA60) }} />
+        </div>
+        <div className="nhlp-grp">
         <h4 className="nhlp-h">Special teams</h4>
         <CompareRow label="Power play" tip="pp" unit="xG for per 60" left={{ team: away.id, value: p.away.ppXG60, text: fmt(p.away.ppXG60), sub: sample(p.away, p.away.pp, "PP") }} right={{ team: home.id, value: p.home.ppXG60, text: fmt(p.home.ppXG60), sub: sample(p.home, p.home.pp, "PP") }} />
         <CompareRow label="Penalty kill" tip="pk" unit="xG against per 60, lower is better" higherIsBetter={false} left={{ team: away.id, value: p.away.pkXGA60, text: fmt(p.away.pkXGA60), sub: sample(p.away, p.away.pk, "PK") }} right={{ team: home.id, value: p.home.pkXGA60, text: fmt(p.home.pkXGA60), sub: sample(p.home, p.home.pk, "PK") }} />
@@ -41,8 +44,9 @@ export function PregameExpanded({ game, away, home, summary, games, hideButton =
         {l5 && (l5.away.n > 0 || l5.home.n > 0)
           ? <CompareRow label="xG share, last 5 games" tip="rolling" unit="derived from shot-level data" left={{ team: away.id, value: l5.away.xGPct, text: fmtPct(l5.away.xGPct), sub: `${l5.away.n} game${l5.away.n === 1 ? "" : "s"}` }} right={{ team: home.id, value: l5.home.xGPct, text: fmtPct(l5.home.xGPct), sub: `${l5.home.n} game${l5.home.n === 1 ? "" : "s"}` }} diffPct />
           : <p className="nhlp-note">{games.state === "loading" ? "Loading recent games…" : "Recent games are not available yet."}</p>}
-        <p className="nhlp-note"><MetricTip id="xG"><span>Expected goals</span></MetricTip> are MoneyPuck's model. Small samples move a lot early in the season.</p>
-      </>}
+        </div>
+        <p className="nhlp-note nhlp-foot"><MetricTip id="xG"><span>Expected goals</span></MetricTip> are MoneyPuck's model. Small samples move a lot early in the season.</p>
+      </div>}
       <DataStatus compact state={summary.state} updated={summary.updated} stale={summary.stale} savedCopy={summary.savedCopy} what="Season profile" onRetry={summary.retry} />
     </section>
   );

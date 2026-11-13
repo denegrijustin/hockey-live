@@ -16,6 +16,7 @@ import { gameStatus } from "../lib/game-status.mjs";
 import { LOGO_SIZE } from "./GameCardView";
 import { usePauseOffscreen } from "../motion";
 import { useGameRoute } from "../hooks/useGameRoute";
+import "./card-dashboard.css";
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
 const IcePrep = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IcePrep })));
 const GameCardExpanded = lazy(() => import("./GameCardExpanded"));
@@ -132,8 +133,11 @@ export const GameCard = memo(function GameCard({
       <GoalFlash flash={goal} game={game} away={away} home={home} feed={feed} />
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">
-        <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>
-        <Suspense fallback={null}><GameCardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} before={before} baseline={baseline} summary={importanceSummary} onCollapse={() => setExpanded(false)} /></Suspense>
+        <div className="cx-bar">
+          <button type="button" className="expand-game primary-game-center" onClick={openGameCenter}>Open Game Center <span>Matchup engine · goalies · players · live pulse</span></button>
+          <button type="button" className="card-collapse" onClick={() => setExpanded(false)} aria-label="Collapse game card">Collapse <b aria-hidden="true">⌃</b></button>
+        </div>
+        <Suspense fallback={null}><GameCardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} before={before} baseline={baseline} summary={importanceSummary} /></Suspense>
       </div>}
 
       {gameCenterOpen && <Suspense fallback={null}>

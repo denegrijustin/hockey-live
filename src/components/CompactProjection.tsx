@@ -8,6 +8,6 @@ export function CompactGameProjection({ game, before, baseline }: { game: Game; 
   const { ref, visible } = useVisible();
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
   const { data, error } = useGameFeedData(visible && played ? game : null);
-  return <div ref={ref} className="compact-projection"><Projection game={game} before={before} baseline={baseline} feed={data} error={error} /></div>;
+  return <div ref={ref} className="compact-projection"><Projection game={game} before={before} baseline={baseline} feed={data} error={error} lean /></div>;
 }
 

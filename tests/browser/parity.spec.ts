@@ -71,7 +71,8 @@ for (const width of [360, 1280]) {
     await expect(wheel).toBeVisible({ timeout: 30000 });
     await expect(wheel.locator(".pw-wedge")).toHaveCount(32);
     await expect(wheel.locator(".pw-wedge").first().locator(".pw-cell")).toHaveCount(5);
-    await wheel.locator('.pw-wedge[data-team="COL"]').click({ force: true });
+    // A wedge is a curved shape: the centre of its bounding box can sit on a neighbour, so send the click to the wedge itself.
+    await wheel.locator('.pw-wedge[data-team="COL"]').dispatchEvent("click");
     await expect(wheel.locator(".pw-detail h3")).toContainText(/Colorado/);
     await expect(wheel.locator(".pw-rows li")).toHaveCount(5);
     const w = await wheel.locator(".pw-svg").boundingBox();

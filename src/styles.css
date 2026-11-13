@@ -3418,8 +3418,13 @@ select,
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 85' preserveAspectRatio='none'%3E%3Crect width='200' height='85' fill='%23182a4a'/%3E%3Crect x='3' y='3' width='194' height='79' rx='24' fill='%23e6eff7' stroke='%23a9bbcc' stroke-width='1.6'/%3E%3Cg fill='none' stroke-width='.9'%3E%3Cline x1='100' y1='3' x2='100' y2='82' stroke='%23c8454b' stroke-width='1.4'/%3E%3Cline x1='75' y1='3' x2='75' y2='82' stroke='%233a62b8' stroke-width='1.4'/%3E%3Cline x1='125' y1='3' x2='125' y2='82' stroke='%233a62b8' stroke-width='1.4'/%3E%3Ccircle cx='100' cy='42.5' r='12' stroke='%233a62b8'/%3E%3Ccircle cx='31' cy='24' r='8.5' stroke='%23c8454b'/%3E%3Ccircle cx='31' cy='61' r='8.5' stroke='%23c8454b'/%3E%3Ccircle cx='169' cy='24' r='8.5' stroke='%23c8454b'/%3E%3Ccircle cx='169' cy='61' r='8.5' stroke='%23c8454b'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat, #0a1530;
 }
 /* the picture never grows with the screen: a rink on a wide row or in the Game Center stays a sensible size, centred */
-.ice-canvas { max-width: 640px; margin-inline: auto; }
-.intermission.compact .ice-canvas { max-width: 520px; }
+.ice-stage { max-width: 640px; margin-inline: auto; }
+.intermission.compact .ice-stage { max-width: 520px; }
+.ice-stage { position: relative; }
+.ice-view-btn { position: absolute; top: 6px; right: 6px; z-index: 2; display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 14px; background: rgba(8, 16, 30, 0.62); color: #fff; font: inherit; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; cursor: pointer; backdrop-filter: blur(2px); }
+.ice-view-btn::after { content: ""; position: absolute; inset: -8px; } /* a 44px touch target around the small pill */
+.ice-view-btn:hover { background: rgba(8, 16, 30, 0.8); }
+.ice-view-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .int-cap {
   margin: 6px 0 0;
   font-size: 0.78rem;

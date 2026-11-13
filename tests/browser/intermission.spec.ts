@@ -209,3 +209,38 @@ test("under the production Content-Security-Policy the 3D rink still starts", as
   expect(consoleErrors.filter((e) => /Content Security Policy/.test(e)), "nothing the rink needs is blocked").toEqual([]);
   await expect(rink(page)).toHaveAttribute("data-render", "webgl");
 });
+
+// Two pictures, chosen per person: the close-up that follows the machine (its lettering can be read) or the whole rink at once (the whole sheet's progress in one view).
+test("a toggle on the rink switches between the close-up and the whole rink; the choice is remembered; the caption gives the progress", async ({ page }) => {
+  test.slow();
+  await open(page, { intermission: true, clock: "9:00" });
+  await settled(page);
+  test.skip((await rink(page).getAttribute("data-render")) !== "webgl", "no WebGL in this browser");
+  const btn = rink(page).locator(".ice-view-btn");
+  await expect(rink(page)).toHaveAttribute("data-view", "follow");
+  await expect(btn).toHaveAccessibleName("Show the whole rink");
+  const vehicleShare = async () => {
+    await page.waitForTimeout(3500); // the camera eases between the two pictures
+    const png = (await rink(page).locator("canvas").screenshot()).toString("base64");
+    return page.evaluate(async (b64) => {
+      const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+      const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const x = c.getContext("2d")!; x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, img.width, img.height).data; let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i + 2] > 110 && d[i + 2] > d[i] + 50 && d[i + 2] > d[i + 1] + 30) n++; // the vehicle's blue
+      return n / (d.length / 4);
+    }, png);
+  };
+  const close = await vehicleShare();
+  expect(close, "in the close-up the machine fills a good part of the picture").toBeGreaterThan(0.08);
+  await btn.click();
+  await expect(rink(page)).toHaveAttribute("data-view", "overview");
+  await expect(btn).toHaveAccessibleName("Show the close-up that follows the Zamboni");
+  const whole = await vehicleShare();
+  expect(whole, "in the whole-rink view the machine is small").toBeLessThan(close / 3);
+  await expect(rink(page).locator(".int-cap")).toContainText(/\d+% done/); // progress of the whole sheet
+  await open(page, { intermission: true, clock: "9:00" }); // a fresh visit; only the stored choice carries over
+  await settled(page);
+  await expect(rink(page)).toHaveAttribute("data-view", "overview"); // remembered on this device
+  await rink(page).locator(".ice-view-btn").click();
+  await expect(rink(page)).toHaveAttribute("data-view", "follow");
+});

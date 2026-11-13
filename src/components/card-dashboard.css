@@ -12,9 +12,9 @@
 .cx-panel .nhlp-card-expanded { margin: 0; }
 /* tighter inside a panel */
 .cx-panel .why-watch { margin: 0 0 6px; padding: 6px 10px; }
-.cx-panel .projection { padding: 4px 0 0; margin: 0; border: 0; }
-.cx-panel .projection .detail-note, .cx-panel .projection .prediction-change, .cx-panel .projection .feed-time { margin: 4px 0; font-size: .6875rem; line-height: 1.4; }
-.cx-panel .projection .prediction-head, .cx-panel .projection .prediction-labels { margin: 6px 0; }
+
+
+
 .cx-panel .compact-projection { margin: 0; }
 .cx-panel .game-injuries, .cx-panel .game-center-section { padding: 0; border: 0; margin: 0; }
 .cx-panel .game-injuries > summary { min-height: 32px; }

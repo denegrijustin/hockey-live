@@ -1,0 +1,24 @@
+/* The win-chance chart: on the home team's colour, darkened so white type always reads; the accent is a light tint of the same colour. Tokens plus the team's own colour. */
+.projection.win { --win-bg: #1d3a2c; --win-accent: color-mix(in srgb, var(--win-bg) 35%, #fff); position: relative; display: grid; gap: 6px; padding: 10px 14px 12px; border: 2px solid color-mix(in srgb, var(--win-accent) 70%, transparent); border-radius: 16px; background: linear-gradient(160deg, color-mix(in srgb, var(--win-bg) 66%, #000), color-mix(in srgb, var(--win-bg) 40%, #000)); color: #fff; min-width: 0; }
+.win-top { display: flex; justify-content: space-between; gap: 8px; font-size: .75rem; font-weight: 850; letter-spacing: .6px; padding-bottom: 4px; border-bottom: 3px solid var(--win-accent); }
+.win-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; }
+.win-head strong { font-size: 1.5rem; line-height: 1.15; }
+.win-head strong em { font-style: normal; color: var(--win-accent); }
+.win-head b { font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.win-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.win-axis line { stroke: #fff; stroke-width: 2; }
+.win-axis .win-brk { stroke: #fff4; stroke-width: 1.5; }
+.win-axis .win-mid { stroke: #fff; stroke-width: 2; }
+.win-axis text { fill: #fff; font-size: 20px; font-weight: 700; }
+.win-line { fill: none; stroke: var(--win-accent); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.win-dot { fill: var(--win-accent); stroke: #fff; stroke-width: 2; }
+.win-badge { fill: color-mix(in srgb, var(--win-bg) 45%, #000); stroke: var(--win-accent); stroke-width: 3; }
+.win-badge-in { display: flex; align-items: center; gap: 8px; height: 100%; font-size: 1.375rem; color: #fff; }
+.win-badge-in b { font-variant-numeric: tabular-nums; }
+.win-cap { margin: 0; text-align: center; font-size: .8125rem; font-weight: 700; }
+.win-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.win-chip { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 52px; padding: 6px 12px; border: 2px solid #fff9; border-radius: 16px; background: color-mix(in srgb, var(--win-bg) 40%, #000); }
+.win-chip b { font-size: 1.75rem; font-variant-numeric: tabular-nums; }
+.win-chip.lead { border-color: var(--win-accent); background: color-mix(in srgb, var(--win-accent) 38%, #000); }
+.projection.win { margin: 0; }
+.cx-proj { background: none; border: 0; padding: 0; display: grid; gap: 8px; align-content: start; }

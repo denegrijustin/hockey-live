@@ -17,7 +17,7 @@ export default function GameCardExpanded({ game, away, home, nhl, feed, before, 
       <div className="cx-panel cx-prof"><CardExpanded game={game} away={away} home={home} nhl={nhl} feed={feed} /></div>
       <div className="cx-panel cx-proj">
         <div className="why-watch"><span>WHY IT MATTERS</span><p>{summary}</p></div>
-        <CompactGameProjection game={game} before={before} baseline={baseline} />
+        <CompactGameProjection game={game} before={before} baseline={baseline} home={home} away={away} />
       </div>
       <div className="cx-panel cx-goal"><GoalieComparison game={game} away={away} home={home} lean /></div>
       <div className="cx-panel cx-inj"><GameInjuries away={away} home={home} season={game.season} /></div>

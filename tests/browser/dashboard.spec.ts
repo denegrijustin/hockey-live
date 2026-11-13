@@ -35,7 +35,7 @@ test("default teams, league selection, graphs and season navigation", async ({
   await card.scrollIntoViewIfNeeded();
   await page.screenshot({path: `../nhl-projection-${test.info().project.name}.png`});
   await expect(card.locator(".why-watch")).toBeVisible();
-  await expect(card.locator(".lineup-brief")).toBeVisible();
+  await expect(card.locator(".goalie-comparison")).toBeVisible();
   await expect(card.locator(".scenario-grid")).toHaveCount(0);
   await expect(card.locator(".card-details")).toHaveCount(0);
   await selectAllTeams(page);

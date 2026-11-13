@@ -5,6 +5,7 @@ import {
   normalizeEdge,
   isFreshLive,
   reconcileLiveScores,
+  scoreFromLanding,
 } from "./lib/game-data.mjs";
 import teams from "./data/teams.json";
 import { parseEspnScoreboard } from "./lib/espn-links.mjs";
@@ -34,12 +35,33 @@ const json = (data, status = 200, ttl = 60) =>
       "X-Content-Type-Options": "nosniff",
     },
   });
-async function get(path) {
+async function getOnce(path) {
   const r = await fetch(`${API}${path}`, {
     signal: AbortSignal.timeout(18000),
   });
   if (!r.ok) throw Object.assign(Error(`NHL returned ${r.status}`), { status: r.status });
   return r.json();
+}
+// One retry after a short pause for anything but "not found": the NHL feed turns requests away now and then, and a second try usually gets through.
+async function get(path) {
+  try {
+    return await getOnce(path);
+  } catch (e) {
+    if (e?.status === 404) throw e;
+    await new Promise((done) => setTimeout(done, 150 + Math.random() * 250));
+    return getOnce(path);
+  }
+}
+// The score from a game's goal list, kept for 30 s so a busy night does not ask the NHL for it on every refresh.
+async function cachedLanding(id, ctx, url) {
+  const key = new Request(`${url.origin}/__landing/${id}`);
+  const hit = await caches.default.match(key);
+  if (hit) return hit.json();
+  const landing = await get(`/gamecenter/${id}/landing`);
+  const score = scoreFromLanding(landing);
+  const small = { summary: { scoring: score ? [{ goals: [{ awayScore: score.away, homeScore: score.home }] }] : [] } };
+  ctx.waitUntil(caches.default.put(key, json(small, 200, 30)));
+  return small;
 }
 async function statsGet(report, season, limit = 100) {
   const url = new URL(`${STATS_API}/${report}/summary`);
@@ -223,7 +245,7 @@ async function handle(request, env, ctx) {
         let data;
         try {
           data = live
-            ? await reconcileLiveScores(normalizeScoreboard(await get("/score/now")), (id) => get(`/gamecenter/${id}/landing`))
+            ? await reconcileLiveScores(normalizeScoreboard(await get("/score/now")), (id) => cachedLanding(id, ctx, url))
             : normalizeGameFeed(
                 await get(
                   `/gamecenter/${url.pathname.split("/").pop()}/play-by-play`,
@@ -232,6 +254,9 @@ async function handle(request, env, ctx) {
         } catch (e) {
           // A game the NHL has not published yet is "not found", not an outage (the client keeps its normal cadence instead of backing off).
           if (!live && e?.status === 404) return json({ error: "Play-by-play is not published for this game yet" }, 404, 15);
+          // The NHL feed failed twice: show the last good copy (at most two minutes old) rather than an error.
+          const last = await caches.default.match(new Request(`${url.origin}/__last${url.pathname}`));
+          if (last) return new Response(last.body, { status: 200, headers: { "Cache-Control": "public, max-age=5", "X-Content-Type-Options": "nosniff", "Content-Type": "application/json", "X-Iceboard-Stale": "1" } });
           throw e;
         }
         // Edge TTL by game state (Phase 5): 15 s while live (the NHL feed's own cache), 120 s for FINAL (late corrections still arrive),
@@ -239,6 +264,7 @@ async function handle(request, env, ctx) {
         const ttl = live ? 15 : data.state === "OFF" ? 3600 : data.state === "FINAL" ? 120 : 15;
         const response = json(data, 200, ttl);
         ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+        ctx.waitUntil(caches.default.put(new Request(`${url.origin}/__last${url.pathname}`), json(data, 200, 120)));
         return response;
       }
       if (

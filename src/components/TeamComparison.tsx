@@ -7,7 +7,7 @@ import { loadBox } from "../lib/api";
 import { useLeagueMatchups } from "./useLeagueMatchups";
 import "./team-comparison.css";
 import { TeamLogo } from "./TeamLogo";
-import { Gauge } from "./Gauge";
+import { Versus } from "./Versus";
 import { gaugeColors } from "../lib/kits";
 import "./gauge.css";
 
@@ -17,45 +17,29 @@ const displayValue = (metric: RankedMatchupMetric | null) => {
   if (metric.unit === "%") return `${(metric.value * 100).toFixed(1)}%`;
   return metric.value.toFixed(2);
 };
-const displayRank = (metric: RankedMatchupMetric | null) =>
-  !metric || metric.rank == null ? "Rank unavailable" : `${metric.tied ? "T" : ""}#${metric.rank} of ${metric.pool}`;
-
-function Badge({ metric }: { metric: RankedMatchupMetric | null }) {
-  const badge = rankBadge(metric);
-  return badge ? <span className={`rank-badge ${badge.tone}`}>{badge.label}</span> : null;
-}
-
-function RankGap({ offense, defense }: { offense: RankedMatchupMetric | null; defense: RankedMatchupMetric | null }) {
-  if (offense?.rank == null || defense?.rank == null)
-    return <span className="rank-gap neutral">Rank comparison unavailable</span>;
-  const gap = Math.abs(offense.rank - defense.rank);
-  if (gap <= 5) return <span className="rank-gap neutral">◆ within 5 rank places</span>;
-  return offense.rank < defense.rank
-    ? <span className="rank-gap stronger-left">← {gap} rank places</span>
-    : <span className="rank-gap stronger-right">{gap} rank places →</span>;
-}
-
-/** A two-sided number as text first (label, both values) with a thin split bar; `span` is the gap that swings the bar all the way for rates. */
+/** A two-sided number in the head-to-head look; `span` is the gap that swings the bar all the way for rates. */
 function SplitRow({ label, away, home, awayId, homeId, span, lowerBetter, format }: { label: string; away: number; home: number; awayId: string; homeId: string; span: number; lowerBetter?: boolean; format: (v: number) => string }) {
   const share = Math.min(0.95, Math.max(0.05, 0.5 + ((away - home) / span / 2) * (lowerBetter ? -1 : 1)));
-  const lead = Math.abs(share - 0.5) < 0.02 ? "even" : share > 0.5 ? "away" : "home", colors = gaugeColors(awayId, homeId);
+  const lead = Math.abs(share - 0.5) < 0.02 ? "even" : share > 0.5 ? "away" : "home";
   return (
-    <div className="split-row" data-leader={lead} role="img" aria-label={`${label}: ${awayId} ${format(away)}, ${homeId} ${format(home)}`} style={{ "--g-away": colors.away, "--g-home": colors.home } as React.CSSProperties}>
-      <span className="split-label">{label}</span>
-      <b className="away"><em>{awayId}</em> {format(away)}</b>
-      <span className="split-bar" aria-hidden="true"><i style={{ width: `${share * 100}%` }} /></span>
-      <b className="home">{format(home)} <em>{homeId}</em></b>
+    <div className="split-row" data-leader={lead} role="img" aria-label={`${label}: ${awayId} ${format(away)}, ${homeId} ${format(home)}`}>
+      <Versus away={{ id: awayId, big: format(away) }} home={{ id: homeId, big: format(home) }} share={share} label={label} />
     </div>
   );
 }
 
-/** How strong a side is in this matchup row, from its league rank (first of the pool is the most). */
-const strength = (m: RankedMatchupMetric | null) => (m?.rank == null || m.pool == null ? 0 : m.pool - m.rank + 1);
-
-/** Phone replacement for the 86px dial: the same split (offense rank strength against defense rank strength) as a thin bar. */
-function GapBar({ offense, defense, offenseId, defenseId }: { offense: RankedMatchupMetric | null; defense: RankedMatchupMetric | null; offenseId: string; defenseId: string }) {
-  const a = strength(offense), d = strength(defense), c = gaugeColors(offenseId, defenseId);
-  return <span className="gap-bar" aria-hidden="true" style={{ "--g-away": c.away, "--g-home": c.home } as React.CSSProperties}><i style={{ width: `${(a + d > 0 ? a / (a + d) : 0.5) * 100}%` }} /></span>;
+/** One row of the rank comparison: the offense's league rank against the defense's, big at the sides, a bar split by the rank gap, "+N RANKS" on the split. */
+function CrossRow({ offense, defense, offenseTeam, defenseTeam }: { offense: RankedMatchupMetric | null; defense: RankedMatchupMetric | null; offenseTeam: Team; defenseTeam: Team }) {
+  const gap = offense?.rank != null && defense?.rank != null ? defense.rank - offense.rank : null; // positive: the offense is ranked better
+  const pool = Math.max(2, offense?.pool ?? defense?.pool ?? 32);
+  const share = gap == null || Math.abs(gap) <= 0 ? 0.5 : 0.5 + (Math.sign(gap) * 0.47 * Math.min(1, Math.abs(gap) / (pool - 1)));
+  const who = gap == null || gap === 0 ? null : gap > 0 ? offenseTeam : defenseTeam;
+  const badge = gap == null ? <b>—</b> : gap === 0 ? <b>EVEN</b> : <><b>+{Math.abs(gap)} RANK{Math.abs(gap) === 1 ? "" : "S"}</b><small>{who!.short} advantage</small></>;
+  const side = (m: RankedMatchupMetric | null, team: Team, role: string) => {
+    const tier = rankBadge(m);
+    return { id: team.id, big: m?.rank == null ? "—" : `${m.tied ? "T" : ""}#${m.rank}`, sub: <>{m?.label ?? "Unavailable"} ({role})<br />{displayValue(m)}</>, tier: tier as { tone: "good" | "bad"; label: string } | null };
+  };
+  return <Versus away={side(offense, offenseTeam, "Offense")} home={side(defense, defenseTeam, "Defense")} share={share} badge={badge} label={offense?.label?.replace(" scored", "").replace(" / Game", "") ?? "Metric"} />;
 }
 
 function Crossover({ offenseTeam, defenseTeam, snapshot }: {
@@ -75,23 +59,7 @@ function Crossover({ offenseTeam, defenseTeam, snapshot }: {
       </header>
       {rows.map(({ key, offense: offenseMetric, defense: defenseMetric }) => (
         <div className="crossover-row" key={key} data-metric={key}>
-          <div className="metric-side metric-offense">
-            <b>{displayValue(offenseMetric)}</b>
-            <small>{offenseMetric?.label ?? "Unavailable"} · {offenseMetric?.unit ?? ""}</small>
-            <span>{displayRank(offenseMetric)}</span>
-            <Badge metric={offenseMetric} />
-          </div>
-          <div className="metric-gap">
-            <GapBar offense={offenseMetric} defense={defenseMetric} offenseId={offenseTeam.id} defenseId={defenseTeam.id} />
-            <Gauge stretch away={strength(offenseMetric)} home={strength(defenseMetric)} awayId={offenseTeam.id} homeId={defenseTeam.id} label={offenseMetric?.label?.replace(" scored", "") ?? "Metric"} awayText={displayValue(offenseMetric)} homeText={displayValue(defenseMetric)} />
-            <RankGap offense={offenseMetric} defense={defenseMetric} />
-          </div>
-          <div className="metric-side metric-defense">
-            <b>{displayValue(defenseMetric)}</b>
-            <small>{defenseMetric?.label ?? "Unavailable"} · {defenseMetric?.unit ?? ""}</small>
-            <span>{displayRank(defenseMetric)}</span>
-            <Badge metric={defenseMetric} />
-          </div>
+          <CrossRow offense={offenseMetric} defense={defenseMetric} offenseTeam={offenseTeam} defenseTeam={defenseTeam} />
         </div>
       ))}
     </section>
@@ -140,6 +108,7 @@ function GoalieCard({ team, goalie, status }: { team: Team; goalie: MatchupGoali
     </article>
   );
 }
+
 
 export function GoalieComparison({ game, away, home, compact = false, lean = false }: { game: Game; away: Team; home: Team; compact?: boolean; /** Cards and gauges only, no explanatory note. */ lean?: boolean }) {
   const { data, error } = useLeagueMatchups(game.season);

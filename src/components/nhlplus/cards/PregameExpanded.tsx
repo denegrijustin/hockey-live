@@ -6,7 +6,9 @@ import { DataStatus } from "../shared/DataStatus";
 import { MetricTip } from "../shared/MetricTip";
 import { fmt, fmtMin, fmtPct, fmtSigned } from "../shared/format";
 import { NhlPlusButton } from "./NhlPlusButton";
-import { lastFive, profileFor, seasonLabel } from "./logic.mjs";
+import { lastFive, leagueRank, profileFor, seasonLabel } from "./logic.mjs";
+import { VersusHead } from "../../Versus";
+import { teamMetrics } from "../../../lib/nhlplus.mjs";
 import { starterGap, statusWord, useStarterLines } from "./StarterCell";
 
 /** Aligned season comparisons for the expanded card and the Game Center. Same numbers as the strip, with sample sizes and definitions. */
@@ -17,6 +19,7 @@ export function PregameExpanded({ game, away, home, summary, games, hideButton =
   const p = data ? profileFor(data, away.id, home.id) : null;
   const g = useStarterLines(game, away, home, data);
   const l5 = games.data ? { away: lastFive(games.data, away.id), home: lastFive(games.data, home.id) } : null;
+  const rk = (team: string, sit: string, key: string, hi = true) => (data ? leagueRank(data, team, (t: any) => (teamMetrics(t?.[sit]) as any)?.[key] ?? null, hi) : null);
   const sample = (side: NonNullable<typeof p>["away"], m: any, what: string) => (side.gp != null ? `${side.gp} GP · ${fmtMin(m?.toi)} min ${what}` : undefined);
   return (
     <section className="nhlp-expanded" aria-label="Season profile detail" data-testid="nhlp-expanded">
@@ -24,18 +27,19 @@ export function PregameExpanded({ game, away, home, summary, games, hideButton =
         <span className="nhlp-title">Season profile<em> · {seasonLabel(game.season)} season</em></span>
         {!hideButton && <NhlPlusButton game={game} away={away} home={home} before={beforeOpen} className="nhlp-btn-lg" />}
       </header>
+      <VersusHead away={{ id: away.id, name: away.short }} home={{ id: home.id, name: home.short }} />
       {!data || !p ? <DataStatus state={summary.state} updated={null} what="Season profile" onRetry={summary.retry} /> : <div className="nhlp-body">
         <div className="nhlp-grp">
         <h4 className="nhlp-h">Chance creation</h4>
-        <CompareRow label="5-on-5 xG share" tip="xGPct" left={{ team: away.id, value: p.away.xGPct, text: fmtPct(p.away.xGPct), sub: sample(p.away, p.away.m5, "5v5") }} right={{ team: home.id, value: p.home.xGPct, text: fmtPct(p.home.xGPct), sub: sample(p.home, p.home.m5, "5v5") }} diffPct />
-        <CompareRow label="5-on-5 xG for" tip="xGF60" unit="per 60" left={{ team: away.id, value: p.away.m5?.xGF60 ?? null, text: fmt(p.away.m5?.xGF60) }} right={{ team: home.id, value: p.home.m5?.xGF60 ?? null, text: fmt(p.home.m5?.xGF60) }} />
+        <CompareRow label="5-on-5 xG share" tip="xGPct" left={{ rank: rk(away.id, "5on5", "xGPct", true), team: away.id, value: p.away.xGPct, text: fmtPct(p.away.xGPct), sub: sample(p.away, p.away.m5, "5v5") }} right={{ rank: rk(home.id, "5on5", "xGPct", true), team: home.id, value: p.home.xGPct, text: fmtPct(p.home.xGPct), sub: sample(p.home, p.home.m5, "5v5") }} diffPct />
+        <CompareRow label="5-on-5 xG for" tip="xGF60" unit="per 60" left={{ rank: rk(away.id, "5on5", "xGF60", true), team: away.id, value: p.away.m5?.xGF60 ?? null, text: fmt(p.away.m5?.xGF60) }} right={{ rank: rk(home.id, "5on5", "xGF60", true), team: home.id, value: p.home.m5?.xGF60 ?? null, text: fmt(p.home.m5?.xGF60) }} />
         <h4 className="nhlp-h">Defensive suppression</h4>
-        <CompareRow label="5-on-5 xG against" tip="xGA60" unit="per 60, lower is better" higherIsBetter={false} left={{ team: away.id, value: p.away.m5?.xGA60 ?? null, text: fmt(p.away.m5?.xGA60) }} right={{ team: home.id, value: p.home.m5?.xGA60 ?? null, text: fmt(p.home.m5?.xGA60) }} />
+        <CompareRow label="5-on-5 xG against" tip="xGA60" unit="per 60, lower is better" higherIsBetter={false} left={{ rank: rk(away.id, "5on5", "xGA60", false), team: away.id, value: p.away.m5?.xGA60 ?? null, text: fmt(p.away.m5?.xGA60) }} right={{ rank: rk(home.id, "5on5", "xGA60", false), team: home.id, value: p.home.m5?.xGA60 ?? null, text: fmt(p.home.m5?.xGA60) }} />
         </div>
         <div className="nhlp-grp">
         <h4 className="nhlp-h">Special teams</h4>
-        <CompareRow label="Power play" tip="pp" unit="xG for per 60" left={{ team: away.id, value: p.away.ppXG60, text: fmt(p.away.ppXG60), sub: sample(p.away, p.away.pp, "PP") }} right={{ team: home.id, value: p.home.ppXG60, text: fmt(p.home.ppXG60), sub: sample(p.home, p.home.pp, "PP") }} />
-        <CompareRow label="Penalty kill" tip="pk" unit="xG against per 60, lower is better" higherIsBetter={false} left={{ team: away.id, value: p.away.pkXGA60, text: fmt(p.away.pkXGA60), sub: sample(p.away, p.away.pk, "PK") }} right={{ team: home.id, value: p.home.pkXGA60, text: fmt(p.home.pkXGA60), sub: sample(p.home, p.home.pk, "PK") }} />
+        <CompareRow label="Power play" tip="pp" unit="xG for per 60" left={{ rank: rk(away.id, "5on4", "xGF60", true), team: away.id, value: p.away.ppXG60, text: fmt(p.away.ppXG60), sub: sample(p.away, p.away.pp, "PP") }} right={{ rank: rk(home.id, "5on4", "xGF60", true), team: home.id, value: p.home.ppXG60, text: fmt(p.home.ppXG60), sub: sample(p.home, p.home.pp, "PP") }} />
+        <CompareRow label="Penalty kill" tip="pk" unit="xG against per 60, lower is better" higherIsBetter={false} left={{ rank: rk(away.id, "4on5", "xGA60", false), team: away.id, value: p.away.pkXGA60, text: fmt(p.away.pkXGA60), sub: sample(p.away, p.away.pk, "PK") }} right={{ rank: rk(home.id, "4on5", "xGA60", false), team: home.id, value: p.home.pkXGA60, text: fmt(p.home.pkXGA60), sub: sample(p.home, p.home.pk, "PK") }} />
         <h4 className="nhlp-h">Goaltending</h4>
         <CompareRow label="Starter goals saved above expected" tip="gsax" unit="season total"
           left={{ team: away.id, value: g.away.gsax, text: fmtSigned(g.away.gsax), sub: [g.away.name, starterGap(g.away) ?? statusWord(g.away.status), g.away.gp != null ? `${g.away.gp} GP` : null].filter(Boolean).join(" · ") }}

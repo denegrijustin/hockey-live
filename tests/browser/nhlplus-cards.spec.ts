@@ -124,7 +124,7 @@ test("expanded card: aligned comparisons with exact values, definitions, NHL+ bu
   for (const h of ["Chance creation", "Defensive suppression", "Special teams", "Goaltending"]) await expect(ex).toContainText(h);
   // The last row (recent trend) comes from a second request that finishes after the season profile, so wait for it.
   await expect.poll(() => ex.locator(".mp-cmp").count()).toBeGreaterThanOrEqual(7);
-  await expect(ex).toContainText(/\d+ GP · [\d.]+ min/);
+  await expect(ex.locator('.vs-side[title*=" GP · "]').first()).toHaveAttribute('title', /\d+ GP · [\d.]+ min/); // sample sizes sit in each side's tooltip, off the screen
   await expect(ex.getByText("Recent trend")).toBeVisible();
   await expect(ex).toContainText(/derived from shot-level data|Recent games are not available/);
   // NHL+ button precedes "Why it matters" and does not collapse the card

@@ -4,7 +4,7 @@ import { TeamLogo } from "./TeamLogo";
 import "./versus.css";
 
 export type VsTier = { tone: "good" | "bad"; label: string } | null;
-export type VsSide = { id: string; big: ReactNode; sub?: ReactNode; tier?: VsTier };
+export type VsSide = { id: string; big: ReactNode; sub?: ReactNode; tier?: VsTier; /** Detail kept off the screen (a tooltip), such as the sample size behind a number. */ hint?: string };
 
 /** Black or white, whichever reads on the colour behind it. */
 function inkOn(hex: string) {
@@ -26,7 +26,7 @@ export function Versus({ away, home, share, label, density = "row", className = 
   const colors = gaugeColors(away.id, home.id);
   const leader = Math.abs(share - 0.5) < 0.02 ? "even" : share > 0.5 ? "away" : "home";
   const side = (x: VsSide, cls: string) => (
-    <div className={`vs-side ${cls}`}>
+    <div className={`vs-side ${cls}`} title={x.hint}>
       {density === "bar" && <TeamLogo id={x.id} size={30} />}
       <b className="vs-big">{x.big}</b>
       {x.sub != null && <small className="vs-sub">{x.sub}</small>}

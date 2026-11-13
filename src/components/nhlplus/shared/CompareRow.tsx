@@ -29,7 +29,7 @@ export function CompareRow({ label, tip, left, right, higherIsBetter = true, uni
     }
     share = 0.5 + dir * 0.47 * Math.min(1, mag);
   }
-  const side = (x: CompareSide): VsSide => ({ id: x.team, big: x.rank ? `#${x.rank.rank}` : x.text, sub: x.rank ? x.text : compact ? undefined : x.sub, tier: tierOf(x.rank) as VsSide["tier"] });
+  const side = (x: CompareSide): VsSide => ({ id: x.team, big: x.rank ? `#${x.rank.rank}` : x.text, sub: x.rank ? x.text : compact ? undefined : x.sub, hint: x.sub, tier: tierOf(x.rank) as VsSide["tier"] });
   return (
     <div className={`mp-cmp${compact ? " mp-cmp-compact" : ""}`} role="group" aria-label={`${label}: ${left.team} ${left.text}, ${right.team} ${right.text}`} title={unit || undefined}>
       <Versus away={side(left)} home={side(right)} share={share} label={tip ? <MetricTip id={tip}>{label}</MetricTip> : label} />

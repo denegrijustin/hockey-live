@@ -93,7 +93,7 @@ export async function captionOverlaps(page: Page) {
   return page.locator(`${GAME_DIALOG} .gauge`).evaluateAll((figures) => {
     const hits: string[] = [];
     for (const f of figures) {
-      const boxes = [...f.querySelectorAll("figcaption b, figcaption i, figcaption .gauge-label")].filter((e) => e.getClientRects().length > 0).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
+      const boxes = [...f.querySelectorAll(".vs-big, .vs-sub, .vs-label, .vs-tier, figcaption")].filter((e) => e.getClientRects().length > 0).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
       for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
         const a = boxes[i].r, b = boxes[j].r;
         if (a.width && b.width && a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) hits.push(`${boxes[i].t} | ${boxes[j].t}`);
@@ -107,7 +107,7 @@ export async function captionOverlaps(page: Page) {
 export async function clippedCaptions(page: Page) {
   return page.locator(`${GAME_DIALOG} .gauge`).evaluateAll((figures) => figures.flatMap((f) => {
     const fr = f.getBoundingClientRect();
-    return [...f.querySelectorAll("figcaption *")].filter((e) => e.getClientRects().length).flatMap((e) => {
+    return [...f.querySelectorAll(".vs *, figcaption *")].filter((e) => e.getClientRects().length).flatMap((e) => {
       const r = e.getBoundingClientRect();
       return r.left < fr.left - 1 || r.right > fr.right + 1 ? [`${e.textContent}`] : [];
     });

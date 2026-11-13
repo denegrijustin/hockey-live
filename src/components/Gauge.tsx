@@ -32,7 +32,7 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   const colors = gaugeColors(awayId, homeId);
   const density = look === "proj" ? "hero" : look === "bar" ? "bar" : "row";
   return (
-    <figure className={`gauge versus ${look ?? ""} ${stretch ? "stretch" : ""} ${variant}`} data-leader={leader} role="img" aria-label={`${label}: ${text}`} style={{ margin: 0, "--g-away": colors.away, "--g-home": colors.home } as CSSProperties}>
+    <figure className={`gauge versus ${look ?? ""} ${look === "bar" ? "sbar" : ""} ${stretch ? "stretch" : ""} ${variant}`} data-leader={leader} data-lopsided={Math.min(1, Math.abs(share - 0.5) * 2).toFixed(2)} role="img" aria-label={`${label}: ${text}`} style={{ margin: 0, "--g-away": colors.away, "--g-home": colors.home } as CSSProperties}>
       <Versus away={{ id: awayId, big: shownA, sub: awaySub }} home={{ id: homeId, big: shownH, sub: homeSub }} share={share} label={look === "bar" ? undefined : label} density={density} />
       {look === "bar" && <figcaption className="gauge-label vs-cap">{label}</figcaption>}
     </figure>

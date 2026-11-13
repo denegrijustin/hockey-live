@@ -22,13 +22,19 @@ test("the global rule sets the baseline security headers", () => {
 test("the CSP has no eval, no wildcard or http script/connect sources, and locks down framing, objects and base", () => {
   const csp = header("Content-Security-Policy");
   expect(csp).toBeTruthy();
-  expect(csp).not.toMatch(/unsafe-eval|wasm-unsafe-eval/);
+  expect(csp).not.toMatch(/'unsafe-eval'/);
+  // The 3D rink decodes its meshopt-compressed model with WebAssembly: that, and only that, may compile (no eval).
+  expect(directive(csp, "script-src")).toMatch(/'wasm-unsafe-eval'/);
   expect(directive(csp, "default-src")).toBe("default-src 'self'");
   for (const d of ["script-src", "connect-src"]) {
     const v = directive(csp, d);
-    expect(v, d).not.toMatch(/\*|'unsafe-inline'|\bdata:|\bhttp:|\bblob:/);
+    expect(v, d).not.toMatch(/\*|'unsafe-inline'|\bdata:|\bhttp:/);
     expect(v, d).toMatch(/'self'/);
   }
+  // blob: is for the 3D model's own textures (the loader reads them back through a blob URL); never for scripts.
+  expect(directive(csp, "script-src")).not.toMatch(/\bblob:/);
+  expect(directive(csp, "connect-src")).toMatch(/\bblob:/);
+  expect(directive(csp, "img-src")).toMatch(/\bblob:/);
   expect(directive(csp, "object-src")).toBe("object-src 'none'");
   expect(directive(csp, "base-uri")).toBe("base-uri 'self'");
   expect(directive(csp, "frame-ancestors")).toBe("frame-ancestors 'none'");

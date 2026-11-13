@@ -78,6 +78,8 @@ test("the ice-preparation window opens 20 minutes before puck drop and closes wh
   assert.equal(icePrepActive(g({ state: "LIVE" }), start + 60_000), false);
   assert.equal(icePrepActive(g({ state: "FINAL" }), start), false);
   assert.equal(icePrepActive(g({ scheduleState: "PPD" }), start - 60_000), false);
+  assert.equal(icePrepActive(g(), start + 44 * 60_000), true, "a short delay keeps the ice ready");
+  assert.equal(icePrepActive(g(), start + 46 * 60_000), false, "a game still not started 45 minutes late is not shown a rink");
   assert.equal(icePrepActive(g(), start + 4 * 3600_000), false);
   assert.equal(icePrepActive(g({ start: "nope" }), start), false);
 });

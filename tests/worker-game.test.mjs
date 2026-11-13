@@ -60,3 +60,27 @@ test("the response keeps its shape and the scoreboard clock fields", async () =>
   assert.equal(body.clockRunning, false);
   assert.equal(body.clockSeconds, 692);
 });
+
+test("one failed NHL request is retried once, and the second try's answer is used", async () => {
+  let n = 0;
+  upstream = () => (++n === 1 ? new Response("{}", { status: 503 }) : Response.json({ ...raw, gameState: "LIVE" }));
+  upstreamCalls.length = 0;
+  const res = await call("/api/game/2026020501");
+  assert.equal(res.status, 200);
+  assert.equal(upstreamCalls.length, 2);
+});
+
+test("when the NHL feed fails twice, the last good copy is served instead of an error; with no copy it is still a 502", async () => {
+  serve({ gameState: "LIVE" });
+  const ok = await call("/api/game/2026020502");
+  assert.equal(ok.status, 200);
+  const good = await ok.json();
+  stored.delete("https://x.test/api/game/2026020502"); // the normal cache entry has expired, the last-good copy has not
+  upstream = () => new Response("{}", { status: 503 });
+  const res = await call("/api/game/2026020502");
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("X-Iceboard-Stale"), "1");
+  assert.equal(ttl(res), "5");
+  assert.equal((await res.json()).id, good.id);
+  assert.equal((await call("/api/game/2026020599")).status, 502);
+});

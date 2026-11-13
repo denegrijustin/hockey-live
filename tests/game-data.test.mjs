@@ -60,10 +60,11 @@ test("the goal list outranks lagging team totals: a goal the NHL has listed but 
   assert.equal(scoreFromLanding({ summary: { scoring: [] } }), null);
   assert.equal(scoreFromLanding(null), null);
   const board = { games: [
-    { id: 1, state: "LIVE", period: 2, awayScore: 0, homeScore: 2 },
-    { id: 2, state: "LIVE", period: 1, awayScore: 1, homeScore: 0 },   // landing fails: unchanged
+    { id: 1, state: "LIVE", period: 2, intermission: true, awayScore: 0, homeScore: 2 },
+    { id: 2, state: "LIVE", period: 1, intermission: true, awayScore: 1, homeScore: 0 },   // landing fails: unchanged
     { id: 3, state: "FUT", period: null, awayScore: null, homeScore: null }, // not live: never fetched
-    { id: 4, state: "LIVE", period: 3, awayScore: 3, homeScore: 2 },   // totals ahead of a stale goal list: never lowered
+    { id: 4, state: "LIVE", period: 3, intermission: true, awayScore: 3, homeScore: 2 },   // totals ahead of a stale goal list: never lowered
+    { id: 5, state: "LIVE", period: 2, intermission: false, awayScore: 0, homeScore: 0 }, // in play, not at an intermission: never fetched
   ] };
   const asked = [];
   const out = await reconcileLiveScores(board, async (id) => {
@@ -72,6 +73,7 @@ test("the goal list outranks lagging team totals: a goal the NHL has listed but 
     return id === 4 ? { summary: { scoring: [{ goals: [{ awayScore: 2, homeScore: 2 }] }] } } : landing;
   });
   assert.deepEqual(asked.sort(), [1, 2, 4]);
+  assert.equal(out.games[4], board.games[4]);
   assert.deepEqual([out.games[0].awayScore, out.games[0].homeScore], [1, 2]);
   assert.equal(out.games[1], board.games[1]);
   assert.equal(out.games[2], board.games[2]);

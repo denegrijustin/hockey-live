@@ -56,7 +56,8 @@ export function scoreFromLanding(j) {
  * @param {{ games: any[] }} scoreboard @param {(id: number) => Promise<any>} fetchLanding
  */
 export async function reconcileLiveScores(scoreboard, fetchLanding) {
-  const live = (scoreboard?.games ?? []).filter((g) => (g.state === "LIVE" || g.state === "CRIT") && (g.period ?? 0) >= 1).slice(0, 24);
+  // Only games at an intermission: that is where a lagging total sits on screen for minutes; during play the NHL's totals catch up within a poll. It also keeps the extra NHL requests to a handful.
+  const live = (scoreboard?.games ?? []).filter((g) => (g.state === "LIVE" || g.state === "CRIT") && (g.period ?? 0) >= 1 && g.intermission).slice(0, 6);
   const found = new Map();
   await Promise.allSettled(live.map(async (g) => {
     const score = scoreFromLanding(await fetchLanding(g.id));

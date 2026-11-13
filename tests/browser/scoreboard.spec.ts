@@ -209,7 +209,10 @@ test.describe("scoreboard home", () => {
     expect(main!.x + main!.width).toBeLessThanOrEqual(ring!.x + 1);
     expect(status!.x).toBeLessThan(gc!.x);
     expect(gc!.y + gc!.height).toBeLessThanOrEqual(ring!.y + ring!.height);
-    expect(r!.height).toBeLessThan(180);
+    // (a game that is about to start, or has just, also carries its ice-preparation rink: that is measured separately and capped)
+    const rinkBox = await row.getByTestId("intermission").boundingBox();
+    expect(r!.height - (rinkBox?.height ?? 0)).toBeLessThan(180);
+    if (rinkBox) expect(rinkBox.height, "a rink in a row stays a sensible size on a wide screen").toBeLessThan(340);
     const second = await page.locator(".sb-row.soon").nth(1).boundingBox();
     expect(second!.x).toBeGreaterThan(r!.x + r!.width - 1); // the second game sits beside the first
     // The day switcher and the status filters share one toolbar row.

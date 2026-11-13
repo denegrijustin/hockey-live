@@ -10,7 +10,7 @@ import { usePrefs } from "../lib/prefs";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
 const SCOUTS = "/logos/kc-scouts.png";
-const ASPECT = 0.51;                  // the picture's height / width (fixed camera)
+const ASPECT = 0.43;                  // the picture's height / width (fixed camera)
 const hashOf = (id: number | string) => { let h = 2166136261; for (const ch of String(id)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
 
 /**

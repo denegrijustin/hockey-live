@@ -102,3 +102,16 @@
     min-height: 44px;
   }
 }
+
+/* Results for the selected week: every counted game and what the win did (its own class names, apart from the standings list) */
+.imp-results { border-top: 1px solid var(--imp-line); padding-top: 12px; margin-top: 14px; }
+.imp-results h3 { font-size: 0.875rem; margin: 0 0 8px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.imp-results h3 span { font-size: 0.6875rem; font-weight: 400; color: var(--imp-muted); }
+.imp-res-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.imp-res { display: grid; gap: 2px; padding: 6px 10px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface-5); font-size: 0.75rem; min-width: 0; }
+.imp-res-teams { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.imp-res-teams small { color: var(--imp-muted); }
+.imp-res-take { color: var(--text-2); }
+.imp-res-take strong { color: var(--imp-mint); font-weight: 700; }
+.imp-res-revived { border-color: var(--imp-mint); box-shadow: inset 3px 0 0 var(--imp-mint); }
+@media (min-width: 700px) { .imp-res-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

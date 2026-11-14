@@ -1,0 +1,1524 @@
+{
+  "schema_version": "1.0.0",
+  "source": "NHL Records official franchise-vs-franchise API",
+  "source_url": "https://records.nhl.com/site/api/all-time-record-vs-franchise",
+  "retrieved_on": "2026-11-14",
+  "cutoff_policy": "Official cumulative NHL Records service at retrieval on 2026-11-14; not a retroactive frozen end-of-day snapshot.",
+  "season": "2026-27",
+  "scope": "NHL franchise history, including predecessor identities and relocations where NHL records group them; not limited to current city/team era.",
+  "validation": "Both franchise perspectives summed over historical opponent team IDs; reciprocal game totals, W-L-OTL and ties all reconcile.",
+  "rivalries": [
+    {
+      "id": "BOS-MTL",
+      "teams": [
+        "BOS",
+        "MTL"
+      ],
+      "regular_season": {
+        "BOS": {
+          "wins": 298,
+          "losses": 356,
+          "ties": 103,
+          "overtime_losses": 12,
+          "games": 769,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "MTL": {
+          "wins": 368,
+          "losses": 286,
+          "ties": 103,
+          "overtime_losses": 12,
+          "games": 769,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "BOS": {
+          "wins": 71,
+          "losses": 106,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 177,
+          "segments": 1,
+          "last_meeting_season": 20132014,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "MTL": {
+          "wins": 106,
+          "losses": 71,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 177,
+          "segments": 1,
+          "last_meeting_season": 20132014,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "CGY-EDM",
+      "teams": [
+        "CGY",
+        "EDM"
+      ],
+      "regular_season": {
+        "CGY": {
+          "wins": 136,
+          "losses": 113,
+          "ties": 19,
+          "overtime_losses": 7,
+          "games": 275,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "EDM": {
+          "wins": 120,
+          "losses": 126,
+          "ties": 19,
+          "overtime_losses": 10,
+          "games": 275,
+          "segments": 2,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "CGY": {
+          "wins": 12,
+          "losses": 23,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 35,
+          "segments": 1,
+          "last_meeting_season": 20212022,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "EDM": {
+          "wins": 23,
+          "losses": 12,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 35,
+          "segments": 1,
+          "last_meeting_season": 20212022,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "PHI-PIT",
+      "teams": [
+        "PHI",
+        "PIT"
+      ],
+      "regular_season": {
+        "PHI": {
+          "wins": 169,
+          "losses": 107,
+          "ties": 30,
+          "overtime_losses": 14,
+          "games": 320,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "PIT": {
+          "wins": 121,
+          "losses": 155,
+          "ties": 30,
+          "overtime_losses": 14,
+          "games": 320,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "PHI": {
+          "wins": 25,
+          "losses": 22,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 47,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "PIT": {
+          "wins": 22,
+          "losses": 25,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 47,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "MTL-TOR",
+      "teams": [
+        "MTL",
+        "TOR"
+      ],
+      "regular_season": {
+        "MTL": {
+          "wins": 372,
+          "losses": 304,
+          "ties": 88,
+          "overtime_losses": 14,
+          "games": 778,
+          "segments": 3,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 318,
+          "losses": 352,
+          "ties": 88,
+          "overtime_losses": 20,
+          "games": 778,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "MTL": {
+          "wins": 46,
+          "losses": 32,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 78,
+          "segments": 3,
+          "last_meeting_season": 20202021,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 32,
+          "losses": 46,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 78,
+          "segments": 1,
+          "last_meeting_season": 20202021,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "NYI-NYR",
+      "teams": [
+        "NYI",
+        "NYR"
+      ],
+      "regular_season": {
+        "NYI": {
+          "wins": 140,
+          "losses": 134,
+          "ties": 19,
+          "overtime_losses": 9,
+          "games": 302,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "NYR": {
+          "wins": 143,
+          "losses": 130,
+          "ties": 19,
+          "overtime_losses": 10,
+          "games": 302,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "NYI": {
+          "wins": 20,
+          "losses": 19,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 39,
+          "segments": 1,
+          "last_meeting_season": 19931994,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "NYR": {
+          "wins": 19,
+          "losses": 20,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 39,
+          "segments": 1,
+          "last_meeting_season": 19931994,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "PIT-WSH",
+      "teams": [
+        "PIT",
+        "WSH"
+      ],
+      "regular_season": {
+        "PIT": {
+          "wins": 126,
+          "losses": 106,
+          "ties": 16,
+          "overtime_losses": 7,
+          "games": 255,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "WSH": {
+          "wins": 113,
+          "losses": 112,
+          "ties": 16,
+          "overtime_losses": 14,
+          "games": 255,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "PIT": {
+          "wins": 40,
+          "losses": 28,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 68,
+          "segments": 1,
+          "last_meeting_season": 20172018,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "WSH": {
+          "wins": 28,
+          "losses": 40,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 68,
+          "segments": 1,
+          "last_meeting_season": 20172018,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "COL-DET",
+      "teams": [
+        "COL",
+        "DET"
+      ],
+      "regular_season": {
+        "COL": {
+          "wins": 65,
+          "losses": 62,
+          "ties": 5,
+          "overtime_losses": 6,
+          "games": 138,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "DET": {
+          "wins": 68,
+          "losses": 55,
+          "ties": 5,
+          "overtime_losses": 10,
+          "games": 138,
+          "segments": 2,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "COL": {
+          "wins": 17,
+          "losses": 17,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 34,
+          "segments": 1,
+          "last_meeting_season": 20072008,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "DET": {
+          "wins": 17,
+          "losses": 17,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 34,
+          "segments": 1,
+          "last_meeting_season": 20072008,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "OTT-TOR",
+      "teams": [
+        "OTT",
+        "TOR"
+      ],
+      "regular_season": {
+        "OTT": {
+          "wins": 80,
+          "losses": 56,
+          "ties": 3,
+          "overtime_losses": 13,
+          "games": 152,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 69,
+          "losses": 67,
+          "ties": 3,
+          "overtime_losses": 13,
+          "games": 152,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "OTT": {
+          "wins": 10,
+          "losses": 20,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 30,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 20,
+          "losses": 10,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 30,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "NJD-NYR",
+      "teams": [
+        "NJD",
+        "NYR"
+      ],
+      "regular_season": {
+        "NJD": {
+          "wins": 116,
+          "losses": 123,
+          "ties": 27,
+          "overtime_losses": 13,
+          "games": 279,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "NYR": {
+          "wins": 136,
+          "losses": 105,
+          "ties": 27,
+          "overtime_losses": 11,
+          "games": 279,
+          "segments": 3,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "NJD": {
+          "wins": 20,
+          "losses": 21,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 41,
+          "segments": 1,
+          "last_meeting_season": 20222023,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "NYR": {
+          "wins": 21,
+          "losses": 20,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 41,
+          "segments": 1,
+          "last_meeting_season": 20222023,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "CHI-STL",
+      "teams": [
+        "CHI",
+        "STL"
+      ],
+      "regular_season": {
+        "CHI": {
+          "wins": 158,
+          "losses": 134,
+          "ties": 35,
+          "overtime_losses": 12,
+          "games": 339,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "STL": {
+          "wins": 146,
+          "losses": 141,
+          "ties": 35,
+          "overtime_losses": 17,
+          "games": 339,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "CHI": {
+          "wins": 35,
+          "losses": 28,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 63,
+          "segments": 1,
+          "last_meeting_season": 20152016,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "STL": {
+          "wins": 28,
+          "losses": 35,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 63,
+          "segments": 1,
+          "last_meeting_season": 20152016,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "BOS-TOR",
+      "teams": [
+        "BOS",
+        "TOR"
+      ],
+      "regular_season": {
+        "BOS": {
+          "wins": 311,
+          "losses": 272,
+          "ties": 98,
+          "overtime_losses": 14,
+          "games": 695,
+          "segments": 2,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 286,
+          "losses": 297,
+          "ties": 98,
+          "overtime_losses": 14,
+          "games": 695,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "BOS": {
+          "wins": 46,
+          "losses": 43,
+          "ties": 1,
+          "overtime_losses": 0,
+          "games": 90,
+          "segments": 1,
+          "last_meeting_season": 20232024,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 43,
+          "losses": 46,
+          "ties": 1,
+          "overtime_losses": 0,
+          "games": 90,
+          "segments": 1,
+          "last_meeting_season": 20232024,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "FLA-TBL",
+      "teams": [
+        "FLA",
+        "TBL"
+      ],
+      "regular_season": {
+        "FLA": {
+          "wins": 80,
+          "losses": 56,
+          "ties": 10,
+          "overtime_losses": 19,
+          "games": 165,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TBL": {
+          "wins": 75,
+          "losses": 67,
+          "ties": 10,
+          "overtime_losses": 13,
+          "games": 165,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "FLA": {
+          "wins": 10,
+          "losses": 10,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 20,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TBL": {
+          "wins": 10,
+          "losses": 10,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 20,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "ANA-LAK",
+      "teams": [
+        "ANA",
+        "LAK"
+      ],
+      "regular_season": {
+        "ANA": {
+          "wins": 79,
+          "losses": 64,
+          "ties": 11,
+          "overtime_losses": 17,
+          "games": 171,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "LAK": {
+          "wins": 81,
+          "losses": 58,
+          "ties": 11,
+          "overtime_losses": 21,
+          "games": 171,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "ANA": {
+          "wins": 3,
+          "losses": 4,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 7,
+          "segments": 1,
+          "last_meeting_season": 20132014,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "LAK": {
+          "wins": 4,
+          "losses": 3,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 7,
+          "segments": 1,
+          "last_meeting_season": 20132014,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "CHI-DET",
+      "teams": [
+        "CHI",
+        "DET"
+      ],
+      "regular_season": {
+        "CHI": {
+          "wins": 295,
+          "losses": 367,
+          "ties": 84,
+          "overtime_losses": 12,
+          "games": 758,
+          "segments": 3,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "DET": {
+          "wins": 379,
+          "losses": 278,
+          "ties": 84,
+          "overtime_losses": 17,
+          "games": 758,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "CHI": {
+          "wins": 43,
+          "losses": 38,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 81,
+          "segments": 1,
+          "last_meeting_season": 20122013,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "DET": {
+          "wins": 38,
+          "losses": 43,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 81,
+          "segments": 1,
+          "last_meeting_season": 20122013,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "CGY-VAN",
+      "teams": [
+        "CGY",
+        "VAN"
+      ],
+      "regular_season": {
+        "CGY": {
+          "wins": 155,
+          "losses": 103,
+          "ties": 33,
+          "overtime_losses": 20,
+          "games": 311,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 123,
+          "losses": 144,
+          "ties": 33,
+          "overtime_losses": 11,
+          "games": 311,
+          "segments": 2,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "CGY": {
+          "wins": 21,
+          "losses": 17,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 38,
+          "segments": 1,
+          "last_meeting_season": 20142015,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 17,
+          "losses": 21,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 38,
+          "segments": 1,
+          "last_meeting_season": 20142015,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "EDM-LAK",
+      "teams": [
+        "EDM",
+        "LAK"
+      ],
+      "regular_season": {
+        "EDM": {
+          "wins": 110,
+          "losses": 91,
+          "ties": 30,
+          "overtime_losses": 5,
+          "games": 236,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "LAK": {
+          "wins": 96,
+          "losses": 99,
+          "ties": 30,
+          "overtime_losses": 11,
+          "games": 236,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "EDM": {
+          "wins": 40,
+          "losses": 20,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 60,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "LAK": {
+          "wins": 20,
+          "losses": 40,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 60,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "SJS-VGK",
+      "teams": [
+        "SJS",
+        "VGK"
+      ],
+      "regular_season": {
+        "SJS": {
+          "wins": 7,
+          "losses": 26,
+          "ties": 0,
+          "overtime_losses": 5,
+          "games": 38,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VGK": {
+          "wins": 31,
+          "losses": 2,
+          "ties": 0,
+          "overtime_losses": 5,
+          "games": 38,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "SJS": {
+          "wins": 6,
+          "losses": 7,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 13,
+          "segments": 1,
+          "last_meeting_season": 20182019,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VGK": {
+          "wins": 7,
+          "losses": 6,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 13,
+          "segments": 1,
+          "last_meeting_season": 20182019,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "LAK-VGK",
+      "teams": [
+        "LAK",
+        "VGK"
+      ],
+      "regular_season": {
+        "LAK": {
+          "wins": 19,
+          "losses": 18,
+          "ties": 0,
+          "overtime_losses": 4,
+          "games": 41,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VGK": {
+          "wins": 22,
+          "losses": 15,
+          "ties": 0,
+          "overtime_losses": 4,
+          "games": 41,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "LAK": {
+          "wins": 0,
+          "losses": 4,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 4,
+          "segments": 1,
+          "last_meeting_season": 20172018,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VGK": {
+          "wins": 4,
+          "losses": 0,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 4,
+          "segments": 1,
+          "last_meeting_season": 20172018,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "COL-DAL",
+      "teams": [
+        "COL",
+        "DAL"
+      ],
+      "regular_season": {
+        "COL": {
+          "wins": 81,
+          "losses": 58,
+          "ties": 12,
+          "overtime_losses": 14,
+          "games": 165,
+          "segments": 2,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "DAL": {
+          "wins": 72,
+          "losses": 70,
+          "ties": 12,
+          "overtime_losses": 11,
+          "games": 165,
+          "segments": 2,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "COL": {
+          "wins": 23,
+          "losses": 22,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 45,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "DAL": {
+          "wins": 22,
+          "losses": 23,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 45,
+          "segments": 1,
+          "last_meeting_season": 20242025,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "COL-MIN",
+      "teams": [
+        "COL",
+        "MIN"
+      ],
+      "regular_season": {
+        "COL": {
+          "wins": 67,
+          "losses": 49,
+          "ties": 3,
+          "overtime_losses": 14,
+          "games": 133,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "MIN": {
+          "wins": 63,
+          "losses": 56,
+          "ties": 3,
+          "overtime_losses": 11,
+          "games": 133,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "COL": {
+          "wins": 14,
+          "losses": 11,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 25,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "MIN": {
+          "wins": 11,
+          "losses": 14,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 25,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "CHI-NSH",
+      "teams": [
+        "CHI",
+        "NSH"
+      ],
+      "regular_season": {
+        "CHI": {
+          "wins": 65,
+          "losses": 59,
+          "ties": 4,
+          "overtime_losses": 16,
+          "games": 144,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "NSH": {
+          "wins": 75,
+          "losses": 53,
+          "ties": 4,
+          "overtime_losses": 12,
+          "games": 144,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "CHI": {
+          "wins": 8,
+          "losses": 8,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 16,
+          "segments": 1,
+          "last_meeting_season": 20162017,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "NSH": {
+          "wins": 8,
+          "losses": 8,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 16,
+          "segments": 1,
+          "last_meeting_season": 20162017,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "BUF-TOR",
+      "teams": [
+        "BUF",
+        "TOR"
+      ],
+      "regular_season": {
+        "BUF": {
+          "wins": 127,
+          "losses": 80,
+          "ties": 18,
+          "overtime_losses": 12,
+          "games": 237,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 92,
+          "losses": 114,
+          "ties": 18,
+          "overtime_losses": 13,
+          "games": 237,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "BUF": {
+          "wins": 4,
+          "losses": 1,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 5,
+          "segments": 1,
+          "last_meeting_season": 19981999,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "TOR": {
+          "wins": 1,
+          "losses": 4,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 5,
+          "segments": 1,
+          "last_meeting_season": 19981999,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "BOS-PHI",
+      "teams": [
+        "BOS",
+        "PHI"
+      ],
+      "regular_season": {
+        "BOS": {
+          "wins": 124,
+          "losses": 66,
+          "ties": 21,
+          "overtime_losses": 14,
+          "games": 225,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "PHI": {
+          "wins": 80,
+          "losses": 111,
+          "ties": 21,
+          "overtime_losses": 13,
+          "games": 225,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "BOS": {
+          "wins": 18,
+          "losses": 14,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 32,
+          "segments": 1,
+          "last_meeting_season": 20192020,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "PHI": {
+          "wins": 14,
+          "losses": 18,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 32,
+          "segments": 1,
+          "last_meeting_season": 20192020,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "BOS-VAN",
+      "teams": [
+        "BOS",
+        "VAN"
+      ],
+      "regular_season": {
+        "BOS": {
+          "wins": 80,
+          "losses": 33,
+          "ties": 15,
+          "overtime_losses": 5,
+          "games": 133,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 38,
+          "losses": 77,
+          "ties": 15,
+          "overtime_losses": 3,
+          "games": 133,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "BOS": {
+          "wins": 4,
+          "losses": 3,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 7,
+          "segments": 1,
+          "last_meeting_season": 20102011,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 3,
+          "losses": 4,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 7,
+          "segments": 1,
+          "last_meeting_season": 20102011,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "EDM-VAN",
+      "teams": [
+        "EDM",
+        "VAN"
+      ],
+      "regular_season": {
+        "EDM": {
+          "wins": 144,
+          "losses": 99,
+          "ties": 19,
+          "overtime_losses": 17,
+          "games": 279,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 116,
+          "losses": 129,
+          "ties": 19,
+          "overtime_losses": 15,
+          "games": 279,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "EDM": {
+          "wins": 11,
+          "losses": 5,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 16,
+          "segments": 1,
+          "last_meeting_season": 20232024,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 5,
+          "losses": 11,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 16,
+          "segments": 1,
+          "last_meeting_season": 20232024,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "SEA-VAN",
+      "teams": [
+        "SEA",
+        "VAN"
+      ],
+      "regular_season": {
+        "SEA": {
+          "wins": 10,
+          "losses": 6,
+          "ties": 0,
+          "overtime_losses": 3,
+          "games": 19,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 9,
+          "losses": 8,
+          "ties": 0,
+          "overtime_losses": 2,
+          "games": 19,
+          "segments": 1,
+          "last_meeting_season": 20252026,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "SEA": {
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 0,
+          "segments": 0,
+          "last_meeting_season": null,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "VAN": {
+          "wins": 0,
+          "losses": 0,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 0,
+          "segments": 0,
+          "last_meeting_season": null,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    },
+    {
+      "id": "MIN-WPG",
+      "teams": [
+        "MIN",
+        "WPG"
+      ],
+      "regular_season": {
+        "MIN": {
+          "wins": 31,
+          "losses": 26,
+          "ties": 1,
+          "overtime_losses": 6,
+          "games": 64,
+          "segments": 2,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "WPG": {
+          "wins": 32,
+          "losses": 26,
+          "ties": 1,
+          "overtime_losses": 5,
+          "games": 64,
+          "segments": 1,
+          "last_meeting_season": 20262027,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "playoffs": {
+        "MIN": {
+          "wins": 1,
+          "losses": 4,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 5,
+          "segments": 1,
+          "last_meeting_season": 20172018,
+          "validation_status": "verified",
+          "display_allowed": true
+        },
+        "WPG": {
+          "wins": 4,
+          "losses": 1,
+          "ties": 0,
+          "overtime_losses": 0,
+          "games": 5,
+          "segments": 1,
+          "last_meeting_season": 20172018,
+          "validation_status": "verified",
+          "display_allowed": true
+        }
+      },
+      "series": {}
+    }
+  ]
+}

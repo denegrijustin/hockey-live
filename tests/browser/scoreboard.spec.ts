@@ -251,3 +251,23 @@ test.describe("scoreboard home", () => {
     await expect(page.locator(".sb-row")).toHaveCount(0);
   });
 });
+
+test("on a live card the team names never run under the score, and the watchability number is smaller than the score", async ({ page }) => {
+  const live = (id: number, away: string, home: string, score: [number, number]) => ({ ...game(id, 0, away, home, "LIVE", score), period: 2, periodType: "REG", clock: "08:15", start: new Date(Date.now() - 4800_000).toISOString() });
+  for (const width of [320, 360, 390, 430, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page, "/", [live(9301, "SEA", "CAR", [0, 2]), live(9302, "CBJ", "VGK", [10, 11]), live(9303, "TBL", "MTL", [3, 3])]);
+    const rows = page.locator('.sb-row[data-game="9301"], .sb-row[data-game="9302"], .sb-row[data-game="9303"]');
+    await expect(rows).toHaveCount(3);
+    const m = await rows.evaluateAll((els) => els.flatMap((row) => [...row.querySelectorAll<HTMLElement>(".sb-team")].map((t) => {
+      const n = t.querySelector<HTMLElement>(".sb-name")!, s = t.querySelector<HTMLElement>(".sb-score")!;
+      const rg = document.createRange(); rg.selectNodeContents(n);
+      const ring = row.querySelector<HTMLElement>(".score-ring strong");
+      return { who: n.textContent, runUnder: Math.max(...[...rg.getClientRects()].map((r) => r.right)) - s.getBoundingClientRect().left, scoreFont: parseFloat(getComputedStyle(s.querySelector(".ts-num") ?? s).fontSize), ringFont: ring ? parseFloat(getComputedStyle(ring).fontSize) : 0 };
+    })));
+    for (const x of m) {
+      expect(x.runUnder, `${x.who} runs under its score at ${width}px`).toBeLessThanOrEqual(1);
+      expect(x.ringFont, `the watchability number is a supporting number (${x.who} at ${width}px: score ${x.scoreFont})`).toBeLessThan(x.scoreFont);
+    }
+  }
+});

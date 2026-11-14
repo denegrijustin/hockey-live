@@ -18,7 +18,7 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
   const context = rivalryContext(allGames, game);
   const approvedImages = approvedRivalryMedia(RIVALRY_MEDIA_CANDIDATES, rivalry.id);
   const recent = context?.lastTen ?? [];
-  const official = allTimeRecords.rivalries.find(record => record.id === rivalry.id);
+  const official = (allTimeRecords.rivalries as unknown as Array<{ id: string; regular_season: Record<string, any>; playoffs: Record<string, any> }>).find(record => record.id === rivalry.id);
   const awayRegular = verifiedAllTime(official?.regular_season[game.away]);
   const homeRegular = verifiedAllTime(official?.regular_season[game.home]);
   const awayPlayoffs = verifiedAllTime(official?.playoffs[game.away]);

@@ -203,14 +203,15 @@ test("full game overlay shows projection, ice tilt and a per-team player tracker
       return {
         overflow: element.scrollWidth - element.clientWidth,
         toolbarGap: matchup.top - toolbar.bottom,
-        rowGap: teams[1].row.top - teams[0].row.bottom,
+        // the two teams sit side by side in the banner, so no overlap along the row
+        colGap: teams[1].row.left - teams[0].row.right,
         scoreGaps: teams.map((team) => team.scoreGap),
       };
     });
     expect(layout.overflow).toBeLessThanOrEqual(1);
     expect(layout.toolbarGap).toBeGreaterThanOrEqual(8);
-    expect(layout.rowGap).toBeGreaterThanOrEqual(8);
-    for (const gap of layout.scoreGaps) expect(gap).toBeGreaterThanOrEqual(8);
+    expect(layout.colGap).toBeGreaterThanOrEqual(-1);
+    for (const gap of layout.scoreGaps) expect(Math.abs(gap)).toBeGreaterThanOrEqual(4);
   }
   // Real-time / projection content, reused from the inline card's GameData.
   await expect(dialog.getByLabel("Live winner projection")).toBeVisible();

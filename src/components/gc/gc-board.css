@@ -131,3 +131,55 @@
 .gx-team { min-width: 0; }
 .gx-team > div { overflow: hidden; }
 .gx-team > div span, .gx-team > div h3 { max-width: 100%; }
+
+/* ---------- v2: the matchup's own colours (the home team is the background, the banner runs from the away team's colour to the home team's) ---------- */
+.game-dialog {
+  background:
+    radial-gradient(100% 38% at 50% 0%, color-mix(in srgb, var(--face-bg, #1b2a55) 100%, #fff 7%), transparent 72%),
+    linear-gradient(180deg, color-mix(in srgb, var(--face-bg, #1b2a55) 78%, #000), color-mix(in srgb, var(--face-bg, #1b2a55) 48%, #000) 55%, color-mix(in srgb, var(--face-bg, #1b2a55) 30%, #000));
+  --face-line: color-mix(in srgb, var(--face-accent, #5aa9ff) 70%, transparent);
+}
+.gx-banner { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px 22px; padding: 14px 24px; border: 3px solid var(--face-accent, #5aa9ff); border-radius: 28px; overflow: hidden;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--face-away, #2f7dd1) 82%, #000) 0%, color-mix(in srgb, color-mix(in srgb, var(--face-away, #2f7dd1) 50%, var(--face-bg, #1b2a55)) 70%, #000) 50%, color-mix(in srgb, var(--face-bg, #1b2a55) 82%, #000) 100%);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--face-accent, #5aa9ff) 45%, transparent), inset 0 0 0 1px #ffffff30; }
+.gx-team { clip-path: none; box-shadow: none; background: none; min-height: 0; padding: 0; gap: 16px; }
+.gx-team .team-logo { width: 92px; height: 92px; padding: 8px; box-sizing: border-box; border-radius: 20px; background: #fff; box-shadow: 0 4px 14px #0006; }
+.gx-team > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; min-width: 0; padding-left: 16px; border-left: 2px solid #ffffff50; line-height: 1.15; }
+.gx-home > div { padding-left: 0; padding-right: 16px; border-left: 0; border-right: 2px solid #ffffff50; }
+.gx-team > div h3 { margin: 0; font-size: clamp(1.25rem, 2.6vw, 2rem); font-style: normal; font-weight: 800; text-transform: none; white-space: normal; overflow-wrap: anywhere; line-height: 1.1; }
+.gx-rec { font-size: 1.125rem; font-weight: 500; color: #ffffffe0; } .gx-rank { font-size: 1rem; color: #ffffffd0; }
+.game-dialog .gx-team > b { font-size: clamp(2.5rem, 5.5vw, 4rem); border: 0; padding: 0; }
+.gx-team > small { margin: 0 8px; }
+.game-dialog .gc-header-meta.gx-mid { gap: 8px; }
+.gx-mid .gc-pill { padding: 4px 20px; font-size: 1rem; letter-spacing: .06em; text-transform: uppercase; border-color: #ffffff40; background: #ffffff26; color: #fff; }
+.gx-mid .gc-pill[data-state="live"] { background: #e0243c; border-color: #ff7a8c; color: #fff; } .gx-mid .gc-pill[data-state="live"] i { background: #fff; }
+.gx-mid .gc-clock { font-size: 1.5rem; font-style: normal; font-weight: 800; }
+.gx-when { display: inline-flex; align-items: center; gap: 10px; font-size: 1.375rem; font-weight: 700; color: #fff; }
+.gx-net.tv-network { display: inline-flex; padding: 4px 16px; border-radius: 999px; background: #fff; color: #111; }
+.gx-watch { font-size: 1.125rem; font-weight: 700; color: color-mix(in srgb, var(--face-accent, #ff9ec7) 70%, #fff); }
+/* panels and tabs in the matchup's accent */
+.gc-card, .gr-model, .game-dialog .game-center-section, .mo, .gr-hero .gr-deserved { border: 2px solid var(--face-line); background: color-mix(in srgb, #000 24%, transparent); box-shadow: 0 0 20px color-mix(in srgb, var(--face-accent, #5aa9ff) 22%, transparent), inset 0 0 22px color-mix(in srgb, var(--face-accent, #5aa9ff) 8%, transparent); }
+.gc-card h4, .gr-model h4, .game-dialog .game-center-section > summary, .mo-title, .gr-hero .gr-deserved h4.gr-dh { background: linear-gradient(100deg, color-mix(in srgb, var(--face-accent, #5aa9ff) 55%, transparent), color-mix(in srgb, #fff 6%, transparent) 60%, transparent); border-bottom-color: var(--face-line); }
+.gc-tabs { border: 2px solid var(--face-line); border-radius: 20px; padding: 4px 8px; background: color-mix(in srgb, #000 24%, transparent); margin-right: 0; }
+.gc-tabs [role="tab"][aria-selected="true"] { background: color-mix(in srgb, var(--face-bg, #1b2a55) 60%, #000); box-shadow: 0 0 0 2px var(--face-accent, #5aa9ff), 0 0 16px color-mix(in srgb, var(--face-accent, #5aa9ff) 50%, transparent); }
+.gc-link { border-color: var(--face-line); background: color-mix(in srgb, #000 24%, transparent); } .gc-link .icon { color: var(--face-accent, #5aa9ff); }
+.gc-linescore { border-collapse: separate; border-spacing: 0; border: 2px solid var(--face-line); border-radius: 18px; overflow: hidden; background: color-mix(in srgb, #000 24%, transparent); margin-top: 12px; }
+.gc-linescore th, .gc-linescore td { border-bottom: 0; }
+.gp-score, .gp-prob { border-color: var(--face-accent, #fff); }
+.mo-btn[aria-pressed="true"], .gx-stats thead .gx-chip { box-shadow: none; }
+.mo-btn[aria-pressed="true"] { background: color-mix(in srgb, var(--face-bg, #1b2a55) 55%, #000); border-color: var(--face-accent, #5aa9ff); }
+@media (max-width: 720px) {
+  .gx-banner { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 12px; gap: 10px; border-radius: 22px; }
+  .gx-team .team-logo { width: 52px; height: 52px; padding: 5px; border-radius: 14px; }
+  .gx-team { gap: 8px; } .gx-team > div { padding-left: 8px; } .gx-home > div { padding-right: 8px; }
+  .gx-team > div h3 { font-size: .9375rem; } .gx-rec { font-size: .8125rem; } .gx-rank { font-size: .6875rem; display: none; }
+  .game-dialog .gx-team > b { font-size: 2rem; }
+  .gx-when { font-size: 1rem; } .gx-watch { font-size: .9375rem; }
+}
+@media (max-width: 720px) {
+  .gx-team { display: grid !important; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "logo score" "info info"; align-items: center; gap: 6px 8px; }
+  .gx-team .team-logo { grid-area: logo; } .gx-team > b, .gx-team > small { grid-area: score; justify-self: end; margin: 0; }
+  .gx-team > div { grid-area: info; padding: 0 !important; border: 0 !important; text-align: left; }
+  .gx-home { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "score logo" "info info"; text-align: right; } .gx-home > div { text-align: right; } .gx-home > b, .gx-home > small { justify-self: start; }
+  .gx-team > div h3 { font-size: 1rem; } .gx-rec { font-size: .875rem; }
+}

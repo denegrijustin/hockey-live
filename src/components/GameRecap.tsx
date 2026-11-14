@@ -10,6 +10,7 @@ import { markerColors, gaugeColors } from "../lib/kits";
 import { Gauge } from "./Gauge";
 import "./game-recap.css";
 import "./gauge.css";
+import "./recap-panels.css";
 
 type Recap = ReturnType<typeof buildRecap>;
 const pct = (p: number) => `${Math.round(p * 100)}%`;
@@ -20,7 +21,7 @@ function Deserved({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   const a = Math.round(r.deserved.away * 100), h = 100 - a;
   return (
     <section className="gr-deserved" aria-label={`Deserved to win: ${away.id} ${a} percent, ${home.id} ${h} percent`}>
-      <h4>Deserved to Win <small>Based on the quality and quantity of chances each team created</small></h4>
+      <h4 className="gr-dh"><span>Deserved to Win</span><i className="gr-hline" aria-hidden="true" /><small>Based on the quality and quantity of chances each team created</small></h4>
       <Gauge look="bar" size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
     </section>
   );
@@ -28,7 +29,7 @@ function Deserved({ r, home, away }: { r: Recap; home: Team; away: Team }) {
 
 /** Expected goals building up through the game, one line a team, a gold dot for each goal. */
 function Race({ r, home, away }: { r: Recap; home: Team; away: Team }) {
-  const W = 340, H = 190, L = 26, R = 56, T = 14, B = 26;
+  const W = 340, H = 190, L = 26, R = 66, T = 14, B = 26;
   const max = Math.max(1, Math.ceil(Math.max(r.xg.home, r.xg.away, ...r.marks.map((m) => m.v)) + 0.4));
   const x = (t: number) => L + (t / r.series.end) * (W - L - R);
   const y = (v: number) => H - B - (v / max) * (H - T - B);
@@ -36,8 +37,8 @@ function Race({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   const periods = [1200, 2400, 3600].filter((t) => t < r.series.end);
   const ticks = Array.from({ length: max + 1 }, (_, i) => i);
   return (
-    <section className="gr-race" aria-label={`Expected goals race: ${away.id} ${f2(r.xg.away)}, ${home.id} ${f2(r.xg.home)}`}>
-      <h4>Expected goals race <small>gold dot = goal · <i className="gr-key chance" aria-hidden="true" /> high-chance shot (xG {HIGH_XG.toFixed(2).replace(/^0/, "")}+)</small></h4>
+    <section className="gr-race pn" aria-label={`Expected goals race: ${away.id} ${f2(r.xg.away)}, ${home.id} ${f2(r.xg.home)}`}>
+      <h4 className="pn-h">Expected goals race <span className="gr-lg"><i className="away" aria-hidden="true" />{away.id} ({f2(r.xg.away)}) <i className="home" aria-hidden="true" />{home.id} ({f2(r.xg.home)})</span><small className="gr-sr">gold dot = goal · <i className="gr-key chance" aria-hidden="true" /> high-chance shot (xG {HIGH_XG.toFixed(2).replace(/^0/, "")}+)</small></h4>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${away.id} ${f2(r.xg.away)} expected goals, ${home.id} ${f2(r.xg.home)}`}>
         {ticks.map((v) => <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} className="gr-grid" /><text x={L - 5} y={y(v) + 4} className="gr-ax" textAnchor="end">{v}</text></g>)}
         {periods.map((t) => <line key={t} x1={x(t)} x2={x(t)} y1={T} y2={H - B} className="gr-sep" />)}
@@ -46,8 +47,10 @@ function Race({ r, home, away }: { r: Recap; home: Team; away: Team }) {
         <path d={path(r.series.home)} className="gr-line home" />
         {r.chances.filter((c: any) => !c.goal).map((c: any, i: number) => <circle key={`c${i}`} cx={x(c.t)} cy={y(c.v)} r="5" className="gr-chance-dot" data-high="1"><title>{`High-chance shot · ${f2(c.xg)} xG${c.player ? ` · ${c.player}` : ""}`}</title></circle>)}
         {r.marks.map((m) => <g key={m.n}>{r.chances.some((c: any) => c.goal && c.t === m.t && c.home === m.home) && <circle cx={x(m.t)} cy={y(m.v)} r="10.5" className="gr-chance-ring" data-high="1" />}<circle cx={x(m.t)} cy={y(m.v)} r="7" className={`gr-goal ${m.home ? "home" : "away"}`} /><text x={x(m.t)} y={y(m.v) + 4} className="gr-goal-n" textAnchor="middle">{m.n}</text></g>)}
-        <text x={W - R + 4} y={y(r.xg.away) + (r.xg.away > r.xg.home ? -3 : 11)} className="gr-end away">{away.id} {f2(r.xg.away)}</text>
-        <text x={W - R + 4} y={y(r.xg.home) + (r.xg.home > r.xg.away ? -3 : 11)} className="gr-end home">{home.id} {f2(r.xg.home)}</text>
+        {[[away, r.xg.away, r.xg.home, "away"], [home, r.xg.home, r.xg.away, "home"]].map(([t, v, other, side]: any) => {
+          const cy = Math.min(H - B - 8, Math.max(T + 8, y(v) + (v === other ? (side === "away" ? -11 : 11) : v > other ? -6 : 8)));
+          return <g key={side} className={`gr-endpill ${side}`}><rect x={W - R + 6} y={cy - 9} width={R - 8} height="18" rx="9" /><text x={W - R + 6 + (R - 8) / 2} y={cy + 4} textAnchor="middle">{t.id} {f2(v)}</text></g>;
+        })}
       </svg>
     </section>
   );
@@ -59,8 +62,8 @@ function AttemptMap({ r, side, team }: { r: Recap; side: "home" | "away"; team: 
   const colors = markerColors(r.teams.away, r.teams.home)[side];
   const mine = r.list.filter((a: any) => a.home === (side === "home"));
   return (
-    <section className={`gr-map ${side}`} aria-label={`${team.id} attempts`}>
-      <h4>{team.id} attempts <i className="gr-key" style={{ background: colors.fill, borderColor: colors.ring }} aria-hidden="true" /></h4>
+    <section className={`gr-map pn ${side}`} aria-label={`${team.id} attempts`}>
+      <h4 className="pn-h"><TeamLogo id={team.id} size={26} /> {team.id} shot map <i className="gr-key" style={{ background: colors.fill, borderColor: colors.ring }} aria-hidden="true" /></h4>
       <svg viewBox="0 0 85 84" role="img" aria-label={`${team.id}: ${mine.length} unblocked attempts, ${mine.filter((a: any) => a.goal).length} goals`}>
         <defs><clipPath id={id}><path d="M0 0H85V84H0z" /></clipPath></defs>
         <rect x="0.5" y="0.5" width="84" height="83" rx="26" className="gr-ice" />
@@ -99,10 +102,28 @@ function Compare({ r, home, away }: { r: Recap; home: Team; away: Team }) {
     ...(r.hits ? [{ label: "Hits", a: r.hits.away, h: r.hits.home, fmt: String }] : []),
   ];
   return (
-    <section className="gr-compare" aria-label={`Team numbers, ${away.id} against ${home.id}`}>
+    <section className="gr-compare pn" aria-label={`Team numbers, ${away.id} against ${home.id}`}>
+      <h4 className="pn-h">Team comparison</h4>
       <div className="gauge-grid gr-cgrid">
-        {rows.filter((x) => x.a != null && x.h != null).map((x) => <div key={x.label} className="gauge-item"><Gauge stretch size="compact" away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} /></div>)}
+        {rows.filter((x) => x.a != null && x.h != null).map((x) => <div key={x.label} className="gauge-item"><Gauge look="tile" stretch size="compact" away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} /></div>)}
       </div>
+    </section>
+  );
+}
+
+/** The key between the two shot maps: the attempt count for each team and what the marks mean. */
+function Key({ r, home, away }: { r: Recap; home: Team; away: Team }) {
+  const colors = markerColors(r.teams.away, r.teams.home);
+  return (
+    <section className="gr-key-col" aria-label="Shot map key">
+      <span className="gr-pill">Attempts</span>
+      <div className="gr-att"><b className="away">{away.id}</b><strong>{r.attempts.away}</strong><i aria-hidden="true" /><b className="home">{home.id}</b><strong>{r.attempts.home}</strong></div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill={colors.away.fill} /></svg>Shot attempt</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 2.4" /></svg>Missed / blocked attempt</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#0a0a0a" stroke="#f5a623" strokeWidth="3" /></svg>Goal</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke={CHANCE_COLOR} strokeWidth="2.6" /></svg>High-chance shot (xG {HIGH_XG.toFixed(2).replace(/^0/, "").replace(".", "")}+)</li>
+      </ul>
     </section>
   );
 }
@@ -198,7 +219,8 @@ export function DeservedHero({ data, home, away, beside }: { data: GameFeed | nu
   const mp = useGameShots(data?.season ?? 0, data?.id ?? 0, over);
   const recap = useMemo(() => (data ? buildRecap({ game: data, mp: over ? mp.data : null }) : null), [data, mp.data, over]);
   if (!data || !recap || recap.list.length < 3) return null;
-  return <div className="gr-hero" data-testid="deserved-hero"><Deserved r={recap} home={home} away={away} />{beside}</div>;
+  const c = gaugeColors(away.id, home.id);
+  return <div className="gr-hero" data-testid="deserved-hero" style={{ "--g-away": c.away, "--g-home": c.home } as React.CSSProperties}><Deserved r={recap} home={home} away={away} />{beside}</div>;
 }
 
 /**
@@ -212,13 +234,16 @@ export function GameRecap({ data, home, away }: { data: GameFeed | null; home: T
   if (!data || !recap || recap.list.length < 3) return null;
   const live = ["LIVE", "CRIT"].includes(data.state);
   return (
-    <section className="game-recap" data-testid="game-recap" data-source={recap.source} aria-label="Game recap">
+    <section className="game-recap" data-testid="game-recap" data-source={recap.source} aria-label="Game recap" style={{ "--g-away": gaugeColors(away.id, home.id).away, "--g-home": gaugeColors(away.id, home.id).home } as React.CSSProperties}>
       <div className="mini-heading">GAME RECAP <span>{live ? "Updating as it is played" : over ? "Final" : ""}</span></div>
       <Deserved r={recap} home={home} away={away} />
-      <Race r={recap} home={home} away={away} />
+      <div className="gr-top">
+        <Race r={recap} home={home} away={away} />
+        <Compare r={recap} home={home} away={away} />
+      </div>
       <div className="gr-mid">
         <AttemptMap r={recap} side="away" team={away} />
-        <Compare r={recap} home={home} away={away} />
+        <Key r={recap} home={home} away={away} />
         <AttemptMap r={recap} side="home" team={home} />
       </div>
       <Periods r={recap} home={home} away={away} />

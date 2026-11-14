@@ -230,7 +230,9 @@ test.describe("Phase 5 features", () => {
     const ids = await keyOf();
     expect(new Set(ids).size).toBe(ids.length);
     // Read an event a few rows down, focus its row, then let polls add events (newest first prepends; scroll anchoring must hold the row in place).
-    await dialog.evaluate((d) => { d.scrollTop += 700; }); // scroll anchoring is off at scrollTop 0 (the newest rows are then meant to push down)
+    // scroll anchoring is off at scrollTop 0 (the newest rows are then meant to push down). The list remembers the reader's place on the scroll event, so wait for that event
+    // to be handled before any poll lands, as it always is for a person (the scroll event comes a frame after scrollTop changes; on a slow machine that can be after the polls).
+    await dialog.evaluate((d) => new Promise<void>((done) => { d.addEventListener("scroll", () => done(), { once: true }); d.scrollTop += 700; }));
     const idx = await events.evaluateAll((els) => els.findIndex((e) => { const r = e.getBoundingClientRect(); return r.top > 150 && r.bottom < innerHeight - 50; }));
     expect(idx, "a fully visible event row to read").toBeGreaterThanOrEqual(0);
     const anchor = events.nth(idx);

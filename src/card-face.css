@@ -1,0 +1,94 @@
+/* The scoreboard game card as one glossy face (after the card references): the home team's own colour as the background, a bright accent frame, a banner for a close
+   late game, the teams as logo tiles with their league rank, the watchability ring as a tile, the live metrics or the win bar, injuries, the model's pills and a Details
+   button. Tokens inside the card are pinned light-on-dark. Selectors carry [data-face] twice so they win over the older dense-row rules at every width. */
+.scoreboard .sb-row.gcv-row[data-face][data-face] {
+  --text-1: #ffffffb8; --text-2: #ffffffd0; --text-3: #ffffffe6; --text-4: #fff; --text-5: #fff; --text-6: #fff; --muted: #ffffffb8; --mint: #7fdec1; --mint-5: #7fdec1;
+  --surface-4: #ffffff14; --surface-5: #ffffff1a; --surface-6: #ffffff26; --surface-7: #ffffff30; --line-1: #ffffff30; --line-2: #ffffff45; --line-3: #ffffff60;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; padding: 16px; margin: 0; min-width: 0; color: #fff;
+  border: 3px solid var(--face-accent); border-radius: 24px; overflow: hidden;
+  background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--face-bg) 88%, #fff), color-mix(in srgb, var(--face-bg) 78%, #000) 55%, color-mix(in srgb, var(--face-bg) 55%, #000));
+  box-shadow: 0 0 26px color-mix(in srgb, var(--face-accent) 40%, transparent), inset 0 0 0 1px #ffffff40;
+}
+.scoreboard .sb-row.gcv-row[data-face][data-face] > * { grid-column: 1 / -1 !important; grid-row: auto !important; min-width: 0; }
+.scoreboard .sb-row.gcv-row[data-face][data-face] .sb-top { display: flex !important; align-items: center; justify-content: space-between; gap: 10px; padding: 0 !important; }
+.scoreboard .sb-row.gcv-row[data-face][data-face] .sb-body { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: stretch; padding: 0; }
+.scoreboard .sb-row.gcv-row[data-face][data-face] .sb-body > * { grid-column: auto !important; grid-row: auto !important; }
+/* banner and upset line */
+.gcv-banner { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-radius: 999px; background: var(--face-accent); color: #0b0b0b; font-size: 1.125rem; font-weight: 800; }
+.gcv-banner i { width: 11px; height: 11px; border-radius: 50%; background: #0b0b0b; flex: none; }
+.gcv-alert { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-size: 1.1875rem; font-weight: 850; text-transform: uppercase; }
+.gcv-upset { color: #3dff6a; font-style: italic; letter-spacing: .02em; }
+.gcv-lead { padding-left: 16px; border-left: 2px solid #ffffff70; }
+/* top row: when, live, network, Game Center */
+.gcv-row .sb-status { display: inline-flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 700; color: #fff; flex-wrap: nowrap !important; }
+.gcv-row .sb-status .icon { flex: none; }
+.gcv-livepill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 16px; border-radius: 999px; background: #e0243c; color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: .02em; }
+.gcv-livepill i { margin: 0 !important; width: 9px !important; height: 9px !important; background: #fff !important; }
+.gcv-clock { font-weight: 850; }
+.gcv-row .sb-actions { display: inline-flex !important; align-items: center; gap: 12px; flex: none; }
+.gcv-row .sb-actions .tv-network { display: inline-flex; align-items: center; padding: 4px 14px; border-radius: 999px; background: #fff; color: #111; }
+.gcv-row .gc-icon { display: grid; place-items: center; gap: 0; width: 60px; height: 60px; min-width: 60px; border: 2px solid #ffffff80; border-radius: 16px; background: #ffffff14; color: #fff; font-size: 1rem; font-weight: 850; }
+.gcv-row .gc-icon span { line-height: 1; margin-top: -4px; }
+.gcv-row .gcv-acts .save-game, .gcv-row .gcv-acts button:not(.gc-icon) { border-color: #ffffff60; color: #fff; }
+/* teams */
+.gcv-row .sb-main { display: grid; gap: 8px; padding: 0 !important; background: none; border: 0; align-content: start; }
+.gcv-row .sb-team { display: flex !important; align-items: center; gap: 14px; padding: 8px 12px 8px 8px; border: 1px solid #ffffff35; border-radius: 18px; background: #ffffff10; }
+.gcv-row .sb-team .team-logo { width: 58px !important; height: 58px !important; padding: 6px; box-sizing: border-box; border-radius: 14px; background: #fff !important; box-shadow: 0 2px 8px #0005; }
+.gcv-row .sb-name { display: flex !important; flex: 1; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; white-space: normal !important; overflow: visible !important; font-size: clamp(1.25rem, 3.4vw, 1.75rem); font-weight: 600; line-height: 1.1; color: #fff; }
+.gcv-row .sb-name b { font-weight: 850; }
+.gcv-row .sb-name .sb-rank { order: -1; padding: 3px 12px; border: 2px solid #ffffff55; border-radius: 12px; background: #ffffff14; color: #fff; font-size: 1.125rem; font-weight: 800; }
+.gcv-row .gcv-home { padding: 3px 14px; border-radius: 12px; background: color-mix(in srgb, var(--face-accent) 78%, var(--face-bg)); color: #0b0b0b; font-style: normal; font-size: 1rem; font-weight: 850; text-transform: uppercase; }
+.gcv-row .gcv-record { margin: 0; color: #ffffffe0; font-size: 1.25rem; font-weight: 500; }
+.gcv-row .sb-score { margin-left: auto; font-size: clamp(2rem, 6vw, 3rem); font-weight: 900; line-height: 1; color: #fff; }
+.gcv-row .sb-team.lost .sb-name b, .gcv-row .sb-team.lost .sb-score { color: #ffffffb0; font-weight: 700; }
+/* the watchability tile */
+.gcv-ringwrap { display: grid; justify-items: center; align-content: center; gap: 4px; min-width: 138px; padding: 10px 12px; border: 3px solid var(--face-accent); border-radius: 22px; background: color-mix(in srgb, var(--face-bg) 55%, #000); box-shadow: 0 0 16px color-mix(in srgb, var(--face-accent) 35%, transparent); }
+.gcv-ringwrap .sb-rate { display: grid; justify-items: center; padding: 0 !important; }
+.gcv-ringwrap .score-ring { width: 96px !important; height: 96px !important; --score-color: var(--face-accent); }
+.gcv-ringwrap .score-ring strong { font-size: 2.25rem !important; font-weight: 900; color: #fff; }
+.gcv-ringwrap .sr-track { stroke: #ffffff26; stroke-width: 4.5; } .gcv-ringwrap .sr-fill { stroke: var(--face-accent); stroke-width: 4.5; }
+.gcv-tier { font-size: 1.0625rem; font-weight: 850; text-transform: uppercase; letter-spacing: .02em; color: #fff; text-align: center; }
+/* live metrics */
+.gcv-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; align-items: start; }
+.gcv-metric { display: grid; gap: 6px; padding: 0 16px; border-left: 2px solid #ffffff40; min-width: 0; }
+.gcv-metric:first-child { padding-left: 0; border-left: 0; }
+.gcv-metric h5 { margin: 0; font-size: 1.125rem; font-weight: 850; letter-spacing: .02em; text-transform: uppercase; color: #fff; }
+.gcv-metric b { font-size: 1.375rem; font-weight: 850; color: #fff; }
+.gcv-gradbar { height: 13px; border-radius: 999px; background: linear-gradient(90deg, #38bdf8, #60a5fa 35%, #a3e635); }
+.gcv-gradbar.alt { background: linear-gradient(90deg, #38bdf8, #4ade80 55%, #bef264); }
+.gcv-segbar { position: relative; height: 13px; border-radius: 4px; background: linear-gradient(90deg, #38bdf8 0 18%, #22d3ee 18% 36%, #4ade80 36% 54%, #a3e635 54% 72%, #86efac 72% 86%, #6366f1 86%); }
+.gcv-segbar i { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1px; background: #fff; border-radius: 2px; }
+.gcv-up { font-style: normal; font-size: .9em; }
+/* venue, injuries, pills */
+.gcv-row .sb-venue { display: flex !important; align-items: center; gap: 12px; margin: 0; padding: 0 !important; font-size: 1.25rem; color: #fff; overflow: visible; white-space: normal; }
+.gcv-row .sb-venue .icon { color: #ff5a6a; flex: none; }
+.gcv-injuries { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.gcv-label { padding: 8px 16px; border-radius: 12px; background: #ffffff1f; font-size: 1.125rem; font-weight: 850; text-transform: uppercase; }
+.gcv-pillrow { display: inline-flex; align-items: center; gap: 10px; padding: 6px 18px; border: 2px solid #ffffff70; border-radius: 999px; background: #ffffff12; font-size: 1.1875rem; font-weight: 600; color: #fff; min-width: 0; }
+.gcv-pillrow b { font-weight: 850; } .gcv-pillrow img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #fff; }
+.gcv-st { color: #ffd23f; font-weight: 700; } .gcv-st.high { color: #ff9ec7; }
+.gcv-pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gcv-pills .gcv-pillrow { min-height: 58px; padding: 8px 22px; font-size: 1.375rem; font-weight: 700; }
+.gcv-pills .gcv-pillrow .icon { color: #fff; flex: none; } .gcv-pills .gcv-pillrow:nth-child(2) .icon { color: #ff5a6a; }
+.gcv-probrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; font-size: 1.375rem; font-weight: 600; color: #fff; }
+.gcv-probbar { position: relative; display: block; height: 20px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--face-accent) 75%, #fff); }
+.gcv-probbar i { display: block; height: 100%; background: linear-gradient(90deg, #fb7185, #7c6ee6 55%, #6d5bd8); }
+.gcv-probbar u { position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; background: #fff; }
+/* details */
+.gcv-details { justify-self: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 240px; min-height: 60px; padding: 0 28px; border: 3px solid var(--face-accent); border-radius: 20px; background: color-mix(in srgb, var(--face-bg) 42%, #000); color: #fff; font-size: 1.5rem; font-weight: 800; box-shadow: 0 0 14px color-mix(in srgb, var(--face-accent) 30%, transparent); }
+.gcv-details .icon { transform: rotate(90deg); transition: transform .2s; } .gcv-details[aria-expanded="true"] .icon { transform: rotate(-90deg); }
+@media (hover: hover) { .gcv-details:hover { background: color-mix(in srgb, var(--face-bg) 60%, #000); } }
+/* phones */
+@media (max-width: 520px) {
+  .scoreboard .sb-row.gcv-row[data-face][data-face] { padding: 12px; gap: 10px; border-radius: 20px; }
+  .gcv-banner { font-size: 1rem; padding: 8px 14px; } .gcv-alert { font-size: 1rem; }
+  .gcv-row .sb-status { font-size: 1rem; gap: 8px; } .gcv-row .sb-status .icon { width: 22px; height: 22px; }
+  .gcv-row .gc-icon { width: 50px; height: 50px; min-width: 50px; }
+  .gcv-row .sb-team { gap: 10px; padding: 6px 10px 6px 6px; } .gcv-row .sb-team .team-logo { width: 46px !important; height: 46px !important; }
+  .gcv-row .sb-name { font-size: 1.125rem; gap: 3px 8px; } .gcv-row .sb-name .sb-rank { font-size: .9375rem; padding: 2px 8px; } .gcv-row .gcv-record { font-size: 1rem; } .gcv-row .gcv-home { font-size: .8125rem; padding: 2px 10px; }
+  .gcv-ringwrap { min-width: 104px; padding: 8px; } .gcv-ringwrap .score-ring { width: 72px !important; height: 72px !important; } .gcv-ringwrap .score-ring strong { font-size: 1.75rem !important; } .gcv-tier { font-size: .8125rem; }
+  .gcv-metric { padding: 0 10px; } .gcv-metric h5 { font-size: .875rem; } .gcv-metric b { font-size: 1.0625rem; }
+  .gcv-row .sb-venue, .gcv-probrow { font-size: 1.0625rem; } .gcv-pillrow { font-size: 1rem; padding: 6px 12px; } .gcv-label { font-size: .9375rem; padding: 6px 12px; }
+  .gcv-pills { grid-template-columns: minmax(0, 1fr); } .gcv-pills .gcv-pillrow { font-size: 1.0625rem; min-height: 48px; }
+  .gcv-details { min-width: 200px; min-height: 52px; font-size: 1.25rem; }
+}

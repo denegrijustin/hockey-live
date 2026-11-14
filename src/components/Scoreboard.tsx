@@ -15,6 +15,8 @@ import { NetworkLogos } from "./NetworkLogos";
 import { ScoreRing } from "./ScoreRing";
 import { CompactGameFlow, useCardFeed } from "./GameData";
 import { GameCardView } from "./GameCardView";
+import { InjuryRow, MetricTrio, ModelPills, ProbRow } from "./CardFace";
+import { deserve, modelLine, momentum } from "../lib/card-metrics.mjs";
 import { DateStrip, DayHeading, fullDate } from "./DateStrip";
 import { InsightLine } from "./InsightLine";
 import { CompletedStrip } from "./home/CompletedStrip";
@@ -374,10 +376,22 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
   const names = { away: away.short, home: home.short };
   const recapText = kind === "final" ? recap(game, rating?.pre ?? null, names) : "";
   const flowShown = (kind === "live" && !game.intermission) || (open && kind !== "soon");
+  const mom = useMemo(() => (kind === "live" ? momentum(game, feed) : null), [kind, game, feed]);
+  const dv = useMemo(() => (kind === "live" ? deserve(feed) : null), [kind, feed]);
+  const line = projection && kind !== "final" ? modelLine(projection) : null;
+  // an underdog that is ahead late: who leads whom, by league rank
+  const lead = game.homeScore != null && game.awayScore != null && game.homeScore !== game.awayScore ? (game.homeScore > game.awayScore ? { a: home, b: away } : { a: away, b: home }) : null;
+  const alertLine = kind === "live" && rating?.upset && lead && ranks?.[lead.a.id] && ranks?.[lead.b.id]
+    ? <><strong className="gcv-upset">Upset alert <span aria-hidden="true">»</span></strong><span className="gcv-lead">{lead.a.id} #{ranks[lead.a.id].league} leads {lead.b.id} #{ranks[lead.b.id].league}</span></>
+    : null;
   return (
     <GameCardView
       variant="row" venue={!compact} game={game} away={away} home={home} ranks={ranks} rating={rating} homePct={homePct} open={open} state={`tier-${tier.key}`}
-      hot={cl.both ? { label: cl.label } : null} scored={{ away: awayScored, home: homeScored }} onOpen={() => onFull()}
+      hot={cl.both ? { label: cl.label } : null} banner={cl.both ? <><i aria-hidden="true" />{cl.label}</> : null} alertLine={alertLine} tierLabel={tier.label}
+      metrics={kind === "live" && !compact ? <MetricTrio away={away} home={home} homePct={homePct} momentum={mom} deserve={dv} /> : null}
+      extras={kind !== "final" && !compact ? <><InjuryRow away={away} home={home} season={game.season} /><ModelPills away={away} home={home} line={line} score={projection?.score ?? null} /></> : null}
+      probRow={kind === "soon" && !compact && homePct != null ? <ProbRow away={away} home={home} homePct={homePct} /> : null}
+      scored={{ away: awayScored, home: homeScored }} onOpen={() => onFull()}
       ariaExtra={cl.both ? "close and late" : undefined}
       actions={<span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
       context={kind === "live" && rating?.upset ? <span className="sb-brew">Upset brewing: the underdog is ahead late</span> : undefined}

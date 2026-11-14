@@ -3,7 +3,7 @@ import { icePrepActive } from "../lib/ice-plan.mjs";
 import { fmtDay, fmtTime } from "../lib/dates.mjs";
 import { useTimeKey } from "../lib/display";
 import type { Game, Team } from "../types";
-import { finished } from "../lib/model.mjs";
+import { finished, recordBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameDataPanel";
 import { GameRecap, DeservedHero } from "./GameRecap";
@@ -17,7 +17,7 @@ import { GameInjuries } from "./GameInjuries";
 import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IcePrep, IntermissionRink } from "./IntermissionRink";
 import { matchupInsights, restDays } from "../lib/insights.mjs";
-import { pregameHomeWin } from "../lib/watchability.mjs";
+import { pregameHomeWin, tierOf } from "../lib/watchability.mjs";
 import { InsightLine } from "./InsightLine";
 import { useSheetDrag } from "../hooks/useSheetDrag";
 import { TeamLogo } from "./TeamLogo";
@@ -33,6 +33,7 @@ import { GameFollowBadge } from "./gc/FollowedGames";
 import "./gc/game-center.css";
 import "./gc/gc-board.css";
 import { gaugeColors } from "../lib/kits";
+import { faceColors } from "../lib/face";
 
 const PlayByPlay = lazy(() => import("./gc/PlayByPlay"));
 const TeamStatsPane = lazy(() => import("./gc/TeamStatsPane"));
@@ -122,6 +123,7 @@ export function GameOverlay({
     const top = bar.offsetTop - (element.querySelector<HTMLElement>(".dialog-toolbar")?.offsetHeight ?? 44);
     if (element.scrollTop > top) element.scrollTop = Math.max(0, top);
   }, [tab]);
+  const recText = (id: string) => { const r = recordBeforeGame(allGames, game, id); return `${r.w}-${r.l}-${r.ot}`; };
   const past = finished(game),
     live = isLive(game);
   const previousMeetings = allGames.filter((candidate) =>
@@ -184,7 +186,7 @@ export function GameOverlay({
     <dialog
       ref={dialog}
       className="game-dialog"
-      style={{ ["--g-away" as any]: gaugeColors(away.id, home.id).away, ["--g-home" as any]: gaugeColors(away.id, home.id).home }}
+      style={{ ["--g-away" as any]: gaugeColors(away.id, home.id).away, ["--g-home" as any]: gaugeColors(away.id, home.id).home, ["--face-bg" as any]: faceColors(away, home).bg, ["--face-accent" as any]: faceColors(away, home).accent, ["--face-away" as any]: faceColors(away, home).away }}
       onClose={closeOverlay}
       onCancel={(event) => {
         event.preventDefault();
@@ -199,7 +201,7 @@ export function GameOverlay({
       <GameCenterProvider game={game}>
         <GameCenterUiProvider value={{ tab, focusEvent, goTab }}>
           <GameAnnouncer home={home} away={away} />
-          <GameHeader home={home} away={away} />
+          <GameHeader home={home} away={away} ranks={ranks} records={{ [away.id]: recText(away.id), [home.id]: recText(home.id) }} watch={`Watchability ${analysis.score} · ${tierOf(analysis.score).label}`} />
           <p className="detail-note dialog-status">
             {fmtDay(game.start, { long: true })}{" "}
             ·{" "}

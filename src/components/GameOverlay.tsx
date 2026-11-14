@@ -203,14 +203,8 @@ export function GameOverlay({
           <GameAnnouncer home={home} away={away} />
           <GameHeader home={home} away={away} ranks={ranks} records={{ [away.id]: recText(away.id), [home.id]: recText(home.id) }} watch={`Watchability ${analysis.score} · ${tierOf(analysis.score).label}`} />
           <p className="detail-note dialog-status">
-            {fmtDay(game.start, { long: true })}{" "}
-            ·{" "}
-            {past
-              ? `FINAL${game.end !== "REG" ? " / " + game.end : ""}`
-              : live
-                ? `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`
-                : fmtTime(game.start, { withZone: true })}
-            {" · "}
+            {/* the header already carries the date, time and venue for a game that has not started; once it is on or over, the status leads */}
+            {past || live ? <>{fmtDay(game.start, { long: true })} · {past ? `FINAL${game.end !== "REG" ? " / " + game.end : ""}` : `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`} · </> : null}
             {analysis.kind}: {analysis.score}/100 · Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}
           </p>
           <div className="game-center-actions">

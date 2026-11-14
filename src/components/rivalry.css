@@ -29,3 +29,16 @@
 .rivalry-photo img{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:10px}
 .rivalry-photo figcaption{padding:.35rem 0;color:#c0cad6;font-size:.7rem;line-height:1.4}
 .rivalry-photo figcaption a{color:#a9dcff}
+
+.rivalry-all-time{margin:1rem 0;padding:.85rem 1rem;border:1px solid #ffffff38;border-radius:12px;background:#ffffff0a}
+.rivalry-record-title{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;align-items:baseline;margin-bottom:.7rem}
+.rivalry-record-title strong{font-size:.91rem;color:#fff}
+.rivalry-record-title span{font-size:.68rem;color:#bdcbdc}
+.rivalry-record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.rivalry-record-grid>div>span{display:block;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#c5d2e2;margin-bottom:.4rem}
+.rivalry-record-line{display:flex;align-items:baseline;justify-content:space-between;gap:.4rem;border-bottom:1px solid #ffffff1b;padding:.29rem 0}
+.rivalry-record-line strong{font-size:.76rem;color:#e3eaf2}
+.rivalry-record-line b{font-size:.91rem;font-variant-numeric:tabular-nums;white-space:nowrap;color:#fff}
+.rivalry-record-grid small{display:block;margin-top:.4rem;font-size:.63rem;color:#bdcbdc}
+.rivalry-all-time .rivalry-record-scope{font-size:.68rem;color:#bdcbdc;margin:.7rem 0 .1rem;line-height:1.4}
+@media(max-width:480px){.rivalry-record-grid{grid-template-columns:1fr}.rivalry-record-line b{font-size:.86rem}}

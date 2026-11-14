@@ -11,8 +11,8 @@ import { defaultMonth, monthGrid, monthKey, monthLabel, nextIndex, recordOf, sea
 import { useEtToday } from "../hooks/useEtToday";
 import { Icon } from "./icons";
 import { TeamLogo } from "./TeamLogo";
+import { kitFor } from "../lib/kits";
 import { LOGO_SIZE } from "./GameCardView";
-import { PageHeader } from "./PageHeader";
 import { TeamLink } from "./TeamProfile";
 
 const GameOverlay = lazy(() => import("./GameOverlay").then((m) => ({ default: m.GameOverlay })));
@@ -20,11 +20,21 @@ type Item = ReturnType<typeof sideOf>;
 type Filter = "all" | "final" | "upcoming";
 
 const time = (iso: string) => fmtTime(iso);
+const cityOf = (t: Team) => (t.name.startsWith(t.city) ? t.city : t.name.split(" ").slice(0, -1).join(" ") || t.name);
+const nickOf = (t: Team) => t.name.slice(cityOf(t).length).trim() || t.short;
 const dayParts = (date: string) => {
   const d = new Date(`${date}T12:00:00Z`);
   return { wd: d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }), md: d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) };
 };
-const resultText = (i: Item) => (i.status === "upcoming" ? time(i.start) : `${i.us ?? 0}–${i.them ?? 0}${i.ot ? ` ${i.ot}` : ""}`);
+const lum = (hex: string) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex); if (!m) return 0.3; const [r, g, b] = [0, 2, 4].map((k) => parseInt(m[1].slice(k, k + 2), 16)); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+/** A team's banner colours: its bright kit colour as the accent, its dark one (or a darkened bright one) behind the banner. */
+function bannerColors(id: string) {
+  const kit = kitFor(id);
+  const accent = lum(kit.jersey) > 0.32 ? kit.jersey : lum(kit.trim) > 0.32 && lum(kit.trim) < 0.95 ? kit.trim : `color-mix(in srgb, ${kit.jersey} 55%, #fff)`;
+  const deep = lum(kit.jersey) <= 0.22 ? kit.jersey : lum(kit.trim) <= 0.22 ? kit.trim : `color-mix(in srgb, ${kit.jersey} 24%, #0b0b0b)`;
+  return { accent, deep };
+}
+const resultText = (i: Item) => (i.status === "upcoming" ? fmtTime(i.start, { withZone: true }) : `${i.us ?? 0}–${i.them ?? 0}${i.ot ? ` ${i.ot}` : ""}`);
 
 interface Props { games: Game[]; teams: Team[]; defaultTeam?: string; analysis: any; baseline: any; baselineTable?: any; sourceSeason: number }
 
@@ -38,6 +48,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
   const team = teams.find((t) => t.id === teamId)!;
   const items: Item[] = useMemo(() => teamGames(games, teamId).map((g: Game) => sideOf(g, teamId)), [games, teamId]);
   const record = useMemo(() => recordOf(items), [items]);
+  const colors = useMemo(() => bannerColors(teamId), [teamId]);
   const counts = useMemo(() => ({ final: items.filter((i) => i.status === "final").length, upcoming: items.filter((i) => i.status !== "final").length }), [items]);
   const nextId = items[nextIndex(items)]?.id;
   const shown = useMemo(() => items.filter((i) => (filter === "all" ? true : filter === "final" ? i.status === "final" : i.status !== "final")), [items, filter]);
@@ -69,13 +80,13 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
     const first = i.id === nextId;
     return (
       <li key={i.id} data-game-id={i.id} data-status={i.status} {...(first ? { "data-next": "" } : {})} {...(k === shown.length - 1 ? { "data-last": "" } : {})}>
-        {newMonth && <h3 className="ts-month">{monthLabel(monthKey(i.date))}</h3>}
+        {newMonth && <h3 className="ts-month"><span>{monthLabel(monthKey(i.date))}</span>{k === 0 && <button type="button" className="ts-jump" onClick={jump}>Next game <Icon name="chevron" size={16} /></button>}</h3>}
         {first && <p className="ts-now">{i.status === "live" ? "Playing now" : i.status === "upcoming" ? "Next game" : "Last game of the season"}</p>}
         <button type="button" className={`ts-card ${i.status}${i.result ? ` r-${i.result}` : ""}${first ? " is-next" : ""}`} onClick={() => open(i.game)}
           aria-label={`${wd} ${md}: ${i.home ? "home against" : "at"} ${opp.name}, ${i.status === "upcoming" ? `${time(i.start)}` : i.status === "live" ? `live, ${i.us} to ${i.them}` : `${i.result === "W" ? "won" : i.result === "OTL" ? "lost in overtime" : "lost"} ${i.us} to ${i.them}${i.ot ? ` in ${i.ot === "SO" ? "a shootout" : "overtime"}` : ""}`}. Open Game Center`}>
           <span className="ts-date"><b>{wd}</b><span>{md}</span></span>
           <span className="ts-opp"><TeamLogo id={opp.id} size={LOGO_SIZE.row} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}<FavoriteMark id={opp.id} /></b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
-          <span className="ts-res">
+          <span className={`ts-res${i.status === "final" ? ` fin r-${i.result ?? "x"}` : ""}`}>
             {i.status === "final" ? <><b className={`ts-badge ${i.result ?? ""}`}>{i.result ?? "–"}</b><span>{resultText(i)}</span></> : i.status === "live" ? <><b className="ts-badge live">LIVE</b><span>{i.us}–{i.them}</span></> : <span className="ts-time">{resultText(i)}</span>}
           </span>
         </button>
@@ -88,36 +99,41 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
   const step = (n: number) => months[mi + n] && setMonth(months[mi + n]);
 
   return (
-    <section ref={root} className="team-schedule" aria-label="Team schedule">
-      <PageHeader title={team.name} eyebrow="SCHEDULE">
-        <div className="ts-head">
-        <div className="ts-team">
-          <TeamLogo id={team.id} size={44} />
-          <FavoriteStar id={team.id} name={team.name} />
-          <p data-testid="ts-record">{record.w}–{record.l}–{record.otl} · {record.pts} pts · {counts.final} completed · {counts.upcoming} upcoming · <TeamLink id={team.id}>{team.short} profile</TeamLink></p>
+    <section ref={root} className="team-schedule" aria-label="Team schedule" data-mode={mode} style={{ ["--ts-a" as never]: colors.accent, ["--ts-d" as never]: colors.deep } as never}>
+      <header className="tsb" data-mode={mode}>
+        <span className="tsb-slash" aria-hidden="true" />
+        <TeamLogo id={team.id} size={96} eager />
+        <h1 className="tsb-name"><span className="tsb-city">{cityOf(team)}</span> <span className="tsb-nick">{nickOf(team)}</span></h1>
+        <div className="tsb-info" data-testid="ts-record">
+          <span className="tsb-rec">{record.w}–{record.l}–{record.otl} · <b>{record.pts} pts</b></span>
+          <span className="tsb-count"><span>{counts.final} completed</span> · <span>{counts.upcoming} upcoming</span></span>
+          <TeamLink id={team.id} className="tsb-prof">{team.short} profile <Icon name="chevron" size={16} /></TeamLink>
         </div>
-        <div className="ts-tools">
-          <label className="ts-pick"><span className="sr-only">Team</span>
-            <select value={teamId} onChange={(e) => { setTeamId(e.target.value); setFilter("all"); }} aria-label="Team">
-              {[...teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          </label>
+        <FavoriteStar id={team.id} name={team.name} className="tsb-fav" />
+      </header>
+      <div className="ts-tools">
+        <label className="ts-pick"><span className="sr-only">Team</span>
+          <select value={teamId} onChange={(e) => { setTeamId(e.target.value); setFilter("all"); }} aria-label="Team">
+            {[...teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </label>
+        <div className="ts-row2">
           <div className="ts-seg" role="group" aria-label="View">
             <button type="button" aria-pressed={mode === "list"} onClick={() => setMode("list")}>List</button>
             <button type="button" aria-pressed={mode === "calendar"} onClick={() => setMode("calendar")}>Calendar</button>
           </div>
+          {mode === "list" && (
+            <div className="ts-filters" role="group" aria-label="Show games">
+              <button type="button" className="ts-chip" aria-pressed={filter === "all"} onClick={() => setFilter("all")}><b>{items.length}</b> season</button>
+              <button type="button" className="ts-chip" aria-pressed={filter === "final"} onClick={() => setFilter("final")}><b>{counts.final}</b> completed</button>
+              <button type="button" className="ts-chip" aria-pressed={filter === "upcoming"} onClick={() => setFilter("upcoming")}><b>{counts.upcoming}</b> upcoming</button>
+            </div>
+          )}
         </div>
-        </div>
-      </PageHeader>
+      </div>
 
       {mode === "list" ? (
         <>
-          <div className="ts-filters" role="group" aria-label="Show games">
-            <button type="button" className="ts-chip" aria-pressed={filter === "all"} onClick={() => setFilter("all")}><b>{items.length}</b> season</button>
-            <button type="button" className="ts-chip" aria-pressed={filter === "final"} onClick={() => setFilter("final")}><b>{counts.final}</b> completed</button>
-            <button type="button" className="ts-chip" aria-pressed={filter === "upcoming"} onClick={() => setFilter("upcoming")}><b>{counts.upcoming}</b> upcoming</button>
-            <button type="button" className="ts-jump" onClick={jump}><span className="ts-rot"><Icon name="chevron" size={16} /></span> Next game</button>
-          </div>
           {shown.length ? <ol className="ts-list" data-testid="ts-list">{shown.map(card)}</ol> : <p className="ts-empty">No games here yet.</p>}
         </>
       ) : (
@@ -137,7 +153,7 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
                   <button key={i.id} type="button" className={`ts-gchip ${i.status}${i.result ? ` r-${i.result}` : ""}`} onClick={() => open(i.game)}
                     aria-label={`${i.home ? "Home against" : "At"} ${teamOf(i.opp).name}, ${i.status === "upcoming" ? time(i.start) : i.status === "live" ? "live" : `${i.result ?? ""} ${i.us} to ${i.them}`}. Open Game Center`}>
                     <TeamLogo id={i.opp} size={LOGO_SIZE.compact} />
-                    <span className="ts-gtext"><span className="ts-oppline"><em data-venue={i.home ? "home" : "away"}>{i.home ? "vs" : "@"}</em> <b className="ts-abbr">{i.opp}</b></span> <span className="ts-gres">{i.status === "upcoming" ? time(i.start).replace(" ", "").toLowerCase() : `${i.result ?? ""} ${i.us}–${i.them}`}</span></span>
+                    <span className="ts-gtext"><span className="ts-oppline"><em data-venue={i.home ? "home" : "away"}>{i.home ? "vs" : "@"}</em> <b className="ts-abbr">{i.opp}</b></span> <span className={`ts-gres ${i.status === "upcoming" ? (i.start ? "up" : "tbd") : i.status === "live" ? "live" : i.result ?? "x"}`}>{i.status === "upcoming" ? (i.start ? time(i.start) : "TBD") : i.status === "live" ? `${i.us}–${i.them}` : `${i.result ?? ""} ${i.us}–${i.them}`}</span></span>
                   </button>
                 ))}
               </div>

@@ -2,7 +2,6 @@ import type { Game } from "../types";
 import { rivalryForGame, rivalryContext, verifiedAllTime } from "../lib/rivalries.mjs";
 import allTimeRecords from "../data/rivalry-records.json";
 import { approvedRivalryMedia, RIVALRY_MEDIA_CANDIDATES } from "../lib/rivalry-media.mjs";
-import "./rivalry.css";
 
 /** Compact label for schedule rows, tiles, and game cards. */
 export function RivalryTag({ game }: { game: Game }) {

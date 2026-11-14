@@ -20,8 +20,8 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   needle?: number;
   /** Kept for callers: every gauge is a bar now. */
   stretch?: boolean;
-  /** "proj": the projected-final-score headline (big numbers); "bar": the deserved-to-win bar with logos. */
-  look?: "proj" | "bar";
+  /** "proj": the projected-final-score headline (big numbers); "bar": the deserved-to-win bar with logos; "tile": a stat tile (label, both values in team colours, a bar). */
+  look?: "proj" | "bar" | "tile";
 }) {
   const total = away + home;
   const share = needle != null ? needle : span ? Math.min(0.95, Math.max(0.05, 0.5 + ((away - home) / span / 2) * (lowerBetter ? -1 : 1))) : total > 0 ? away / total : 0.5;
@@ -31,10 +31,18 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   const variant = size === "sm" ? "compact" : size === "lg" ? "standard" : size;
   const colors = gaugeColors(awayId, homeId);
   const density = look === "proj" ? "hero" : look === "bar" ? "bar" : "row";
+  if (look === "tile") {
+    return (
+      <figure className={`gauge versus tile ${stretch ? "stretch" : ""} ${variant}`} data-leader={leader} data-lopsided={Math.min(1, Math.abs(share - 0.5) * 2).toFixed(2)} role="img" aria-label={`${label}: ${text}`} style={{ margin: 0, "--g-away": colors.away, "--g-home": colors.home } as CSSProperties}>
+        <span className="gt-label gauge-label">{label}</span>
+        <div className="gt-vals"><b className="a">{shownA}</b><i aria-hidden="true" /><b className="h">{shownH}</b></div>
+        <Versus away={{ id: awayId, big: shownA }} home={{ id: homeId, big: shownH }} share={share} density="track" />
+      </figure>
+    );
+  }
   return (
     <figure className={`gauge versus ${look ?? ""} ${look === "bar" ? "sbar" : ""} ${stretch ? "stretch" : ""} ${variant}`} data-leader={leader} data-lopsided={Math.min(1, Math.abs(share - 0.5) * 2).toFixed(2)} role="img" aria-label={`${label}: ${text}`} style={{ margin: 0, "--g-away": colors.away, "--g-home": colors.home } as CSSProperties}>
-      <Versus away={{ id: awayId, big: shownA, sub: awaySub }} home={{ id: homeId, big: shownH, sub: homeSub }} share={share} label={look === "bar" ? undefined : label} density={density} />
-      {look === "bar" && <figcaption className="gauge-label vs-cap">{label}</figcaption>}
+      <Versus away={{ id: awayId, big: shownA, sub: awaySub }} home={{ id: homeId, big: shownH, sub: homeSub }} share={share} label={label} density={density} />
     </figure>
   );
 }

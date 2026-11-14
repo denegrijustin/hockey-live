@@ -1,0 +1,93 @@
+/* The game recap as one dark, glossy board (after the Deserved to Win reference): titled panels with slanted heading bars, team colours for every series,
+   stat tiles, shot maps with a key between them. Always dark, like the win-chance and season-profile panels, so the dark tokens are pinned here. */
+.game-recap, .gr-hero {
+  color-scheme: dark; color: #fff;
+  --surface-1: #040a0e; --surface-2: #071017; --surface-3: #0a161f; --surface-4: #0d1c26; --surface-5: #11222c; --surface-6: #152934; --surface-7: #1b313c; --surface-8: #283c45;
+  --line-1: #2e4652; --line-2: #3a5662; --line-3: #4c6875; --line-4: #58828a; --line-5: #6c8caa;
+  --text-1: #8ea8b6; --text-2: #9fbac6; --text-3: #b9cfd9; --text-4: #d0e0e6; --text-5: #e2ecf0; --text-6: #ecf4f8; --muted: #9fbac6;
+  --mint-5: #7fdec1; --mint-6: #c9f3e5; --red-5: #fbb5af; --amber-5: #e8c88d;
+  --series-away: var(--g-away, #ff6a1a); --series-home: var(--g-home, #26c6c6);
+}
+.game-recap {
+  position: relative; gap: 14px; padding: 14px; border-radius: 20px; border: 1px solid color-mix(in srgb, #fff 14%, transparent); overflow: hidden;
+  background:
+    radial-gradient(90% 40% at 0% 0%, color-mix(in srgb, var(--g-away, #ff6a1a) 26%, transparent), transparent 60%),
+    radial-gradient(90% 40% at 100% 0%, color-mix(in srgb, var(--g-home, #26c6c6) 26%, transparent), transparent 60%),
+    linear-gradient(180deg, #0d1b30, #08111f);
+}
+.gr-hero { border-radius: 20px; }
+/* panels */
+.pn { border: 1px solid color-mix(in srgb, #fff 18%, transparent); border-radius: 16px; background: color-mix(in srgb, #fff 3%, transparent); padding: 0 12px 12px; overflow: hidden; min-width: 0;
+  box-shadow: inset 0 0 22px color-mix(in srgb, var(--g-home, #26c6c6) 10%, transparent); }
+.game-recap h4.pn-h, h4.pn-h { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin: 0 -12px 10px; padding: 8px 60px 8px 14px; font-size: 1rem; font-style: italic; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; color: #fff;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--g-away, #ff6a1a) 70%, transparent), color-mix(in srgb, #fff 6%, transparent) 62%, transparent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 28px) 100%, 0 100%); border-bottom: 2px solid color-mix(in srgb, var(--g-away, #ff6a1a) 75%, transparent); }
+.gr-map.home h4.pn-h { background: linear-gradient(100deg, color-mix(in srgb, var(--g-home, #26c6c6) 70%, transparent), color-mix(in srgb, #fff 6%, transparent) 62%, transparent); border-bottom-color: color-mix(in srgb, var(--g-home, #26c6c6) 75%, transparent); }
+.gr-map h4.pn-h { text-align: left; } .gr-map h4 .team-logo { width: 26px; height: 26px; }
+/* deserved to win: heading with an accent line, then the bar in its own panel */
+.gr-deserved { display: grid; gap: 8px; }
+.game-recap h4.gr-dh, h4.gr-dh { display: flex; align-items: center; gap: 14px; margin: 0; font-size: 1.5rem; font-style: italic; font-weight: 900; letter-spacing: .02em; text-transform: uppercase; color: #fff; flex-wrap: wrap; }
+.gr-hline { flex: 0 0 56px; height: 3px; border-radius: 3px; background: var(--g-away, #ff6a1a); }
+.game-recap h4.gr-dh small, h4.gr-dh small { margin: 0; font-size: .8125rem; font-style: normal; font-weight: 400; letter-spacing: 0; text-transform: none; color: #ffffffcc; flex: 1 1 260px; }
+.gr-deserved .gauge { padding: 8px 14px 12px; border: 1px solid color-mix(in srgb, #fff 18%, transparent); border-radius: 16px; background: color-mix(in srgb, #fff 3%, transparent); }
+.gr-deserved .vs-bar { grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 16px; }
+.gr-deserved .vs-bar .vs-big { font-size: clamp(1.75rem, 4vw, 2.5rem); font-style: italic; font-weight: 900; }
+.gr-deserved .vs-bar .vs-label { font-style: italic; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: .875rem; padding: 3px 22px; }
+.gr-deserved .vs-bar .vs-track { height: 38px; border-color: color-mix(in srgb, #fff 80%, transparent); }
+.gr-deserved .vs-bar .vs-fill { background: linear-gradient(180deg, color-mix(in srgb, var(--g-away) 85%, #fff), var(--g-away)); }
+.gr-deserved .vs-bar .vs-knob { background: #fff; width: 22px; height: 22px; }
+/* top row: race beside the team comparison */
+.gr-top { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .gr-top { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+.gr-race svg { max-width: none; }
+.gr-lg { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: .8125rem; font-style: normal; font-weight: 600; letter-spacing: 0; text-transform: none; margin-left: auto; }
+.gr-lg i { display: inline-block; width: 26px; height: 3px; border-radius: 3px; margin-right: 6px; vertical-align: middle; } .gr-lg i.away { background: var(--g-away); } .gr-lg i.home { background: var(--g-home); }
+.gr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.gr-race .gr-grid { stroke: #ffffff2e; } .gr-race .gr-sep { stroke: #ffffff55; } .gr-race .gr-ax { fill: #fff; font-size: 11px; font-weight: 600; }
+.gr-race .gr-line { stroke-width: 2.6; } .gr-race .gr-line.away { stroke: var(--g-away); } .gr-race .gr-line.home { stroke: var(--g-home); }
+.gr-race .gr-goal.away { fill: var(--g-away); stroke: #fff; } .gr-race .gr-goal.home { fill: var(--g-home); stroke: #fff; } .gr-race .gr-goal-n { fill: #fff; stroke: #0007; stroke-width: 2px; paint-order: stroke; }
+.gr-endpill rect { stroke: #fff; stroke-width: 1.2; } .gr-endpill.away rect { fill: var(--g-away); } .gr-endpill.home rect { fill: var(--g-home); }
+.gr-endpill text { fill: #fff; stroke: #0008; stroke-width: 2.4px; paint-order: stroke; font-size: 10.5px; font-weight: 800; }
+/* team comparison tiles */
+.gr-cgrid { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 520px) { .gr-cgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.gr-cgrid .gauge-item { min-width: 0; max-width: none; }
+.gauge.tile { display: grid; gap: 4px; padding: 8px 10px 10px; text-align: center; border: 1px solid color-mix(in srgb, #fff 20%, transparent); border-radius: 12px; background: color-mix(in srgb, #fff 4%, transparent); width: 100%; max-width: none; }
+.gauge.tile .gt-label { font-size: .875rem; font-weight: 650; color: #fff; }
+.gt-vals { display: flex; align-items: center; justify-content: center; gap: 10px; font-variant-numeric: tabular-nums; }
+.gt-vals b { font-size: clamp(1.25rem, 2.2vw, 1.75rem); font-weight: 800; line-height: 1.1; } .gt-vals b.a { color: var(--g-away); } .gt-vals b.h { color: var(--g-home); }
+.gt-vals i { width: 2px; height: 20px; background: #ffffff80; }
+.vs-solo { grid-template-columns: minmax(0, 1fr); }
+.gauge.tile .vs-track { height: 18px; border-width: 2px; } .gauge.tile .vs-knob { width: 14px; height: 14px; border-width: 2px; }
+/* maps with the key between */
+.gr-mid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "away home" "key key"; align-items: stretch; }
+.gr-mid > .gr-map.away { grid-area: away; } .gr-mid > .gr-map.home { grid-area: home; } .gr-mid > .gr-key-col { grid-area: key; }
+@media (min-width: 900px) { .gr-mid { grid-template-columns: minmax(0, 1.3fr) minmax(190px, .75fr) minmax(0, 1.3fr); grid-template-areas: "away key home"; } }
+.gr-key-col { display: grid; align-content: start; justify-items: center; gap: 12px; padding: 14px 6px; min-width: 0; }
+.gr-pill { display: flex; align-items: center; gap: 12px; width: 100%; font-style: italic; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; font-size: .9375rem; }
+.gr-pill::before, .gr-pill::after { content: ""; flex: 1; height: 1px; background: #ffffff50; }
+.gr-pill { justify-content: center; } .gr-pill { padding: 0; }
+.gr-att { display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+.gr-att b { padding: 2px 10px; border-radius: 6px; font-size: .9375rem; font-weight: 850; color: #fff; text-shadow: 0 1px 2px #0008; } .gr-att b.away { background: var(--g-away); } .gr-att b.home { background: var(--g-home); }
+.gr-att strong { font-size: 2rem; font-style: italic; font-weight: 900; line-height: 1; } .gr-att i { width: 2px; height: 28px; background: #ffffff80; }
+.gr-key-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; justify-self: stretch; }
+.gr-key-col li { display: flex; align-items: center; gap: 12px; font-size: .9375rem; color: #fff; }
+.gr-key-col li svg { width: 26px; height: 26px; flex: none; }
+/* period breakdown */
+.gr-periods h4 { display: flex; align-items: center; gap: 14px; margin: 0 0 8px; color: #fff; font-size: .8125rem; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; }
+.gr-periods h4::after { content: ""; order: 2; flex: 1; height: 1px; background: #ffffff40; }
+.gr-periods .gr-toggle { order: 3; border-radius: 999px; border-color: #ffffff40; background: #ffffff0d; }
+.gr-periods .gr-toggle button { border-radius: 999px; color: #fff; padding: 0 16px; }
+.gr-periods .gr-toggle button[aria-pressed="true"] { background: color-mix(in srgb, #5de8b0 35%, #0a1628); color: #fff; }
+.gr-compare { align-content: start; }
+.gr-compare .gr-cgrid { align-content: start; }
+/* narrow: the deserved-to-win numbers sit above the bar, the pill and bar across the full width */
+@container (max-width: 460px) {
+  .vs-bar { grid-template-columns: 1fr 1fr; grid-template-areas: "a h" "mid mid"; gap: 8px; }
+  .vs-bar .vs-a { grid-area: a; justify-content: flex-start; } .vs-bar .vs-h { grid-area: h; justify-content: flex-end; } .vs-bar .vs-mid { grid-area: mid; }
+}
+@media (max-width: 520px) {
+  .gr-map h4.pn-h { flex-wrap: nowrap; padding-right: 28px; font-size: .75rem; letter-spacing: .04em; gap: 6px; white-space: nowrap; }
+  .gr-map h4 .gr-key { display: none; }
+  h4.gr-dh { font-size: 1.125rem; }
+}

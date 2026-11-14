@@ -20,7 +20,7 @@ function inkOn(hex: string) {
  * `share` is the away side's part of the bar (0..1, .5 = even). Density: "row" for stat rows, "hero" for the big headline numbers, "bar" for the bare bar.
  */
 export function Versus({ away, home, share, label, density = "row", className = "" }: {
-  away: VsSide; home: VsSide; share: number; label?: ReactNode; density?: "row" | "hero" | "bar"; className?: string;
+  away: VsSide; home: VsSide; share: number; label?: ReactNode; density?: "row" | "hero" | "bar" | "track"; className?: string;
 }) {
   const s = Math.min(0.96, Math.max(0.04, share));
   const colors = gaugeColors(away.id, home.id);
@@ -34,8 +34,8 @@ export function Versus({ away, home, share, label, density = "row", className = 
     </div>
   );
   return (
-    <div className="vs-wrap"><div className={`vs vs-${density} ${className}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home, "--ink-away": inkOn(colors.away), "--ink-home": inkOn(colors.home) } as CSSProperties}>
-      {side(away, "vs-a")}
+    <div className="vs-wrap"><div className={`vs vs-${density === "track" ? "solo" : density} ${className}`} data-leader={leader} style={{ "--g-away": colors.away, "--g-home": colors.home, "--ink-away": inkOn(colors.away), "--ink-home": inkOn(colors.home) } as CSSProperties}>
+      {density !== "track" && side(away, "vs-a")}
       <div className="vs-mid">
         {label != null && <span className="vs-label gauge-label">{label}</span>}
         <div className="vs-track" aria-hidden="true">
@@ -43,9 +43,9 @@ export function Versus({ away, home, share, label, density = "row", className = 
           <u className="vs-tick" />
           <span className="vs-knob" style={{ left: `${s * 100}%` }} />
         </div>
-        <span className="vs-even" aria-hidden="true">Even</span>
+        {density !== "track" && <span className="vs-even" aria-hidden="true">Even</span>}
       </div>
-      {side(home, "vs-h")}
+      {density !== "track" && side(home, "vs-h")}
     </div></div>
   );
 }

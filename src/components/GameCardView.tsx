@@ -136,7 +136,7 @@ export function GameCardView(p: GameCardViewProps) {
           </span>
         </button>
         {p.actions && <span className="sb-actions">{p.actions}</span>}
-        <div className="gcv-rivalry"><RivalryTag game={game} /></div>{p.context}{p.insight}{p.below}
+        {/* Matchup history is available in Game Center. */}<div className="gcv-rivalry"><RivalryTag game={game} /></div>{p.context}{p.insight}{p.below}
       </div>
     );
   }
@@ -149,7 +149,7 @@ export function GameCardView(p: GameCardViewProps) {
           <span className="gcv-lines">{teams}</span>
         </button>
         {p.actions && <span className="sb-actions">{p.actions}</span>}
-        <div className="gcv-rivalry"><RivalryTag game={game} /></div>{p.context}{p.insight}{p.below}
+        {/* Matchup history is available in Game Center. */}<div className="gcv-rivalry"><RivalryTag game={game} /></div>{p.context}{p.insight}{p.below}
       </div>
     );
   }
@@ -186,7 +186,7 @@ export function GameCardView(p: GameCardViewProps) {
       {p.venue !== false && <p className="sb-venue"><Icon name="pin" size={20} />{game.venue || "Venue unavailable"}</p>}
       {p.extras}
       {p.probRow}
-      <div className="gcv-rivalry"><RivalryTag game={game} /></div>
+      {/* Matchup history is available in Game Center. */}<div className="gcv-rivalry"><RivalryTag game={game} /></div>
       {p.context && <div className="gcv-context">{p.context}</div>}
       {p.insight && <div className="gcv-insight">{p.insight}</div>}
       <button type="button" className="gcv-details" aria-expanded={!!p.open} aria-label={`${p.open ? "Hide" : "Show"} details for ${away.name} at ${home.name}`} onClick={() => onOpen(game)}>Details <Icon name="chevron" size={22} /></button>

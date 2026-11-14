@@ -1,5 +1,6 @@
 import type { Game } from "../types";
 import { rivalryForGame, rivalryContext } from "../lib/rivalries.mjs";
+import { approvedRivalryMedia, RIVALRY_MEDIA_CANDIDATES } from "../lib/rivalry-media.mjs";
 import "./rivalry.css";
 
 /** Compact label for schedule rows, tiles, and game cards. */
@@ -14,6 +15,7 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
   const rivalry = rivalryForGame(game);
   if (!rivalry) return null;
   const context = rivalryContext(allGames, game);
+  const approvedImages = approvedRivalryMedia(RIVALRY_MEDIA_CANDIDATES, rivalry.id);
   const recent = context?.lastTen ?? [];
   return (
     <section className="rivalry-panel" aria-label={`Rivalry history: ${rivalry.name}`} data-testid="rivalry-panel">
@@ -22,6 +24,7 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
         <span className="rivalry-team-line">{game.away} / {game.home}</span>
       </div>
       <p>{rivalry.history}</p>
+      {approvedImages.map(asset => <figure key={asset.source_url} className="rivalry-photo"><img src={asset.asset_url} alt={asset.caption} loading="lazy" /><figcaption>{asset.caption} · {asset.photographer} · {asset.license} · <a href={asset.source_url} target="_blank" rel="noreferrer">Photo source</a></figcaption></figure>)}
       {context && <div className="rivalry-live-context">
         <p className="rivalry-current-story">{context.story}</p>
         <div className="rivalry-facts">

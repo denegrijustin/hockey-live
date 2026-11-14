@@ -96,3 +96,12 @@ test("team logo style: retro by default, current when chosen, junk falls back to
   assert.equal(sanitize({ display: { logos: "neon" } }, []).display.logos, "retro");
   assert.equal(sanitize({}, []).display.logos, "retro");
 });
+
+test("the migrated old team filter with every team selected means the whole league, not 32 favorites; a saved choice of every team is kept", () => {
+  const all = Array.from({ length: 32 }, (_, i) => `T${String(i).padStart(2, "0")}`);
+  const opts = { teamIds: all };
+  assert.deepEqual(parsePrefs(null, { ...opts, legacy: JSON.stringify(all) }).favorites, []);
+  assert.equal(parsePrefs(null, { ...opts, legacy: JSON.stringify(all) }).onboarded, true);
+  assert.deepEqual(parsePrefs(null, { ...opts, legacy: JSON.stringify(all.slice(0, 5)) }).favorites, all.slice(0, 5));
+  assert.deepEqual(parsePrefs(JSON.stringify({ version: 1, favorites: all }), opts).favorites, all); // chosen in Pick teams
+});

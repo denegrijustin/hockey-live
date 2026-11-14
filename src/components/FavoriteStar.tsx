@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { useFavorites } from "../hooks/useFavorites";
+import teams from "../data/teams.json";
 import "./favorites.css";
 
 /** The one favorite toggle used everywhere: a 44px target, pressed when the team is a favorite. Saved on this device only. */
@@ -15,7 +16,8 @@ export function FavoriteStar({ id, name, className = "" }: { id: string; name: s
 
 /** A small non-interactive marker for a favorite team (cards, schedule rows). */
 export function FavoriteMark({ id, sr = false }: { id: string; sr?: boolean }) {
-  const { isFavorite } = useFavorites();
-  if (!isFavorite(id)) return null;
+  const { isFavorite, favorites } = useFavorites();
+  // A star on every team marks nothing: when every team is a favorite (all 32 picked) the mark stays off.
+  if (!isFavorite(id) || favorites.length >= teams.length) return null;
   return <span className="fav-mark" title="Favorite team"><Star size={11} aria-hidden="true" fill="currentColor" />{sr && <span className="sr-only">Favorite</span>}</span>;
 }

@@ -4,7 +4,7 @@ import { goTo } from "./nav";
 
 const season = manifest.current;
 const etDay = (offset: number) => new Date(Date.now() + offset * 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-const opps = ["BOS", "MTL", "OTT", "FLA", "TBL", "DET", "BUF", "NYR", "PHI", "PIT"];
+const opps = ["BOS", "CBJ", "OTT", "VGK", "TBL", "DET", "BUF", "NYR", "PHI", "PIT"]; // includes the two longest names (Columbus Blue Jackets, Vegas Golden Knights)
 let id = 9500;
 // TOR's season in the fixture: 30 games already played (every other day, up to yesterday) and 52 still to come (every other day from tomorrow).
 const games = [
@@ -159,3 +159,42 @@ for (const [label, size] of [["phone", { width: 390, height: 844 }], ["laptop", 
     await expect(page.locator("dialog[open]")).toHaveCount(0);
   });
 }
+
+test("every opponent's name fits on one line in the list, the longest ones too, down to a 320px phone", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "phone widths");
+  await page.addInitScript(() => { try { localStorage.setItem("iceboard-prefs-v1", JSON.stringify({ version: 1, favorites: ["CBJ"], onboarded: true })); } catch {} }); // a star beside the name takes room too
+  for (const width of [390, 360, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page, "list");
+    await expect(page.locator(".ts-name").first()).toBeVisible();
+    expect(await page.locator(".ts-name").count(), "a name for every game").toBe(82);
+    const cut = await page.locator(".ts-name").evaluateAll((els) => els.filter((n) => n.scrollWidth > n.clientWidth + 1 || n.getBoundingClientRect().height > 26).map((n) => n.textContent));
+    expect(cut, `names cut or wrapped at ${width}px`).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  }
+});
+
+test("a star marks a favorite team only: none for the migrated old all-teams filter or when every team is picked, just that team for a real favorite", async ({ page }) => {
+  const ALL = ["ANA", "BOS", "BUF", "CGY", "CAR", "CHI", "COL", "CBJ", "DAL", "DET", "EDM", "FLA", "LAK", "MIN", "MTL", "NSH", "NJD", "NYI", "NYR", "OTT", "PHI", "PIT", "SJS", "SEA", "STL", "TBL", "TOR", "UTA", "VAN", "VGK", "WSH", "WPG"];
+  await page.addInitScript((all) => { try { if (sessionStorage.getItem("seeded")) return; sessionStorage.setItem("seeded", "1"); localStorage.clear(); localStorage.setItem("iceboard-teams", JSON.stringify(all)); } catch {} }, ALL); // seeded once, so a reload keeps what the test saves // the old team filter started with every team selected
+  await open(page, "list");
+  await expect(page.locator(".ts-card").first()).toBeVisible();
+  await expect(page.locator(".ts-name .fav-mark")).toHaveCount(0);
+  // every team picked in Pick teams: a star on every team marks nothing, so none is shown
+  await page.evaluate((all) => localStorage.setItem("iceboard-prefs-v1", JSON.stringify({ version: 1, favorites: all, onboarded: true })), ALL);
+  await page.reload();
+  await goTo(page, "Schedule");
+  await page.getByLabel("Team", { exact: true }).selectOption("TOR");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.locator(".ts-card").first()).toBeVisible();
+  await expect(page.locator(".ts-name .fav-mark")).toHaveCount(0);
+  // a real favorite: stars only beside that team
+  await page.evaluate(() => localStorage.setItem("iceboard-prefs-v1", JSON.stringify({ version: 1, favorites: ["CBJ"], onboarded: true })));
+  await page.reload();
+  await goTo(page, "Schedule");
+  await page.getByLabel("Team", { exact: true }).selectOption("TOR");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const starred = await page.locator(".ts-card:has(.fav-mark)").evaluateAll((els) => els.map((e) => e.querySelector(".ts-name b")?.textContent));
+  expect(starred.length).toBeGreaterThan(0);
+  expect(new Set(starred)).toEqual(new Set(["Columbus Blue Jackets"]));
+});

@@ -11,6 +11,7 @@ import { Icon } from "./icons";
 import { faceColors } from "../lib/face";
 import "../game-card-view.css";
 import "../card-face.css";
+import "./rivalry-tag.css";
 
 const SaveGameButton = lazy(() => import("./SaveGameButton").then((m) => ({ default: m.SaveGameButton })));
 

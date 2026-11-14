@@ -128,3 +128,6 @@
   .gx-team > div h3 { font-size: 1rem; }
   .gx-team { padding: 8px 20px; }
 }
+.gx-team { min-width: 0; }
+.gx-team > div { overflow: hidden; }
+.gx-team > div span, .gx-team > div h3 { max-width: 100%; }

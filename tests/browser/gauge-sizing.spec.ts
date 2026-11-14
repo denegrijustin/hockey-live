@@ -51,7 +51,7 @@ async function measure(dialog: ReturnType<Page["locator"]>) {
     const dialogW = d.clientWidth;
     const gauges = [...d.querySelectorAll<HTMLElement>(".gauge")].filter((g) => g.getBoundingClientRect().width > 0).map((g) => {
       const p = g.parentElement!.getBoundingClientRect(), f = g.getBoundingClientRect();
-      const vs = g.querySelector<HTMLElement>(".vs"), track = g.querySelector<HTMLElement>(".vs-track");
+      const vs = g.querySelector<HTMLElement>(".vs"), track = g.querySelector<HTMLElement>(".vs-track, .gp-prob");
       return { parentW: p.width, figW: f.width, vsW: vs?.scrollWidth ?? 0, vsClient: vs?.clientWidth ?? 0, trackW: track?.getBoundingClientRect().width ?? 0, label: g.getAttribute("aria-label")?.slice(0, 30) };
     });
     return { dialogW, scrollW: d.scrollWidth, gauges };

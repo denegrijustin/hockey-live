@@ -236,8 +236,10 @@ test.describe("Phase 5 features", () => {
     await dialog.evaluate((d) => { (window as any).__scrolled = false; d.addEventListener("scroll", () => { (window as any).__scrolled = true; }, { once: true }); });
     await expect.poll(() => dialog.evaluate((d) => { d.scrollTop = 700; return Math.round(d.scrollTop); }), { message: "the dialog scrolls" }).toBeGreaterThan(600);
     await expect.poll(() => page.evaluate(() => (window as any).__scrolled), { message: "the scroll event is handled" }).toBe(true);
-    const idx = await events.evaluateAll((els) => els.findIndex((e) => { const r = e.getBoundingClientRect(); return r.top > 150 && r.bottom < innerHeight - 50; }));
-    expect(idx, "a fully visible event row to read").toBeGreaterThanOrEqual(0);
+    // the rows are content-visibility:auto, so wait for the layout after the scroll to settle on a row that is fully on screen
+    const pick = () => events.evaluateAll((els) => els.findIndex((e) => { const r = e.getBoundingClientRect(); return r.top > 150 && r.bottom < innerHeight - 50; }));
+    await expect.poll(pick, { message: "a fully visible event row to read" }).toBeGreaterThanOrEqual(0);
+    const idx = await pick();
     const anchor = events.nth(idx);
     const id = await anchor.getAttribute("data-event-id");
     await anchor.focus();

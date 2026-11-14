@@ -36,7 +36,7 @@
   .vs-tier { font-size: .625rem; padding: 1px 7px; }
 }
 /* very narrow (a cell in a grid of stats): both numbers on top, the label and bar under them across the full width */
-@container (max-width: 300px) {
+@container (max-width: 240px) {
   .vs:not(.vs-bar) { grid-template-columns: 1fr 1fr; grid-template-areas: "a h" "mid mid"; gap: 6px 8px; }
   .vs:not(.vs-bar) .vs-a { grid-area: a; justify-items: start; text-align: left; } .vs:not(.vs-bar) .vs-h { grid-area: h; justify-items: end; text-align: right; } .vs:not(.vs-bar) .vs-mid { grid-area: mid; }
 }
@@ -49,3 +49,6 @@ div.mp-cmp, div.split-row { display: block; padding: 6px 0; }
 div.mp-cmp-compact { padding: 4px 0; }
 /* the rank comparison's row holds one Versus; it no longer needs its own three columns */
 .crossover .crossover-row { display: block; grid-template-columns: none; padding: 8px 0; }
+/* a knob that carries the margin ("+3") */
+.vs-knob.has-text { display: grid; place-items: center; width: auto; min-width: 30px; height: 28px; padding: 0 8px; border-radius: 999px; background: color-mix(in srgb, var(--surface-2, #000) 55%, var(--g-away)); border: 2px solid color-mix(in srgb, #fff 80%, transparent); color: #fff; font-size: .8125rem; font-weight: 850; line-height: 1; white-space: nowrap; }
+@container (max-width: 420px) { .vs-knob.has-text { height: 24px; min-width: 26px; font-size: .75rem; padding: 0 6px; } }

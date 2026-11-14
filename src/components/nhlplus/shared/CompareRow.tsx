@@ -18,21 +18,22 @@ export function CompareRow({ label, tip, left, right, higherIsBetter = true, uni
   const ahead: "left" | "right" | null = ranked
     ? (left.rank!.rank === right.rank!.rank ? null : left.rank!.rank < right.rank!.rank ? "left" : "right")
     : both && left.value !== right.value ? ((left.value! > right.value!) === higherIsBetter ? "left" : "right") : null;
-  let share = 0.5;
+  let share = 0.5, knob: string | undefined;
   if (ahead) {
     const dir = ahead === "left" ? 1 : -1;
     let mag: number;
-    if (ranked) { const pool = Math.max(2, left.rank!.pool); mag = Math.abs(left.rank!.rank - right.rank!.rank) / (pool - 1); }
+    if (ranked) { const n = Math.abs(left.rank!.rank - right.rank!.rank), pool = Math.max(2, left.rank!.pool); mag = n / (pool - 1); knob = `+${n}`; }
     else {
       const d = left.value! - right.value!, rel = Math.abs(d) / Math.max(Math.abs(left.value!), Math.abs(right.value!), 1e-9);
       mag = Math.min(1, rel * 1.5);
+      knob = diffPct ? `+${Math.abs(d * 100).toFixed(1)}%` : `+${Math.abs(d).toFixed(diffDigits)}`;
     }
     share = 0.5 + dir * 0.47 * Math.min(1, mag);
   }
   const side = (x: CompareSide): VsSide => ({ id: x.team, big: x.rank ? `#${x.rank.rank}` : x.text, sub: x.rank ? x.text : compact ? undefined : x.sub, hint: x.sub, tier: tierOf(x.rank) as VsSide["tier"] });
   return (
     <div className={`mp-cmp${compact ? " mp-cmp-compact" : ""}`} role="group" aria-label={`${label}: ${left.team} ${left.text}, ${right.team} ${right.text}`} title={unit || undefined}>
-      <Versus away={side(left)} home={side(right)} share={share} label={tip ? <MetricTip id={tip}>{label}</MetricTip> : label} />
+      <Versus away={side(left)} home={side(right)} share={share} knob={knob} label={tip ? <MetricTip id={tip}>{label}</MetricTip> : label} />
     </div>
   );
 }

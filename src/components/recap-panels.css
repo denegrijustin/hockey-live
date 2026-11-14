@@ -57,7 +57,8 @@
 .gt-vals { display: flex; align-items: center; justify-content: center; gap: 10px; font-variant-numeric: tabular-nums; }
 .gt-vals b { font-size: clamp(1.25rem, 2.2vw, 1.75rem); font-weight: 800; line-height: 1.1; } .gt-vals b.a { color: var(--g-away); } .gt-vals b.h { color: var(--g-home); }
 .gt-vals i { width: 2px; height: 20px; background: #ffffff80; }
-.vs-solo { grid-template-columns: minmax(0, 1fr); }
+.vs.vs-solo:not(.vs-bar) { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
+.vs.vs-solo .vs-mid { grid-area: auto; }
 .gauge.tile .vs-track { height: 18px; border-width: 2px; } .gauge.tile .vs-knob { width: 14px; height: 14px; border-width: 2px; }
 /* maps with the key between */
 .gr-mid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "away home" "key key"; align-items: stretch; }

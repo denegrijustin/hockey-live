@@ -1,0 +1,15 @@
+.rivalry-tag{display:inline-flex;align-items:center;max-width:100%;gap:.3rem;padding:.24rem .55rem;border:1px solid color-mix(in srgb,currentColor 30%,transparent);border-radius:999px;font-weight:700;font-size:.67rem;letter-spacing:.015em;line-height:1.25;color:var(--text,var(--foreground,inherit));background:color-mix(in srgb,var(--face-accent,#94a3b8) 12%,transparent);white-space:normal}
+.gcv-rivalry{padding:0 .75rem .35rem;display:flex;align-items:center}
+.rivalry-panel{margin:1rem 0;padding:1rem 1.15rem;border:1px solid color-mix(in srgb,var(--face-accent,#64748b) 38%,transparent);border-radius:14px;background:color-mix(in srgb,var(--face-bg,#162033) 66%,#131823);color:#f5f7fb}
+.rivalry-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.rivalry-eyebrow{font-size:.65rem;font-weight:800;letter-spacing:.14em;color:#c9d5e5}
+.rivalry-panel h3{margin:.24rem 0 .6rem;font-size:1.15rem;line-height:1.2;color:#fff}
+.rivalry-panel p{font-size:.91rem;line-height:1.55;color:#d8e3f0;margin:0 0 .75rem}
+.rivalry-team-line{font-size:.7rem;font-weight:700;white-space:nowrap;color:#d6e0ee}
+.rivalry-meetings strong{display:block;margin:.8rem 0 .35rem;font-size:.78rem}
+.rivalry-meetings strong small{font-weight:400;color:#b4bfcd}
+.rivalry-meetings ul{margin:0;padding:0;list-style:none}
+.rivalry-meetings li{display:flex;justify-content:space-between;gap:.75rem;padding:.35rem 0;border-bottom:1px solid #ffffff20;font-size:.78rem}
+.rivalry-meetings time{color:#b4bfcd;white-space:nowrap}
+.rivalry-source{display:inline-block;color:#a9dcff;margin-top:.75rem;font-size:.79rem}
+.rivalry-disclaimer{display:block;margin-top:.55rem;font-size:.67rem;color:#b4bfcd}

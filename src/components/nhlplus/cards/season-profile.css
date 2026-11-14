@@ -1,6 +1,11 @@
 /* The season profile as one panel (after the Oilers/Maple Leafs reference): the two teams in the header, titled section panels, rows with a margin knob.
    Always on a dark navy field with a glow of each team's colour at its corner, like the win-chance panel. */
-.nhlp-expanded.sp { --sp-a: #ff6a1a; --sp-h: #2f7dd1; position: relative; display: grid; gap: 12px; padding: 14px 16px 12px; border-radius: 18px; color: #fff; overflow: hidden;
+.nhlp-expanded.sp { color-scheme: dark;
+  --surface-1: #040a0e; --surface-2: #071017; --surface-3: #0a161f; --surface-4: #0d1c26; --surface-5: #11222c; --surface-6: #152934; --surface-7: #1b313c; --surface-8: #283c45;
+  --line-1: #2e4652; --line-2: #3a5662; --line-3: #4c6875; --line-4: #58828a; --line-5: #6c8caa;
+  --text-1: #8ea8b6; --text-2: #9fbac6; --text-3: #b9cfd9; --text-4: #d0e0e6; --text-5: #e2ecf0; --text-6: #ffffff; --muted: #9fbac6;
+  --mint: #7fdec1; --mint-5: #7fdec1; --mint-6: #c9f3e5;
+  --sp-a: #ff6a1a; --sp-h: #2f7dd1; position: relative; display: grid; gap: 12px; padding: 14px 16px 12px; border-radius: 18px; color: #fff; overflow: hidden;
   border: 1px solid color-mix(in srgb, #fff 14%, transparent);
   background:
     radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--sp-a) 34%, transparent), transparent 55%),
@@ -11,7 +16,7 @@
 .sp-team.sp-right { justify-content: flex-end; text-align: right; }
 .sp-team span { display: grid; min-width: 0; line-height: 1; }
 .sp-team em { font-size: .75rem; font-style: italic; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #fffc; overflow-wrap: anywhere; }
-.sp-team b { font-size: clamp(1.05rem, 2vw, 1.6rem); font-style: italic; font-weight: 900; text-transform: uppercase; overflow-wrap: anywhere; }
+.sp-team b { color: #fff; font-size: clamp(1.05rem, 2vw, 1.6rem); font-style: italic; font-weight: 900; text-transform: uppercase; overflow-wrap: anywhere; }
 .sp-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .sp-mid { display: grid; justify-items: center; gap: 2px; text-align: center; flex: none; }
 .sp-line { flex: 1 1 24px; height: 3px; min-width: 16px; border-radius: 3px; }

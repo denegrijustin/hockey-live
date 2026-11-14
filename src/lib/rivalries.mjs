@@ -297,3 +297,44 @@ export function verifiedAllTime(record) {
   if (record.wins+record.losses+record.ties+record.overtime_losses!==record.games) return null;
   return record;
 }
+
+/** Regular-season, season-scoped and bounded rivalry form derived from the same
+ * completed NHL game snapshots that power the rest of Iceboard. No external API. */
+export function rivalryContext(games, viewedGame) {
+  if (!rivalryForGame(viewedGame) || !Array.isArray(games)) return null;
+  const reference = viewedGame.start;
+  const teamIds = [viewedGame.away, viewedGame.home];
+  // Game IDs can appear in multiple team/season snapshots; never double count.
+  const seen = new Set();
+  const matches = games.filter(g => {
+    if (!g || g.id == null || seen.has(g.id) || g.id === viewedGame.id) return false;
+    if (!g.start || g.start >= reference || !["OFF", "FINAL"].includes(g.state)) return false;
+    if (!Number.isFinite(g.homeScore) || !Number.isFinite(g.awayScore) || g.homeScore === g.awayScore) return false;
+    if (!(g.type === 2 || g.type === 3)) return false;
+    if (!(teamIds.includes(g.home) && teamIds.includes(g.away) && g.home !== g.away)) return false;
+    seen.add(g.id);
+    return true;
+  }).sort((a,b) => b.start.localeCompare(a.start));
+  const winner = g => g.homeScore > g.awayScore ? g.home : g.away;
+  const bySeason = matches.filter(g => g.type === 2 && g.season === viewedGame.season);
+  const currentSeason = {season:viewedGame.season, meetings:bySeason.length, wins: Object.fromEntries(teamIds.map(t=>[t,bySeason.filter(g=>winner(g)===t).length]))};
+  const lastTen=matches.slice(0,10);
+  const streakTeam = matches.length ? winner(matches[0]) : null;
+  let streakLength=0;
+  for (const g of matches) { if(winner(g) !== streakTeam)break; streakLength++; }
+  const recentPlayoffs = matches.filter(g=>g.type===3).slice(0,10);
+  const lastTenWins = Object.fromEntries(teamIds.map(t=>[t,lastTen.filter(g=>winner(g)===t).length]));
+  let story;
+  if (bySeason.length) {
+    const a=currentSeason.wins[viewedGame.away],h=currentSeason.wins[viewedGame.home];
+    story = a===h ? `The season series is level at ${a}–${h} entering this matchup.`
+      : `${a>h?viewedGame.away:viewedGame.home} leads the season series ${Math.max(a,h)}–${Math.min(a,h)} entering this matchup.`;
+  } else if(matches.length) {
+    const latest=matches[0];
+    story=`${winner(latest)} won the most recent meeting on ${latest.date ?? latest.start.slice(0,10)}.`;
+  } else {
+    story="No previous completed meeting is available in the loaded game history.";
+  }
+  return {currentSeason, lastTen, lastTenWins, streak:{team:streakTeam,games:streakLength}, recentPlayoffs, story,
+    sourceScope:"Loaded NHL season snapshots only", oldestLoadedMeeting:matches.at(-1)?.date ?? null};
+}

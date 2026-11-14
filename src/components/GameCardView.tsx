@@ -7,7 +7,7 @@ import { rankTitle } from "../lib/ranks.mjs";
 import { usePauseOffscreen } from "../motion";
 import { TeamLogo } from "./TeamLogo";
 import { Icon } from "./icons";
-import { kitFor } from "../lib/kits";
+import { faceColors } from "../lib/face";
 import "../game-card-view.css";
 import "../card-face.css";
 
@@ -155,9 +155,7 @@ export function GameCardView(p: GameCardViewProps) {
 
   const scoredNow = !!(p.scored?.away || p.scored?.home);
   // The card sits on the home team's own colour, framed in a bright accent (its second colour when that is bright, else a tint of the first).
-  const base = home.cardColor ?? home.color, kit = kitFor(home.id);
-  const lum = (hex: string) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex); if (!m) return 0; const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16)); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
-  const accent = lum(kit.trim) > 0.5 && kit.trim.toLowerCase() !== "#ffffff" ? kit.trim : `color-mix(in srgb, ${base} 45%, #fff)`;
+  const { bg: base, accent } = faceColors(away, home);
   const liveNow = st.live && !st.stale;
   return (
     <article ref={set as never} data-face="1" style={{ ["--face-bg" as never]: base, ["--face-accent" as never]: accent } as never} className={`gcv gcv-row sb-row ${state}${pill ? ` ${st.kind}` : ""}${upset ? " upset-won" : ""}${p.open ? " open" : ""}${p.hot ? " hot" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>

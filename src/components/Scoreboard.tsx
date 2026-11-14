@@ -393,7 +393,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
       probRow={kind === "soon" && !compact && homePct != null ? <ProbRow away={away} home={home} homePct={homePct} /> : null}
       scored={{ away: awayScored, home: homeScored }} onOpen={() => onFull()}
       ariaExtra={cl.both ? "close and late" : undefined}
-      actions={<span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
+      actions={!game.broadcasts?.length ? null : <span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
       context={kind === "live" && rating?.upset ? <span className="sb-brew">Upset brewing: the underdog is ahead late</span> : undefined}
       insight={insight}
       ring={before && (kind !== "final" || open) ? (

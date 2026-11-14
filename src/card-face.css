@@ -43,7 +43,7 @@
 .gcv-row .sb-team.lost .sb-name b, .gcv-row .sb-team.lost .sb-score { color: #ffffffb0; font-weight: 700; }
 /* the watchability tile */
 .gcv-ringwrap { display: grid; justify-items: center; align-content: center; gap: 4px; min-width: 138px; padding: 10px 12px; border: 3px solid var(--face-accent); border-radius: 22px; background: color-mix(in srgb, var(--face-bg) 55%, #000); box-shadow: 0 0 16px color-mix(in srgb, var(--face-accent) 35%, transparent); }
-.gcv-ringwrap .sb-rate { display: grid; justify-items: center; padding: 0 !important; }
+.gcv-ringwrap .sb-rate { display: grid; justify-items: center; justify-self: center !important; grid-column: auto !important; grid-row: auto !important; padding: 0 !important; }
 .gcv-ringwrap .score-ring { width: 96px !important; height: 96px !important; --score-color: var(--face-accent); }
 .gcv-ringwrap .score-ring strong { font-size: 2.25rem !important; font-weight: 900; color: #fff; }
 .gcv-ringwrap .sr-track { stroke: #ffffff26; stroke-width: 4.5; } .gcv-ringwrap .sr-fill { stroke: var(--face-accent); stroke-width: 4.5; }
@@ -78,6 +78,22 @@
 .gcv-details { justify-self: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 240px; min-height: 60px; padding: 0 28px; border: 3px solid var(--face-accent); border-radius: 20px; background: color-mix(in srgb, var(--face-bg) 42%, #000); color: #fff; font-size: 1.5rem; font-weight: 800; box-shadow: 0 0 14px color-mix(in srgb, var(--face-accent) 30%, transparent); }
 .gcv-details .icon { transform: rotate(90deg); transition: transform .2s; } .gcv-details[aria-expanded="true"] .icon { transform: rotate(-90deg); }
 @media (hover: hover) { .gcv-details:hover { background: color-mix(in srgb, var(--face-bg) 60%, #000); } }
+.gcv-row .sb-actions .tv-network:not(:has(*)) { display: none; }
+/* desktop: two cards side by side, so the phone-sized type steps down */
+@media (min-width: 701px) {
+  .scoreboard .sb-row.gcv-row[data-face][data-face] { padding: 14px; gap: 10px; border-radius: 22px; }
+  .gcv-banner { font-size: .9375rem; padding: 7px 16px; } .gcv-alert { font-size: 1rem; }
+  .gcv-row .sb-status { font-size: 1.0625rem; gap: 10px; } .gcv-row .sb-status .icon { width: 22px; height: 22px; }
+  .gcv-row .gc-icon { width: 48px; height: 48px; min-width: 48px; font-size: .8125rem; border-radius: 13px; }
+  .gcv-row .sb-team { gap: 10px; padding: 6px 10px 6px 6px; border-radius: 14px; } .gcv-row .sb-team .team-logo { width: 44px !important; height: 44px !important; padding: 5px; border-radius: 11px; }
+  .gcv-row .sb-name { font-size: 1.0625rem; gap: 3px 8px; } .gcv-row .sb-name .sb-rank { font-size: .875rem; padding: 2px 8px; border-radius: 9px; } .gcv-row .gcv-record { font-size: .9375rem; } .gcv-row .gcv-home { font-size: .75rem; padding: 2px 9px; border-radius: 9px; }
+  .gcv-row .sb-score { font-size: 1.875rem; }
+  .gcv-ringwrap { min-width: 112px; padding: 8px 10px; border-radius: 18px; } .gcv-ringwrap .score-ring { width: 72px !important; height: 72px !important; } .gcv-ringwrap .score-ring strong { font-size: 1.625rem !important; } .gcv-tier { font-size: .8125rem; }
+  .gcv-metric h5 { font-size: .8125rem; } .gcv-metric b { font-size: 1.0625rem; } .gcv-gradbar, .gcv-segbar { height: 10px; }
+  .gcv-row .sb-venue, .gcv-probrow { font-size: .9375rem; } .gcv-pillrow { font-size: .9375rem; padding: 5px 14px; } .gcv-label { font-size: .875rem; padding: 6px 12px; }
+  .gcv-pills .gcv-pillrow { min-height: 44px; font-size: 1rem; padding: 6px 16px; } .gcv-probbar { height: 14px; }
+  .gcv-details { min-width: 160px; min-height: 44px; font-size: 1.0625rem; border-radius: 14px; border-width: 2px; }
+}
 /* phones */
 @media (max-width: 520px) {
   .scoreboard .sb-row.gcv-row[data-face][data-face] { padding: 12px; gap: 10px; border-radius: 20px; }

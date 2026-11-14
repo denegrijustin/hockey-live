@@ -32,7 +32,7 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
           ))}</ul>
         </div>
       )}
-      <a className="rivalry-source" href={rivalry.source} target="_blank" rel="noreferrer">Explore NHL history ↗</a>
+      {rivalry.source && <a className="rivalry-source" href={rivalry.source} target="_blank" rel="noreferrer">Historical source ↗</a>}
       <small className="rivalry-disclaimer">Historical all-time W–L is hidden until independently reconciled against NHL game results.</small>
     </section>
   );

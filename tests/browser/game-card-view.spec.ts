@@ -52,7 +52,7 @@ test.describe("Games list card", () => {
     await open(page, "/?view=games");
     const c = card(page, G.live);
     await expect(c).toBeVisible();
-    const sizes = await page.locator(".game-card .matchup-team img").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))]);
+    const sizes = await page.locator(".game-card .matchup-team img:not(.int-who img)").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))]);
     expect(sizes).toEqual([32]);
     const gc = c.locator(".gc-icon");
     const hit = await gc.evaluate((el) => { const r = el.getBoundingClientRect(), b = getComputedStyle(el, "::before"); return { w: r.width + Math.abs(parseFloat(b.left)) * 2, h: r.height + Math.abs(parseFloat(b.top)) * 2 }; });
@@ -143,6 +143,6 @@ test.describe("Home row (GameCardView, variant row)", () => {
       const box = await loc.evaluate((el) => { const r = el.getBoundingClientRect(), b = getComputedStyle(el, "::before"); return { h: Math.max(r.height, r.height + Math.abs(parseFloat(b.top) || 0) * 2) }; });
       expect(box.h).toBeGreaterThanOrEqual(44);
     }
-    expect(await page.locator(".sb-row .team-logo").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))])).toEqual([32]);
+    expect(await page.locator(".sb-row .team-logo:not(.int-who .team-logo)").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))])).toEqual([32]);
   });
 });

@@ -7,6 +7,9 @@ import type { Ice3D } from "../lib/ice3d";
 import type { Look } from "../lib/ice-textures";
 import { logoUrl } from "../lib/logos";
 import { usePrefs } from "../lib/prefs";
+import { faceColors } from "../lib/face";
+import { TeamLogo } from "./TeamLogo";
+import "./rink-panel.css";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
 const SCOUTS = "/logos/kc-scouts.png";
@@ -57,13 +60,13 @@ function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, p
   const leaving = phase === "exit";
   if (mode === "pregame") {
     return working || leaving
-      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${away.short} at ${home.short} · ${leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
-      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: `${away.short} at ${home.short} · the ice is ready` };
+      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
+      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: `the ice is ready` };
   }
   return {
     k: `INTERMISSION${game.period ? ` · END OF P${game.period}` : ""}`,
     l: left > 0 ? `until ${next}` : `${next} about to start`,
-    cap: `${away.short} at ${home.short} · ${working ? "the Zamboni is resurfacing the ice" : leaving ? "the Zamboni is leaving the ice" : "fresh ice for the next period"}`,
+    cap: `${working ? "the Zamboni is resurfacing the ice" : leaving ? "the Zamboni is leaving the ice" : "fresh ice for the next period"}`,
   };
 }
 
@@ -197,7 +200,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
   }, [logos, home.id]);
 
   return (
-    <section ref={root} className={`intermission ice-prep-${mode}${compact ? " compact" : ""}`} data-testid="intermission" data-mode={mode} data-view={view} aria-label={`${initial.k}. ${clockText(left0)} ${initial.l}`}>
+    <section ref={root} style={{ ["--face-bg" as never]: faceColors(away, home).bg, ["--face-accent" as never]: faceColors(away, home).accent } as never} className={`intermission ice-prep-${mode}${compact ? " compact" : ""}`} data-testid="intermission" data-mode={mode} data-view={view} aria-label={`${initial.k}. ${clockText(left0)} ${initial.l}`}>
       <div className="int-count" aria-hidden="true">
         <span className="int-k" ref={kRef}>{initial.k}</span>
         <strong className="int-t" ref={tRef}>{clockText(left0)}</strong>
@@ -210,7 +213,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
           <span aria-hidden="true">{view === "follow" ? "⤢ Full rink" : "⌖ Close-up"}</span>
         </button>
       </div>
-      <p className="int-cap" ref={capRef}><span aria-hidden="true">🧊</span> {initial.cap}</p>
+      <p className="int-cap" ref={capRef}><span className="int-who"><TeamLogo id={away.id} size={44} /><b>{away.short} at {home.short}</b></span><i className="int-sep" aria-hidden="true" />{` ${initial.cap}`}</p>
     </section>
   );
 }

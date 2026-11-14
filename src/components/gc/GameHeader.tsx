@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import type { Team } from "../../types";
 import { TeamLogo } from "../TeamLogo";
+import { Icon } from "../icons";
+import { NetworkLogos } from "../NetworkLogos";
+import { rankLine } from "../../lib/ranks.mjs";
 import { fmtDay, fmtTime } from "../../lib/dates.mjs";
 import { finished } from "../../lib/model.mjs";
 import { useGameCenter } from "./GameCenterContext";
@@ -18,7 +21,15 @@ const STATE_TEXT: Record<string, string> = {
  * Line score: goals per period from the play-by-play goals (never invented); the total is the official score.
  * For a shootout the SO column is the official final minus period goals (0 or 1), shown only when it adds up.
  */
-export function GameHeader({ home, away }: { home: Team; away: Team }) {
+export function GameHeader({ home, away, ranks, records, watch }: {
+  home: Team; away: Team;
+  /** League ranks by team id (teamRanks), for the line under each name. */
+  ranks?: Record<string, any> | null;
+  /** Records going into the game, by team id, e.g. "12-3-1". */
+  records?: Record<string, string> | null;
+  /** The watchability line under the status ("Watchability 63 · Background"). */
+  watch?: string | null;
+}) {
   const { game, feed, plays, status, live, stale } = useGameCenter();
   const src = feed ?? game;
   const past = finished(src), shown = past || live;
@@ -48,21 +59,15 @@ export function GameHeader({ home, away }: { home: Team; away: Team }) {
   }, [shown, feed, plays, src, live, so, past, away, home]);
   const sub = [src.venue || null, !shown && src.start ? `Puck drop ${fmtTime(src.start, { withZone: true })} · ${fmtDay(src.start, { long: true })}` : null].filter(Boolean).join(" · ");
   return (
-    <header className="gc-header" data-testid="gc-header" data-state={kind}>
-      <div className="gc-header-meta">
-        <span className="gc-pill" data-testid="gc-status" data-state={kind}>
-          <i aria-hidden="true" />{pill}
-        </span>
-        {clock && <span className="gc-clock" data-testid="gc-clock">{clock}</span>}
-        {stale && live && <span className="gc-stale-note">Updating… the last data is older than expected.</span>}
-      </div>
-      <div className="dialog-matchup">
+    <header className="gc-header gx" data-testid="gc-header" data-state={kind}>
+      <div className="dialog-matchup gx-banner">
         {[away, home].map((t, i) => (
-          <div className="dialog-team" key={t.id}>
-            <TeamLogo id={t.id} size={54} eager />
+          <div className={`dialog-team gx-team ${i === 0 ? "gx-away" : "gx-home"}`} key={t.id}>
+            <TeamLogo id={t.id} size={92} eager />
             <div>
-              <span>{t.city}</span>
-              <h3>{t.short}</h3>
+              <h3>{t.name}</h3>
+              {records?.[t.id] && <span className="gx-rec">{records[t.id]}</span>}
+              {ranks?.[t.id] && <span className="gx-rank">{rankLine(ranks[t.id], true)}</span>}
             </div>
             {shown ? (
               <b data-testid="gc-score" aria-label={`${t.name} ${(i === 0 ? src.awayScore : src.homeScore) ?? "no score"}`}>{(i === 0 ? src.awayScore : src.homeScore) ?? "—"}</b>
@@ -71,8 +76,18 @@ export function GameHeader({ home, away }: { home: Team; away: Team }) {
             )}
           </div>
         ))}
+        <div className="gc-header-meta gx-mid">
+          <span className="gc-pill" data-testid="gc-status" data-state={kind}>
+            <i aria-hidden="true" />{pill}
+          </span>
+          {clock && <span className="gc-clock" data-testid="gc-clock">{clock}</span>}
+          {!shown && game.start && <span className="gx-when"><Icon name="calendar" size={22} />{fmtTime(game.start, { withZone: true })}</span>}
+          {(game.broadcasts?.length ?? 0) > 0 && <span className="tv-network gx-net"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
+          {watch && <span className="gx-watch">{watch}</span>}
+          {stale && live && <span className="gc-stale-note">Updating… the last data is older than expected.</span>}
+        </div>
       </div>
-      {sub && <p className="gc-sub" data-testid="gc-sub">{sub}</p>}
+      {sub && <p className="gc-sub" data-testid="gc-sub"><Icon name="pin" size={16} />{sub}</p>}
       {line && (
         <table className="gc-linescore" data-testid="gc-linescore" aria-label="Goals by period">
           <thead>

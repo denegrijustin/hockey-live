@@ -1,0 +1,35 @@
+/* The pregame / intermission rink as one glossy panel (after the Ice Preparation reference): the home team's colour as the background with diagonal light streaks, a glowing
+   accent frame, the countdown in a slanted pill, the rink in its own framed panel, and a caption pill with the matchup. Always white on the team colour. */
+.intermission[data-testid="intermission"] {
+  position: relative; overflow: hidden; isolation: isolate; margin: 12px 0; padding: 20px 20px 16px; color: #fff;
+  border: 3px solid color-mix(in srgb, var(--face-accent, #3ddc84) 75%, transparent); border-radius: 28px;
+  background: linear-gradient(140deg, color-mix(in srgb, var(--face-bg, #0b6b3a) 80%, #000), color-mix(in srgb, var(--face-bg, #0b6b3a) 42%, #000));
+  box-shadow: 0 0 30px color-mix(in srgb, var(--face-accent, #3ddc84) 35%, transparent), inset 0 0 0 1px #ffffff30;
+}
+.intermission[data-testid="intermission"]::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(135deg, transparent 0 14%, color-mix(in srgb, var(--face-accent, #3ddc84) 28%, transparent) 14% 15%, transparent 15% 19%, color-mix(in srgb, var(--face-accent, #3ddc84) 18%, transparent) 19% 20%, transparent 20%),
+    linear-gradient(135deg, transparent 72%, color-mix(in srgb, var(--face-accent, #3ddc84) 30%, transparent) 72% 73%, transparent 73% 78%, color-mix(in srgb, var(--face-accent, #3ddc84) 20%, transparent) 78% 79%, transparent 79%),
+    radial-gradient(80% 50% at 80% 0%, color-mix(in srgb, var(--face-accent, #3ddc84) 24%, transparent), transparent 70%);
+}
+.intermission .int-count { gap: 8px; margin-bottom: 16px; }
+.intermission .int-k { display: flex; align-items: center; gap: 22px; width: 100%; font-size: clamp(.8125rem, 2.2vw, 1.375rem); font-weight: 800; letter-spacing: .32em; text-transform: uppercase; color: #fff; justify-content: center; white-space: nowrap; }
+.intermission .int-k::before, .intermission .int-k::after { content: ""; flex: 1 1 24px; height: 2px; max-width: 180px; background: linear-gradient(90deg, transparent, #ffffffb0); } .intermission .int-k::after { background: linear-gradient(270deg, transparent, #ffffffb0); }
+.intermission .int-t { position: relative; z-index: 0; padding: 4px clamp(28px, 8vw, 80px); font-size: clamp(2.75rem, 11vw, 5.5rem); font-weight: 900; line-height: 1.1; color: #fff; }
+.intermission .int-t::before { content: ""; position: absolute; inset: 0; z-index: -1; transform: skewX(-14deg); border: 3px solid var(--face-accent, #3ddc84); border-radius: 30px; background: #00000066; box-shadow: 0 0 22px color-mix(in srgb, var(--face-accent, #3ddc84) 55%, transparent), inset 0 0 18px color-mix(in srgb, var(--face-accent, #3ddc84) 25%, transparent); }
+.intermission .int-l { font-size: clamp(.875rem, 2.6vw, 1.5rem); font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: #fff; opacity: 1; }
+/* the rink in its own framed panel */
+.intermission .ice-stage { max-width: none; margin: 0; padding: 10px; border: 2px solid color-mix(in srgb, var(--face-accent, #3ddc84) 60%, transparent); border-radius: 24px; background: #00000030; box-shadow: inset 0 0 24px #0005; }
+.intermission .ice-canvas { border-radius: 16px; }
+/* the caption pill: the matchup, a rule, what is happening */
+.intermission .int-cap { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin: 14px 0 0; padding: 10px 24px; border: 2px solid color-mix(in srgb, var(--face-accent, #3ddc84) 65%, transparent); border-radius: 28px; background: #00000030; font-size: clamp(.9375rem, 2.6vw, 1.625rem); font-weight: 500; text-align: left; color: #fff; box-shadow: 0 0 14px color-mix(in srgb, var(--face-accent, #3ddc84) 25%, transparent); }
+.intermission .int-who { display: inline-flex; align-items: center; gap: 14px; } .intermission .int-who b { font-weight: 800; }
+.intermission .int-who .team-logo { width: 46px; height: 46px; padding: 3px; box-sizing: border-box; border-radius: 50%; background: #fff; flex: none; }
+.intermission .int-sep { align-self: stretch; width: 2px; min-height: 28px; background: color-mix(in srgb, var(--face-accent, #3ddc84) 75%, transparent); }
+/* inside a card: the same panel, smaller */
+.intermission.compact[data-testid="intermission"] { margin: 10px 0; padding: 12px 12px 10px; border-radius: 20px; }
+.intermission.compact .int-t { font-size: clamp(2rem, 9vw, 3rem); } .intermission.compact .int-k { letter-spacing: .2em; font-size: .75rem; } .intermission.compact .int-l { font-size: .75rem; letter-spacing: .2em; }
+.intermission.compact .ice-stage { padding: 6px; border-radius: 16px; max-width: none; }
+.intermission.compact .int-cap { padding: 6px 14px; border-radius: 18px; font-size: .875rem; } .intermission.compact .int-who .team-logo { width: 30px; height: 30px; }
+@media (max-width: 520px) { .intermission[data-testid="intermission"] { padding: 14px 12px 12px; border-radius: 22px; } .intermission .int-sep { display: none; } .intermission .int-cap { padding: 8px 14px; } }

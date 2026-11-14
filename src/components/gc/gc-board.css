@@ -192,3 +192,9 @@
   .game-dialog .gc-header-meta.gx-mid { display: flex !important; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; text-align: center; }
   .gx-watch { white-space: normal; }
 }
+.gx-stats { table-layout: fixed; }
+.gx-stats .gx-ico { width: 40px; }
+@media (max-width: 420px) {
+  .gx-stats .gx-ico { width: 30px; } .gx-stats th, .gx-stats td { padding: 6px 4px; font-size: 1rem; }
+  .gx-stats tbody th { font-size: .9375rem; overflow-wrap: anywhere; } .gx-chip { font-size: .875rem; } .gx-chip .team-logo { display: none; }
+}

@@ -19,8 +19,8 @@ function inkOn(hex: string) {
  * and between them a bar split at the advantage in each team's colour, a mark for Even, and a marker on the split. No text sits on the bar; the numbers and the aria label carry it.
  * `share` is the away side's part of the bar (0..1, .5 = even). Density: "row" for stat rows, "hero" for the big headline numbers, "bar" for the bare bar.
  */
-export function Versus({ away, home, share, label, density = "row", className = "" }: {
-  away: VsSide; home: VsSide; share: number; label?: ReactNode; density?: "row" | "hero" | "bar" | "track"; className?: string;
+export function Versus({ away, home, share, label, knob, density = "row", className = "" }: {
+  away: VsSide; home: VsSide; share: number; label?: ReactNode; /** A short margin ("+3") carried on the split marker. */ knob?: ReactNode; density?: "row" | "hero" | "bar" | "track"; className?: string;
 }) {
   const s = Math.min(0.96, Math.max(0.04, share));
   const colors = gaugeColors(away.id, home.id);
@@ -41,7 +41,7 @@ export function Versus({ away, home, share, label, density = "row", className = 
         <div className="vs-track" aria-hidden="true">
           <span className="vs-fill" style={{ width: `${s * 100}%` }} />
           <u className="vs-tick" />
-          <span className="vs-knob" style={{ left: `${s * 100}%` }} />
+          <span className={`vs-knob${knob != null ? " has-text" : ""}`} style={{ left: `clamp(${knob != null ? 11 : 4}%, ${s * 100}%, ${knob != null ? 89 : 96}%)` }}>{knob}</span>
         </div>
         {density !== "track" && <span className="vs-even" aria-hidden="true">Even</span>}
       </div>

@@ -1,0 +1,68 @@
+/* The season profile as one panel (after the Oilers/Maple Leafs reference): the two teams in the header, titled section panels, rows with a margin knob.
+   Always on a dark navy field with a glow of each team's colour at its corner, like the win-chance panel. */
+.nhlp-expanded.sp { --sp-a: #ff6a1a; --sp-h: #2f7dd1; position: relative; display: grid; gap: 12px; padding: 14px 16px 12px; border-radius: 18px; color: #fff; overflow: hidden;
+  border: 1px solid color-mix(in srgb, #fff 14%, transparent);
+  background:
+    radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--sp-a) 34%, transparent), transparent 55%),
+    radial-gradient(120% 70% at 100% 0%, color-mix(in srgb, var(--sp-h) 34%, transparent), transparent 55%),
+    linear-gradient(180deg, #0d1b30, #08111f); }
+.sp-head { display: grid !important; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px 14px; padding-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, #fff 16%, transparent); }
+.sp-team { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sp-team.sp-right { justify-content: flex-end; text-align: right; }
+.sp-team span { display: grid; min-width: 0; line-height: 1; }
+.sp-team em { font-size: .75rem; font-style: italic; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #fffc; overflow-wrap: anywhere; }
+.sp-team b { font-size: clamp(1.05rem, 2vw, 1.6rem); font-style: italic; font-weight: 900; text-transform: uppercase; overflow-wrap: anywhere; }
+.sp-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.sp-mid { display: grid; justify-items: center; gap: 2px; text-align: center; flex: none; }
+.sp-line { flex: 1 1 24px; height: 3px; min-width: 16px; border-radius: 3px; }
+.sp-line.a { background: linear-gradient(90deg, transparent, var(--sp-a)); } .sp-line.h { background: linear-gradient(270deg, transparent, var(--sp-h)); }
+.sp-title .nhlp-title { font-size: clamp(.8125rem, 1.6vw, 1.125rem); font-weight: 600; letter-spacing: .2em; color: #fff; white-space: nowrap; }
+.sp-title small { font-size: .6875rem; letter-spacing: .14em; text-transform: uppercase; color: #fffb; white-space: nowrap; }
+.nhlp-expanded.sp .nhlp-body { gap: 12px; }
+/* each titled group is a rounded panel with a slanted heading bar */
+.nhlp-expanded.sp .nhlp-grp { display: grid; align-content: start; border: 1px solid color-mix(in srgb, #fff 16%, transparent); border-radius: 14px; background: color-mix(in srgb, #fff 3%, transparent); padding: 0 12px 8px; overflow: hidden; }
+.nhlp-expanded.sp .nhlp-h { margin: 0 -12px 4px; padding: 7px 56px 7px 14px; font-size: .9375rem; font-style: italic; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; color: #fff;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--sp-a) 60%, transparent), color-mix(in srgb, #fff 7%, transparent) 55%, transparent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 26px) 100%, 0 100%); border-bottom: 2px solid color-mix(in srgb, var(--sp-a) 70%, transparent); }
+.nhlp-expanded.sp .nhlp-grp > .nhlp-h:not(:first-child) { margin-top: 8px; }
+.nhlp-expanded.sp .mp-cmp + .mp-cmp, .nhlp-expanded.sp .mp-cmp + .nhlp-h { border-top: 0; }
+.nhlp-expanded.sp .nhlp-h + .mp-cmp { padding-top: 6px; }
+.nhlp-expanded.sp .vs-big { color: #fff; }
+.nhlp-expanded.sp .vs-sub, .nhlp-expanded.sp .vs-even { color: #ffffffb3; }
+.nhlp-expanded.sp .vs-label { background: color-mix(in srgb, #fff 6%, #0a1628); border-color: color-mix(in srgb, #fff 38%, transparent); color: #fff; }
+.nhlp-expanded.sp .vs-track { border-color: color-mix(in srgb, #fff 70%, transparent); }
+.nhlp-expanded.sp .vs-tier.good { color: #5de8b0; border-color: #5de8b0; }
+.nhlp-expanded.sp .vs-tier.bad { color: #ff8f9c; border-color: #ff8f9c; }
+.nhlp-expanded.sp .nhlp-foot, .nhlp-expanded.sp .nhlp-note { color: #ffffffb3; }
+.sp-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, #fff 16%, transparent); }
+.sp-foot .mp-status { flex: 1 1 220px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 0; color: #ffffffb3; }
+.sp-foot .nhlp-btn { background: color-mix(in srgb, #5de8b0 12%, #0a1628); border-color: #5de8b0; color: #5de8b0; }
+@media (max-width: 560px) {
+  .sp-head { grid-template-columns: 1fr 1fr; grid-template-areas: "a h" "t t"; }
+  .sp-line { display: none; }
+  .sp-head > :nth-child(1) { grid-area: a; } .sp-head > :nth-child(3) { grid-area: h; } .sp-head > .sp-title { grid-area: t; }
+  .sp-team .team-logo { width: 48px; height: 48px; }
+}
+
+.sp-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.sp .team-logo { width: 72px; height: 72px; }
+/* no "Even" captions, no "?" glyphs: the label pill itself is the hover/focus target for the definition */
+.nhlp-expanded.sp .vs-even { display: none; }
+.nhlp-expanded.sp .mp-tipwrap { position: relative; display: inline-block; }
+.nhlp-expanded.sp .mp-tip { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border-radius: 999px; cursor: help; padding: 0; margin: 0; }
+.nhlp-expanded.sp .mp-tooltip { text-align: left; }
+.nhlp-expanded.sp .nhlp-grp { box-shadow: inset 0 0 18px color-mix(in srgb, var(--sp-a) 10%, transparent), 0 0 0 1px color-mix(in srgb, var(--sp-h) 18%, transparent); }
+.nhlp-expanded.sp .vs-big { font-style: italic; font-weight: 900; font-size: 1.75rem; }
+@container (max-width: 420px) { .nhlp-expanded.sp .vs-big { font-size: 1.375rem; } }
+.nhlp-expanded.sp .sp-foot { flex-direction: row; }
+/* the panels of the shorter column stretch so both columns end together, as in the reference */
+.nhlp-expanded.sp .nhlp-body { align-items: stretch; }
+.nhlp-expanded.sp .sp-col { display: flex; flex-direction: column; }
+.nhlp-expanded.sp .sp-col > .nhlp-grp { flex: 1 1 auto; display: flex; flex-direction: column; }
+.nhlp-expanded.sp .nhlp-grp > .mp-cmp, .nhlp-expanded.sp .nhlp-grp > .nhlp-note { flex: 1 1 auto; display: flex; align-items: center; }
+.nhlp-expanded.sp .nhlp-grp > .mp-cmp > .vs-wrap { width: 100%; }
+@media (max-width: 560px) {
+  .sp-team b { overflow-wrap: normal; font-size: clamp(.8rem, 4.2vw, 1.05rem); }
+  .sp-team em { overflow-wrap: normal; font-size: .6875rem; white-space: nowrap; }
+  .sp .team-logo { width: 44px; height: 44px; }
+}

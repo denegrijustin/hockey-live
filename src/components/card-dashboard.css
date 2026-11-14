@@ -66,3 +66,5 @@
   .nhlp-grp .mp-cmp { padding: 3px 0; }
   .cx-panel .goalie-numbers span { padding: 4px 6px; }
 }
+/* the season profile is its own panel now */
+.cx-prof { background: none; border: 0; padding: 0; }

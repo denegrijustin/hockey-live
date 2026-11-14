@@ -390,3 +390,24 @@ test("screenshots", async ({ page }, info) => {
     await d.getByTestId(id).screenshot({ path: `/tmp/cards-shots/${name}-gc-${id}.png` });
   }
 });
+
+test("the season profile stays light-on-dark in the light theme (leading ranks, team names, links)", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await mount(page, ["future"]);
+  const c = await show(page, "future");
+  await c.locator(".game-card-summary").click();
+  const ex = c.getByTestId("nhlp-expanded");
+  await expect(ex).toBeVisible();
+  const dark = await ex.evaluate((root) => {
+    const lum = (col: string) => { const m = col.match(/[\d.]+/g)!.map(Number); const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]); };
+    const out: string[] = [];
+    root.querySelectorAll("*").forEach((el) => {
+      if (![...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent || "").trim())) return;
+      const cs = getComputedStyle(el);
+      if (cs.visibility === "hidden" || cs.display === "none") return;
+      if (lum(cs.color) < 0.25) out.push(`${el.tagName.toLowerCase()}.${el.className} "${(el.textContent || "").trim().slice(0, 24)}" ${cs.color}`);
+    });
+    return out;
+  });
+  expect(dark, "text too dark for the navy panel").toEqual([]);
+});

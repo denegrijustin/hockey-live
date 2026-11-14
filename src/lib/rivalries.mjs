@@ -20,7 +20,7 @@ export const RIVALRIES = [
     ],
     "name": "Battle of Alberta",
     "history": "The provincial feud intensified during the 1980s, when Calgary challenged Edmonton’s dynasty. Steve Smith’s 1986 own goal remains a defining moment.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "PHI-PIT",
@@ -30,7 +30,7 @@ export const RIVALRIES = [
     ],
     "name": "Battle of Pennsylvania",
     "history": "Pennsylvania’s two NHL clubs have built a fierce rivalry through heated playoff clashes, including the chaotic 2012 series.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "MTL-TOR",
@@ -40,7 +40,7 @@ export const RIVALRIES = [
     ],
     "name": "Canadiens–Maple Leafs Rivalry",
     "history": "Two Original Six franchises, with a history rooted in Stanley Cup races and Canada’s oldest hockey markets.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "NYI-NYR",
@@ -50,7 +50,7 @@ export const RIVALRIES = [
     ],
     "name": "Battle of New York",
     "history": "New York’s cross-city rivalry, shaped by the Islanders’ dynasty years and fierce Metropolitan-area fan competition.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "PIT-WSH",
@@ -60,7 +60,7 @@ export const RIVALRIES = [
     ],
     "name": "Penguins–Capitals Rivalry",
     "history": "Crosby and Ovechkin elevated an already significant rivalry through frequent high-stakes playoff meetings.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "COL-DET",
@@ -70,7 +70,7 @@ export const RIVALRIES = [
     ],
     "name": "Red Wings–Avalanche Rivalry",
     "history": "The 1996 Lemieux–Draper hit and the 1997 Fight Night at the Joe helped make this a defining late-1990s feud.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "OTT-TOR",
@@ -80,7 +80,7 @@ export const RIVALRIES = [
     ],
     "name": "Battle of Ontario",
     "history": "Two Ontario teams, a regional fan rivalry, and several early-2000s playoff meetings.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "NJD-NYR",
@@ -90,7 +90,7 @@ export const RIVALRIES = [
     ],
     "name": "Hudson River Rivalry",
     "history": "Cross-Hudson opponents whose rivalry includes the 1994 Eastern Conference Final and the 2008 Avery incident.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "CHI-STL",
@@ -100,7 +100,7 @@ export const RIVALRIES = [
     ],
     "name": "Blackhawks–Blues Rivalry",
     "history": "The long-running Central Division feud features frequent physical games and playoff meetings.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "BOS-TOR",
@@ -110,7 +110,7 @@ export const RIVALRIES = [
     ],
     "name": "Bruins–Maple Leafs Rivalry",
     "history": "A long-running Original Six series known for painful elimination games, including Boston’s 2013 Game 7 comeback.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "FLA-TBL",
@@ -120,7 +120,7 @@ export const RIVALRIES = [
     ],
     "name": "Battle of Florida",
     "history": "Sunshine State rivals with increasingly significant playoff clashes. Historical Governor’s Cup arrangements are no longer active.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "ANA-LAK",
@@ -130,7 +130,7 @@ export const RIVALRIES = [
     ],
     "name": "Freeway Face-Off",
     "history": "Southern California opponents separated by a short freeway trip, with their 2014 playoff series a landmark meeting.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "CHI-DET",
@@ -140,7 +140,7 @@ export const RIVALRIES = [
     ],
     "name": "Blackhawks–Red Wings Rivalry",
     "history": "An Original Six rivalry shaped by decades as divisional opponents before Detroit moved east.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "CGY-VAN",
@@ -150,7 +150,7 @@ export const RIVALRIES = [
     ],
     "name": "Canucks–Flames Rivalry",
     "history": "Western Canadian competition with multiple dramatic postseason meetings, including 1994 and 2004.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "EDM-LAK",
@@ -160,7 +160,7 @@ export const RIVALRIES = [
     ],
     "name": "Oilers–Kings Rivalry",
     "history": "Wayne Gretzky’s trade to Los Angeles added another chapter to a matchup with major postseason history.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "SJS-VGK",
@@ -170,7 +170,7 @@ export const RIVALRIES = [
     ],
     "name": "Sharks–Golden Knights Rivalry",
     "history": "The 2019 Game 7 comeback following a controversial major penalty remains a defining moment.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "LAK-VGK",
@@ -180,7 +180,7 @@ export const RIVALRIES = [
     ],
     "name": "Kings–Golden Knights Rivalry",
     "history": "Pacific Division opponents with a strong geographic and competitive connection.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "COL-DAL",
@@ -190,7 +190,7 @@ export const RIVALRIES = [
     ],
     "name": "Stars–Avalanche Rivalry",
     "history": "Western Conference playoff rivals with several significant series across eras.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "COL-MIN",
@@ -200,7 +200,7 @@ export const RIVALRIES = [
     ],
     "name": "Avalanche–Wild Rivalry",
     "history": "Regional opponents whose 2003 and 2014 playoff series helped deepen the feud.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "CHI-NSH",
@@ -210,7 +210,7 @@ export const RIVALRIES = [
     ],
     "name": "Blackhawks–Predators Rivalry",
     "history": "Central Division rivals with recent playoff history and passionate fan bases.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "BUF-TOR",
@@ -220,7 +220,7 @@ export const RIVALRIES = [
     ],
     "name": "Maple Leafs–Sabres Rivalry",
     "history": "A cross-border rivalry with extensive regular-season history and traveling fans.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "BOS-PHI",
@@ -230,7 +230,7 @@ export const RIVALRIES = [
     ],
     "name": "Bruins–Flyers Rivalry",
     "history": "Historical playoff adversaries, notably Philadelphia’s comeback from a 3–0 series deficit in 2010.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "BOS-VAN",
@@ -240,7 +240,7 @@ export const RIVALRIES = [
     ],
     "name": "Canucks–Bruins Rivalry",
     "history": "The legacy of their intense seven-game 2011 Stanley Cup Final meeting.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "EDM-VAN",
@@ -250,7 +250,7 @@ export const RIVALRIES = [
     ],
     "name": "Oilers–Canucks Rivalry",
     "history": "Western Canadian opponents with a growing modern playoff history.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "SEA-VAN",
@@ -260,7 +260,7 @@ export const RIVALRIES = [
     ],
     "name": "Kraken–Canucks Rivalry",
     "history": "An emerging Cascadia geographic rivalry since Seattle joined the league in 2021.",
-    "source": "https://www.nhl.com/"
+    "source": null
   },
   {
     "id": "MIN-WPG",
@@ -270,7 +270,7 @@ export const RIVALRIES = [
     ],
     "name": "Wild–Jets Rivalry",
     "history": "Nearby Central Division rivals with contested games and a 2018 playoff series.",
-    "source": "https://www.nhl.com/"
+    "source": null
   }
 ];
 const index = new Map(RIVALRIES.map(r => [r.id, r]));

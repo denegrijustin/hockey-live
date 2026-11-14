@@ -92,3 +92,9 @@
   .gr-map h4 .gr-key { display: none; }
   h4.gr-dh { font-size: 1.125rem; }
 }
+@media (max-width: 520px) {
+  .gr-periods h4 { flex-wrap: wrap; gap: 8px 12px; letter-spacing: .12em; }
+  .gr-periods h4::after { display: none; }
+  .gr-periods .gr-toggle { margin-left: auto; }
+  .gr-periods .gr-toggle button { padding: 0 12px; }
+}

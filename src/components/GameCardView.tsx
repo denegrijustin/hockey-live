@@ -6,7 +6,10 @@ import { gameStatus } from "../lib/game-status.mjs";
 import { rankTitle } from "../lib/ranks.mjs";
 import { usePauseOffscreen } from "../motion";
 import { TeamLogo } from "./TeamLogo";
+import { Icon } from "./icons";
+import { faceColors } from "../lib/face";
 import "../game-card-view.css";
+import "../card-face.css";
 
 const SaveGameButton = lazy(() => import("./SaveGameButton").then((m) => ({ default: m.SaveGameButton })));
 
@@ -42,6 +45,18 @@ export interface GameCardViewProps {
   ring?: ReactNode;
   /** "Close & late" flag (row): its label; also the `hot` state class. */
   hot?: { label: string } | null;
+  /** Row: the banner across the top ("One-goal game · 3rd period"). */
+  banner?: ReactNode;
+  /** Row: the upset line under the banner. */
+  alertLine?: ReactNode;
+  /** Row: the live metrics (win probability, momentum, deserve), under the teams. */
+  metrics?: ReactNode;
+  /** Row: the injuries and the model pills, under the venue. */
+  extras?: ReactNode;
+  /** Row: the pregame win-probability bar, above the Details button. */
+  probRow?: ReactNode;
+  /** The watchability tier word under the ring ("Must watch"). */
+  tierLabel?: string;
   /** Row: show the venue line (default true). */
   venue?: boolean;
   /** Row: show the built-in "GC" Game Center button beside `actions` (default true). */
@@ -93,6 +108,7 @@ export function GameCardView(p: GameCardViewProps) {
           <span className="sb-name gcv-name" title={team.name}>
             {nick ? <>{team.name.slice(0, -team.short.length)}<b>{team.short}</b></> : <b>{team.name}</b>}
             {rank && <small className="sb-rank" title={rankTitle(rank)}>#{rank.league}</small>}
+            {side === "home" && <em className="gcv-home">Home</em>}
             {record?.[side] && <small className="gcv-record">{record[side]}</small>}
           </span>
         ) : (
@@ -138,40 +154,40 @@ export function GameCardView(p: GameCardViewProps) {
   }
 
   const scoredNow = !!(p.scored?.away || p.scored?.home);
+  // The card sits on the home team's own colour, framed in a bright accent (its second colour when that is bright, else a tint of the first).
+  const { bg: base, accent } = faceColors(away, home);
+  const liveNow = st.live && !st.stale;
   return (
-    <article ref={set as never} className={`gcv gcv-row sb-row ${state}${pill ? ` ${st.kind}` : ""}${upset ? " upset-won" : ""}${p.open ? " open" : ""}${p.hot ? " hot" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>
+    <article ref={set as never} data-face="1" style={{ ["--face-bg" as never]: base, ["--face-accent" as never]: accent } as never} className={`gcv gcv-row sb-row ${state}${pill ? ` ${st.kind}` : ""}${upset ? " upset-won" : ""}${p.open ? " open" : ""}${p.hot ? " hot" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>
       {scoredNow && <span className="pulse-ring" aria-hidden="true" />}
+      {p.banner && <div className="gcv-banner late-flag">{p.banner}</div>}
+      {p.alertLine && <div className="gcv-alert">{p.alertLine}</div>}
       <div className="sb-top">
         <span className="sb-status">
-          {st.live && !st.stale && <i aria-hidden="true" />}
-          {pill ? <span className={`gcv-pill ${st.kind}`}>{st.label}</span> : label}
+          {pill ? <span className={`gcv-pill ${st.kind}`}>{st.label}</span> : liveNow ? <><span className="gcv-livepill"><i aria-hidden="true" />Live</span><span className="gcv-clock">{label}</span></> : <><Icon name="calendar" size={26} /><span className="gcv-when">{label}</span></>}
           {upset && <strong className="sb-upset-tag">UPSET</strong>}
-          {p.hot && <span className="late-flag" title={p.hot.label}><i aria-hidden="true" />Close &amp; late</span>}
         </span>
         <span className="sb-actions">
           {p.actions}
           <span className="gcv-acts">
             <Suspense fallback={null}><SaveGameButton game={game} awayName={away.name} homeName={home.name} /></Suspense>
-            {p.gcIcon !== false && <button type="button" className="gc-icon" onClick={() => onOpen(game)} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center">GC</button>}
+            {p.gcIcon !== false && <button type="button" className="gc-icon" onClick={() => onOpen(game)} aria-label={`Open Game Center for ${away.name} at ${home.name}`} title="Open Game Center"><Icon name="pulse" size={22} /><span>GC</span></button>}
           </span>
         </span>
       </div>
       <div className="sb-body">
         <button type="button" className="sb-main" aria-haspopup="dialog" aria-label={name} onClick={() => onOpen(game)}>
           {teams}
-          {homePct != null && awayPct != null && (
-            <span className="sb-prob" role="img" aria-label={`Win probability: ${away.id} ${awayPct} percent, ${home.id} ${homePct} percent`}>
-              <span className="sb-pct">{away.id} {awayPct}%</span>
-              <span className="sb-bar"><i style={{ width: `${awayPct}%` }} /><i /></span>
-              <span className="sb-pct">{homePct}% {home.id}</span>
-            </span>
-          )}
         </button>
-        {p.ring}
+        {p.ring && <div className="gcv-ringwrap">{p.ring}{p.tierLabel && <span className="gcv-tier">{p.tierLabel}</span>}</div>}
       </div>
-      {p.venue !== false && <p className="sb-venue"><span aria-hidden="true">📍 </span>{game.venue || "Venue unavailable"}</p>}
+      {p.metrics}
+      {p.venue !== false && <p className="sb-venue"><Icon name="pin" size={20} />{game.venue || "Venue unavailable"}</p>}
+      {p.extras}
+      {p.probRow}
       {p.context && <div className="gcv-context">{p.context}</div>}
       {p.insight && <div className="gcv-insight">{p.insight}</div>}
+      <button type="button" className="gcv-details" aria-expanded={!!p.open} aria-label={`${p.open ? "Hide" : "Show"} details for ${away.name} at ${home.name}`} onClick={() => onOpen(game)}>Details <Icon name="chevron" size={22} /></button>
       {p.below}
     </article>
   );

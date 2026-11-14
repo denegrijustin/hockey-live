@@ -24,7 +24,7 @@ test.describe("scoreboard home", () => {
   test("opens on the day's games with win probability and none of the schedule controls", async ({ page }) => {
     await open(page);
     await expect(page.locator(".sb-row")).toHaveCount(3);
-    await expect(page.locator(".sb-prob")).toHaveCount(3); // the finals have none
+    await expect(page.locator(".sb-row").filter({ has: page.locator(".gcv-probbar, .gcv-metric") })).toHaveCount(3); // the finals have none
     await expect(page.locator(".control-dock")).toHaveCount(0);
     await expect(page.locator(".game-card")).toHaveCount(0);
   });
@@ -163,7 +163,7 @@ test.describe("scoreboard home", () => {
     await open(page, "/", [soon(9210, "TBL", "FLA", 25), soon(9211, "LAK", "SJS", 90), soon(9212, "NSH", "STL", 95), soon(9213, "PHI", "PIT", 100), soon(9214, "OTT", "MTL", 110), soon(9215, "CGY", "VAN", 120)]);
     await expect(page.getByTestId("home-section-featured")).toHaveCount(0);
     await expect(page.getByText("Worth watching", { exact: true })).toHaveCount(0);
-    await expect(page.locator('[data-testid=home-section-live] .sb-row[data-game="9206"] .late-flag')).toContainText(/Close/);
+    await expect(page.locator('[data-testid=home-section-live] .sb-row[data-game="9206"] .late-flag')).toContainText(/Tied|Close|One-goal/);
   });
 
 
@@ -211,7 +211,7 @@ test.describe("scoreboard home", () => {
     expect(gc!.y + gc!.height).toBeLessThanOrEqual(ring!.y + ring!.height);
     // (a game that is about to start, or has just, also carries its ice-preparation rink: that is measured separately and capped)
     const rinkBox = (await row.getByTestId("intermission").count()) > 0 ? await row.getByTestId("intermission").boundingBox() : null; // boundingBox() waits for an element that may not exist
-    expect(r!.height - (rinkBox?.height ?? 0)).toBeLessThan(180);
+    expect(r!.height - (rinkBox?.height ?? 0)).toBeLessThan(430); // the face card also carries the venue, the injury line, the model pills and the win bar
     if (rinkBox) expect(rinkBox.height, "a rink in a row stays a sensible size on a wide screen").toBeLessThan(340);
     const second = await page.locator(".sb-row.soon").nth(1).boundingBox();
     expect(second!.x).toBeGreaterThan(r!.x + r!.width - 1); // the second game sits beside the first
@@ -233,7 +233,7 @@ test.describe("scoreboard home", () => {
     const tv = (await box(row.locator(".tv-network")))!, gc = (await box(row.getByRole("button", { name: /Open Game Center/ })))!;
     expect(tv.x + tv.width, "TV pill ends before the GC button").toBeLessThanOrEqual(gc.x + 1);
     if (!isMobile) {
-      const ring = (await box(row.locator(".score-ring")))!, prob = (await box(row.locator(".sb-prob")))!, status = (await box(row.locator(".sb-status")))!, venue = (await box(row.locator(".sb-venue")))!;
+      const ring = (await box(row.locator(".score-ring")))!, prob = (await box(row.locator(".gcv-probbar")))!, status = (await box(row.locator(".sb-status")))!, venue = (await box(row.locator(".sb-venue")))!;
       const apart = (a: { x: number; y: number; width: number; height: number }, b: typeof a) => a.x + a.width <= b.x + 1 || b.x + b.width <= a.x + 1 || a.y + a.height <= b.y + 1 || b.y + b.height <= a.y + 1;
       const named: [string, typeof ring][] = [["ring", ring], ["bar", prob], ["status", status], ["venue", venue], ["TV pill", tv], ["GC button", gc]];
       for (let i = 0; i < named.length; i++) for (let j = i + 1; j < named.length; j++) expect(apart(named[i][1], named[j][1]), `${named[i][0]} and ${named[j][0]} must not overlap`).toBe(true);

@@ -19,7 +19,7 @@ for (const f of list("assets/", ".js")) {
 }
 // Total JS counts every lazy chunk (a visitor downloads only the views they open). Raised 300 -> 350 KB for Phase 5 (Game Center play-by-play, stats, momentum, intelligence, live-data engine); the per-file 135 KB limit is unchanged.
 limits.push(["all JavaScript", totalJs, 520 * KB]); // raised 350 -> 520 KB for the lazy 3D ice scene (about 155 KB gzip)
-for (const f of list("assets/", ".css")) limits.push([`assets/${f}`, gz(new URL(`assets/${f}`, dist)), 32 * KB]);
+for (const f of list("assets/", ".css")) limits.push([`assets/${f}`, gz(new URL(`assets/${f}`, dist)), 36 * KB]); // 32 -> 36 KB: the scoreboard card face (home-colour card, metrics, pills) ships in the main stylesheet
 // Fetched data: the season files grow all season, so they get the most room.
 const dataFiles = (dir) => list(dir, ".json");
 for (const f of dataFiles("data/seasons/")) limits.push([`data/seasons/${f}`, gz(new URL(`data/seasons/${f}`, dist)), 150 * KB]);

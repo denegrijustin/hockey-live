@@ -7,6 +7,9 @@ import type { Ice3D } from "../lib/ice3d";
 import type { Look } from "../lib/ice-textures";
 import { logoUrl } from "../lib/logos";
 import { usePrefs } from "../lib/prefs";
+import { faceColors } from "../lib/face";
+import { TeamLogo } from "./TeamLogo";
+import "./rink-panel.css";
 
 const SEEN = (g: Game) => `iceboard-int-${g.id}-${g.period ?? 0}`;
 const SCOUTS = "/logos/kc-scouts.png";
@@ -197,7 +200,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
   }, [logos, home.id]);
 
   return (
-    <section ref={root} className={`intermission ice-prep-${mode}${compact ? " compact" : ""}`} data-testid="intermission" data-mode={mode} data-view={view} aria-label={`${initial.k}. ${clockText(left0)} ${initial.l}`}>
+    <section ref={root} style={{ ["--face-bg" as never]: faceColors(away, home).bg, ["--face-accent" as never]: faceColors(away, home).accent } as never} className={`intermission ice-prep-${mode}${compact ? " compact" : ""}`} data-testid="intermission" data-mode={mode} data-view={view} aria-label={`${initial.k}. ${clockText(left0)} ${initial.l}`}>
       <div className="int-count" aria-hidden="true">
         <span className="int-k" ref={kRef}>{initial.k}</span>
         <strong className="int-t" ref={tRef}>{clockText(left0)}</strong>
@@ -210,7 +213,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
           <span aria-hidden="true">{view === "follow" ? "⤢ Full rink" : "⌖ Close-up"}</span>
         </button>
       </div>
-      <p className="int-cap" ref={capRef}><span aria-hidden="true">🧊</span> {initial.cap}</p>
+      <p className="int-cap" ref={capRef}><span className="int-who"><TeamLogo id={away.id} size={44} /><b>{away.short} at {home.short}</b></span><i className="int-sep" aria-hidden="true" />{` ${initial.cap}`}</p>
     </section>
   );
 }

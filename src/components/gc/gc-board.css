@@ -160,7 +160,7 @@
 /* panels and tabs in the matchup's accent */
 .gc-card, .gr-model, .game-dialog .game-center-section, .mo, .gr-hero .gr-deserved { border: 2px solid var(--face-line); background: color-mix(in srgb, #000 24%, transparent); box-shadow: 0 0 20px color-mix(in srgb, var(--face-accent, #5aa9ff) 22%, transparent), inset 0 0 22px color-mix(in srgb, var(--face-accent, #5aa9ff) 8%, transparent); }
 .gc-card h4, .gr-model h4, .game-dialog .game-center-section > summary, .mo-title, .gr-hero .gr-deserved h4.gr-dh { background: linear-gradient(100deg, color-mix(in srgb, var(--face-accent, #5aa9ff) 55%, transparent), color-mix(in srgb, #fff 6%, transparent) 60%, transparent); border-bottom-color: var(--face-line); }
-.gc-tabs { border: 2px solid var(--face-line); border-radius: 20px; padding: 4px 8px; background: color-mix(in srgb, #000 24%, transparent); margin-right: 0; }
+.gc-tabs { border: 2px solid var(--face-line); border-radius: 20px; padding: 4px 8px; background: color-mix(in srgb, #000 24%, transparent); margin-right: calc(var(--float-btn-size) + 8px); }
 .gc-tabs [role="tab"][aria-selected="true"] { background: color-mix(in srgb, var(--face-bg, #1b2a55) 60%, #000); box-shadow: 0 0 0 2px var(--face-accent, #5aa9ff), 0 0 16px color-mix(in srgb, var(--face-accent, #5aa9ff) 50%, transparent); }
 .gc-link { border-color: var(--face-line); background: color-mix(in srgb, #000 24%, transparent); } .gc-link .icon { color: var(--face-accent, #5aa9ff); }
 .gc-linescore { border-collapse: separate; border-spacing: 0; border: 2px solid var(--face-line); border-radius: 18px; overflow: hidden; background: color-mix(in srgb, #000 24%, transparent); margin-top: 12px; }
@@ -188,3 +188,7 @@
 .gx-mid .gc-pill { background: color-mix(in srgb, var(--face-bg, #1b2a55) 55%, #000); border-color: #ffffff60; }
 .gx-mid .gc-pill[data-state="live"] { background: #c8102e; border-color: #ff7a8c; }
 @media (max-width: 720px) { .game-dialog .gc-header { padding-top: calc(var(--float-btn-size) + 6px); } }
+@media (max-width: 720px) {
+  .game-dialog .gc-header-meta.gx-mid { display: flex !important; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; text-align: center; }
+  .gx-watch { white-space: normal; }
+}

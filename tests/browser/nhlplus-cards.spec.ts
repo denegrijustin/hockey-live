@@ -390,3 +390,19 @@ test("screenshots", async ({ page }, info) => {
     await d.getByTestId(id).screenshot({ path: `/tmp/cards-shots/${name}-gc-${id}.png` });
   }
 });
+
+test("every comparison bar in the season profile is the same width, whatever its rank badges say", async ({ page }) => {
+  await mount(page, ["future"]);
+  const c = await show(page, "future");
+  await c.locator(".game-card-summary").click();
+  const ex = c.getByTestId("nhlp-expanded");
+  await expect(ex).toBeVisible();
+  await expect.poll(() => ex.locator(".mp-cmp").count()).toBeGreaterThanOrEqual(7);
+  for (const width of [320, 360, 390, 430, 1000]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect.poll(async () => {
+      const w = await ex.locator(".vs:not(.vs-bar):not(.vs-hero) .vs-track").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
+      return w.length >= 7 && Math.max(...w) - Math.min(...w) <= 1 ? "same" : w.join(",");
+    }, { message: `bar widths at ${width}px` }).toBe("same");
+  }
+});

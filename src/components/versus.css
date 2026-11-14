@@ -28,12 +28,13 @@
 .vs-bar .vs-even { display: none; }
 /* narrow: the label pill spans the top, numbers shrink */
 @container (max-width: 420px) {
-  .vs:not(.vs-bar) { grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 8px; }
+  /* the side columns are one width in every row (they scale with the container), so a short badge (TOP 5) and a long one (BEST IN LEAGUE) leave the bars the same size */
+  .vs:not(.vs-bar) { grid-template-columns: minmax(0, clamp(4.5rem, 26cqw, 6rem)) minmax(0, 1fr) minmax(0, clamp(4.5rem, 26cqw, 6rem)); gap: 4px 8px; }
   .vs-side { min-width: 44px; }
   .vs-big { font-size: 1.25rem; } .vs-hero .vs-big { font-size: 2rem; }
   .vs-sub { display: none; } .vs-hero .vs-sub { display: block; }
   .vs-track { height: 28px; } .vs-label { font-size: .75rem; padding: 2px 10px; }
-  .vs-tier { font-size: .625rem; padding: 1px 7px; }
+  .vs-tier { font-size: .625rem; padding: 1px 5px; letter-spacing: .2px; }
 }
 /* very narrow (a cell in a grid of stats): both numbers on top, the label and bar under them across the full width */
 @container (max-width: 240px) {

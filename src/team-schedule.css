@@ -133,6 +133,14 @@
   .ts-logo { width: 34px !important; height: 34px !important; }
   .ts-date span { font-size: .875rem; } .ts-venue { font-size: .75rem; }
 }
+/* the smallest phones: the longest names (Columbus Blue Jackets, with a favorite's star) still fit on a line, with room to spare for a wider font */
+@media (max-width: 350px) {
+  .ts-card { grid-template-columns: 2.7rem auto minmax(0, 1fr) auto; column-gap: 6px; padding: 7px 6px; }
+  .ts-logo { width: 30px !important; height: 30px !important; }
+  .ts-date { padding-right: 5px; } .ts-date span { font-size: .8125rem; } .ts-date b { font-size: .6875rem; }
+  .ts-name { font-size: .71875rem; } .ts-name .fav-mark { margin-left: 2px; }
+  .ts-res.fin { padding: 3px 8px; font-size: .8125rem; }
+}
 @media (min-width: 1100px) {
   .ts-chip, .ts-step, .ts-today, .ts-seg button, .ts-pick select { min-height: 40px; }
   .ts-day { min-height: 118px; }

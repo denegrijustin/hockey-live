@@ -10,7 +10,7 @@
 
 ## Integrity controls
 
-**No all-time NHL W-L figures are shown.** Source-level aggregate snapshots from the separate research pack have different unknown cutoffs and cannot be certified as of 2026-11-14. The exported `verifiedAllTime` gate returns null unless a future record has a verified status, explicit display authorization, integer nonnegative fields and internally consistent game count.
+**Official NHL franchise all-time W-L figures now display** for all 27 rivalry pairs from `src/data/rivalry-records.json`. On 2026-11-14, the official NHL Records `all-time-record-vs-franchise` endpoint provided per-franchise regular season and playoff records, including historical predecessor-team identity segments. Both team perspectives were summed and reconciled for games, wins, losses, ties and OT losses. The exported `verifiedAllTime` gate blocks any later unverified/malformed record.
 
 Recent meetings are calculated from the app's own loaded schedule snapshots. Their heading deliberately says "available loaded seasons only"; these results are not described as historical all-time records.
 
@@ -25,7 +25,7 @@ pnpm build
 
 The audit reads the NHL public club-schedule-season API, deduplicates games by NHL game ID, excludes unfinished games and anything after 2026-11-14, and computes independent regular-season and postseason counts for each pairing. It reports missing schedule requests as failures and leaves **every result provisional**. This is a *period-scoped audit*, not a substitute for an exhaustive 1917–2026 ledger.
 
-To certify all-time records, a separate full historical results ingestion must cover each rivalry's intended era and exact franchise relocation policy, reconcile missing NHL schedule seasons with a trusted second source, audit ties and overtime-loss classification in historical rules, and cross-check opposite-team results. Only then should `validation_status: "verified"` and `display_allowed: true` be set.
+**Certification method:** The official NHL Records cumulative franchise ledger is the source of truth for published figures; every one of the 27 rivalry pairs passed reciprocal aggregate checks. This is *not* an independently rebuilt NHL game-by-game historical ledger and must not be described as such. Historical predecessor teams are included as defined by the NHL franchise database. The snapshot was retrieved November 14, 2026; it is not guaranteed to represent the final game result on that date. To freeze records at a specific earlier puck-drop time, replay the NHL game schedule and subtract post-cutoff results.
 
 ### Historical data limitations
 
@@ -54,7 +54,7 @@ This work is intended for review on a non-production feature branch.
 - up to 10 completed playoff meetings in the loaded history (not playoff *series* wins)
 - a matchup-specific narrative about the season-series leader or most recent winner
 
-The helper deduplicates NHL game IDs, sorts chronologically, excludes viewed/future/live games, rejects missing or tied scores, and returns empty display-safe data when unavailable. It does **not** fetch live API data independently; it uses the same live-refreshed season snapshots as Iceboard. All-time W-L remains blocked.
+The helper deduplicates NHL game IDs, sorts chronologically, excludes viewed/future/live games, rejects missing or tied scores, and returns empty display-safe data when unavailable. It does **not** fetch live API data independently; it uses the same live-refreshed season snapshots as Iceboard. **Verified official franchise W-L is stored separately** in the static November 14 snapshot and shown with that as-of date.
 
 ### P1: archival images and publication safety
 
@@ -68,3 +68,15 @@ Direct reviewed sources:
 - [Minnesota–Colorado spectators 2008 — Sreejith K, CC BY 2.0](https://commons.wikimedia.org/wiki/File:The_crowd.jpg)
 
 No production deploy or merge was performed.
+
+## P0 historical W-L certification (2026-11-14)
+
+All 27 matchups now have NHL-source regular-season W-L-T-OTL and postseason game W-L in `src/data/rivalry-records.json`. Source: [NHL Records official API](https://records.nhl.com/site/api/all-time-record-vs-franchise). The record renderer shows both team perspectives, game counts, and the retrieval date. Each record has `validation_status=verified`, `display_allowed=true` only after checking:
+
+1. Sum of W+L+T+OTL equals games played for every team/type.
+2. Both teams report the same game count and ties.
+3. Team A wins equal Team B losses plus overtime losses, and vice versa.
+4. Historical NHL team identity segments are aggregated under the NHL franchise, not dropped.
+5. No playoff record row from either team is interpreted as zero games if the other side reports playoff games.
+
+The verification process uses NHL official **cumulative franchise aggregates** as primary data, **not** a separate full game-level replay for 1917–2026. Don't imply those are identical methods. The feature intentionally labels the figures 'franchise history' and keeps the as-of date visible. `tests/rivalry-records.test.mjs` checks every record.

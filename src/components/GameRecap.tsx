@@ -104,7 +104,7 @@ function Compare({ r, home, away }: { r: Recap; home: Team; away: Team }) {
   return (
     <section className="gr-compare pn" aria-label={`Team numbers, ${away.id} against ${home.id}`}>
       <h4 className="pn-h">Team comparison</h4>
-      <div className="gr-cgrid">
+      <div className="gauge-grid gr-cgrid">
         {rows.filter((x) => x.a != null && x.h != null).map((x) => <div key={x.label} className="gauge-item"><Gauge look="tile" stretch size="compact" away={x.a as number} home={x.h as number} awayId={away.id} homeId={home.id} label={x.label} format={x.fmt} /></div>)}
       </div>
     </section>

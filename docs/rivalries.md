@@ -44,3 +44,27 @@ To certify all-time records, a separate full historical results ingestion must c
 - `scripts/audit-rivalry-records.mjs` — official schedule audit utility
 
 This work is intended for review on a non-production feature branch.
+
+## P1: live rivalry intelligence (2026-11-14)
+
+`rivalryContext(allGames, game)` derives its statistics from the current Iceboard loaded NHL snapshots:
+- current-season **regular-season** meetings and wins (season ID matches `game.season`)
+- up to 10 most recent prior **completed** meetings, across season snapshots
+- consecutive winner streak within available loaded games
+- up to 10 completed playoff meetings in the loaded history (not playoff *series* wins)
+- a matchup-specific narrative about the season-series leader or most recent winner
+
+The helper deduplicates NHL game IDs, sorts chronologically, excludes viewed/future/live games, rejects missing or tied scores, and returns empty display-safe data when unavailable. It does **not** fetch live API data independently; it uses the same live-refreshed season snapshots as Iceboard. All-time W-L remains blocked.
+
+### P1: archival images and publication safety
+
+The updated separate media asset pack (V5) tracks **28 candidate images for 24 of 27 pairings**. Three new source-specific records cover COL-DAL (2019 game), EDM-VAN (2005 game) and COL-MIN (2008 crowd). Remaining no-specific-photo IDs: `LAK-VGK`, `MIN-WPG`, `OTT-TOR`.
+
+The copyright/license at Commons is not a comprehensive app rights grant. Players, sponsors, trademarks, venues, recognizable fans, and editorial context may require separate legal review. `src/lib/rivalry-media.mjs` has strict deny-by-default controls: render only if `commercial_app_use_approved === true`, a reviewed **local** URL under `/rivalry-media/`, source URL, credit and license metadata. The UI automatically provides on-image attribution once approved. **All current assets remain unapproved** and no image file was added to the Git repository; this is deliberate. COL-MIN's crowd photo also carries a privacy/likeness review flag.
+
+Direct reviewed sources:
+- [Dallas–Colorado 2019 — LHC88, CC BY 4.0](https://commons.wikimedia.org/wiki/File:Dr_Pepper.png)
+- [Edmonton–Vancouver 2005 — Anders Elkjaer Johansen, PD-self](https://commons.wikimedia.org/wiki/File:Face_off.jpg)
+- [Minnesota–Colorado spectators 2008 — Sreejith K, CC BY 2.0](https://commons.wikimedia.org/wiki/File:The_crowd.jpg)
+
+No production deploy or merge was performed.

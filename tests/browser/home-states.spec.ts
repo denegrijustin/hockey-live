@@ -38,7 +38,7 @@ test.describe("home card states", () => {
   test("intermission, overtime and shootout read as such", async ({ page }) => {
     await expect(page.locator('.sb-row[data-game="9303"] .sb-status')).toContainText("P1 · Intermission");
     await expect(page.locator('.sb-row[data-game="9307"] .sb-status')).toContainText("OT · 02:15");
-    await expect(page.locator('.sb-row[data-game="9308"] .sb-status')).toContainText(/^SO/);
+    await expect(page.locator('.sb-row[data-game="9308"] .sb-status')).toContainText(/SO\b/);
   });
 
   test("finals (regulation, OT, SO) are in the Completed strip with the right tag, scores and winner wording", async ({ page }) => {

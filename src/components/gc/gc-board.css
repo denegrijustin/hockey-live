@@ -4,8 +4,11 @@
   color-scheme: dark; color: #fff;
   --surface-1: #040a0e; --surface-2: #071017; --surface-3: #0a161f; --surface-4: #0d1c26; --surface-5: #0b1830; --surface-6: #152934; --surface-7: #1b313c; --surface-8: #283c45;
   --line-1: #2e4652; --line-2: #3a5662; --line-3: #4c6875; --line-4: #58828a; --line-5: #6c8caa;
-  --text-1: #8ea8b6; --text-2: #9fbac6; --text-3: #b9cfd9; --text-4: #d0e0e6; --text-5: #e2ecf0; --text-6: #ffffff; --muted: #9fbac6;
-  --mint-1: #14332b; --mint-5: #7fdec1; --mint-6: #c9f3e5; --red-5: #fbb5af; --amber-5: #e8c88d;
+  --text-1: #acc3d0; --text-2: #bdd1dc; --text-3: #cddde6; --text-4: #dbe8ee; --text-5: #e9f1f5; --text-6: #ffffff; --muted: #bdd1dc;
+  --mint-1: #14332b; --mint-2: #2c6556; --mint-3: #428074; --mint-4: #68c4ae; --mint-5: #7fdec1; --mint-6: #c9f3e5;
+  --red-1: #45221f; --red-2: #713732; --red-3: #df4e54; --red-4: #f19190; --red-5: #fbb5af;
+  --amber-1: #453e2b; --amber-2: #6a5220; --amber-3: #c98f1c; --amber-4: #eaba41; --amber-5: #e8c88d;
+  --gc-tabs-bg: color-mix(in srgb, var(--face-bg, #1b2a55) 30%, #050a14);
   --series-away: var(--g-away, #2f7dd1); --series-home: var(--g-home, #26c6c6);
   background:
     radial-gradient(70% 28% at 0% 0%, color-mix(in srgb, var(--g-away, #2f7dd1) 30%, transparent), transparent 70%),
@@ -214,3 +217,17 @@
 .game-dialog .mo > .mo-title { margin: 0 -14px 8px; }
 /* A note in the Game Center is read in full: it wraps instead of being cut with an ellipsis. */
 .game-dialog .nhlp-pending { white-space: normal; overflow: visible; text-overflow: clip; padding: 6px 8px; }
+
+/* ---- Phones: readable logos and text, an opaque tab bar (nothing bleeds through it), clear result chips ---- */
+.game-dialog .gc-tabs { background: var(--gc-tabs-bg); box-shadow: 0 calc(-1 * var(--gc-gap)) 0 0 var(--gc-tabs-bg), calc(var(--float-btn-size) + 8px) 0 0 0 var(--gc-tabs-bg); }
+.gx-team > small { color: #ffffffe6; }
+.gx-watch { color: #ffffffe6; }
+.game-dialog .gx-net .network-logo, .game-dialog .gx-net img { width: 36px; height: 36px; }
+.game-dialog .form-results .form-win { background: #174a3b; color: #9af0d0; }
+.game-dialog .form-results .form-loss { background: color-mix(in srgb, var(--red-2) 60%, #0b1830); color: #ffc9c6; }
+.game-dialog .form-results .form-ot { background: color-mix(in srgb, var(--amber-2) 60%, #0b1830); color: #ffe19a; }
+.game-dialog .form-results small { opacity: 1; }
+@media (max-width: 720px) {
+  .gx-team .team-logo { width: 64px; height: 64px; }
+  .gc-tabs [role="tab"] { padding: 4px 10px; font-size: .8125rem; min-height: 44px; }
+}

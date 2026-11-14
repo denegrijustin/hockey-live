@@ -201,3 +201,16 @@
 @media (max-width: 720px) { .gx-watch { flex: 1 1 100%; text-align: center; } .gx-mid .gc-clock { white-space: nowrap; } }
 /* live panels change height between polls; keep the reader's scroll position as it is rather than letting the browser re-anchor it */
 .game-dialog { overflow-anchor: none; }
+
+/* Phones: nothing runs past the edge. The tab bar wraps onto a second row instead of scrolling off both sides, and panel text keeps the panel's padding. */
+.game-dialog .mo { padding: 0 14px 14px; }
+.mo-empty, .mo-note, .mo-meta { overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .gc-tabs { flex-wrap: wrap; overflow: visible; gap: 2px 4px; padding: 4px 6px; }
+  .gc-tabs [role="tab"] { flex: 1 1 auto; justify-content: center; text-align: center; padding: 6px 10px; font-size: .875rem; margin: 2px; }
+}
+.game-dialog .game-center-section > summary { flex-wrap: nowrap; }
+.game-dialog .game-center-section > summary > span { flex: none; margin-left: auto; }
+.game-dialog .mo > .mo-title { margin: 0 -14px 8px; }
+/* A note in the Game Center is read in full: it wraps instead of being cut with an ellipsis. */
+.game-dialog .nhlp-pending { white-space: normal; overflow: visible; text-overflow: clip; padding: 6px 8px; }

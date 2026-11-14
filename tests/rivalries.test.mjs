@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { approvedRivalryMedia, RIVALRY_MEDIA_CANDIDATES, UNCOVERED_RIVALRY_IMAGES } from "../src/lib/rivalry-media.mjs";
 import { RIVALRIES, rivalryForTeams, rivalryForGame, recentHeadToHead, verifiedAllTime, rivalryContext } from "../src/lib/rivalries.mjs";
 test("27 unique two-team rivalries and order-independent matching",()=>{
  assert.equal(RIVALRIES.length,27);
@@ -56,4 +57,14 @@ test("uncovered rivals and empty history degrade cleanly",()=>{
  assert.equal(r.streak.team,null);
  assert.equal(r.lastTen.length,0);
  assert.equal(r.currentSeason.wins.NYR,0);
+});
+
+test("archival licensing candidates never publish without affirmative app approval and local asset",()=>{
+ assert.equal(approvedRivalryMedia(RIVALRY_MEDIA_CANDIDATES,"EDM-VAN").length,0);
+ assert.equal(UNCOVERED_RIVALRY_IMAGES.length,3);
+ const good={rivalry_id:"EDM-VAN",commercial_app_use_approved:true,asset_url:"/rivalry-media/edm-van.jpg",photographer:"Photo credit",source_url:"https://commons.wikimedia.org/wiki/File:Face_off.jpg",license:"Public domain"};
+ assert.equal(approvedRivalryMedia([good],"EDM-VAN").length,1);
+ assert.equal(approvedRivalryMedia([{...good,asset_url:"https://external.example/img.jpg"}],"EDM-VAN").length,0);
+ assert.equal(approvedRivalryMedia([{...good,privacy_review_required:true}],"EDM-VAN").length,0);
+ assert.equal(approvedRivalryMedia([{...good,photographer:""}],"EDM-VAN").length,0);
 });

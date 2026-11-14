@@ -24,3 +24,8 @@
 .rivalry-meetings>summary{cursor:pointer;color:#e5f3ff;font-size:.83rem;font-weight:700;margin:.6rem 0}
 .rivalry-meetings>summary small{color:#becbdb;font-weight:400}
 .rivalry-meetings em{color:#d3dfe9;font-size:.66rem;font-style:normal}
+
+.rivalry-photo{margin:.7rem 0 1rem;max-width:100%}
+.rivalry-photo img{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:10px}
+.rivalry-photo figcaption{padding:.35rem 0;color:#c0cad6;font-size:.7rem;line-height:1.4}
+.rivalry-photo figcaption a{color:#a9dcff}

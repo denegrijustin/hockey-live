@@ -198,3 +198,6 @@
   .gx-stats .gx-ico { width: 30px; } .gx-stats th, .gx-stats td { padding: 6px 4px; font-size: 1rem; }
   .gx-stats tbody th { font-size: .9375rem; overflow-wrap: anywhere; } .gx-chip { font-size: .875rem; } .gx-chip .team-logo { display: none; }
 }
+@media (max-width: 720px) { .gx-watch { flex: 1 1 100%; text-align: center; } .gx-mid .gc-clock { white-space: nowrap; } }
+/* live panels change height between polls; keep the reader's scroll position as it is rather than letting the browser re-anchor it */
+.game-dialog { overflow-anchor: none; }

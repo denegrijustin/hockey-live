@@ -81,8 +81,8 @@ export function GameHeader({ home, away, ranks, records, watch }: {
             <i aria-hidden="true" />{pill}
           </span>
           {clock && <span className="gc-clock" data-testid="gc-clock">{clock}</span>}
-          {!shown && src.start && <span className="gx-when"><Icon name="calendar" size={22} />{fmtTime(src.start, { withZone: true })}</span>}
-          {(src.broadcasts?.length ?? 0) > 0 && <span className="tv-network gx-net"><NetworkLogos broadcasts={[...new Set(src.broadcasts)]} game={src} /></span>}
+          {!shown && game.start && <span className="gx-when"><Icon name="calendar" size={22} />{fmtTime(game.start, { withZone: true })}</span>}
+          {(game.broadcasts?.length ?? 0) > 0 && <span className="tv-network gx-net"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
           {watch && <span className="gx-watch">{watch}</span>}
           {stale && live && <span className="gc-stale-note">Updating… the last data is older than expected.</span>}
         </div>

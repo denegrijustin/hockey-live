@@ -128,27 +128,47 @@ export default function PlayByPlay({ focusEvent }: { focusEvent?: number }) {
   const rememberPlace = useCallback(() => {
     const sc = scroller();
     if (!sc || !root.current || root.current.offsetParent === null) return;
-    const edge = sc.getBoundingClientRect().top + 90;
-    const row = [...root.current.querySelectorAll<HTMLElement>(".pbp-event")].find((e) => e.getBoundingClientRect().bottom > edge);
+    const box = sc.getBoundingClientRect(), edge = box.top + 90;
+    // The row being read: the one with focus if it is on screen (a reader who focused a row is looking at it), else the first row in view.
+    const focused = root.current.contains(document.activeElement) ? (document.activeElement as HTMLElement).closest<HTMLElement>(".pbp-event") : null;
+    const fr = focused?.getBoundingClientRect();
+    const row = fr && fr.bottom > edge && fr.top < box.bottom ? focused : [...root.current.querySelectorAll<HTMLElement>(".pbp-event")].find((e) => e.getBoundingClientRect().bottom > edge);
     place.current = row ? { id: row.id, top: row.getBoundingClientRect().top } : null;
   }, []);
+  useEffect(() => { const el = root.current; el?.addEventListener("focusin", rememberPlace); return () => el?.removeEventListener("focusin", rememberPlace); }, [rememberPlace, feed, all.length]);
   useEffect(() => { const sc = scroller(); const onScroll = () => { if (ownScroll.current) { ownScroll.current = false; return; } rememberPlace(); }; sc?.addEventListener("scroll", onScroll, { passive: true }); return () => sc?.removeEventListener("scroll", onScroll); }, [rememberPlace, feed]);
   useLayoutEffect(() => {
     const p = place.current;
-    const restore = () => {
+    const restore = (at = p) => {
       const sc = scroller();
-      if (!sc || !p || sc.scrollTop <= 1 || !root.current || root.current.offsetParent === null) return;
-      const el = document.getElementById(p.id);
-      const d = el ? el.getBoundingClientRect().top - p.top : 0;
+      if (!sc || !at || sc.scrollTop <= 1 || !root.current || root.current.offsetParent === null) return;
+      const el = document.getElementById(at.id);
+      const d = el ? el.getBoundingClientRect().top - at.top : 0;
       if (Math.abs(d) > 1) { ownScroll.current = true; sc.scrollTop += d; }
     };
     restore();
     // Rows are content-visibility:auto: heights settle a frame later, so check once more (only if the reader has not scrolled meanwhile).
     rememberPlace();
     const mine = place.current;
-    const raf = requestAnimationFrame(() => { if (place.current === mine) { restore(); rememberPlace(); } });
+    const raf = requestAnimationFrame(() => { if (place.current === mine) { restore(mine); rememberPlace(); } });
     return () => cancelAnimationFrame(raf);
   }, [shown, newest, rememberPlace]);
+
+  // Rows are content-visibility:auto, so a row's real height is only known once it renders, which can be later than the one extra frame checked above (a slow device).
+  // Whenever the list changes size, put the row the reader was on back where it was (nothing moves when the rows that settled are below it).
+  useEffect(() => {
+    const el = root.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      const p = place.current, sc = scroller();
+      if (!p || !sc || sc.scrollTop <= 1 || el.offsetParent === null) return;
+      const row = document.getElementById(p.id);
+      const d = row ? row.getBoundingClientRect().top - p.top : 0;
+      if (Math.abs(d) > 1) { ownScroll.current = true; sc.scrollTop += d; }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [feed, all.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = useCallback((k: string) => setGroups((g) => (g.includes(k) ? g.filter((x) => x !== k) : [...g, k])), []);
   const goTo = (id: number | null) => { if (id != null) setJump((j) => ({ id, n: (j?.n ?? 0) + 1 })); };

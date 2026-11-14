@@ -1,5 +1,5 @@
 import type { Game } from "../types";
-import { rivalryForGame, recentHeadToHead } from "../lib/rivalries.mjs";
+import { rivalryForGame, rivalryContext } from "../lib/rivalries.mjs";
 import "./rivalry.css";
 
 /** Compact label for schedule rows, tiles, and game cards. */
@@ -13,7 +13,8 @@ export function RivalryTag({ game }: { game: Game }) {
 export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] }) {
   const rivalry = rivalryForGame(game);
   if (!rivalry) return null;
-  const recent = recentHeadToHead(allGames, game, 5);
+  const context = rivalryContext(allGames, game);
+  const recent = context?.lastTen ?? [];
   return (
     <section className="rivalry-panel" aria-label={`Rivalry history: ${rivalry.name}`} data-testid="rivalry-panel">
       <div className="rivalry-panel-head">
@@ -21,16 +22,26 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
         <span className="rivalry-team-line">{game.away} / {game.home}</span>
       </div>
       <p>{rivalry.history}</p>
+      {context && <div className="rivalry-live-context">
+        <p className="rivalry-current-story">{context.story}</p>
+        <div className="rivalry-facts">
+          <div><span>Season series</span><strong>{game.away} {context.currentSeason.wins[game.away]} – {context.currentSeason.wins[game.home]} {game.home}</strong></div>
+          {recent.length > 0 && <div><span>Last {recent.length} meetings</span><strong>{game.away} {context.lastTenWins[game.away]} – {context.lastTenWins[game.home]} {game.home}</strong></div>}
+          {context.streak.team && <div><span>Active head-to-head streak</span><strong>{context.streak.team} · {context.streak.games} win{context.streak.games === 1 ? "" : "s"}</strong></div>}
+        </div>
+        {context.recentPlayoffs.length > 0 && <p className="rivalry-playoff-note">Recent playoff games in loaded history: {context.recentPlayoffs.length} (not an all-time series total).</p>}
+      </div>}
       {recent.length > 0 && (
-        <div className="rivalry-meetings">
-          <strong>Recent meetings <small>· available loaded seasons only</small></strong>
+        <details className="rivalry-meetings">
+          <summary>Last {recent.length} completed meetings <small>· loaded seasons only</small></summary>
           <ul>{recent.map(g => (
             <li key={g.id}>
               <time dateTime={g.date}>{g.date}</time>
               <span>{g.away} {g.awayScore} – {g.homeScore} {g.home}</span>
+              {g.type === 3 && <em>Playoffs</em>}
             </li>
           ))}</ul>
-        </div>
+        </details>
       )}
       {rivalry.source && <a className="rivalry-source" href={rivalry.source} target="_blank" rel="noreferrer">Historical source ↗</a>}
       <small className="rivalry-disclaimer">Historical all-time W–L is hidden until independently reconciled against NHL game results.</small>

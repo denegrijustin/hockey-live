@@ -238,7 +238,16 @@ test.describe("Phase 5 features", () => {
     await expect.poll(() => page.evaluate(() => (window as any).__scrolled), { message: "the scroll event is handled" }).toBe(true);
     // the rows are content-visibility:auto, so wait for the layout after the scroll to settle on a row that is fully on screen
     const pick = () => events.evaluateAll((els) => els.findIndex((e) => { const r = e.getBoundingClientRect(); return r.top > 150 && r.bottom < innerHeight - 50; }));
-    await expect.poll(pick, { message: "a fully visible event row to read" }).toBeGreaterThanOrEqual(0);
+    try {
+      await expect.poll(pick, { message: "a fully visible event row to read" }).toBeGreaterThanOrEqual(0);
+    } catch (e) {
+      // say what the layout looked like, so a failure on another machine can be read without reproducing it
+      const info = await page.evaluate(() => {
+        const d = document.querySelector("dialog.game-dialog") as HTMLElement, r = (el: Element | null) => (el ? Math.round(el.getBoundingClientRect().top) + ".." + Math.round(el.getBoundingClientRect().bottom) : "none");
+        return { innerHeight, scrollTop: Math.round(d.scrollTop), scrollHeight: d.scrollHeight, tabs: r(d.querySelector(".gc-tabs")), header: r(d.querySelector(".gc-header")), pbp: r(d.querySelector("[data-testid=pbp]")), rows: [...d.querySelectorAll("[data-testid=pbp-event]")].slice(0, 14).map((x) => r(x)) };
+      });
+      throw new Error(`no fully visible event row: ${JSON.stringify(info)}\n${(e as Error).message}`);
+    }
     const idx = await pick();
     const anchor = events.nth(idx);
     const id = await anchor.getAttribute("data-event-id");

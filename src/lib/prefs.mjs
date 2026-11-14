@@ -99,7 +99,12 @@ export function parsePrefs(text, { teamIds, legacy } = {}) {
   try { raw = text ? JSON.parse(text) : null; } catch { raw = null; }
   let legacyTeams = null;
   try { legacyTeams = legacy ? JSON.parse(legacy) : null; } catch { legacyTeams = null; }
-  return sanitize(migrate(raw, legacyTeams), teamIds ?? []);
+  const prefs = sanitize(migrate(raw, legacyTeams), teamIds ?? []);
+  // The old app's team filter started with every team selected, so a migrated list that holds every team means "the whole league", not 32 favorites (a record the person saved
+  // themselves is left alone: choosing every team in Pick teams is allowed).
+  const migrated = !(isObj(raw) && Number(raw.version) >= 1);
+  if (migrated && (teamIds ?? []).length >= 16 && prefs.favorites.length >= teamIds.length) prefs.favorites = [];
+  return prefs;
 }
 
 export const serialize = (prefs) => JSON.stringify(prefs);

@@ -85,7 +85,9 @@ export function TeamSchedule({ games, teams, defaultTeam, analysis, baseline, ba
         <button type="button" className={`ts-card ${i.status}${i.result ? ` r-${i.result}` : ""}${first ? " is-next" : ""}`} onClick={() => open(i.game)}
           aria-label={`${wd} ${md}: ${i.home ? "home against" : "at"} ${opp.name}, ${i.status === "upcoming" ? `${time(i.start)}` : i.status === "live" ? `live, ${i.us} to ${i.them}` : `${i.result === "W" ? "won" : i.result === "OTL" ? "lost in overtime" : "lost"} ${i.us} to ${i.them}${i.ot ? ` in ${i.ot === "SO" ? "a shootout" : "overtime"}` : ""}`}. Open Game Center`}>
           <span className="ts-date"><b>{wd}</b><span>{md}</span></span>
-          <span className="ts-opp"><TeamLogo id={opp.id} size={LOGO_SIZE.row} /><span><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}<FavoriteMark id={opp.id} /></b><small>{i.game.venue || (i.home ? team.city : opp.city)}</small></span></span>
+          <TeamLogo id={opp.id} size={LOGO_SIZE.row} className="ts-logo" />
+          <span className="ts-name"><em>{i.home ? "vs" : "@"}</em> <b>{opp.name}</b><FavoriteMark id={opp.id} /></span>
+          <small className="ts-venue">{i.game.venue || (i.home ? team.city : opp.city)}</small>
           <span className={`ts-res${i.status === "final" ? ` fin r-${i.result ?? "x"}` : ""}`}>
             {i.status === "final" ? <><b className={`ts-badge ${i.result ?? ""}`}>{i.result ?? "–"}</b><span>{resultText(i)}</span></> : i.status === "live" ? <><b className="ts-badge live">LIVE</b><span>{i.us}–{i.them}</span></> : <span className="ts-time">{resultText(i)}</span>}
           </span>

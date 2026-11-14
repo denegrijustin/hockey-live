@@ -60,13 +60,13 @@ function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, p
   const leaving = phase === "exit";
   if (mode === "pregame") {
     return working || leaving
-      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${away.short} at ${home.short} · ${leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
-      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: `${away.short} at ${home.short} · the ice is ready` };
+      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
+      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: `the ice is ready` };
   }
   return {
     k: `INTERMISSION${game.period ? ` · END OF P${game.period}` : ""}`,
     l: left > 0 ? `until ${next}` : `${next} about to start`,
-    cap: `${away.short} at ${home.short} · ${working ? "the Zamboni is resurfacing the ice" : leaving ? "the Zamboni is leaving the ice" : "fresh ice for the next period"}`,
+    cap: `${working ? "the Zamboni is resurfacing the ice" : leaving ? "the Zamboni is leaving the ice" : "fresh ice for the next period"}`,
   };
 }
 

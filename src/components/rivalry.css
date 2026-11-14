@@ -13,3 +13,14 @@
 .rivalry-meetings time{color:#b4bfcd;white-space:nowrap}
 .rivalry-source{display:inline-block;color:#a9dcff;margin-top:.75rem;font-size:.79rem}
 .rivalry-disclaimer{display:block;margin-top:.55rem;font-size:.67rem;color:#b4bfcd}
+
+.rivalry-live-context{margin:.85rem 0;padding:.7rem .85rem;border-radius:10px;background:#ffffff0c;border:1px solid #ffffff18}
+.rivalry-panel .rivalry-current-story{font-weight:650;color:#fff;margin:0 0 .7rem;font-size:.89rem}
+.rivalry-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.65rem}
+.rivalry-facts>div{display:flex;flex-direction:column;gap:.2rem;min-width:0}
+.rivalry-facts span{font-size:.67rem;color:#becbdb;text-transform:uppercase;letter-spacing:.045em}
+.rivalry-facts strong{font-size:.87rem;color:#fff;line-height:1.4}
+.rivalry-panel .rivalry-playoff-note{color:#becbdb;font-size:.72rem;margin:.6rem 0 0}
+.rivalry-meetings>summary{cursor:pointer;color:#e5f3ff;font-size:.83rem;font-weight:700;margin:.6rem 0}
+.rivalry-meetings>summary small{color:#becbdb;font-weight:400}
+.rivalry-meetings em{color:#d3dfe9;font-size:.66rem;font-style:normal}

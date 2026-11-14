@@ -25,11 +25,13 @@ import { SaveGameButton } from "./SaveGameButton";
 import { GameCenterProvider, useGameCenter } from "./gc/GameCenterContext";
 import { GameCenterUiProvider, type GcTab } from "./gc/GameCenterUi";
 import { GameHeader } from "./gc/GameHeader";
+import { RivalryPanel } from "./Rivalry";
 import { GameCenterClose } from "./gc/GameCenterClose";
 import { GameTabs } from "./gc/GameTabs";
 import { GameAnnouncer } from "./gc/GameAnnouncer";
 import OverviewPane from "./gc/OverviewPane";
 import { GameFollowBadge } from "./gc/FollowedGames";
+import "./rivalry.css";
 import "./gc/game-center.css";
 import "./gc/gc-board.css";
 import { gaugeColors } from "../lib/kits";
@@ -221,6 +223,7 @@ export function GameOverlay({
                 <>
                   {live && game.intermission && <IntermissionRink game={game} home={home} away={away} />}
                   {!live && !past && icePrepActive(game) && <IcePrep game={game} home={home} away={away} />}
+                  <RivalryPanel game={game} allGames={allGames} />
                   <div className="gc-cols">
                     <div className="gc-col"><OverviewPane home={home} away={away} dayGames={dayGames} /></div>
                     <div className="gc-col">

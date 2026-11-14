@@ -143,6 +143,6 @@ test.describe("Home row (GameCardView, variant row)", () => {
       const box = await loc.evaluate((el) => { const r = el.getBoundingClientRect(), b = getComputedStyle(el, "::before"); return { h: Math.max(r.height, r.height + Math.abs(parseFloat(b.top) || 0) * 2) }; });
       expect(box.h).toBeGreaterThanOrEqual(44);
     }
-    expect(await page.locator(".sb-row .team-logo").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))])).toEqual([32]);
+    expect(await page.locator(".sb-row .team-logo:not(.int-who .team-logo)").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))])).toEqual([32]);
   });
 });

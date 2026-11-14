@@ -234,7 +234,8 @@ test.describe("Phase 5 features", () => {
     // really scrolled and that event has been handled before any poll lands, as it always is for a person (on a slow machine the dialog may not be scrollable yet, and the event
     // comes a frame after scrollTop changes, which can be after the polls). Polls run in the test, not the page, because the page's timers are faked.
     await dialog.evaluate((d) => { (window as any).__scrolled = false; d.addEventListener("scroll", () => { (window as any).__scrolled = true; }, { once: true }); });
-    await expect.poll(() => dialog.evaluate((d) => { d.scrollTop = 700; return Math.round(d.scrollTop); }), { message: "the dialog scrolls" }).toBeGreaterThan(600);
+    // scroll so the fifth event row sits mid-screen (a fixed offset depends on how tall the header and tab bar are: three rows of tabs on a wide-lettered font push the list down)
+    await expect.poll(() => dialog.evaluate((d) => { const row = d.querySelectorAll("[data-testid=pbp-event]")[4]; if (!row) return -1; d.scrollTop += row.getBoundingClientRect().top - 300; return Math.round(d.scrollTop); }), { message: "the dialog scrolls to the list" }).toBeGreaterThan(300);
     await expect.poll(() => page.evaluate(() => (window as any).__scrolled), { message: "the scroll event is handled" }).toBe(true);
     // the rows are content-visibility:auto, so wait for the layout after the scroll to settle on a row that is fully on screen
     const pick = () => events.evaluateAll((els) => els.findIndex((e) => { const r = e.getBoundingClientRect(); return r.top > 150 && r.bottom < innerHeight - 50; }));

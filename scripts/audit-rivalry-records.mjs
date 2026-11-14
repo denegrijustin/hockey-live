@@ -43,12 +43,13 @@ const results=RIVALRIES.map(r=>{
  const perspective=r.teams[0],opponent=r.teams[1];
  const aggregate=(type)=>{
   const g=games.filter(x=>x.type===type);
-  const out={wins:0,losses:0,ties:0,overtime_losses:0,games:g.length};
+  const out={wins:0,losses:0,ties:0,overtime_losses:0,unclassified:0,games:g.length};
   for(const x of g){
    const mine=x.home===perspective?x.hs:x.as,theirs=x.home===perspective?x.as:x.hs;
    if(mine>theirs)out.wins++;
    else if(mine===theirs)out.ties++;
-   else if(type===2 && x.season>=1999 && x.period && x.period!=="REG")out.overtime_losses++;
+   else if(type===2 && x.season>=1999 && !x.period)out.unclassified++;
+   else if(type===2 && x.season>=1999 && x.period!=="REG")out.overtime_losses++;
    else out.losses++;
   }
   return out;

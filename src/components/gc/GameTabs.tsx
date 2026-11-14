@@ -1,12 +1,13 @@
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import type { GcTab } from "./GameCenterUi";
 
-export const GC_TAB_LIST: { id: GcTab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "pbp", label: "Play-by-Play" },
-  { id: "stats", label: "Team Stats" },
-  { id: "players", label: "Players" },
-  { id: "intel", label: "Matchup Intelligence" },
+/** `short` is the label on a phone, where all five tabs share one line; the full label is always the accessible name. */
+export const GC_TAB_LIST: { id: GcTab; label: string; short: string }[] = [
+  { id: "overview", label: "Overview", short: "Overview" },
+  { id: "pbp", label: "Play-by-Play", short: "Plays" },
+  { id: "stats", label: "Team Stats", short: "Stats" },
+  { id: "players", label: "Players", short: "Players" },
+  { id: "intel", label: "Matchup Intelligence", short: "Matchup" },
 ];
 
 /**
@@ -38,9 +39,11 @@ export function GameTabs({ tab, onTab, panes }: { tab: GcTab; onTab: (tab: GcTab
             aria-selected={tab === t.id}
             aria-controls={`gc-pane-${t.id}`}
             tabIndex={tab === t.id ? 0 : -1}
+            aria-label={t.label}
             onClick={() => onTab(t.id)}
           >
-            {t.label}
+            <span className="gc-tab-full">{t.label}</span>
+            <span className="gc-tab-short" aria-hidden="true">{t.short}</span>
           </button>
         ))}
       </div>

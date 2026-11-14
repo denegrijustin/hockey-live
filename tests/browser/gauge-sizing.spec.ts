@@ -84,3 +84,12 @@ for (const width of [390, 360, 320]) {
     expect(a!.width).toBeGreaterThan(card!.width * 0.7);
   });
 }
+
+test("every Ice Tilt gauge carries both teams' logos beside its numbers", async ({ page }) => {
+  const dialog = await openGame(page, 390);
+  const tilt = dialog.locator(".ice-tilt").first();
+  await expect(tilt).toBeVisible();
+  const gauges = await tilt.locator(".gauge").evaluateAll((els) => els.map((g) => [...g.querySelectorAll(".vs-side")].map((s) => s.querySelectorAll("img.team-logo").length)));
+  expect(gauges.length, "gauges in the Ice Tilt panel").toBeGreaterThanOrEqual(1);
+  for (const g of gauges) expect(g, "a logo on each side").toEqual([1, 1]);
+});

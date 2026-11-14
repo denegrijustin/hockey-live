@@ -11,7 +11,7 @@ export type GaugeSize = "compact" | "standard" | "expanded" | "sm" | "lg";
  * One two-sided number, drawn as the head-to-head bar (see Versus): the away side's number on the left, the home side's on the right, and a bar split at who has the
  * advantage. For "deserved to win" and the projected score (`look`), and for every head-to-head stat, so they all read the same way.
  */
-export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "compact", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle, stretch = false, look, caption }: {
+export function Gauge({ away, home, awayId, homeId, label, format = (v: number) => String(v), percent = false, size = "compact", span, lowerBetter = false, awayText, homeText, awaySub, homeSub, needle, stretch = false, look, caption, logos = false }: {
   away: number; home: number; awayId: string; homeId: string; label: string; format?: (v: number) => string; percent?: boolean; size?: GaugeSize;
   /** For numbers that are not shares of a total (a save percentage, goals against): the gap that swings the bar all the way. */
   span?: number; lowerBetter?: boolean; awayText?: string; homeText?: string;
@@ -25,6 +25,8 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   look?: "proj" | "bar" | "tile";
   /** Under the projected score (the "proj" look). */
   caption?: string;
+  /** Each team's logo above its number. */
+  logos?: boolean;
 }) {
   const total = away + home;
   const share = needle != null ? needle : span ? Math.min(0.95, Math.max(0.05, 0.5 + ((away - home) / span / 2) * (lowerBetter ? -1 : 1))) : total > 0 ? away / total : 0.5;
@@ -59,7 +61,7 @@ export function Gauge({ away, home, awayId, homeId, label, format = (v: number) 
   }
   return (
     <figure className={`gauge versus ${look ?? ""} ${look === "bar" ? "sbar" : ""} ${stretch ? "stretch" : ""} ${variant}`} data-leader={leader} data-lopsided={Math.min(1, Math.abs(share - 0.5) * 2).toFixed(2)} role="img" aria-label={`${label}: ${text}`} style={{ margin: 0, "--g-away": colors.away, "--g-home": colors.home } as CSSProperties}>
-      <Versus away={{ id: awayId, big: shownA, sub: awaySub }} home={{ id: homeId, big: shownH, sub: homeSub }} share={share} label={label} density={density} />
+      <Versus away={{ id: awayId, big: shownA, sub: awaySub }} home={{ id: homeId, big: shownH, sub: homeSub }} share={share} label={label} density={density} logos={logos} />
     </figure>
   );
 }

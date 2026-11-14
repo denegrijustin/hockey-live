@@ -11,7 +11,7 @@ import { useVisible, GameFlowChart } from "./GameData";
 import "./gauge.css";
 /** One head-to-head number, drawn as a gas gauge. */
 export function ComparisonBar({ label, away, home, awayId, homeId, format, size = "sm" }: { label: string; away: number; home: number; awayId: string; homeId: string; format?: (v: number) => string; size?: GaugeSize; awayColor?: string; homeColor?: string }) {
-  return <Gauge size={size} away={away} home={home} awayId={awayId} homeId={homeId} label={label} format={format} />;
+  return <Gauge size={size} away={away} home={home} awayId={awayId} homeId={homeId} label={label} format={format} logos />;
 }
 export function GameData({
   game,

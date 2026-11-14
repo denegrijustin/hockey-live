@@ -208,9 +208,13 @@
 /* Phones: nothing runs past the edge. The tab bar wraps onto a second row instead of scrolling off both sides, and panel text keeps the panel's padding. */
 .game-dialog .mo { padding: 0 14px 14px; }
 .mo-empty, .mo-note, .mo-meta { overflow-wrap: anywhere; }
+/* the short tab labels show on a phone; the full ones are the accessible names and show on wider screens */
+.gc-tab-short { display: none; }
 @media (max-width: 700px) {
-  .gc-tabs { flex-wrap: wrap; overflow: visible; gap: 2px 4px; padding: 4px 6px; }
-  .gc-tabs [role="tab"] { flex: 1 1 auto; justify-content: center; text-align: center; padding: 6px 10px; font-size: .875rem; margin: 2px; }
+  .gc-tab-full { display: none; } .gc-tab-short { display: inline; }
+  /* all five tabs on one centred line, wrapping (centred too) only on a very narrow screen */
+  .gc-tabs { flex-wrap: wrap; overflow: visible; justify-content: center; align-content: center; gap: 0 2px; padding: 3px 4px; }
+  .gc-tabs [role="tab"] { flex: 0 1 auto; justify-content: center; text-align: center; padding: 4px clamp(3px, 1.1vw, 10px); font-size: clamp(.6875rem, 3.1vw, .875rem); margin: 2px 0; white-space: nowrap; min-width: 44px; }
 }
 .game-dialog .game-center-section > summary { flex-wrap: nowrap; }
 .game-dialog .game-center-section > summary > span { flex: none; margin-left: auto; }
@@ -220,6 +224,11 @@
 
 /* ---- Phones: readable logos and text, an opaque tab bar (nothing bleeds through it), clear result chips ---- */
 .game-dialog .gc-tabs { background: var(--gc-tabs-bg); box-shadow: 0 calc(-1 * var(--gc-gap)) 0 0 var(--gc-tabs-bg), calc(var(--float-btn-size) + 8px) 0 0 0 var(--gc-tabs-bg); }
+/* on a phone the opaque backing is a plain strip above the bar (no offset shadows, which drew odd shapes behind it) */
+@media (max-width: 700px) {
+  .game-dialog .gc-tabs { box-shadow: none; }
+  .game-dialog .gc-tabs::before { content: ""; position: absolute; z-index: -1; top: calc(-1 * var(--gc-gap)); height: var(--gc-gap); left: 20px; right: 20px; background: var(--gc-tabs-bg); }
+}
 .gx-team > small { color: #ffffffe6; }
 .gx-watch { color: #ffffffe6; }
 .game-dialog .gx-net .network-logo, .game-dialog .gx-net img { width: 36px; height: 36px; }
@@ -229,5 +238,5 @@
 .game-dialog .form-results small { opacity: 1; }
 @media (max-width: 720px) {
   .gx-team .team-logo { width: 64px; height: 64px; }
-  .gc-tabs [role="tab"] { padding: 4px 10px; font-size: .8125rem; min-height: 44px; }
+  .gc-tabs [role="tab"] { min-height: 44px; }
 }

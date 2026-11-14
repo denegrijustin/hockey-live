@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { Team } from "../../types";
 import { TeamLogo } from "../TeamLogo";
+import { Icon } from "../icons";
 import { fmtDay, fmtTime } from "../../lib/dates.mjs";
 import { finished } from "../../lib/model.mjs";
 import { useGameCenter } from "./GameCenterContext";
@@ -48,18 +49,12 @@ export function GameHeader({ home, away }: { home: Team; away: Team }) {
   }, [shown, feed, plays, src, live, so, past, away, home]);
   const sub = [src.venue || null, !shown && src.start ? `Puck drop ${fmtTime(src.start, { withZone: true })} · ${fmtDay(src.start, { long: true })}` : null].filter(Boolean).join(" · ");
   return (
-    <header className="gc-header" data-testid="gc-header" data-state={kind}>
-      <div className="gc-header-meta">
-        <span className="gc-pill" data-testid="gc-status" data-state={kind}>
-          <i aria-hidden="true" />{pill}
-        </span>
-        {clock && <span className="gc-clock" data-testid="gc-clock">{clock}</span>}
-        {stale && live && <span className="gc-stale-note">Updating… the last data is older than expected.</span>}
-      </div>
-      <div className="dialog-matchup">
+    <header className="gc-header gx" data-testid="gc-header" data-state={kind}>
+      <p className="gx-title">NHL Gamecenter<i aria-hidden="true" /></p>
+      <div className="dialog-matchup gx-banner">
         {[away, home].map((t, i) => (
-          <div className="dialog-team" key={t.id}>
-            <TeamLogo id={t.id} size={54} eager />
+          <div className={`dialog-team gx-team ${i === 0 ? "gx-away" : "gx-home"}`} key={t.id} style={{ ["--tc" as any]: t.cardColor ?? t.color }}>
+            <TeamLogo id={t.id} size={84} eager />
             <div>
               <span>{t.city}</span>
               <h3>{t.short}</h3>
@@ -71,8 +66,15 @@ export function GameHeader({ home, away }: { home: Team; away: Team }) {
             )}
           </div>
         ))}
+        <div className="gc-header-meta gx-mid">
+          <span className="gc-pill" data-testid="gc-status" data-state={kind}>
+            <i aria-hidden="true" />{pill}
+          </span>
+          {clock && <span className="gc-clock" data-testid="gc-clock">{clock}</span>}
+          {stale && live && <span className="gc-stale-note">Updating… the last data is older than expected.</span>}
+        </div>
       </div>
-      {sub && <p className="gc-sub" data-testid="gc-sub">{sub}</p>}
+      {sub && <p className="gc-sub" data-testid="gc-sub"><Icon name="pin" size={16} />{sub}</p>}
       {line && (
         <table className="gc-linescore" data-testid="gc-linescore" aria-label="Goals by period">
           <thead>

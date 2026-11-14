@@ -5,9 +5,20 @@ import { useGameCenter } from "./GameCenterContext";
 import { useGameCenterUi } from "./GameCenterUi";
 import { goalsOf, periodLabel } from "./gcFormat";
 import FollowedGames from "./FollowedGames";
+import { TeamLogo } from "../TeamLogo";
+import { Icon, type IconName } from "../icons";
 import type { Game } from "../../types";
 
 const MomentumPane = lazy(() => import("./MomentumPane"));
+
+/** A feed stat id as a label and an icon for the key-stats table. */
+const statKind = (label: string): { label: string; icon: IconName } => {
+  if (/hit/i.test(label)) return { label: "Hits", icon: "hand" };
+  if (/block/i.test(label)) return { label: "Blocked Shots", icon: "shield" };
+  if (/give/i.test(label)) return { label: "Giveaways", icon: "gift" };
+  if (/take/i.test(label)) return { label: "Takeaways", icon: "swap" };
+  return { label: label.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), icon: "bars" };
+};
 
 /**
  * Overview: where the game stands, the latest goals and penalties (links into Play-by-Play), the scoring summary
@@ -38,7 +49,12 @@ export default function OverviewPane({ home, away, dayGames }: { home: Team; awa
               : "Not started. Pre-game information is in the Team Stats, Players and Matchup Intelligence tabs."}
           {pp ? ` · ${pp}` : ""}
         </p>
-        {(src.awayShots != null && src.homeShots != null) && <p className="gc-muted">Shots on goal: {away.id} {src.awayShots}, {home.id} {src.homeShots}</p>}
+        {(src.awayShots != null && src.homeShots != null) && (
+          <div className="gx-sog" role="group" aria-label={`Shots on goal: ${away.id} ${src.awayShots}, ${home.id} ${src.homeShots}`}>
+            <small>Shots on goal</small>
+            <div><TeamLogo id={away.id} size={40} /><b>{src.awayShots}</b><i aria-hidden="true" /><b>{src.homeShots}</b><TeamLogo id={home.id} size={40} /></div>
+          </div>
+        )}
       </section>
       {recent.length > 0 && (
         <section className="gc-card" aria-label="Recent goals and penalties" data-testid="gc-recent">
@@ -76,16 +92,19 @@ export default function OverviewPane({ home, away, dayGames }: { home: Team; awa
       {keyStats.length > 0 && (
         <section className="gc-card" aria-label="Key team stats" data-testid="gc-keystats">
           <h4>Key team stats</h4>
-          <dl className="gc-keystats">
-            {keyStats.map((s) => (<div key={s.label}><dt>{s.label}</dt><dd>{away.id} {s.away} · {home.id} {s.home}</dd></div>))}
-          </dl>
-          <button type="button" className="gc-link" onClick={() => goTab("stats")}>All team stats</button>
+          <table className="gx-stats">
+            <thead><tr><th scope="col"><span className="sr-only">Stat</span></th><th scope="col"><span className="sr-only">Stat name</span></th><th scope="col" className="gx-chip a"><TeamLogo id={away.id} size={20} />{away.id}</th><th scope="col" className="gx-chip h"><TeamLogo id={home.id} size={20} />{home.id}</th></tr></thead>
+            <tbody>
+              {keyStats.map((s) => { const k = statKind(s.label); return (<tr key={s.label}><td className="gx-ico"><Icon name={k.icon} size={22} /></td><th scope="row">{k.label}</th><td>{s.away}</td><td>{s.home}</td></tr>); })}
+            </tbody>
+          </table>
+          <button type="button" className="gc-link gx-all" onClick={() => goTab("stats")}>All team stats</button>
         </section>
       )}
       <nav className="gc-links" aria-label="More on this game">
-        <button type="button" className="gc-link" onClick={() => goTab("players")}>Notable performers</button>
-        <button type="button" className="gc-link" onClick={() => goTab("pbp")}>Full play-by-play</button>
-        <button type="button" className="gc-link" onClick={() => goTab("intel")}>Matchup intelligence</button>
+        <button type="button" className="gc-link" onClick={() => goTab("players")}><Icon name="star" size={20} />Notable performers</button>
+        <button type="button" className="gc-link" onClick={() => goTab("pbp")}><Icon name="play" size={20} />Full play-by-play</button>
+        <button type="button" className="gc-link" onClick={() => goTab("intel")}><Icon name="bars" size={20} />Matchup intelligence</button>
       </nav>
       <Suspense fallback={null}><MomentumPane /></Suspense>
       <FollowedGames games={dayGames} currentId={game.id} />

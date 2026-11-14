@@ -1,5 +1,6 @@
 import type { Game } from "../types";
-import { rivalryForGame, rivalryContext } from "../lib/rivalries.mjs";
+import { rivalryForGame, rivalryContext, verifiedAllTime } from "../lib/rivalries.mjs";
+import allTimeRecords from "../data/rivalry-records.json";
 import { approvedRivalryMedia, RIVALRY_MEDIA_CANDIDATES } from "../lib/rivalry-media.mjs";
 import "./rivalry.css";
 
@@ -17,6 +18,12 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
   const context = rivalryContext(allGames, game);
   const approvedImages = approvedRivalryMedia(RIVALRY_MEDIA_CANDIDATES, rivalry.id);
   const recent = context?.lastTen ?? [];
+  const official = allTimeRecords.rivalries.find(record => record.id === rivalry.id);
+  const awayRegular = verifiedAllTime(official?.regular_season[game.away]);
+  const homeRegular = verifiedAllTime(official?.regular_season[game.home]);
+  const awayPlayoffs = verifiedAllTime(official?.playoffs[game.away]);
+  const homePlayoffs = verifiedAllTime(official?.playoffs[game.home]);
+  const validOfficial = Boolean(awayRegular && homeRegular && awayPlayoffs && homePlayoffs);
   return (
     <section className="rivalry-panel" aria-label={`Rivalry history: ${rivalry.name}`} data-testid="rivalry-panel">
       <div className="rivalry-panel-head">
@@ -24,6 +31,27 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
         <span className="rivalry-team-line">{game.away} / {game.home}</span>
       </div>
       <p>{rivalry.history}</p>
+      {validOfficial && awayRegular && homeRegular && awayPlayoffs && homePlayoffs && (
+        <section className="rivalry-all-time" aria-label="Official franchise head-to-head records">
+          <div className="rivalry-record-title"><strong>All-time franchise record</strong><span>Official NHL Records · {allTimeRecords.retrieved_on}</span></div>
+          <div className="rivalry-record-grid">
+            <div>
+              <span>Regular season</span>
+              <div className="rivalry-record-line"><strong>{game.away}</strong><b>{awayRegular.wins}-{awayRegular.losses}-{awayRegular.ties}-{awayRegular.overtime_losses}</b></div>
+              <div className="rivalry-record-line"><strong>{game.home}</strong><b>{homeRegular.wins}-{homeRegular.losses}-{homeRegular.ties}-{homeRegular.overtime_losses}</b></div>
+              <small>Wins–Losses–Ties–OT losses · {awayRegular.games} games</small>
+            </div>
+            <div>
+              <span>Playoff games</span>
+              <div className="rivalry-record-line"><strong>{game.away}</strong><b>{awayPlayoffs.wins}-{awayPlayoffs.losses}</b></div>
+              <div className="rivalry-record-line"><strong>{game.home}</strong><b>{homePlayoffs.wins}-{homePlayoffs.losses}</b></div>
+              <small>{awayPlayoffs.games} completed playoff games</small>
+            </div>
+          </div>
+          <p className="rivalry-record-scope">Franchise history includes predecessor identities and relocations where applicable. Counts reflect the NHL Records snapshot retrieved on {allTimeRecords.retrieved_on}; later games are excluded.</p>
+          <a className="rivalry-source" href={allTimeRecords.source_url} target="_blank" rel="noreferrer">NHL Records — official source ↗</a>
+        </section>
+      )}
       {approvedImages.map(asset => <figure key={asset.source_url} className="rivalry-photo"><img src={asset.asset_url || undefined} alt={asset.caption} loading="lazy" /><figcaption>{asset.caption} · {asset.photographer} · {asset.license} · <a href={asset.source_url} target="_blank" rel="noreferrer">Photo source</a></figcaption></figure>)}
       {context && <div className="rivalry-live-context">
         <p className="rivalry-current-story">{context.story}</p>
@@ -47,7 +75,7 @@ export function RivalryPanel({ game, allGames }: { game: Game; allGames: Game[] 
         </details>
       )}
       {rivalry.source && <a className="rivalry-source" href={rivalry.source} target="_blank" rel="noreferrer">Historical source ↗</a>}
-      <small className="rivalry-disclaimer">Historical all-time W–L is hidden until independently reconciled against NHL game results.</small>
+      {!validOfficial && <small className="rivalry-disclaimer">All-time franchise statistics temporarily unavailable pending verification.</small>}
     </section>
   );
 }

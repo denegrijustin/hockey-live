@@ -230,9 +230,12 @@ test.describe("Phase 5 features", () => {
     const ids = await keyOf();
     expect(new Set(ids).size).toBe(ids.length);
     // Read an event a few rows down, focus its row, then let polls add events (newest first prepends; scroll anchoring must hold the row in place).
-    // scroll anchoring is off at scrollTop 0 (the newest rows are then meant to push down). The list remembers the reader's place on the scroll event, so wait for that event
-    // to be handled before any poll lands, as it always is for a person (the scroll event comes a frame after scrollTop changes; on a slow machine that can be after the polls).
-    await dialog.evaluate((d) => new Promise<void>((done) => { d.addEventListener("scroll", () => done(), { once: true }); d.scrollTop += 700; }));
+    // scroll anchoring is off at scrollTop 0 (the newest rows are then meant to push down). The list remembers the reader's place on the scroll event, so wait until the dialog has
+    // really scrolled and that event has been handled before any poll lands, as it always is for a person (on a slow machine the dialog may not be scrollable yet, and the event
+    // comes a frame after scrollTop changes, which can be after the polls). Polls run in the test, not the page, because the page's timers are faked.
+    await dialog.evaluate((d) => { (window as any).__scrolled = false; d.addEventListener("scroll", () => { (window as any).__scrolled = true; }, { once: true }); });
+    await expect.poll(() => dialog.evaluate((d) => { d.scrollTop = 700; return Math.round(d.scrollTop); }), { message: "the dialog scrolls" }).toBeGreaterThan(600);
+    await expect.poll(() => page.evaluate(() => (window as any).__scrolled), { message: "the scroll event is handled" }).toBe(true);
     const idx = await events.evaluateAll((els) => els.findIndex((e) => { const r = e.getBoundingClientRect(); return r.top > 150 && r.bottom < innerHeight - 50; }));
     expect(idx, "a fully visible event row to read").toBeGreaterThanOrEqual(0);
     const anchor = events.nth(idx);

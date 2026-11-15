@@ -163,4 +163,34 @@ test.describe("home personal", () => {
     expect(logos.length).toBeGreaterThanOrEqual(2);
     for (const l of logos) { expect(l.r).toBeLessThanOrEqual(row.x + row.width - 4); expect(l.l).toBeGreaterThanOrEqual(row.x); }
   });
+
+  test("a card's injuries: the two players are equal pills, side by side with the label on a wide card, stacked and never cut on a narrow one", async ({ page }) => {
+    const items = [
+      { id: "1", name: "Devon Bahl", pos: "D", team: "MIN", headshot: null, status: "Injured Reserve", impact: { level: "high" } },
+      { id: "2", name: "Ryan Poehling", pos: "C", team: "DAL", headshot: null, status: "Injured Reserve", impact: { level: "medium" } },
+    ];
+    await seedPrefs(page, {});
+    await mockApis(page, { games: [mk.upcoming(9830, "MIN", "DAL", { time: "01:00" })] });
+    await page.route("**/api/injuries/**", (route) => route.fulfill({ json: { items } }));
+    const geo = () => page.locator("[data-testid=card-injuries]").first().evaluate((el) => {
+      const r = (e: Element) => e.getBoundingClientRect();
+      const label = el.querySelector(".gcv-label")!, pills = [...el.querySelectorAll(".gcv-pillrow")];
+      return { label: { y: r(label).y }, pills: pills.map((p) => ({ x: r(p).x, y: r(p).y, w: r(p).width, cut: p.scrollWidth > p.clientWidth + 1 })) };
+    });
+    await page.setViewportSize({ width: 1700, height: 1000 });
+    await page.goto("/");
+    await expect(page.locator("[data-testid=card-injuries] .gcv-pillrow")).toHaveCount(2);
+    await page.locator("[data-testid=card-injuries]").first().evaluate((el) => { (el.closest(".gcv-row") as HTMLElement).style.cssText += ";width:900px;max-width:none;justify-self:start"; });
+    const wide = await geo();
+    expect(Math.abs(wide.pills[0].y - wide.pills[1].y), "one line").toBeLessThan(2);
+    expect(Math.abs(wide.pills[0].w - wide.pills[1].w), "equal width").toBeLessThan(2);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+    await expect(page.locator("[data-testid=card-injuries] .gcv-pillrow")).toHaveCount(2);
+    const narrow = await geo();
+    expect(narrow.pills[1].y, "stacked").toBeGreaterThan(narrow.pills[0].y + 10);
+    expect(Math.abs(narrow.pills[0].w - narrow.pills[1].w)).toBeLessThan(2);
+    expect(Math.abs(narrow.pills[0].x - narrow.pills[1].x)).toBeLessThan(2);
+    expect(narrow.pills.some((p) => p.cut)).toBe(false);
+  });
 });

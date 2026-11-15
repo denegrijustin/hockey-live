@@ -8,11 +8,10 @@ import { shiftDay } from "../lib/dates.mjs";
 import { projectGame } from "../lib/projection.mjs";
 import { teamRanks } from "../lib/ranks.mjs";
 import { matchupInsights } from "../lib/insights.mjs";
-import { closeAndLate, liveHeat, pregameHomeWin, recap, slotLabel, slotOf, tierOf, upsetBrewing, upsetWon, watchBreakdown, watchability } from "../lib/watchability.mjs";
+import { closeAndLate, liveHeat, pregameHomeWin, recap, slotLabel, slotOf, tierOf, upsetBrewing, upsetWon, watchability } from "../lib/watchability.mjs";
 import { gameStatus } from "../lib/game-status.mjs";
 import { Icon } from "./icons";
 import { NetworkLogos } from "./NetworkLogos";
-import { ScoreRing } from "./ScoreRing";
 import { CompactGameFlow, useCardFeed } from "./GameData";
 import { GameCardView } from "./GameCardView";
 import { InjuryRow, MetricTrio, ModelPills, ProbRow } from "./CardFace";
@@ -372,7 +371,6 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
   // The feed (for the momentum chart) is fetched while a live game is on screen, and for a finished one only once it is opened.
   const { ref: feedRef, data: feed } = useCardFeed(game, kind === "live" || open);
   const score = rating?.score ?? 50, tier = tierOf(score);
-  const why = rating ? watchBreakdown(rating.importance, rating.pre, game) : null;
   const names = { away: away.short, home: home.short };
   const recapText = kind === "final" ? recap(game, rating?.pre ?? null, names) : "";
   const flowShown = (kind === "live" && !game.intermission) || (open && kind !== "soon");
@@ -387,7 +385,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
   return (
     <GameCardView
       variant="row" venue={!compact} game={game} away={away} home={home} ranks={ranks} rating={rating} homePct={homePct} open={open} state={`tier-${tier.key}`}
-      hot={cl.both ? { label: cl.label } : null} banner={cl.both ? <><i aria-hidden="true" />{cl.label}</> : null} alertLine={alertLine} tierLabel={tier.label}
+      hot={cl.both ? { label: cl.label } : null} banner={cl.both ? <><i aria-hidden="true" />{cl.label}</> : null} alertLine={alertLine}
       metrics={kind === "live" && !compact ? <MetricTrio away={away} home={home} homePct={homePct} momentum={mom} deserve={dv} /> : null}
       extras={kind !== "final" && !compact ? <><InjuryRow away={away} home={home} season={game.season} /><ModelPills away={away} home={home} line={line} score={projection?.score ?? null} /></> : null}
       probRow={kind === "soon" && !compact && homePct != null ? <ProbRow away={away} home={home} homePct={homePct} /> : null}
@@ -396,13 +394,6 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
       actions={!game.broadcasts?.length ? null : <span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
       context={kind === "live" && rating?.upset ? <span className="sb-brew">Upset brewing: the underdog is ahead late</span> : undefined}
       insight={insight}
-      ring={before && (kind !== "final" || open) ? (
-        <div className="sb-rate">
-          <ScoreRing score={score} label={`Watchability ${score} out of 100, ${tier.label}`}>
-            {why && <WhyScore why={why} tier={tier.label} reason={analysisRow?.reasons?.[0]} />}
-          </ScoreRing>
-        </div>
-      ) : null}
       below={<>
         {kind === "live" && game.intermission && !covered && <Suspense fallback={null}><IntermissionRink game={game} home={home} away={away} compact /></Suspense>}
         {kind === "soon" && !covered && icePrepActive(game) && <Suspense fallback={null}><IcePrep game={game} home={home} away={away} compact /></Suspense>}
@@ -410,16 +401,5 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
         {open && <Suspense fallback={null}><RowDetails game={game} away={away} home={home} before={before} allGames={allGames} projection={projection} feed={feed} recapText={recapText} showFlow={kind !== "soon"} onFull={onFull} /></Suspense>}
       </>}
     />
-  );
-}
-
-function WhyScore({ why, tier, reason }: { why: ReturnType<typeof watchBreakdown>; tier: string; reason?: string }) {
-  return (
-    <div className="sb-why" data-testid="score-why">
-      <h3>{why.score} · {tier}</h3>
-      <ul>{why.parts.map((p) => <li key={p.key}><b>{p.label}</b> <span>+{p.points}</span><small>{p.note}</small></li>)}</ul>
-      {why.bonus > 0 && <p className="sb-why-heat"><b>Hotter right now: +{why.bonus} → {why.total}.</b> A close score late in the game is worth watching more than its forecast.</p>}
-      {reason && <p className="sb-why-reason">{reason}</p>}
-    </div>
   );
 }

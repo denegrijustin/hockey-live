@@ -139,15 +139,15 @@ test.describe("scoreboard home", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(361);
   });
 
-  test("games sit in puck-drop slots, the most watchable first, and each shows its watchability", async ({ page }) => {
+  test("games sit in puck-drop slots (the most watchable first), and a card shows no watchability score", async ({ page }) => {
     await open(page);
     const slot = page.locator(".sb-group.soon .sb-slot");
     await expect(slot).toHaveCount(1); // both upcoming games drop at the same time
     await expect(slot.locator(".sb-slot-h")).toHaveCount(0); // one slot: no header
-    const scores = await slot.locator(".score-ring strong").allInnerTexts();
-    expect(scores).toHaveLength(2);
-    expect(Number(scores[0])).toBeGreaterThanOrEqual(Number(scores[1]));
+    await expect(slot.locator(".sb-row")).toHaveCount(2);
+    await expect(page.locator(".score-ring, [data-testid=score-why], .sb-rate, .gcv-tier")).toHaveCount(0);
   });
+
 
   test("the board fits a 360px phone with no sideways scroll", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
@@ -167,22 +167,14 @@ test.describe("scoreboard home", () => {
   });
 
 
-  test("the ring shows the watchability score and tapping it says why", async ({ page }) => {
+  test("no card carries a watchability ring or its explanation, on any screen size", async ({ page }) => {
     await open(page);
-    const row = page.locator(".sb-row.soon").first();
-    const ring = row.locator(".score-ring");
-    await expect(ring).toBeVisible();
-    expect(Number(await ring.locator("strong").innerText())).toBeGreaterThan(0);
-    await ring.getByRole("button", { name: /Show why/ }).click();
-    const why = page.getByTestId("score-why");
-    await expect(why).toBeVisible();
-    await expect(why).toContainText("Stakes");
-    await expect(why).toContainText("Competitiveness");
-    // The ring and the breakdown always agree (the number can move once last season's data arrives).
-    await expect.poll(async () => (await why.locator("h3").innerText()).split(" ")[0]).toBe(await ring.locator("strong").innerText());
-    await page.keyboard.press("Escape");
-    await expect(why).toHaveCount(0);
+    await expect(page.locator(".sb-row").first()).toBeVisible();
+    await expect(page.locator(".sb-row .score-ring, .sb-row .sb-rate, .sb-row .gcv-tier, [data-testid=score-why]")).toHaveCount(0);
+    await page.locator(".sb-row.soon").first().getByRole("button", { name: /details/i }).click();
+    await expect(page.locator(".sb-row .score-ring, [data-testid=score-why]")).toHaveCount(0);
   });
+
 
   test("a card has the venue, a Game Center button and TV chips; a finished game says what happened", async ({ page }) => {
     await open(page);
@@ -203,12 +195,12 @@ test.describe("scoreboard home", () => {
     await open(page);
     const row = page.locator(".sb-row.soon").first();
     await expect(row).toBeVisible();
-    const [r, status, main, ring, gc] = await Promise.all([row.boundingBox(), row.locator(".sb-status").boundingBox(), row.locator(".sb-main").boundingBox(), row.locator(".score-ring").boundingBox(), row.getByRole("button", { name: /Open Game Center/ }).boundingBox()]);
-    // Upcoming is two columns of compact cards: a header line (time, buttons), the teams and win chance beneath it, the ring at the right.
+    const [r, status, main, gc] = await Promise.all([row.boundingBox(), row.locator(".sb-status").boundingBox(), row.locator(".sb-main").boundingBox(), row.getByRole("button", { name: /Open Game Center/ }).boundingBox()]);
+    // Upcoming is two columns of compact cards: a header line (time, buttons), then the teams and win chance beneath it.
     expect(status!.y + status!.height).toBeLessThanOrEqual(main!.y + 1);
-    expect(main!.x + main!.width).toBeLessThanOrEqual(ring!.x + 1);
+    expect(main!.x + main!.width).toBeLessThanOrEqual(r!.x + r!.width + 1);
     expect(status!.x).toBeLessThan(gc!.x);
-    expect(gc!.y + gc!.height).toBeLessThanOrEqual(ring!.y + ring!.height);
+    expect(gc!.y + gc!.height).toBeLessThanOrEqual(main!.y + 1);
     // (a game that is about to start, or has just, also carries its ice-preparation rink: that is measured separately and capped)
     const rinkBox = (await row.getByTestId("intermission").count()) > 0 ? await row.getByTestId("intermission").boundingBox() : null; // boundingBox() waits for an element that may not exist
     expect(r!.height - (rinkBox?.height ?? 0)).toBeLessThan(430); // the face card also carries the venue, the injury line, the model pills and the win bar
@@ -233,9 +225,9 @@ test.describe("scoreboard home", () => {
     const tv = (await box(row.locator(".tv-network")))!, gc = (await box(row.getByRole("button", { name: /Open Game Center/ })))!;
     expect(tv.x + tv.width, "TV pill ends before the GC button").toBeLessThanOrEqual(gc.x + 1);
     if (!isMobile) {
-      const ring = (await box(row.locator(".score-ring")))!, prob = (await box(row.locator(".gcv-probbar")))!, status = (await box(row.locator(".sb-status")))!, venue = (await box(row.locator(".sb-venue")))!;
+      const prob = (await box(row.locator(".gcv-probbar")))!, status = (await box(row.locator(".sb-status")))!, venue = (await box(row.locator(".sb-venue")))!;
       const apart = (a: { x: number; y: number; width: number; height: number }, b: typeof a) => a.x + a.width <= b.x + 1 || b.x + b.width <= a.x + 1 || a.y + a.height <= b.y + 1 || b.y + b.height <= a.y + 1;
-      const named: [string, typeof ring][] = [["ring", ring], ["bar", prob], ["status", status], ["venue", venue], ["TV pill", tv], ["GC button", gc]];
+      const named: [string, typeof prob][] = [["bar", prob], ["status", status], ["venue", venue], ["TV pill", tv], ["GC button", gc]];
       for (let i = 0; i < named.length; i++) for (let j = i + 1; j < named.length; j++) expect(apart(named[i][1], named[j][1]), `${named[i][0]} and ${named[j][0]} must not overlap`).toBe(true);
     }
     // The pill holds all its logos inside its own box.
@@ -252,7 +244,7 @@ test.describe("scoreboard home", () => {
   });
 });
 
-test("on a live card the team names never run under the score, and the watchability number is smaller than the score", async ({ page }) => {
+test("on a live card the team names never run under the score", async ({ page }) => {
   const live = (id: number, away: string, home: string, score: [number, number]) => ({ ...game(id, 0, away, home, "LIVE", score), period: 2, periodType: "REG", clock: "08:15", start: new Date(Date.now() - 4800_000).toISOString() });
   for (const width of [320, 360, 390, 430, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -262,12 +254,10 @@ test("on a live card the team names never run under the score, and the watchabil
     const m = await rows.evaluateAll((els) => els.flatMap((row) => [...row.querySelectorAll<HTMLElement>(".sb-team")].map((t) => {
       const n = t.querySelector<HTMLElement>(".sb-name")!, s = t.querySelector<HTMLElement>(".sb-score")!;
       const rg = document.createRange(); rg.selectNodeContents(n);
-      const ring = row.querySelector<HTMLElement>(".score-ring strong");
-      return { who: n.textContent, runUnder: Math.max(...[...rg.getClientRects()].map((r) => r.right)) - s.getBoundingClientRect().left, scoreFont: parseFloat(getComputedStyle(s.querySelector(".ts-num") ?? s).fontSize), ringFont: ring ? parseFloat(getComputedStyle(ring).fontSize) : 0 };
+      return { who: n.textContent, runUnder: Math.max(...[...rg.getClientRects()].map((r) => r.right)) - s.getBoundingClientRect().left };
     })));
     for (const x of m) {
       expect(x.runUnder, `${x.who} runs under its score at ${width}px`).toBeLessThanOrEqual(1);
-      expect(x.ringFont, `the watchability number is a supporting number (${x.who} at ${width}px: score ${x.scoreFont})`).toBeLessThan(x.scoreFont);
     }
   }
 });

@@ -48,7 +48,7 @@ for (const w of WIDTHS) {
         expect(bar.width).toBeGreaterThanOrEqual(w - 2);
       }
       // Within a card the status line, actions, team blocks and win probability do not overlap each other.
-      expect(await rects(page, ".sb-row", [".sb-status", ".sb-actions", ".sb-team", ".sb-prob", ".sb-venue", ".sb-rate"])).toEqual([]);
+      expect(await rects(page, ".sb-row", [".sb-status", ".sb-actions", ".sb-team", ".sb-prob", ".sb-venue"])).toEqual([]);
       // Within a team block the name does not run over the score.
       expect(await rects(page, ".sb-row .sb-team", [".team-logo", ".sb-name", ".sb-score"])).toEqual([]);
       // Nothing inside a card sticks out of its right edge.

@@ -114,10 +114,6 @@ export const GameCard = memo(function GameCard({
               </div>
             ))}
           </div>
-          <div className="importance-wrap">
-            <div className="importance-score"><span>GAME IMPORTANCE</span><strong>{analysis.score}<small>/100</small></strong></div>
-            <small className="importance-components">Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}</small>
-          </div>
         </div>
         <div className="compact-meta"><span>{game.venue || "Venue unavailable"}</span><span className="tv-network"><NetworkLogos broadcasts={broadcasts} game={game} /></span></div>
         {!expanded && <span className="card-stage-hint">Expand <b>⌄</b></span>}
@@ -130,6 +126,11 @@ export const GameCard = memo(function GameCard({
         {live && !game.intermission && <CompactGameFlow data={feed} home={home} away={away} />}
       </div>
       <CardStrip game={game} away={away} home={home} nhl={nhl} expanded={expanded} />
+      <p className="importance-line" data-testid="importance-line" title="How much this game matters to the two teams and to the league table">
+        <span className="il-label">Game importance</span>
+        <strong>{analysis.score}<small>/100</small></strong>
+        <span className="il-parts">Teams {analysis.teamImportance ?? analysis.score} · League {analysis.leagueImportance ?? analysis.score}</span>
+      </p>
       <GoalFlash flash={goal} game={game} away={away} home={home} feed={feed} />
 
       {expanded && <div className="card-expanded" aria-label="Concise game preview">

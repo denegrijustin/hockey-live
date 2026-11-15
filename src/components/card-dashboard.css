@@ -68,3 +68,15 @@
 }
 /* the season profile is its own panel now */
 .cx-prof { background: none; border: 0; padding: 0; }
+
+/* Game importance: one heavy line under the NHL+ strip (a data point, not a badge beside the teams). */
+.game-card .importance-line { display: flex; align-items: baseline; flex-wrap: nowrap; gap: 10px; margin: 8px 0 0; padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--rating) 45%, var(--line-1)); border-radius: 10px; background: var(--surface-4); color: var(--rating); white-space: nowrap; overflow: hidden; }
+.game-card .importance-line .il-label { font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.game-card .importance-line strong { font-size: 1.375rem; font-weight: 850; line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.game-card .importance-line strong small { margin-left: 2px; font-size: .75rem; font-weight: 700; color: var(--text-2); letter-spacing: 0; }
+.game-card .importance-line .il-parts { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: .75rem; font-weight: 700; color: var(--text-2); }
+@media (max-width: 700px) {
+  .game-card.is-compact .importance-line { margin: 6px 0 0; padding: 3px 10px; gap: 8px; border-radius: 8px; }
+  .game-card.is-compact .importance-line strong { font-size: 1.125rem; }
+  .game-card.is-compact .importance-line .il-label, .game-card.is-compact .importance-line .il-parts, .game-card.is-compact .importance-line strong small { font-size: .6875rem; }
+}

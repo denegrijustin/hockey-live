@@ -19,15 +19,15 @@ function inkOn(hex: string) {
  * and between them a bar split at the advantage in each team's colour, a mark for Even, and a marker on the split. No text sits on the bar; the numbers and the aria label carry it.
  * `share` is the away side's part of the bar (0..1, .5 = even). Density: "row" for stat rows, "hero" for the big headline numbers, "bar" for the bare bar.
  */
-export function Versus({ away, home, share, label, knob, density = "row", className = "" }: {
-  away: VsSide; home: VsSide; share: number; label?: ReactNode; /** A short margin ("+3") carried on the split marker. */ knob?: ReactNode; density?: "row" | "hero" | "bar" | "track"; className?: string;
+export function Versus({ away, home, share, label, knob, density = "row", logos = false, className = "" }: {
+  away: VsSide; home: VsSide; share: number; label?: ReactNode; /** A short margin ("+3") carried on the split marker. */ knob?: ReactNode; density?: "row" | "hero" | "bar" | "track"; /** Each team's logo above its number (the bar density always has them). */ logos?: boolean; className?: string;
 }) {
   const s = Math.min(0.96, Math.max(0.04, share));
   const colors = gaugeColors(away.id, home.id);
   const leader = Math.abs(share - 0.5) < 0.02 ? "even" : share > 0.5 ? "away" : "home";
   const side = (x: VsSide, cls: string) => (
     <div className={`vs-side ${cls}`} title={x.hint}>
-      {density === "bar" && <TeamLogo id={x.id} size={30} />}
+      {(density === "bar" || logos) && <TeamLogo id={x.id} size={density === "bar" ? 30 : 28} />}
       <b className="vs-big">{x.big}</b>
       {x.sub != null && <small className="vs-sub">{x.sub}</small>}
       {x.tier && <em className={`vs-tier ${x.tier.tone}`}>{x.tier.label}</em>}

@@ -65,11 +65,31 @@ test.describe("Game Center header", () => {
 });
 
 test.describe("Game Center tabs", () => {
+  test("on a phone the five tabs share one centred line (two at the very narrowest), each at least 44px wide", async ({ page }) => {
+    await setup(page);
+    for (const width of [430, 390, 375, 360]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto(`/?game=${LIVE}`);
+      const bar = dialog(page).getByTestId("gc-tabs");
+      await expect(bar).toBeVisible();
+      const m = await bar.evaluate((el) => {
+        const b = el.getBoundingClientRect(), tabs = [...el.querySelectorAll<HTMLElement>("[role=tab]")].map((t) => t.getBoundingClientRect());
+        return { rows: new Set(tabs.map((t) => Math.round(t.top))).size, minW: Math.min(...tabs.map((t) => t.width)), gapL: Math.min(...tabs.map((t) => t.left)) - b.left, gapR: b.right - Math.max(...tabs.map((t) => t.right)), shown: [...el.querySelectorAll<HTMLElement>("[role=tab] .gc-tab-short")].map((x) => x.offsetParent !== null) };
+      });
+      // one line from 375px up (a phone is 375-430px); at 360px a wider-lettered font can wrap the last tab, which then sits centred on a second row
+      expect(m.rows, `tab rows at ${width}px`).toBeLessThanOrEqual(width >= 375 ? 1 : 2);
+      expect(m.minW).toBeGreaterThanOrEqual(43.5);
+      expect(Math.abs(m.gapL - m.gapR), "centred in the bar").toBeLessThanOrEqual(4);
+      expect(m.shown.every(Boolean), "short labels on a phone").toBe(true);
+    }
+  });
+
   test("tablist semantics, roving tabindex, arrows/Home/End, panes stay mounted", async ({ page }) => {
     await setup(page);
     await page.goto(`/?game=${LIVE}`);
     const tabs = dialog(page).getByRole("tablist", { name: "Game sections" });
-    await expect(tabs.getByRole("tab")).toHaveText(["Overview", "Play-by-Play", "Team Stats", "Players", "Matchup Intelligence"]);
+    await expect(tabs.locator(".gc-tab-full")).toHaveText(["Overview", "Play-by-Play", "Team Stats", "Players", "Matchup Intelligence"]); // the full names (a phone shows short ones: Plays, Stats, Matchup)
+    for (const name of ["Overview", "Play-by-Play", "Team Stats", "Players", "Matchup Intelligence"]) await expect(tabs.getByRole("tab", { name, exact: true })).toHaveCount(1);
     await expect(tabs.getByRole("tab", { name: "Overview" })).toHaveAttribute("aria-selected", "true");
     await expect(dialog(page).getByRole("tabpanel")).toHaveCount(1); // hidden panels are not exposed
     expect(await dialog(page).locator('[role="tabpanel"][hidden]').count()).toBe(4); // but all five stay mounted

@@ -166,8 +166,8 @@ test.describe("home personal", () => {
 
   test("a card's injuries: the two players are equal pills, side by side with the label on a wide card, stacked and never cut on a narrow one", async ({ page }) => {
     const items = [
-      { id: "1", name: "Devon Bahl", pos: "D", team: "MIN", headshot: null, status: "Injured Reserve", impact: { level: "high" } },
-      { id: "2", name: "Ryan Poehling", pos: "C", team: "DAL", headshot: null, status: "Injured Reserve", impact: { level: "medium" } },
+      { id: "1", name: "Devon Bahlsenwerkmeister", pos: "D", team: "MIN", headshot: null, status: "Injured Reserve", impact: { level: "high" } },
+      { id: "2", name: "Ryan Poehlingerhausen", pos: "C", team: "DAL", headshot: null, status: "Injured Reserve", impact: { level: "medium" } },
     ];
     await seedPrefs(page, {});
     await mockApis(page, { games: [mk.upcoming(9830, "MIN", "DAL", { time: "01:00" })] });

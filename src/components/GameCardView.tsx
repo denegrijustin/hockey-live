@@ -41,8 +41,6 @@ export interface GameCardViewProps {
   className?: string;
   /** Home win probability in percent (0 to 100); draws the probability bar (row) when given. */
   homePct?: number | null;
-  /** The watchability ring (row): a sibling of the main button. */
-  ring?: ReactNode;
   /** "Close & late" flag (row): its label; also the `hot` state class. */
   hot?: { label: string } | null;
   /** Row: the banner across the top ("One-goal game · 3rd period"). */
@@ -55,8 +53,6 @@ export interface GameCardViewProps {
   extras?: ReactNode;
   /** Row: the pregame win-probability bar, above the Details button. */
   probRow?: ReactNode;
-  /** The watchability tier word under the ring ("Must watch"). */
-  tierLabel?: string;
   /** Row: show the venue line (default true). */
   venue?: boolean;
   /** Row: show the built-in "GC" Game Center button beside `actions` (default true). */
@@ -179,7 +175,6 @@ export function GameCardView(p: GameCardViewProps) {
         <button type="button" className="sb-main" aria-haspopup="dialog" aria-label={name} onClick={() => onOpen(game)}>
           {teams}
         </button>
-        {p.ring && <div className="gcv-ringwrap">{p.ring}{p.tierLabel && <span className="gcv-tier">{p.tierLabel}</span>}</div>}
       </div>
       {p.metrics}
       {p.venue !== false && <p className="sb-venue"><Icon name="pin" size={20} />{game.venue || "Venue unavailable"}</p>}

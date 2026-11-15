@@ -24,26 +24,19 @@ async function open(page: import("@playwright/test").Page) {
   await expect(page.locator(".sb-row").first()).toBeVisible();
 }
 
-test("motion is on by default: the ring fills in and the late-game glow loops", async ({ page }) => {
+test("motion is on by default: the late-game glow loops", async ({ page }) => {
   await open(page);
   await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
   const glow = await page.locator(".late-flag").first().evaluate((e) => getComputedStyle(e, "::after").animationName);
   expect(glow).toBe("late-ring"); // the late flag's own halo (the old tile glow is gone with the tiles)
-  await expect(page.locator(".sr-fill").first()).toBeVisible();
 });
 
-test("reduced motion switches every effect off and shows the ring already full", async ({ page }) => {
+test("reduced motion switches every effect off", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(page);
   await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
   expect(await page.locator(".late-flag").first().evaluate((e) => getComputedStyle(e, "::after").animationName)).toBe("none");
   expect(await page.locator(".late-flag i").first().evaluate((e) => getComputedStyle(e).animationName)).toBe("none");
-  const fill = page.locator(".sr-fill").first();
-  expect(await fill.evaluate((e) => getComputedStyle(e).transitionDuration)).toBe("0s");
-  // Not mid-fill: the dash offset is already at its final value.
-  const circle = 2 * Math.PI * 21;
-  const offset = Number(await fill.getAttribute("stroke-dashoffset"));
-  expect(offset).toBeLessThan(circle);
 });
 
 test("a hidden tab pauses the looping animations", async ({ page }) => {

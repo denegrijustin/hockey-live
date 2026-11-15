@@ -135,4 +135,19 @@ test.describe("home personal", () => {
     expect(name!.x - (logo!.x + logo!.width)).toBeLessThan(40);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
   });
+
+  test("a My teams row is the reference layout: big logos, the time and the TV networks in a column on the right", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedPrefs(page, { favorites: ["ANA"] });
+    await mockApis(page, { games: [mk.upcoming(9821, "NSH", "ANA", { time: "01:00" })] });
+    await page.goto("/");
+    const card = page.locator(`${sec("myteams")} li[data-team=ANA] .gcv-compact`);
+    await expect(card).toBeVisible();
+    const logo = await card.locator(".sb-team").first().locator(".team-logo").boundingBox();
+    expect(logo!.width).toBeGreaterThanOrEqual(34);
+    const row = (await card.boundingBox())!, tag = (await card.locator(".gcv-tag").boundingBox())!, lines = (await card.locator(".gcv-lines").boundingBox())!;
+    expect(tag.x, "the time sits to the right of the teams").toBeGreaterThanOrEqual(lines.x + lines.width);
+    expect(tag.x + tag.width).toBeLessThanOrEqual(row.x + row.width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+  });
 });

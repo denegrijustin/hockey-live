@@ -6,9 +6,12 @@ test("compact card, concise expansion, outside collapse and direct Game Center",
   const card = page.locator(".game-card").first();
   await expect(card).toBeVisible();
   await expect(card.locator(".compact-meta")).toBeVisible();
-  await expect(card.locator(".importance-score")).toContainText("GAME IMPORTANCE");
-  expect(await card.locator(".importance-score").evaluate((node) => getComputedStyle(node).borderRadius)).toBe("10px");
-  await expect(card.locator(".importance-components")).toContainText(/Teams \d+ · League \d+/);
+  const line = card.locator(".importance-line");
+  await expect(line).toContainText(/Game importance\s*\d+\/100/i);
+  await expect(line).toContainText(/Teams \d+ · League \d+/);
+  const box = (await line.boundingBox())!, strong = (await line.locator("strong").boundingBox())!;
+  expect(box.height, "one line").toBeLessThan(strong.height + 24);
+  await expect(card.locator(".importance-score")).toHaveCount(0);
   await expect(card).not.toContainText("WATCHABILITY");
   await expect(card.getByRole("button", { name: /Open Game Center for/ })).toBeVisible();
   await expect(card.locator(".card-expanded")).toHaveCount(0);

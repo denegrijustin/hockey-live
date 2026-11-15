@@ -213,15 +213,13 @@ test("recent actual game contribution and mobile card layout", async ({
     const spacing = await card.locator(".matchup").evaluate((matchup) => {
       const box = (element: Element) => element.getBoundingClientRect();
       const teams = box(matchup.querySelector(".matchup-teams")!);
-      const importance = box(matchup.querySelector(".importance-score")!);
       const rows = [...matchup.querySelectorAll(".matchup-team")].map((row) => {
         const label = box(row.querySelector(":scope > div")!);
         const score = box(row.querySelector(":scope > b, :scope > small")!);
         return score.left - label.right;
       });
-      return { importanceGap: importance.left - teams.right, scoreGaps: rows };
+      return { teamsRight: teams.right, scoreGaps: rows };
     });
-    expect(spacing.importanceGap).toBeGreaterThanOrEqual(8);
     for (const gap of spacing.scoreGaps) expect(gap).toBeGreaterThanOrEqual(7);
   }
 });

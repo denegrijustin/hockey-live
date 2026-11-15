@@ -17,7 +17,7 @@ test("on a phone the first game card starts high on the screen", async ({ page }
   expect((await row.boundingBox())!.height).toBeLessThan(72);
   const parts = await Promise.all([row.getByRole("button", { name: "Choose teams" }).boundingBox(), row.getByRole("button", { name: /^Filters/ }).boundingBox(), row.getByLabel("Find a matchup").boundingBox()]);
   for (const b of parts) expect(Math.abs(b!.y + b!.height / 2 - (parts[0]!.y + parts[0]!.height / 2)), "Teams, Filters and Search share a row").toBeLessThan(6);
-  expect(await page.locator(".game-card").first().evaluate((e) => e.getBoundingClientRect().height), "a compact card").toBeLessThan(200);
+  expect(await page.locator(".game-card").first().evaluate((e) => e.getBoundingClientRect().height), "a compact card").toBeLessThan(232); // with its one-line game-importance row
   // Nothing spills sideways.
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
 });
@@ -49,14 +49,14 @@ test("on a phone the board opens with game cards showing (three above the fold, 
   // Card height depends on the device's system font, so this checks what holds on any font: two whole cards fit above the
   // fold and a good part of the third shows, which tells the reader there is more.
   for (const c of cards.slice(0, 2)) expect(c.bottom, "the first two cards fit above the fold").toBeLessThanOrEqual(700);
-  expect(700 - cards[2].top, "the third card shows at least 100px").toBeGreaterThanOrEqual(100);
+  expect(700 - cards[2].top, "the third card starts above the fold").toBeGreaterThanOrEqual(10); // each card carries the one-line game-importance row
   // The furniture that used to sit above them is gone on a phone.
   for (const hidden of [".section-heading h2", ".section-heading .eyebrow", ".results-line", ".fresh-counts", ".card-stage-hint", ".compact-meta > span:first-child"])
     await expect(page.locator(hidden).first(), hidden).toBeHidden();
   // Every card still names both teams with the importance score, and keeps its channel logos and GC button.
   const first = page.locator(".game-card").first();
   await expect(first.locator(".matchup-team h3")).toHaveCount(2);
-  await expect(first.locator(".importance-score strong")).toBeVisible();
+  await expect(first.locator(".importance-line strong")).toBeVisible();
   await expect(first.locator(".gc-icon")).toBeVisible();
   // Refreshing is a pull-down, or Refresh data under More; there is no toolbar button.
   await expect(page.locator(".refresh-mini")).toHaveCount(0);

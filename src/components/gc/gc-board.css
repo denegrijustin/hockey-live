@@ -196,6 +196,8 @@
   .gx-watch { white-space: normal; }
 }
 .gx-stats { table-layout: fixed; }
+.gx-stats thead th:nth-child(n+3) { width: 22%; }
+.gx-stats tbody th { white-space: normal; overflow-wrap: break-word; min-width: 0; line-height: 1.15; }
 .gx-stats .gx-ico { width: 40px; }
 @media (max-width: 420px) {
   .gx-stats .gx-ico { width: 30px; } .gx-stats th, .gx-stats td { padding: 6px 4px; font-size: 1rem; }
@@ -224,10 +226,9 @@
 
 /* ---- Phones: readable logos and text, an opaque tab bar (nothing bleeds through it), clear result chips ---- */
 .game-dialog .gc-tabs { background: var(--gc-tabs-bg); box-shadow: 0 calc(-1 * var(--gc-gap)) 0 0 var(--gc-tabs-bg), calc(var(--float-btn-size) + 8px) 0 0 0 var(--gc-tabs-bg); }
-/* on a phone the opaque backing is a plain strip above the bar (no offset shadows, which drew odd shapes behind it) */
+/* on a phone the bar is just opaque itself: a strip above it poked out past its rounded border */
 @media (max-width: 700px) {
   .game-dialog .gc-tabs { box-shadow: none; }
-  .game-dialog .gc-tabs::before { content: ""; position: absolute; z-index: -1; top: calc(-1 * var(--gc-gap)); height: var(--gc-gap); left: 20px; right: 20px; background: var(--gc-tabs-bg); }
 }
 .gx-team > small { color: #ffffffe6; }
 .gx-watch { color: #ffffffe6; }

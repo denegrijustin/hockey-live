@@ -9,6 +9,7 @@ import {
 } from "../lib/standings-view.mjs";
 import { TeamLogo } from "./TeamLogo";
 import { Resumes } from "./Resumes";
+import { DivisionAnalytics } from "./DivisionAnalytics";
 import { TeamLink } from "./TeamProfile";
 import { PageHeader } from "./PageHeader";
 
@@ -60,19 +61,21 @@ function Segmented<T extends string>({ label, value, options, onChange, classNam
 export function Standings({
   teams,
   table,
-  selected, games, baseline, onNavigate,
+  selected, games, baseline, season, onNavigate,
 }: {
   teams: Team[];
   table: any;
   selected: string[];
   games: Game[];
   baseline: any;
+  /** The season the MoneyPuck numbers (the Analytics tab) belong to. */
+  season?: number;
   onNavigate?: (view: string) => void;
 }) {
   const { myTeam } = useMyTeam();
   const mine = teams.find((t) => t.id === myTeam);
   // My team: open on its conference (the race it is in) and bring its row into view once.
-  const [group, setGroup] = useState<View>(mine ? (mine.conference === "E" ? "east" : "west") : "league"), [mode, setMode] = useState<Mode>("current"), [tab, setTab] = useState<"table" | "resumes">("table");
+  const [group, setGroup] = useState<View>(mine ? (mine.conference === "E" ? "east" : "west") : "league"), [mode, setMode] = useState<Mode>("current"), [tab, setTab] = useState<"table" | "resumes" | "analytics">("table");
   const projected = useMemo(() => projectedStandings(teams, table, games, baseline), [teams, table, games, baseline]);
   const rows = useMemo(() => withRow(table, games), [table, games]);
   const scrolled = useRef(false);
@@ -223,8 +226,9 @@ export function Standings({
       <div className="inj-seg rs-tabs" role="group" aria-label="Standings or resumés">
         <button type="button" aria-pressed={tab === "table"} onClick={() => setTab("table")}>Standings table</button>
         <button type="button" aria-pressed={tab === "resumes"} onClick={() => setTab("resumes")}>Resumés<span className="st-intro">: who they beat, who beat them</span></button>
+        {season != null && <button type="button" aria-pressed={tab === "analytics"} onClick={() => setTab("analytics")}>Analytics<span className="st-intro">: by division, with the 5v5 numbers</span></button>}
       </div>
-      {tab === "resumes" ? <Resumes teams={teams} table={table} games={games} /> : <>
+      {tab === "resumes" ? <Resumes teams={teams} table={table} games={games} /> : tab === "analytics" && season != null ? <DivisionAnalytics teams={teams} rowsMap={rows} season={season} myTeam={myTeam} /> : <>
       <div className="st-controls">
         <Segmented<View> label="Standings group" className="st-group-seg" value={SWITCH.some((o) => o.id === group) ? group : null} options={SWITCH} onChange={setGroup} />
         <Segmented<Mode> label="Current or projected" value={mode} onChange={setMode} options={[{ id: "current", label: "Current" }, { id: "projected", label: "Projected" }]} />

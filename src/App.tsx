@@ -695,6 +695,7 @@ export default function App() {
                   games={data.games}
                   baseline={baseline && baseline.season < season ? baselineAnalysis?.table : undefined}
                   selected={favorites}
+                  season={sourceSeason}
                   onNavigate={setView}
                 />
               </Suspense></ErrorBoundary>

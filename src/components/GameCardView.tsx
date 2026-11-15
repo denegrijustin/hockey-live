@@ -122,7 +122,7 @@ export function GameCardView(p: GameCardViewProps) {
   if (variant === "compact") {
     const tag = pill ? st.short : st.final ? st.short : st.label;
     return (
-      <div ref={set as never} className={`gcv gcv-compact ${state}${winner ? " decided" : ""}${upset ? " upset" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>
+      <div ref={set as never} className={`gcv gcv-compact ${state}${winner ? " decided" : ""}${upset ? " upset" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id} style={{ ["--gr-accent" as never]: home.cardColor ?? home.color } as never}>
         <button type="button" className="sb-main" aria-label={name} onClick={() => onOpen(game)}>
           <span className="gcv-lines">{teams}</span>
           <span className="gcv-end">

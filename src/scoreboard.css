@@ -392,3 +392,11 @@ html[data-home] {
   .scoreboard .home-section.soon .sb-actions .gc-icon { min-height: 34px; height: 34px; }
   .scoreboard .home-section.soon .gcv-insight, .scoreboard .home-section.soon .gcv-context { grid-column: 1 / -1; padding: 2px 0 0; font-size: .75rem; color: var(--text-2); }
 }
+
+/* a phone: the three status chips and the density button share one line, labels capitalised (after the reference) */
+@media (max-width: 430px) {
+  .scoreboard .sb-tools .sb-chip { padding: 0 9px; gap: 4px; font-size: .75rem; text-transform: capitalize; white-space: nowrap; }
+}
+@media (min-width: 381px) and (max-width: 430px) {
+  .scoreboard .sb-tools .sb-filters { flex-wrap: nowrap; gap: 5px; }
+}

@@ -7,6 +7,7 @@ import { dayDiff } from "../../lib/dates.mjs";
 import { useMyTeam } from "../../hooks/useMyTeam";
 import { GameCardView } from "../GameCardView";
 import { TeamLogo } from "../TeamLogo";
+import { NetworkLogos } from "../NetworkLogos";
 import { HomeSection } from "./HomeSection";
 import "./home-personal.css";
 
@@ -71,7 +72,7 @@ export default function MyTeamsStrip({ favorites, teams, table, games, dayGames,
               {game ? (
                 isLive(game) ? <div className="mt-game mt-live">{renderLive(game)}</div> : (
                   <div className="mt-game">
-                    <GameCardView variant="compact" game={game} away={teamOf(game.away)} home={teamOf(game.home)} ranks={ranksFor?.(game.id)} onOpen={onOpen} />
+                    <GameCardView variant="compact" game={game} away={teamOf(game.away)} home={teamOf(game.home)} ranks={ranksFor?.(game.id)} onOpen={onOpen} actions={game.broadcasts?.length ? <NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /> : undefined} />
                   </div>
                 )
               ) : shownAbove ? (

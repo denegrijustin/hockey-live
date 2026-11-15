@@ -27,3 +27,36 @@
   .scoreboard .mt-list, .scoreboard .mp-list, .scoreboard .lp-list { grid-template-columns: minmax(0, 1fr); }
   .scoreboard .mt-section .sb-title, .scoreboard .mp-section .sb-title, .scoreboard .lp-section .sb-title { margin-top: 8px; }
 }
+
+/* My teams rows (after the reference): an accent bar on the left, the two teams stacked (logo, abbreviation, name, league rank, score), a divider, and on the right the time
+   with the TV networks under it. Always dark, whatever the theme, so every colour is set here. */
+.scoreboard .mt-card:has(> .mt-game) { padding: 0; border: 0; background: none; }
+.scoreboard .mt-game .gcv-compact {
+  display: grid; grid-template-columns: minmax(0, 1fr) 98px; grid-template-rows: 1fr 1fr; gap: 0; min-height: 0; overflow: hidden;
+  border: 1.5px solid #1f4f8a; border-left: 7px solid var(--gr-accent, #1f6fd0); border-radius: 16px; color: #fff; font-size: 1rem;
+  background: radial-gradient(130% 120% at 0% 0%, #0f2747, #07142a 70%); box-shadow: 0 0 0 1px #0a1c33, 0 0 18px #1a63c033, inset 0 0 22px #0c2a5a55;
+}
+.scoreboard .mt-game .gcv-compact.live { border-color: #d6454f; box-shadow: 0 0 0 1px #3a0d12, 0 0 18px #d6454f40, inset 0 0 22px #5a0c1a44; }
+.scoreboard .mt-game .gcv-compact .sb-main { display: contents; }
+.scoreboard .mt-game .gcv-compact .gcv-lines { grid-column: 1; grid-row: 1 / span 2; display: grid; gap: 0; align-content: center; margin: 10px 0; padding: 0 10px 0 12px; border-right: 1.5px solid #2a4a74; min-width: 0; cursor: pointer; }
+.scoreboard .mt-game .gcv-compact .sb-team { min-height: 40px; gap: 10px; line-height: 1.15; }
+.scoreboard .mt-game .gcv-compact .team-logo, .scoreboard .mt-game .gcv-compact .sb-team img { width: 36px !important; height: 36px !important; flex: none; }
+.scoreboard .mt-game .gcv-compact .sb-name { display: flex; align-items: baseline; gap: 7px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.scoreboard .mt-game .gcv-compact .sb-name b { font-size: 1.125rem; font-weight: 800; color: #fff; }
+.scoreboard .mt-game .gcv-compact .gcv-full { margin-left: 0; font-size: 1.125rem; font-weight: 400; color: #fff; overflow: hidden; text-overflow: ellipsis; }
+.scoreboard .mt-game .gcv-compact .sb-rank { font-size: .9375rem; font-weight: 600; color: #b9c9e0; }
+.scoreboard .mt-game .gcv-compact .sb-score { font-size: 1.5rem; font-weight: 800; color: #fff; }
+.scoreboard .mt-game .gcv-compact .sb-team.lost { opacity: .75; }
+.scoreboard .mt-game .gcv-compact .gcv-end { grid-column: 2; grid-row: 1; align-self: end; justify-items: center; padding: 8px 4px 0; }
+.scoreboard .mt-game .gcv-compact .gcv-tag { font-size: 1.0625rem; font-weight: 800; letter-spacing: 0; color: #fff; white-space: nowrap; }
+.scoreboard .mt-game .gcv-compact .gcv-tag.is-live { color: #ff8a92; }
+.scoreboard .mt-game .gcv-compact .sb-actions { grid-column: 2; grid-row: 2; align-self: start; display: flex; justify-content: center; padding: 4px 4px 8px; }
+.scoreboard .mt-game .gcv-compact .network-logos { gap: 8px; }
+.scoreboard .mt-game .gcv-compact .network-logo { width: 34px; height: 28px; border-radius: 6px; }
+.scoreboard .mt-game .gcv-compact .network-logo img { width: 30px; height: 24px; }
+.scoreboard .mt-game .gcv-compact .network-logo-fallback { font-size: .75rem; font-weight: 800; color: #fff; background: transparent; border: 1.5px solid #ffffff80; }
+.scoreboard .mt-game .gcv-compact .sb-main:focus-visible .gcv-lines { outline: 2px solid #6fb2ff; outline-offset: -3px; border-radius: 12px; }
+.scoreboard .mt-card > .mt-next { padding: 12px 14px; border: 1.5px solid #1f4f8a; border-radius: 16px; background: #07142a; color: #dbe8f8; }
+.scoreboard .mt-card > .mt-next span { color: #fff; }
+.scoreboard .mt-game .gcv-compact .sb-team { position: relative; }
+.scoreboard .mt-game .gcv-compact .fav-mark { position: absolute; left: -5px; top: 1px; z-index: 1; margin: 0; color: #ffcf5a; filter: drop-shadow(0 0 2px #000a); }

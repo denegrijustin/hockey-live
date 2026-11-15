@@ -32,7 +32,7 @@
    with the TV networks under it. Always dark, whatever the theme, so every colour is set here. */
 .scoreboard .mt-card:has(> .mt-game) { padding: 0; border: 0; background: none; }
 .scoreboard .mt-game .gcv-compact {
-  display: grid; grid-template-columns: minmax(0, 1fr) 98px; grid-template-rows: 1fr 1fr; gap: 0; min-height: 0; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1fr) 110px; grid-template-rows: 1fr 1fr; gap: 0; min-height: 0; overflow: hidden;
   border: 1.5px solid #1f4f8a; border-left: 7px solid var(--gr-accent, #1f6fd0); border-radius: 16px; color: #fff; font-size: 1rem;
   background: radial-gradient(130% 120% at 0% 0%, #0f2747, #07142a 70%); box-shadow: 0 0 0 1px #0a1c33, 0 0 18px #1a63c033, inset 0 0 22px #0c2a5a55;
 }
@@ -50,10 +50,11 @@
 .scoreboard .mt-game .gcv-compact .gcv-end { grid-column: 2; grid-row: 1; align-self: end; justify-items: center; padding: 8px 4px 0; }
 .scoreboard .mt-game .gcv-compact .gcv-tag { font-size: 1.0625rem; font-weight: 800; letter-spacing: 0; color: #fff; white-space: nowrap; }
 .scoreboard .mt-game .gcv-compact .gcv-tag.is-live { color: #ff8a92; }
-.scoreboard .mt-game .gcv-compact .sb-actions { grid-column: 2; grid-row: 2; align-self: start; display: flex; justify-content: center; padding: 4px 4px 8px; }
-.scoreboard .mt-game .gcv-compact .network-logos { gap: 8px; }
-.scoreboard .mt-game .gcv-compact .network-logo { width: 34px; height: 28px; border-radius: 6px; }
-.scoreboard .mt-game .gcv-compact .network-logo img { width: 30px; height: 24px; }
+.scoreboard .mt-game .gcv-compact .sb-actions { grid-column: 2; grid-row: 2; align-self: start; display: flex; justify-content: center; min-width: 0; padding: 4px 4px 8px; }
+.scoreboard .mt-game .gcv-compact .sb-actions .tv-network { min-width: 0; max-width: 100%; }
+.scoreboard .mt-game .gcv-compact .network-logos { flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; }
+.scoreboard .mt-game .gcv-compact .network-logo { width: 30px; height: 26px; border-radius: 6px; }
+.scoreboard .mt-game .gcv-compact .network-logo img { width: 26px; height: 22px; }
 .scoreboard .mt-game .gcv-compact .network-logo-fallback { font-size: .75rem; font-weight: 800; color: #fff; background: transparent; border: 1.5px solid #ffffff80; }
 .scoreboard .mt-game .gcv-compact .sb-main:focus-visible .gcv-lines { outline: 2px solid #6fb2ff; outline-offset: -3px; border-radius: 12px; }
 .scoreboard .mt-card > .mt-next { padding: 12px 14px; border: 1.5px solid #1f4f8a; border-radius: 16px; background: #07142a; color: #dbe8f8; }

@@ -150,4 +150,17 @@ test.describe("home personal", () => {
     expect(tag.x + tag.width).toBeLessThanOrEqual(row.x + row.width);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
   });
+
+  test("a My teams row with three TV channels keeps every logo inside the card", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedPrefs(page, { favorites: ["ANA"] });
+    await mockApis(page, { games: [{ ...mk.upcoming(9822, "NSH", "ANA", { time: "01:00" }), broadcasts: ["SN", "TVAS", "NBCS"] }] });
+    await page.goto("/");
+    const card = page.locator(`${sec("myteams")} li[data-team=ANA] .gcv-compact`);
+    await expect(card).toBeVisible();
+    const row = (await card.boundingBox())!;
+    const logos = await card.locator(".network-logo").evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.right }; }));
+    expect(logos.length).toBeGreaterThanOrEqual(2);
+    for (const l of logos) { expect(l.r).toBeLessThanOrEqual(row.x + row.width - 4); expect(l.l).toBeGreaterThanOrEqual(row.x); }
+  });
 });

@@ -17,6 +17,7 @@ import { LOGO_SIZE } from "./GameCardView";
 import { usePauseOffscreen } from "../motion";
 import { useGameRoute } from "../hooks/useGameRoute";
 import "./card-dashboard.css";
+import { WinSplash, isSplashWin } from "./WinSplash";
 const IntermissionRink = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IntermissionRink })));
 const IcePrep = lazy(() => import("./IntermissionRink").then((m) => ({ default: m.IcePrep })));
 const GameCardExpanded = lazy(() => import("./GameCardExpanded"));
@@ -78,9 +79,10 @@ export const GameCard = memo(function GameCard({
     <article
       ref={cardRef}
       data-start={game.start}
-      className={`game-card ${scoreClass} ${live ? "live-card" : ""} ${expanded ? "is-expanded" : "is-compact"}${goal ? " goal-glow" : ""}`}
+      className={`game-card ${scoreClass} ${live ? "live-card" : ""}${isSplashWin(game) ? " la-win-card" : ""} ${expanded ? "is-expanded" : "is-compact"}${goal ? " goal-glow" : ""}`}
       style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${home.cardColor ?? home.color} 23%, var(--surface-3)), var(--surface-4))`, ...(goal ? ({ "--gf": (goal.side === "home" ? home : away).cardColor ?? (goal.side === "home" ? home : away).color } as object) : {}) }}
     >
+      <WinSplash game={game} />
       <div className="game-card-top">
         <span className="game-date">
           {day.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {status.live && !status.stale && <i className="gc-live-dot" aria-hidden="true" />}{status.label}

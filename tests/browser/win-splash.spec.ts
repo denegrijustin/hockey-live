@@ -8,6 +8,7 @@ const games = [
   mk.final(9902, "EDM", "VAN", { score: [1, 4] }), // an Oilers loss
   mk.final(9903, "BOS", "TOR", { score: [2, 3] }), // another team's game
   mk.final(9904, "MIN", "DAL", { score: [3, 1] }), // a Wild win
+  mk.final(9905, "STL", "CHI", { score: [1, 4] }), // a Blackhawks win
 ];
 
 test("an Oilers win shows the artwork for seven seconds, then it sits faded behind the card", async ({ page }) => {
@@ -45,7 +46,7 @@ test("with reduced motion there is no splash, only the faded artwork", async ({ 
   await expect(win.locator(".la-top")).toHaveCSS("opacity", "0");
 });
 
-test("a Wild win gets its own artwork, and the Oilers' keeps theirs", async ({ page }) => {
+test("each splash team gets its own artwork (Oilers, Wild, Blackhawks)", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await seedPrefs(page, {});
   await mockApis(page, { games });
@@ -54,6 +55,9 @@ test("a Wild win gets its own artwork, and the Oilers' keeps theirs", async ({ p
   await expect(wild).toHaveAttribute("data-team", "MIN");
   await expect(wild).toHaveAttribute("data-phase", "splash");
   expect(await wild.locator(".la-top").evaluate((e) => getComputedStyle(e).backgroundImage)).toContain("wild-lets-go-crazy");
+  const hawks = page.locator('[data-game="9905"] [data-testid=win-splash]');
+  await expect(hawks).toHaveAttribute("data-team", "CHI");
+  expect(await hawks.locator(".la-top").evaluate((e) => getComputedStyle(e).backgroundImage)).toContain("blackhawks-chelsea-dagger");
   const oil = page.locator('[data-game="9901"] [data-testid=win-splash]');
   expect(await oil.locator(".la-top").evaluate((e) => getComputedStyle(e).backgroundImage)).toContain("oilers-la-bamba");
 });

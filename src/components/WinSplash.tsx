@@ -13,7 +13,7 @@ const played = new Set<number>();
 export const isSplashWin = (game: Game) => splashWinner(game) != null;
 
 /**
- * When Edmonton ("Play La Bamba") or Minnesota ("Let's Go Crazy!") wins, the card shows that team's artwork for seven seconds (from the first moment the card is on screen), then it fades softly to the back of the
+ * When Edmonton ("Play La Bamba"), Minnesota ("Let's Go Crazy!") or Chicago ("Chelsea Dagger") wins, the card shows that team's artwork for seven seconds (from the first moment the card is on screen), then it fades softly to the back of the
  * card and stays there, faded, behind the score. With reduced motion there is no splash: the faded artwork is simply there. Decorative; it never takes clicks.
  */
 export function WinSplash({ game }: { game: Game }) {

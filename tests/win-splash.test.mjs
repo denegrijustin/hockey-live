@@ -27,3 +27,8 @@ test("the Wild's wins carry a splash too, and a win by a team without one does n
   assert.equal(splashWinner(fin("DAL", "VAN", 1, 3)), null);
   assert.equal(oilersWon(fin("MIN", "DAL", 3, 1)), false);
 });
+
+test("the Blackhawks' wins carry a splash", () => {
+  assert.equal(splashWinner(fin("STL", "CHI", 1, 2, { end: "SO" })), "CHI");
+  assert.equal(splashWinner(fin("CHI", "STL", 0, 3)), null);
+});

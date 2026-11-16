@@ -5,6 +5,7 @@ import { gameStatus } from "./game-status.mjs";
 export const SPLASH = {
   EDM: { image: "/oilers-la-bamba.webp", bg: "#06183a" }, // Play La Bamba
   MIN: { image: "/wild-lets-go-crazy.webp", bg: "#022f12" }, // Let's Go Crazy!
+  CHI: { image: "/blackhawks-chelsea-dagger.webp", bg: "#b30104" }, // Chelsea Dagger
 };
 
 /** The team id whose finished win (regulation, overtime or a shootout) carries a splash, else null. */

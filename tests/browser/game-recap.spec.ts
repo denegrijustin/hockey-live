@@ -246,6 +246,7 @@ test("a team that leads but trails on the chances: the card and the recap explai
   const dialog = page.locator("dialog.game-dialog[open]");
   const note = dialog.locator(".gr-deserved").getByTestId("deserve-why").first();
   await expect(note).toContainText("PHI has earned so far more of the game");
+  await expect(dialog.getByTestId("deserve-goalies").first()).toContainText(/Goaltending counted: PHI [+−]\d\.\d · EDM [+−]\d\.\d/);
   await dialog.locator(".gr-deserved .gr-why summary").first().click();
   await expect(dialog.locator(".gr-deserved .gr-why p").first()).toContainText("every shot attempt in the game were replayed");
 });

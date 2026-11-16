@@ -17,13 +17,16 @@ const pct = (p: number) => `${Math.round(p * 100)}%`;
 const f2 = (v: number) => v.toFixed(2);
 const last = (name: string | null) => (name ? name.split(" ").slice(-1)[0] : "");
 
+const signed = (v: number) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(1)}`;
+
 function Deserved({ r, home, away, score, over }: { r: Recap; home: Team; away: Team; score?: { away: number | null; home: number | null } | null; over?: boolean }) {
   const a = Math.round(r.deserved.away * 100), h = 100 - a;
-  const note = deserveNote({ away: away.id, home: home.id, score: score ?? null, deserved: r.deserved, xg: r.xg, over });
+  const note = deserveNote({ away: away.id, home: home.id, score: score ?? null, deserved: r.deserved, xg: r.xg, over, goalie: r.goaltending });
   return (
     <section className="gr-deserved" aria-label={`Deserved to win: ${away.id} ${a} percent, ${home.id} ${h} percent`}>
       <h4 className="gr-dh"><span>Deserved to Win</span><i className="gr-hline" aria-hidden="true" /><small>Based on the quality and quantity of chances each team created</small></h4>
       <Gauge look="bar" size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
+      <p className="gr-gk" data-testid="deserve-goalies">Goaltending counted: {away.id} <b>{signed(r.goaltending.away)}</b> · {home.id} <b>{signed(r.goaltending.home)}</b> <span>goals saved above expected</span></p>
       {note && <p className="gr-mismatch" data-testid="deserve-why">{note.long}</p>}
       <details className="gr-why">
         <summary>How is this worked out?</summary>

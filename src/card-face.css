@@ -110,3 +110,7 @@
 .gcv-injuries > .gcv-pillrow { display: block; min-width: 0; margin: 0; padding: 5px 14px; border-radius: 20px; font-size: 1rem; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
 .gcv-injuries > .gcv-pillrow img { display: inline-block; vertical-align: middle; width: 28px; height: 28px; margin-right: 8px; }
 @container (min-width: 800px) { .gcv-injuries > .gcv-pillrow { display: flex; align-items: center; gap: 8px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .gcv-injuries > .gcv-pillrow img { flex: none; margin-right: 0; } .gcv-injuries { grid-template-columns: auto repeat(2, minmax(0, 1fr)); } .gcv-injuries > .gcv-label { grid-column: auto; justify-self: stretch; } .gcv-injuries > .gcv-pillrow:only-of-type { grid-column: span 2; } }
+
+/* The card's note when the score and the deserved win disagree. */
+.gcv-why { margin: 8px 0 0; font-size: .875rem; line-height: 1.45; color: #ffffffd9; }
+.gcv-why b { color: #fff; font-weight: 800; }

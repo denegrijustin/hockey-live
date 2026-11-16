@@ -2,22 +2,27 @@ import { useMemo, useState } from "react";
 import type { Team } from "../types";
 import { useFeed } from "../lib/polling";
 import { Icon } from "./icons";
+import { DESERVE_EXPLAINED, deserveNote } from "../lib/game-recap.mjs";
 
 /** The three live readings under the teams: who is favoured, who has the play right now, who has deserved more of the game. */
-export function MetricTrio({ away, home, homePct, momentum, deserve }: {
+export function MetricTrio({ away, home, homePct, momentum, deserve, score }: {
   away: Team; home: Team;
   /** Home win chance in percent, or null. */
   homePct: number | null;
   momentum: { leader: string | null; balance: number } | null;
   /** Share of the deserved win for the away side (0..1), or null. */
-  deserve: { away: number; home: number } | null;
+  deserve: { away: number; home: number; xg?: { away: number; home: number } } | null;
+  /** The score, to say why the chances and the scoreboard disagree. */
+  score?: { away: number | null; home: number | null } | null;
 }) {
   const fav = homePct == null ? null : homePct >= 50 ? { t: home, p: homePct } : { t: away, p: 100 - homePct };
   const dv = deserve == null ? null : deserve.home >= deserve.away ? { t: home, p: Math.round(deserve.home * 100) } : { t: away, p: Math.round(deserve.away * 100) };
   if (!fav && !momentum && !dv) return null;
+  const note = deserveNote({ away: away.id, home: home.id, score: score ?? null, deserved: deserve, xg: deserve?.xg ?? null });
   // the marker sits where the play is: left for away, right for home
   const pos = momentum ? 50 + momentum.balance * 45 : 50;
   return (
+    <>
     <div className="gcv-trio" data-testid="card-metrics">
       {fav && (
         <div className="gcv-metric" aria-label={`Win probability: ${fav.t.id} ${fav.p} percent`}>
@@ -35,12 +40,14 @@ export function MetricTrio({ away, home, homePct, momentum, deserve }: {
       )}
       {dv && (
         <div className="gcv-metric" aria-label={`Deserve: ${dv.t.id} ${dv.p} percent`}>
-          <h5>Deserve</h5>
+          <h5 title={DESERVE_EXPLAINED}>Deserve</h5>
           <span className="gcv-gradbar alt" aria-hidden="true" />
           <b>{dv.t.id} {dv.p}%</b>
         </div>
       )}
     </div>
+    {note && <p className="gcv-why" data-testid="deserve-why"><b>{note.short}</b> {DESERVE_EXPLAINED}</p>}
+    </>
   );
 }
 

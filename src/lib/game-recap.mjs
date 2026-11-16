@@ -71,6 +71,27 @@ export function deservedToWin(homeXg, awayXg) {
   return { home: home + tie / 2, away: away + tie / 2, tie };
 }
 
+/** What "deserve" means, in one sentence. */
+export const DESERVE_EXPLAINED = "Deserve is the chance each team would win if every shot attempt in the game were replayed, each weighed by how likely it was to score (its expected goals). It leaves the real score out, so a team can lead and still trail on the chances.";
+
+/**
+ * When the score and the chances disagree (a team ahead on the scoreboard with under 40% of the deserved win), the sentence that says why. Null when they agree, the
+ * game is tied, or there is nothing to compare. `short` fits a card; `long` is for the recap.
+ * @param {{ away: string, home: string, score: { away: number | null, home: number | null } | null, deserved: { away: number, home: number } | null, xg?: { away: number, home: number } | null, over?: boolean }} o
+ */
+export function deserveNote({ away, home, score, deserved, xg = null, over = false }) {
+  if (!deserved || !score || score.away == null || score.home == null || score.away === score.home) return null;
+  const homeAhead = score.home > score.away;
+  const lead = homeAhead ? home : away, trail = homeAhead ? away : home;
+  const leadShare = homeAhead ? deserved.home : deserved.away;
+  if (!(leadShare < 0.4)) return null;
+  const lo = Math.min(score.home, score.away), hi = Math.max(score.home, score.away);
+  const x = xg ? ` (xG ${(homeAhead ? xg.away : xg.home).toFixed(1)} to ${(homeAhead ? xg.home : xg.away).toFixed(1)})` : "";
+  const short = `${lead} ${over ? "won" : "leads"} ${hi}–${lo}, but ${trail} created the better chances${x}.`;
+  const long = `${short} ${trail} has ${over ? "earned" : "earned so far"} more of the game from its shots, while ${lead}'s goals have run ahead of the chances behind them: finishing and goaltending beyond what the shot quality says is likely. Deserve does not count the score.`;
+  return { short, long };
+}
+
 const count = (game, label) => game.stats?.find((s) => s.label === label);
 
 /** @param {{ game: any, mp?: any }} o */

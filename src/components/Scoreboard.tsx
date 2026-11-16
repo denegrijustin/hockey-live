@@ -386,7 +386,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
     <GameCardView
       variant="row" venue={!compact} game={game} away={away} home={home} ranks={ranks} rating={rating} homePct={homePct} open={open} state={`tier-${tier.key}`}
       hot={cl.both ? { label: cl.label } : null} banner={cl.both ? <><i aria-hidden="true" />{cl.label}</> : null} alertLine={alertLine}
-      metrics={kind === "live" && !compact ? <MetricTrio away={away} home={home} homePct={homePct} momentum={mom} deserve={dv} /> : null}
+      metrics={kind === "live" && !compact ? <MetricTrio away={away} home={home} homePct={homePct} momentum={mom} deserve={dv} score={{ away: game.awayScore, home: game.homeScore }} /> : null}
       extras={kind !== "final" && !compact ? <><InjuryRow away={away} home={home} season={game.season} /><ModelPills away={away} home={home} line={line} score={projection?.score ?? null} /></> : null}
       probRow={kind === "soon" && !compact && homePct != null ? <ProbRow away={away} home={home} homePct={homePct} /> : null}
       scored={{ away: awayScored, home: homeScored }} onOpen={() => onFull()}

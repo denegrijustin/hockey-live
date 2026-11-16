@@ -7,6 +7,7 @@ import { rankTitle } from "../lib/ranks.mjs";
 import { usePauseOffscreen } from "../motion";
 import { TeamLogo } from "./TeamLogo";
 import { Icon } from "./icons";
+import { WinSplash, isOilersWin } from "./WinSplash";
 import { faceColors } from "../lib/face";
 import "../game-card-view.css";
 import "../card-face.css";
@@ -122,7 +123,8 @@ export function GameCardView(p: GameCardViewProps) {
   if (variant === "compact") {
     const tag = pill ? st.short : st.final ? st.short : st.label;
     return (
-      <div ref={set as never} className={`gcv gcv-compact ${state}${winner ? " decided" : ""}${upset ? " upset" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id} style={{ ["--gr-accent" as never]: home.cardColor ?? home.color } as never}>
+      <div ref={set as never} className={`gcv gcv-compact${isOilersWin(game) ? " la-win-card" : ""} ${state}${winner ? " decided" : ""}${upset ? " upset" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id} style={{ ["--gr-accent" as never]: home.cardColor ?? home.color } as never}>
+        <WinSplash game={game} />
         <button type="button" className="sb-main" aria-label={name} onClick={() => onOpen(game)}>
           <span className="gcv-lines">{teams}</span>
           <span className="gcv-end">
@@ -154,7 +156,8 @@ export function GameCardView(p: GameCardViewProps) {
   const { bg: base, accent } = faceColors(away, home);
   const liveNow = st.live && !st.stale;
   return (
-    <article ref={set as never} data-face="1" style={{ ["--face-bg" as never]: base, ["--face-accent" as never]: accent } as never} className={`gcv gcv-row sb-row ${state}${pill ? ` ${st.kind}` : ""}${upset ? " upset-won" : ""}${p.open ? " open" : ""}${p.hot ? " hot" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>
+    <article ref={set as never} data-face="1" style={{ ["--face-bg" as never]: base, ["--face-accent" as never]: accent } as never} className={`gcv gcv-row sb-row${isOilersWin(game) ? " la-win-card" : ""} ${state}${pill ? ` ${st.kind}` : ""}${upset ? " upset-won" : ""}${p.open ? " open" : ""}${p.hot ? " hot" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>
+      <WinSplash game={game} />
       {scoredNow && <span className="pulse-ring" aria-hidden="true" />}
       {p.banner && <div className="gcv-banner late-flag">{p.banner}</div>}
       {p.alertLine && <div className="gcv-alert">{p.alertLine}</div>}

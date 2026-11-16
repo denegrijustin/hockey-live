@@ -1,0 +1,11 @@
+/* The Oilers win splash: the artwork over the whole card for seven seconds, then it fades behind the score and stays there, faded. */
+.la-win-card { position: relative; isolation: isolate; overflow: hidden; }
+.la-win { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+.la-win i { position: absolute; inset: 0; border-radius: inherit; background: url("/oilers-la-bamba.webp") center / cover no-repeat, #06183a; }
+.la-win .la-back { z-index: -1; opacity: 0; transition: opacity 1.6s ease; }
+.la-win .la-top { z-index: 20; opacity: 0; background-size: contain; background-color: #06183a; transition: opacity .5s ease; }
+.la-win.splash .la-top { opacity: 1; }
+.la-win.back .la-back { opacity: .2; }
+.la-win.back .la-top { opacity: 0; transition: opacity 1.6s ease; }
+@media (prefers-reduced-motion: reduce) { .la-win .la-back, .la-win .la-top { transition: none; } }
+.gcv-compact .la-win .la-top { background-size: cover; background-position: center 66%; }

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { oilersWon } from "../src/lib/win-splash.mjs";
+import { oilersWon, splashWinner } from "../src/lib/win-splash.mjs";
 
 const fin = (away, home, a, h, extra = {}) => ({ id: 1, season: 20262027, type: 2, date: "2026-11-15", start: "2026-11-15T01:00:00Z", state: "FINAL", end: "REG", scheduleState: "OK", away, home, awayScore: a, homeScore: h, ...extra });
 
@@ -18,4 +18,12 @@ test("not an Edmonton win: a loss, another team's game, a game not finished, a m
   assert.equal(oilersWon(fin("EDM", "VAN", 2, 1, { state: "FUT", end: "" })), false);
   assert.equal(oilersWon(fin("EDM", "VAN", null, null)), false);
   assert.equal(oilersWon(null), false);
+});
+
+test("the Wild's wins carry a splash too, and a win by a team without one does not", () => {
+  assert.equal(splashWinner(fin("MIN", "DAL", 3, 1)), "MIN");
+  assert.equal(splashWinner(fin("DAL", "MIN", 1, 2, { end: "OT" })), "MIN");
+  assert.equal(splashWinner(fin("MIN", "DAL", 1, 3)), null);
+  assert.equal(splashWinner(fin("DAL", "VAN", 1, 3)), null);
+  assert.equal(oilersWon(fin("MIN", "DAL", 3, 1)), false);
 });

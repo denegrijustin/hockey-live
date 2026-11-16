@@ -218,3 +218,34 @@ test("gauges are drawn in the two teams' own colours, told apart and visible on 
   const lum = (c: number[]) => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
   for (const c of [away, home]) { expect(lum(c)).toBeGreaterThan(0.2); expect(lum(c)).toBeLessThan(0.8); }
 });
+
+// Ahead on the scoreboard but behind on the chances: the card and the recap say why.
+const lopsided = { ...base, id: 9503, home: "EDM", away: "PHI", state: "LIVE", period: 3, periodType: "REG", clock: "08:00", awayScore: 2, homeScore: 4, start: new Date(Date.now() - 6000000).toISOString() };
+test("a team that leads but trails on the chances: the card and the recap explain the deserve number", async ({ page }) => {
+  const snapshot = { season, updatedAt: new Date().toISOString(), source: "fixture", games: [lopsided] };
+  await page.route("**/api/live", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.route(`**/api/season/${season}`, (route) => route.fulfill({ json: snapshot }));
+  await page.route(`**/data/seasons/${season}.json`, (route) => route.fulfill({ json: snapshot }));
+  await page.route("**/data/moneypuck/**/shots/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+  await page.route("**/api/moneypuck/**", (route) => route.fulfill({ status: 404, body: "{}" }));
+  await page.route("**/api/game/*", (route) => {
+    const far = (i: number) => slot("EDM", i, 1 + (i % 3), `${2 + i}:00`);
+    const plays = [
+      ...Array.from({ length: 2 }, (_, i) => ({ ...far(i), x: 30, y: 28 })),
+      ...Array.from({ length: 14 }, (_, i) => ({ ...slot("PHI", i, 1 + (i % 3), `${1 + i}:20`), x: -84, y: (i % 3) - 1 })),
+      ...Array.from({ length: 4 }, (_, i) => ({ ...play("goal", "EDM", 28 + i, 26 - i, 1 + (i % 3), `1${i}:00`, "Connor McDavid") })),
+    ];
+    return route.fulfill({ json: { ...lopsided, plays, shots: plays, goals: plays.filter((p) => p.type === "goal"), stats } });
+  });
+  await page.goto("/");
+  const row = page.locator(`.sb-row[data-game="${lopsided.id}"]`);
+  const why = row.getByTestId("deserve-why");
+  await expect(why).toContainText("EDM leads 4–2, but PHI created the better chances");
+  await expect(why).toContainText("replayed");
+  await row.locator(".sb-main").click();
+  const dialog = page.locator("dialog.game-dialog[open]");
+  const note = dialog.locator(".gr-deserved").getByTestId("deserve-why").first();
+  await expect(note).toContainText("PHI has earned so far more of the game");
+  await dialog.locator(".gr-deserved .gr-why summary").first().click();
+  await expect(dialog.locator(".gr-deserved .gr-why p").first()).toContainText("every shot attempt in the game were replayed");
+});

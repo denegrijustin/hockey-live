@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import type { GameFeed, Team } from "../types";
 import { useGameShots } from "../lib/moneypuck-client";
-import { buildRecap, HIGH_XG } from "../lib/game-recap.mjs";
+import { buildRecap, HIGH_XG, DESERVE_EXPLAINED, deserveNote } from "../lib/game-recap.mjs";
 
 /** The colour that marks a high-chance shot, on the white ice and on the dark charts. */
 export const CHANCE_COLOR = "#c026d3";
@@ -17,12 +17,18 @@ const pct = (p: number) => `${Math.round(p * 100)}%`;
 const f2 = (v: number) => v.toFixed(2);
 const last = (name: string | null) => (name ? name.split(" ").slice(-1)[0] : "");
 
-function Deserved({ r, home, away }: { r: Recap; home: Team; away: Team }) {
+function Deserved({ r, home, away, score, over }: { r: Recap; home: Team; away: Team; score?: { away: number | null; home: number | null } | null; over?: boolean }) {
   const a = Math.round(r.deserved.away * 100), h = 100 - a;
+  const note = deserveNote({ away: away.id, home: home.id, score: score ?? null, deserved: r.deserved, xg: r.xg, over });
   return (
     <section className="gr-deserved" aria-label={`Deserved to win: ${away.id} ${a} percent, ${home.id} ${h} percent`}>
       <h4 className="gr-dh"><span>Deserved to Win</span><i className="gr-hline" aria-hidden="true" /><small>Based on the quality and quantity of chances each team created</small></h4>
       <Gauge look="bar" size="lg" away={a} home={h} awayId={away.id} homeId={home.id} label="Deserved to win" percent />
+      {note && <p className="gr-mismatch" data-testid="deserve-why">{note.long}</p>}
+      <details className="gr-why">
+        <summary>How is this worked out?</summary>
+        <p>{DESERVE_EXPLAINED} Each team's attempts are replayed as independent chances; a tie after that is split evenly (overtime).</p>
+      </details>
     </section>
   );
 }
@@ -220,7 +226,7 @@ export function DeservedHero({ data, home, away, beside }: { data: GameFeed | nu
   const recap = useMemo(() => (data ? buildRecap({ game: data, mp: over ? mp.data : null }) : null), [data, mp.data, over]);
   if (!data || !recap || recap.list.length < 3) return null;
   const c = gaugeColors(away.id, home.id);
-  return <div className="gr-hero" data-testid="deserved-hero" style={{ "--g-away": c.away, "--g-home": c.home } as React.CSSProperties}><Deserved r={recap} home={home} away={away} />{beside}</div>;
+  return <div className="gr-hero" data-testid="deserved-hero" style={{ "--g-away": c.away, "--g-home": c.home } as React.CSSProperties}><Deserved r={recap} home={home} away={away} score={{ away: data.awayScore ?? null, home: data.homeScore ?? null }} over={over} />{beside}</div>;
 }
 
 /**
@@ -236,7 +242,7 @@ export function GameRecap({ data, home, away }: { data: GameFeed | null; home: T
   return (
     <section className="game-recap" data-testid="game-recap" data-source={recap.source} aria-label="Game recap" style={{ "--g-away": gaugeColors(away.id, home.id).away, "--g-home": gaugeColors(away.id, home.id).home } as React.CSSProperties}>
       <div className="mini-heading">GAME RECAP <span>{live ? "Updating as it is played" : over ? "Final" : ""}</span></div>
-      <Deserved r={recap} home={home} away={away} />
+      <Deserved r={recap} home={home} away={away} score={{ away: data.awayScore ?? null, home: data.homeScore ?? null }} over={over} />
       <div className="gr-top">
         <Race r={recap} home={home} away={away} />
         <Compare r={recap} home={home} away={away} />

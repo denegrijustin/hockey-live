@@ -67,3 +67,18 @@ test("high-chance shots are those worth 0.20 xG or more, in time order, goals fl
   assert.ok(r.chances.every((c, i, a) => i === 0 || a[i - 1].t <= c.t));
   assert.equal(r.chances.length, r.list.filter((a) => a.xg >= HIGH_XG).length);
 });
+
+import { deserveNote, DESERVE_EXPLAINED } from "../src/lib/game-recap.mjs";
+test("deserveNote: says why a team can lead and trail on the chances", () => {
+  const n = deserveNote({ away: "PHI", home: "EDM", score: { away: 2, home: 4 }, deserved: { away: 0.8, home: 0.2 }, xg: { away: 3.1, home: 1.9 } });
+  assert.match(n.short, /^EDM leads 4–2, but PHI created the better chances \(xG 3\.1 to 1\.9\)\.$/);
+  assert.match(n.long, /PHI has earned so far more of the game/);
+  assert.match(deserveNote({ away: "PHI", home: "EDM", score: { away: 2, home: 4 }, deserved: { away: 0.8, home: 0.2 }, over: true }).short, /EDM won 4–2/);
+  assert.ok(DESERVE_EXPLAINED.includes("replayed"));
+});
+test("deserveNote: nothing when they agree, the game is tied, or there is no data", () => {
+  assert.equal(deserveNote({ away: "PHI", home: "EDM", score: { away: 2, home: 4 }, deserved: { away: 0.4, home: 0.6 } }), null);
+  assert.equal(deserveNote({ away: "PHI", home: "EDM", score: { away: 3, home: 3 }, deserved: { away: 0.8, home: 0.2 } }), null);
+  assert.equal(deserveNote({ away: "PHI", home: "EDM", score: { away: 2, home: 4 }, deserved: { away: 0.38, home: 0.62 } }), null);
+  assert.equal(deserveNote({ away: "PHI", home: "EDM", score: null, deserved: null }), null);
+});

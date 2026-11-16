@@ -25,7 +25,7 @@ export function deserve(feed) {
   if (!feed || !Array.isArray(feed.plays)) return null;
   const r = buildRecap({ game: feed, mp: null });
   if (!r || r.list.length < 3) return null;
-  return { away: r.deserved.away, home: r.deserved.home };
+  return { away: r.deserved.away, home: r.deserved.home, xg: r.xg };
 }
 
 /** The line the model draws under a pregame or live card: the favourite at the puck line and the total, rounded to the half goal. */

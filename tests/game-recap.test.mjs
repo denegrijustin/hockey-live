@@ -82,3 +82,27 @@ test("deserveNote: nothing when they agree, the game is tied, or there is no dat
   assert.equal(deserveNote({ away: "PHI", home: "EDM", score: { away: 2, home: 4 }, deserved: { away: 0.38, home: 0.62 } }), null);
   assert.equal(deserveNote({ away: "PHI", home: "EDM", score: null, deserved: null }), null);
 });
+
+import { goaltending } from "../src/lib/game-recap.mjs";
+const feedWith = (awayGoals) => {
+  let n = 0;
+  const play = (type, team, x, y) => ({ id: ++n, order: n, type, team, x, y, period: 1 + (n % 3), periodType: "REG", time: `${5 + (n % 10)}:00`, player: "Skater" });
+  const away = Array.from({ length: 8 }, (_, i) => play(i < awayGoals ? "goal" : "shot-on-goal", "PHI", -80, (i % 3) - 1)); // 8 good chances at EDM's net
+  const home = Array.from({ length: 8 }, (_, i) => play("shot-on-goal", "EDM", 60, 15 + (i % 3))); // 8 poor ones at PHI's
+  return { id: 1, season: 20262027, type: 2, state: "LIVE", period: 3, periodType: "REG", clock: "08:00", home: "EDM", away: "PHI", plays: [...away, ...home], shots: [...away, ...home] };
+};
+test("goaltending: a goalie who stops the good chances is credited, one who lets them in is held to it", () => {
+  const stolen = buildRecap({ game: feedWith(0) }), beaten = buildRecap({ game: feedWith(5) });
+  assert.ok(goaltending(stolen.list).home > 1, "EDM's goalie stopped everything");
+  assert.ok(goaltending(beaten.list).home < 0, "EDM's goalie let in more than expected");
+  assert.ok(Math.abs(stolen.deservedNoGoalie.home - beaten.deservedNoGoalie.home) < 0.05, "the shots alone are about the same");
+  assert.ok(stolen.deserved.home > stolen.deservedNoGoalie.home, "a superb goalie lifts his team's deserve");
+  assert.ok(beaten.deserved.home < beaten.deservedNoGoalie.home, "a beaten goalie lowers it");
+  assert.ok(stolen.deserved.home > beaten.deserved.home + 0.1);
+  assert.ok(Math.abs(stolen.deserved.home + stolen.deserved.away - 1) < 1e-9);
+});
+test("goaltending: empty-net shots are left out, and no shots faced is no credit", () => {
+  assert.deepEqual(goaltending([]), { home: 0, away: 0 });
+  const g = goaltending([{ home: true, xg: 0.9, sog: true, goal: true, en: true }, { home: true, xg: 0.2, sog: true, goal: false, en: false }]);
+  assert.ok(Math.abs(g.away - 0.2) < 1e-9);
+});

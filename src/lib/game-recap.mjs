@@ -71,15 +71,37 @@ export function deservedToWin(homeXg, awayXg) {
   return { home: home + tie / 2, away: away + tie / 2, tie };
 }
 
+/** How much of a goalie's goals saved above expected counts toward the deserved win: half, since one game is a small sample. */
+export const GOALIE_WEIGHT = 0.5;
+
+/**
+ * Goaltending in this game, per side: the goals that side's goalie saved above expected, the expected goals of the on-target shots it faced (empty-net shots left
+ * out) minus the goals it let in. Positive is a goalie stealing the game; negative is one letting in what he should have stopped.
+ */
+export function goaltending(list) {
+  const side = (home) => {
+    const faced = list.filter((a) => a.home !== home && a.sog && !a.en);
+    return faced.reduce((sum, a) => sum + a.xg, 0) - faced.filter((a) => a.goal).length;
+  };
+  return { home: side(true), away: side(false) };
+}
+
+/** A side's attempts with the goalie facing them taken into account: each on-target shot's chance scales by how the goalie played (half credit), within reason. */
+function withGoalie(attempts, saved) {
+  const onTarget = attempts.filter((a) => a.sog && !a.en).reduce((sum, a) => sum + a.xg, 0);
+  const factor = onTarget > 0.01 ? Math.min(1.5, Math.max(0.5, (onTarget - GOALIE_WEIGHT * saved) / onTarget)) : 1;
+  return attempts.map((a) => (a.sog && !a.en ? Math.min(0.95, a.xg * factor) : a.xg));
+}
+
 /** What "deserve" means, in one sentence. */
-export const DESERVE_EXPLAINED = "Deserve is the chance each team would win if every shot attempt in the game were replayed, each weighed by how likely it was to score (its expected goals). It leaves the real score out, so a team can lead and still trail on the chances.";
+export const DESERVE_EXPLAINED = "Deserve is the chance each team would win if every shot attempt in the game were replayed, each weighed by how likely it was to score (its expected goals). Goaltending counts: a goalie who saves more than the shots should have scored against (goals saved above expected) lowers the other side's chances, half credit, and one who lets in more raises them. It leaves the real score out, so a team can lead and still trail on the chances.";
 
 /**
  * When the score and the chances disagree (a team ahead on the scoreboard with under 40% of the deserved win), the sentence that says why. Null when they agree, the
  * game is tied, or there is nothing to compare. `short` fits a card; `long` is for the recap.
- * @param {{ away: string, home: string, score: { away: number | null, home: number | null } | null, deserved: { away: number, home: number } | null, xg?: { away: number, home: number } | null, over?: boolean }} o
+ * @param {{ away: string, home: string, score: { away: number | null, home: number | null } | null, deserved: { away: number, home: number } | null, xg?: { away: number, home: number } | null, over?: boolean, goalie?: { away: number, home: number } | null }} o
  */
-export function deserveNote({ away, home, score, deserved, xg = null, over = false }) {
+export function deserveNote({ away, home, score, deserved, xg = null, over = false, goalie = null }) {
   if (!deserved || !score || score.away == null || score.home == null || score.away === score.home) return null;
   const homeAhead = score.home > score.away;
   const lead = homeAhead ? home : away, trail = homeAhead ? away : home;
@@ -87,7 +109,9 @@ export function deserveNote({ away, home, score, deserved, xg = null, over = fal
   if (!(leadShare < 0.4)) return null;
   const lo = Math.min(score.home, score.away), hi = Math.max(score.home, score.away);
   const x = xg ? ` (xG ${(homeAhead ? xg.away : xg.home).toFixed(1)} to ${(homeAhead ? xg.home : xg.away).toFixed(1)})` : "";
-  const short = `${lead} ${over ? "won" : "leads"} ${hi}–${lo}, but ${trail} created the better chances${x}.`;
+  const g = goalie ? (homeAhead ? goalie.home : goalie.away) : null;
+  const gk = g != null && Math.abs(g) >= 0.3 ? ` ${lead}'s goaltending is counted (${g > 0 ? "+" : "−"}${Math.abs(g).toFixed(1)} goals saved above expected).` : "";
+  const short = `${lead} ${over ? "won" : "leads"} ${hi}–${lo}, but ${trail} created the better chances${x}.${gk}`;
   const long = `${short} ${trail} has ${over ? "earned" : "earned so far"} more of the game from its shots, while ${lead}'s goals have run ahead of the chances behind them: finishing and goaltending beyond what the shot quality says is likely. Deserve does not count the score.`;
   return { short, long };
 }
@@ -101,6 +125,7 @@ export function buildRecap({ game, mp = null }) {
   const sum = (arr) => arr.reduce((s, a) => s + a.xg, 0);
   const homeA = side(true), awayA = side(false);
   const xg = { home: sum(homeA), away: sum(awayA) };
+  const gt = goaltending(list);
   const blocked = game.plays?.length ? { home: game.plays.filter((p) => p.type === "blocked-shot" && p.team === game.home).length, away: game.plays.filter((p) => p.type === "blocked-shot" && p.team === game.away).length } : null;
   const attempts = { home: homeA.length + (blocked?.home ?? 0), away: awayA.length + (blocked?.away ?? 0) };
   const sog = { home: game.homeShots ?? homeA.filter((a) => a.sog).length, away: game.awayShots ?? awayA.filter((a) => a.sog).length };
@@ -125,7 +150,9 @@ export function buildRecap({ game, mp = null }) {
     source, teams: { home: game.home, away: game.away }, attempts, sog, xg,
     xgPerAttempt: { home: attempts.home ? xg.home / attempts.home : null, away: attempts.away ? xg.away / attempts.away : null },
     faceoffs: faceoffs ? { home: faceoffs.home, away: faceoffs.away } : null, hits: hits ? { home: hits.home, away: hits.away } : null,
-    deserved: deservedToWin(homeA.map((a) => a.xg), awayA.map((a) => a.xg)),
+    goaltending: gt,
+    deservedNoGoalie: deservedToWin(homeA.map((a) => a.xg), awayA.map((a) => a.xg)),
+    deserved: deservedToWin(withGoalie(homeA, gt.away), withGoalie(awayA, gt.home)),
     series: { home: series(homeA), away: series(awayA), end }, marks, goals, list, chances,
     topChances: [...list].sort((p, q) => q.xg - p.xg).slice(0, 3),
     performers: source === "moneypuck" ? performers(list, game) : null,

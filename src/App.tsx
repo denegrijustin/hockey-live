@@ -4,6 +4,8 @@ import { searchFor } from "./lib/date-nav.mjs";
 import { parseGameRoute } from "./lib/gc-route.mjs";
 import { GameDayStrip, hasDateParam, clearDateParam } from "./components/GameDayStrip";
 import { useEtToday } from "./hooks/useEtToday";
+import { useMultiRoute, embedded } from "./hooks/useMultiRoute";
+import { parseMulti, withMulti } from "./lib/multi-route.mjs";
 import { useSeason } from "./hooks/useSeason";
 import { useGameAlerts } from "./hooks/useGameAlerts";
 import { useGameLists } from "./hooks/useGameLists";
@@ -23,6 +25,7 @@ import { chancesForCards, simulatePlayoffs } from "./lib/playoff-sim.mjs";
 import { TeamPicker } from "./components/TeamPicker";
 import { MainNav, VIEW_IDS, VIEW_TITLES } from "./components/MainNav";
 import { Teams } from "./components/Teams";
+const MultiView = lazy(() => import("./components/MultiView"));
 const TeamPage = lazy(() => import("./components/team/TeamPage"));
 import { PageHeader } from "./components/PageHeader";
 import { Scoreboard as ScoreboardView } from "./components/Scoreboard";
@@ -116,7 +119,9 @@ const addressFor = (view: string, team: string | null = null, keepGame = false) 
   try { player = new URLSearchParams(location.search).get("player") ?? undefined; } catch {}
   // An open Game Center (?game=&tab=&event=) is kept only when the address is being normalised in place, never when moving to another view.
   const game = keepGame ? parseGameRoute(location.search) : null;
-  return `${location.pathname}${searchFor(view, date, { team, player, game })}`;
+  const multi = keepGame ? parseMulti(location.search) : null; // an open multi view survives the in-place normalising too
+  const search = searchFor(view, date, { team, player, game });
+  return `${location.pathname}${multi ? withMulti(search, multi) : search}`;
 };
 export default function App() {
   const prefs = usePrefs();
@@ -150,6 +155,7 @@ export default function App() {
     [teamsOpen, setTeamsOpen] = useState(false),
     [teamId, setTeamId] = useState<string | null>(teamFromAddress);
   const todayEt = useEtToday();
+  const multiIds = useMultiRoute();
   const setByDay = useCallback((on: boolean) => {
     setByDayState(on);
     if (!on) { clearDateParam(); setGameDate(null); }
@@ -718,6 +724,7 @@ export default function App() {
             <ImperialismMap teams={teams} games={data.games} season={season} />
           </Suspense></ErrorBoundary>
         )}
+        {multiIds && data && !embedded() && <Suspense fallback={null}><MultiView ids={multiIds} games={data.games} teams={teams} /></Suspense>}
         {!home && <Suspense fallback={null}><Methodology /></Suspense>}
         <footer>
           <span>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { parseGameRoute, withGameRoute } from "../lib/gc-route.mjs";
 import type { GcTab } from "../components/gc/GameCenterUi";
+import { embedded } from "./useMultiRoute";
 
 export type GameRoute = { id: number; tab: GcTab | null; event: number | null };
 const read = (): GameRoute | null => {
@@ -47,6 +48,7 @@ export function useGameRoute() {
    * when the address names no screen, the Games view takes over (`?view=games`), so Close never leaves the app.
    */
   const close = useCallback((opts?: { replace?: boolean }) => {
+    if (embedded()) return; // a pane of the multi view stays on its game
     try {
       if (!read()) { setRoute(null); return; }
       if (history.state?.gc && !opts?.replace) history.back();

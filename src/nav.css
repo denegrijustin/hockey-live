@@ -664,3 +664,9 @@ main#main:focus { outline: none; }
 .logo-toggle[aria-pressed="true"] { color: var(--mint-6); border-color: var(--mint-5); background: var(--surface-8); }
 .logo-toggle:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 @media (min-width: 1000px) { .logo-toggle { display: inline-flex; } }
+
+/* One pane of a multi view: the Game Center cannot be closed from inside it, and the page chrome under it stays out of the way. */
+html[data-embed] .gc-close-wrap, html[data-embed] .game-center-multi { display: none; }
+html[data-embed] .game-dialog { padding-inline: 12px; }
+html[data-embed] .game-dialog { animation: none !important; }
+html[data-embed] .game-dialog .dialog-toolbar { display: none; }

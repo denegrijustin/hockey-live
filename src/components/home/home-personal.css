@@ -61,3 +61,6 @@
 .scoreboard .mt-card > .mt-next span { color: #fff; }
 .scoreboard .mt-game .gcv-compact .sb-team { position: relative; }
 .scoreboard .mt-game .gcv-compact .fav-mark { position: absolute; left: -5px; top: 1px; z-index: 1; margin: 0; color: #ffcf5a; filter: drop-shadow(0 0 2px #000a); }
+
+/* A live favourite is a full game card, not a compact row: it takes the whole width of My teams instead of one narrow column beside empty space. */
+@media (min-width: 721px) { .scoreboard .mt-card:has(> .mt-game.mt-live) { grid-column: 1 / -1; } }

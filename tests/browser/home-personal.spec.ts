@@ -193,4 +193,15 @@ test.describe("home personal", () => {
     expect(Math.abs(narrow.pills[0].x - narrow.pills[1].x)).toBeLessThan(2);
     expect(narrow.pills.some((p) => p.cut)).toBe(false);
   });
+
+  test("a live favourite is a full-width card in My teams on a desktop, not one narrow column beside empty space", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await seedPrefs(page, { favorites: ["EDM"] });
+    await mockApis(page, { games });
+    await page.goto("/");
+    const card = page.locator(`${sec("myteams")} li[data-team=EDM] .mt-live .sb-row`);
+    await expect(card).toBeVisible();
+    const [c, list] = [(await card.boundingBox())!, (await page.locator(`${sec("myteams")} .mt-list`).boundingBox())!];
+    expect(c.width, "spans the My teams list").toBeGreaterThanOrEqual(list.width - 2);
+  });
 });

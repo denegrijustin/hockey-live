@@ -14,7 +14,7 @@ const directive = (csp: string, name: string) => csp.split(";").map((d) => d.tri
 
 test("the global rule sets the baseline security headers", () => {
   expect(header("X-Content-Type-Options")).toBe("nosniff");
-  expect(header("X-Frame-Options")).toMatch(/^(DENY|SAMEORIGIN)$/);
+  expect(header("X-Frame-Options")).toBe("SAMEORIGIN"); // the multi view frames the site's own pages; no other site may frame it
   expect(header("Referrer-Policy")).toBeTruthy();
   expect(header("Permissions-Policy")).toContain("camera=()");
 });
@@ -37,7 +37,7 @@ test("the CSP has no eval, no wildcard or http script/connect sources, and locks
   expect(directive(csp, "img-src")).toMatch(/\bblob:/);
   expect(directive(csp, "object-src")).toBe("object-src 'none'");
   expect(directive(csp, "base-uri")).toBe("base-uri 'self'");
-  expect(directive(csp, "frame-ancestors")).toBe("frame-ancestors 'none'");
+  expect(directive(csp, "frame-ancestors")).toBe("frame-ancestors 'self'");
   // Images only from first-party and the two named hosts; no bare https: or wildcard.
   expect(directive(csp, "img-src")).not.toMatch(/\*|\bhttps:(?!\/\/)|\bhttp:/);
 });

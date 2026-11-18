@@ -30,6 +30,8 @@ import { GameTabs } from "./gc/GameTabs";
 import { GameAnnouncer } from "./gc/GameAnnouncer";
 import OverviewPane from "./gc/OverviewPane";
 import { GameFollowBadge } from "./gc/FollowedGames";
+import { openMulti } from "../hooks/useMultiRoute";
+import { Icon } from "./icons";
 import "./gc/game-center.css";
 import "./gc/gc-board.css";
 import { gaugeColors } from "../lib/kits";
@@ -211,6 +213,7 @@ export function GameOverlay({
             <a href={`https://www.nhl.com/gamecenter/${game.id}`} target="_blank" rel="noreferrer">Official NHL Gamecenter ↗</a>
             <SaveGameButton game={game} awayName={away.name} homeName={home.name} labeled />
             <GameFollowBadge game={game} awayName={away.name} homeName={home.name} />
+            <button type="button" className="game-center-multi" data-testid="gc-multi" onClick={() => openMulti([game.id])}><Icon name="columns" size={18} /> Multi-view</button>
             <span>{game.venue || "Venue unavailable"}</span>
           </div>
           <GameTabs

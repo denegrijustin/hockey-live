@@ -1,0 +1,17 @@
+/* The multi view: two panes, each with its own scroll; stacked when the screen is narrow. */
+html.mv-open, html.mv-open body { overflow: hidden; }
+.mv { position: fixed; inset: 0; z-index: 200; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--surface-1, #0b1220); color: var(--text-5, #fff); outline: 0; padding-top: var(--safe-top, 0px); }
+.mv-top { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 4px 8px 4px 14px; border-bottom: 1px solid var(--line-2, #ffffff33); background: var(--surface-5, #111a2c); }
+.mv-top h2 { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 1rem; font-weight: 800; letter-spacing: .02em; }
+.mv-hint { flex: 1; min-width: 0; color: var(--text-2, #ffffffb0); font-size: .8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mv-close { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line-3, #ffffff55); border-radius: 12px; background: transparent; color: inherit; cursor: pointer; }
+.mv-panes { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 2px; min-height: 0; background: var(--line-2, #ffffff33); }
+@media (min-width: 900px) { .mv-panes { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); } }
+.mv-pane { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; background: var(--surface-1, #0b1220); }
+.mv-bar { display: flex; align-items: center; gap: 6px; padding: 4px 6px; background: var(--surface-5, #111a2c); }
+.mv-bar label { flex: 1; min-width: 0; }
+.mv-bar select { width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid var(--line-3, #ffffff55); border-radius: 10px; background: var(--surface-6, #16213a); color: inherit; font: inherit; font-size: .875rem; font-weight: 650; }
+.mv-x { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line-3, #ffffff55); border-radius: 10px; background: transparent; color: inherit; cursor: pointer; }
+.mv-frame { display: block; width: 100%; height: 100%; border: 0; background: var(--surface-1, #0b1220); }
+.mv-empty { display: grid; place-items: center; padding: 24px; text-align: center; color: var(--text-3, #ffffffb0); }
+@media (min-width: 1100px) { .mv-bar select, .mv-x, .mv-close { min-height: 36px; height: 36px; } .mv-x, .mv-close { width: 36px; } }

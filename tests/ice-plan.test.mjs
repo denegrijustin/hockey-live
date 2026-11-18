@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BLADE, FINISH_LEFT, INTERMISSION_S, PREGAME_S, RINK, icePrepActive, poseAt, route, smoothLeft, stateAt, sweptQuads } from "../src/lib/ice-plan.mjs";
+import { BLADE, CREW_S, DUMP_LEFT, EXIT_LEFT, FINISH_LEFT, GATE_HALF, GATE_X, INTERMISSION_S, PREGAME_S, RINK, siteAt, icePrepActive, poseAt, route, smoothLeft, stateAt, sweptQuads } from "../src/lib/ice-plan.mjs";
 
 const rinkCell = (x, y) => { const R = RINK.corner, ix = Math.min(x, RINK.w - x), iy = Math.min(y, RINK.h - y); return ix < R && iy < R ? Math.hypot(R - ix, R - iy) <= R - 0.3 : ix > 0.3 && iy > 0.3; };
 
@@ -34,26 +34,58 @@ test("the blade covers the whole sheet: at least 99.5% of the ice, corners and b
   assert.ok(hit / total >= 0.995, `coverage ${(100 * hit / total).toFixed(2)}%`);
 });
 
-test("the timeline: in through the gate, steady working speed, every inch cleaned with 45 seconds left, then out through the gate", () => {
+test("the timeline: in through the gate, steady working speed, every inch cleaned, slowing to rest in the gate at 02:08, away at 02:00", () => {
   const r = route();
   let prev = -1;
   for (let left = INTERMISSION_S; left >= 0; left -= 0.1) { const st = stateAt(left); assert.ok(st.s >= prev - 1e-9, "never backwards"); prev = st.s; }
   assert.equal(stateAt(INTERMISSION_S).phase, "enter");
   assert.equal(stateAt(INTERMISSION_S - 30).phase, "clean");
-  const at45 = stateAt(FINISH_LEFT + 0.01);
-  assert.equal(at45.phase, "clean"); assert.ok(Math.abs(at45.clean - r.spiralEnd) < 1, "all the ice is clean at 45 s");
-  assert.equal(stateAt(FINISH_LEFT - 1).phase, "exit");
-  assert.equal(stateAt(FINISH_LEFT - 1).bladeDown < 1, true, "the blade is rising as it leaves");
-  assert.equal(stateAt(FINISH_LEFT - 25).phase, "gone", "off the ice well before play resumes");
-  assert.ok(Math.abs(stateAt(100).s - stateAt(101).s - stateAt(500).s + stateAt(501).s) < 1e-6, "the working speed is steady");
+  const done = stateAt(stateAt(1).window.tCleanEnd - 0.01);
+  assert.equal(done.phase, "approach"); assert.ok(Math.abs(done.clean - r.spiralEnd) < 0.5, "every inch is clean when it turns for the gate");
+  assert.ok(stateAt(1).window.tCleanEnd > DUMP_LEFT && stateAt(1).window.tCleanEnd < DUMP_LEFT + 6, "the approach takes a few seconds");
+  assert.equal(stateAt(DUMP_LEFT - 0.5).phase, "dump", "stopped at the gate from 02:08");
+  assert.equal(stateAt(EXIT_LEFT + 0.5).phase, "dump");
+  assert.equal(stateAt(DUMP_LEFT - 0.5).s, stateAt(EXIT_LEFT + 0.5).s, "it stands still while it dumps");
+  assert.equal(stateAt(EXIT_LEFT - 1).phase, "exit", "leaving at 02:00");
+  assert.equal(stateAt(EXIT_LEFT - 1).bladeDown, 0, "the blade is up");
+  assert.equal(stateAt(EXIT_LEFT - 40).phase, "gone", "off the ice well before play resumes");
+  assert.ok(Math.abs(stateAt(500).s - stateAt(501).s - stateAt(300).s + stateAt(301).s) < 1e-6, "the working speed is steady");
   const gone = poseAt(stateAt(10).s); assert.ok(gone.y > RINK.h + 5, "out past the near boards");
 });
 
-test("speed is continuous at every boundary (no jerk entering, working or leaving)", () => {
+test("the dump: the machine stands in the gate with its nose through the boards and its blade still on the ice, and the pile is dropped there", () => {
+  const r = route(), p = poseAt(r.dumpS);
+  assert.ok(Math.abs(p.x - GATE_X) < GATE_HALF + 4, `centred on the gate (x ${p.x.toFixed(1)})`);
+  assert.ok(p.y >= RINK.h, "the machine itself is at or past the boards line");
+  assert.ok(p.by < RINK.h, "the blade end is still inside the rink");
+  const s = siteAt(DUMP_LEFT - 1);
+  assert.ok(Math.hypot(s.pileAt.x - r.dumpAt.x, s.pileAt.y - r.dumpAt.y) < 3, "the pile lands at the blade");
+});
+
+test("the site: the pile grows while it dumps, the crew shovels it away between 02:00 and 01:05 and is gone after", () => {
+  assert.equal(siteAt(DUMP_LEFT + 5).pile, 0);
+  const a = siteAt(DUMP_LEFT - 2).pile, b = siteAt(DUMP_LEFT - 6).pile;
+  assert.ok(a > 0 && b > a && b <= 1, "it grows");
+  assert.equal(siteAt(EXIT_LEFT).pile, 1);
+  assert.equal(siteAt(EXIT_LEFT + 0.5).crew, null, "nobody on the ice before 02:00");
+  assert.ok(siteAt(EXIT_LEFT - 20).crew, "the crew is on the ice");
+  assert.equal(siteAt(EXIT_LEFT - 20).crew.digging, 1, "scooping");
+  assert.ok(siteAt(EXIT_LEFT - 30).pile < siteAt(EXIT_LEFT - 15).pile, "the pile shrinks as they scoop");
+  assert.equal(siteAt(EXIT_LEFT - CREW_S - 1).crew, null, "gone by 01:05");
+  assert.equal(siteAt(EXIT_LEFT - CREW_S - 1).pile, 0);
+  const walkIn = siteAt(EXIT_LEFT - 0.2).crew; assert.ok(walkIn.y > RINK.h, "they come in through the gate");
+  assert.deepEqual([DUMP_LEFT + 5, DUMP_LEFT - 2, EXIT_LEFT - 20, EXIT_LEFT - CREW_S - 5].map((l) => siteAt(l).status), ["RESURFACING", "SLUSH DUMP", "ICE CREW", "ICE READY"]);
+  assert.equal(siteAt(EXIT_LEFT + 30).exitIn, 30);
+  assert.equal(siteAt(EXIT_LEFT - 5).exitIn, 0);
+});
+
+test("speed is continuous at every boundary (no jerk entering, working or slowing to the gate)", () => {
   const v = (l) => (stateAt(l - 0.01).s - stateAt(l + 0.01).s) / 0.02;
   const work = v(500);
   assert.ok(Math.abs(v(INTERMISSION_S - 18) - work) < 0.15);
-  assert.ok(Math.abs(v(FINISH_LEFT) - work) < 0.15);
+  assert.ok(Math.abs(v(stateAt(1).window.tCleanEnd) - work) < 0.15);
+  assert.ok(Math.abs(v(DUMP_LEFT)) < 0.15, "it has stopped when the dump starts");
+  assert.ok(Math.abs(v(EXIT_LEFT)) < 0.15, "and sets off from rest");
   assert.ok(v(INTERMISSION_S - 0.5) < work, "it starts from rest at the gate");
 });
 

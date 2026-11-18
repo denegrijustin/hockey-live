@@ -33,3 +33,11 @@
 .intermission.compact .ice-stage { padding: 6px; border-radius: 16px; max-width: none; }
 .intermission.compact .int-cap { padding: 6px 14px; border-radius: 18px; font-size: .875rem; } .intermission.compact .int-who .team-logo { width: 30px; height: 30px; }
 @media (max-width: 520px) { .intermission[data-testid="intermission"] { padding: 14px 12px 12px; border-radius: 22px; } .intermission .int-sep { display: none; } .intermission .int-cap { padding: 8px 14px; } }
+
+/* The broadcast bug under the clock: when the machine leaves the ice (02:00 left) and what is happening on the ice. */
+.intermission .int-bug { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 8px 12px; margin-top: 6px; }
+.intermission .int-exit { display: inline-flex; align-items: center; gap: 10px; padding: 4px 14px; border: 2px solid #ffffff55; border-radius: 10px; background: #0a1322cc; color: #fff; font-size: .8125rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.intermission .int-exit i { font-style: normal; opacity: .85; } .intermission .int-exit b { color: #f1b82c; font-variant-numeric: tabular-nums; font-size: 1rem; }
+.intermission .int-pill { display: inline-flex; align-items: center; padding: 4px 14px; border-radius: 10px; background: #f1b82c; color: #0a1322; font-size: .8125rem; font-weight: 850; letter-spacing: .08em; }
+.intermission .int-pill[data-status="SLUSH DUMP"] { background: #ff9d2e; } .intermission .int-pill[data-status="ICE CREW"] { background: #7fc4ff; } .intermission .int-pill[data-status="ICE READY"] { background: #6ee7a8; }
+.intermission.compact .int-bug { display: none; }

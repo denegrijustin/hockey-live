@@ -7,6 +7,7 @@ import { finished, recordBeforeGame } from "../lib/model.mjs";
 import { isLive } from "../lib/game-data.mjs";
 import { GameData } from "./GameDataPanel";
 import { GameRecap, DeservedHero } from "./GameRecap";
+import { WatchBar } from "./gc/WatchBar";
 import { Gauge } from "./Gauge";
 import { modelGaugeProps } from "./Projection";
 import { projectGame } from "../lib/projection.mjs";
@@ -17,7 +18,7 @@ import { GameInjuries } from "./GameInjuries";
 import { GameCenterAnalytics } from "./nhlplus/cards/GameCenterAnalytics";
 import { IcePrep, IntermissionRink } from "./IntermissionRink";
 import { matchupInsights, restDays } from "../lib/insights.mjs";
-import { pregameHomeWin, tierOf } from "../lib/watchability.mjs";
+import { pregameHomeWin } from "../lib/watchability.mjs";
 import { InsightLine } from "./InsightLine";
 import { useSheetDrag } from "../hooks/useSheetDrag";
 import { TeamLogo } from "./TeamLogo";
@@ -203,7 +204,7 @@ export function GameOverlay({
       <GameCenterProvider game={game}>
         <GameCenterUiProvider value={{ tab, focusEvent, goTab }}>
           <GameAnnouncer home={home} away={away} />
-          <GameHeader home={home} away={away} ranks={ranks} records={{ [away.id]: recText(away.id), [home.id]: recText(home.id) }} watch={`Watchability ${analysis.score} · ${tierOf(analysis.score).label}`} />
+          <GameHeader home={home} away={away} ranks={ranks} records={{ [away.id]: recText(away.id), [home.id]: recText(home.id) }} />
           <p className="detail-note dialog-status">
             {/* the header already carries the date, time and venue for a game that has not started; once it is on or over, the status leads */}
             {past || live ? <>{fmtDay(game.start, { long: true })} · {past ? `FINAL${game.end !== "REG" ? " / " + game.end : ""}` : `LIVE · ${game.periodType === "OT" ? "OT" : `P${game.period ?? "—"}`} · ${game.intermission ? "Intermission" : (game.clock ?? "Updating")}`} · </> : null}
@@ -227,6 +228,7 @@ export function GameOverlay({
                   <div className="gc-cols">
                     <div className="gc-col"><OverviewPane home={home} away={away} dayGames={dayGames} /></div>
                     <div className="gc-col">
+                      <WatchBar score={analysis.score} away={away} home={home} />
                       {(past || live) && <DeservedTop game={game} home={home} away={away} live={live} before={before} baseline={baseline} />}
                       <details className="game-center-section" open>
                         <summary>Projection and game pulse <span>+</span></summary>

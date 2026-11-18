@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motionOff } from "../motion";
 import type { Game, Team } from "../types";
 import { INTERMISSION_MS, clockText, firstSeenAt, parseClock } from "../lib/intermission.mjs";
-import { FINISH_LEFT, INTERMISSION_S, PREGAME_S, icePrepActive, poseAt, route, sessionKey, smoothLeft, stateAt, sweptQuads } from "../lib/ice-plan.mjs";
+import { EXIT_LEFT, FINISH_LEFT, INTERMISSION_S, PREGAME_S, icePrepActive, poseAt, route, sessionKey, smoothLeft, stateAt, sweptQuads } from "../lib/ice-plan.mjs";
 import type { Ice3D } from "../lib/ice3d";
 import type { Look } from "../lib/ice-textures";
 import { logoUrl } from "../lib/logos";
@@ -54,19 +54,23 @@ function useRinkView(): [RinkView, (v: RinkView) => void] {
 const loadImage = (src: string) => new Promise<HTMLImageElement | null>((resolve) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = () => resolve(null); i.src = src; });
 
 type Labels = { k: string; l: string; cap: string };
-function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, phase: string, away: Team, home: Team): Labels {
+/** The broadcast status line under the clock (the pill), by the plan's status. */
+const STATUS_TEXT: Record<string, string> = { RESURFACING: "ON ICE • RESURFACING", "SLUSH DUMP": "SLUSH DUMP • EXITING GATE", "ICE CREW": "ICE CREW • CLEARING THE SLUSH", "ICE READY": "ICE READY" };
+function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, phase: string, away: Team, home: Team, status = ""): Labels {
   const next = game.period ? (game.period >= 3 ? "overtime" : `period ${game.period + 1}`) : "the next period";
-  const working = phase === "enter" || phase === "clean" || phase === "wait";
+  const working = phase === "enter" || phase === "clean" || phase === "approach" || phase === "wait";
+  const dumping = phase === "dump";
   const leaving = phase === "exit";
+  const crew = phase === "gone" && status === "ICE CREW";
   if (mode === "pregame") {
     return working || leaving
-      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
-      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: `the ice is ready` };
+      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${dumping ? "the Zamboni is dumping its slush at the gate" : leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
+      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: crew ? "the ice crew is clearing the slush" : `the ice is ready` };
   }
   return {
     k: `INTERMISSION${game.period ? ` · END OF P${game.period}` : ""}`,
     l: left > 0 ? `until ${next}` : `${next} about to start`,
-    cap: `${working ? "the Zamboni is resurfacing the ice" : leaving ? "the Zamboni is leaving the ice" : "fresh ice for the next period"}`,
+    cap: `${working ? "the Zamboni is resurfacing the ice" : dumping ? "the Zamboni is dumping its slush at the gate" : leaving ? "the Zamboni is leaving the ice" : crew ? "the ice crew is clearing the slush" : "fresh ice for the next period"}`,
   };
 }
 
@@ -82,7 +86,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
   const viewRef = useRef(view); viewRef.current = view;
   const canvas = useRef<HTMLCanvasElement>(null);
   const root = useRef<HTMLElement>(null);
-  const tagRef = useRef<HTMLDivElement>(null), kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
+  const tagRef = useRef<HTMLDivElement>(null), kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), xRef = useRef<HTMLElement>(null), pRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
   const gameRef = useRef(game); gameRef.current = game;
   const teams = useRef({ home, away }); teams.current = { home, away };
   const session = sessionKey(mode, game.id, game.period);
@@ -143,24 +147,26 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       if (tag) {
         if (viewRef.current === "overview" && at) {
           const cw = el.clientWidth || at.w, ch = el.clientHeight || at.h, mx = (at.x / at.w) * cw, my = (at.y / at.h) * ch; // the picture is shown at its CSS size, which is capped on wide screens
-          const half = tag.offsetWidth / 2 || 70, x = Math.max(half + 4, Math.min(cw - half - 4, mx)), y = Math.max(tag.offsetHeight + 8, Math.min(ch, my) - 12);
+          const half = tag.offsetWidth / 2 || 70, th = tag.offsetHeight || 28, x = Math.max(half + 4, Math.min(cw - half - 4, mx)), y = Math.max(th + 8, Math.min(ch, my) - 12); // (a hidden label has no size yet: use its usual height so the first frame is already inside the picture)
           tag.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`; tag.hidden = false;
         } else tag.hidden = true;
       }
       // what the animation is showing, for tests and for anyone inspecting it
       const r = route(), pose = poseAt(st.s);
-      host.dataset.phase = st.phase;
+      host.dataset.phase = st.phase; host.dataset.status = st.site.status; host.dataset.pile = st.site.pile.toFixed(2); host.dataset.crew = st.site.crew ? "on" : "off";
       host.dataset.clean = String(Math.round((1000 * (st.clean - r.enterEnd)) / (r.spiralEnd - r.enterEnd)) / 10);
       host.dataset.left = String(Math.round(shown * 10) / 10);
       host.dataset.pose = `${pose.x.toFixed(1)},${pose.y.toFixed(1)},${((pose.heading * 180) / Math.PI).toFixed(1)}`;
       const sec = Math.max(0, Math.floor(target));
       if (sec !== lastSecond || st.phase !== lastPhase) {
         lastSecond = sec; lastPhase = st.phase;
-        const L = labelsFor(mode, gameRef.current, target, st.phase, teams.current.away, teams.current.home);
+        const L = labelsFor(mode, gameRef.current, target, st.phase, teams.current.away, teams.current.home, st.site.status);
         if (tRef.current) tRef.current.textContent = clockText(Math.max(0, target));
         if (kRef.current) kRef.current.textContent = L.k;
         if (lRef.current) lRef.current.textContent = L.l;
-        const done = Number(host.dataset.clean), progress = (st.phase === "clean" || st.phase === "exit") && done >= 1 ? ` · ${Math.min(100, Math.round(done))}% done` : "";
+        if (xRef.current) xRef.current.textContent = st.site.exitIn > 0 ? clockText(st.site.exitIn) : "EXITED";
+        if (pRef.current) { pRef.current.textContent = STATUS_TEXT[st.site.status] ?? st.site.status; pRef.current.dataset.status = st.site.status; }
+        const done = Number(host.dataset.clean), progress = (st.phase === "clean" || st.phase === "approach") && done >= 1 ? ` · ${Math.min(100, Math.round(done))}% done` : "";
         if (capRef.current) capRef.current.lastChild!.textContent = ` ${L.cap}${progress}`;
       }
     };
@@ -205,6 +211,10 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
         <span className="int-k" ref={kRef}>{initial.k}</span>
         <strong className="int-t" ref={tRef}>{clockText(left0)}</strong>
         <span className="int-l" ref={lRef}>{initial.l}</span>
+        <div className="int-bug" data-testid="int-bug">
+          <span className="int-exit"><i>ICE EXIT (AT {clockText(EXIT_LEFT)})</i><b ref={xRef}>{clockText(Math.max(0, left0 - EXIT_LEFT))}</b></span>
+          <span className="int-pill" ref={pRef} data-status="RESURFACING">{STATUS_TEXT.RESURFACING}</span>
+        </div>
       </div>
       <div className="ice-stage">
         <canvas ref={canvas} className="ice-canvas" aria-hidden="true" data-logos={logos} />

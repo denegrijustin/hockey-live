@@ -60,7 +60,7 @@ test("with no clock in the feed it counts 18 minutes from first sight, and a gam
 // One shared timeline: the machine, its blade and the cleaned ice all come from the countdown, so each moment can be checked from the countdown alone.
 const MOMENTS: [string, string, number, number][] = [
   // clock, phase, min clean %, max clean %
-  ["17:50", "enter|clean", 0, 3], ["16:00", "clean", 1, 15], ["9:00", "clean", 40, 60], ["1:00", "clean", 96, 100], ["0:44", "exit", 100, 100], ["0:20", "gone", 100, 100],
+  ["17:50", "enter|clean", 0, 3], ["16:00", "clean", 1, 15], ["9:00", "clean", 40, 60], ["2:20", "clean|approach", 96, 100], ["2:04", "dump", 100, 100], ["1:55", "exit", 100, 100], ["1:20", "gone", 100, 100], ["0:20", "gone", 100, 100],
 ];
 for (const [clock, phase, lo, hi] of MOMENTS) {
   test(`at ${clock} the rink shows the "${phase}" stage with ${lo}–${hi}% of the ice clean, from the first frame (opened midway)`, async ({ page }) => {
@@ -264,4 +264,23 @@ test("in the whole-rink view a BRING NHL TO KC label with the KC Scouts logo rid
   expect(t!.y + t!.height, "above the bottom of the picture").toBeLessThanOrEqual(c!.y + c!.height);
   await rink(page).locator(".ice-view-btn").click();
   await expect(tag).toBeHidden();
+});
+
+// the end of the intermission: the machine dumps its slush at the gate (02:08), leaves (02:00), the ice crew clears the pile (02:00 to 01:05)
+for (const [clock, status, pile, crew] of [["2:04", "SLUSH DUMP", /^0\.[3-9]|^1\.00/, "off"], ["1:30", "ICE CREW", /^[01]\.\d\d$/, "on"], ["0:40", "ICE READY", /^0\.00$/, "off"]] as const) {
+  test(`at ${clock} the status is ${status} (crew ${crew}), with the broadcast bug showing it`, async ({ page }) => {
+    await open(page, { intermission: true, clock });
+    await expect(rink(page)).toHaveAttribute("data-status", status, { timeout: 30000 });
+    expect(await rink(page).getAttribute("data-pile")).toMatch(pile);
+    await expect(rink(page)).toHaveAttribute("data-crew", crew);
+    const bug = rink(page).getByTestId("int-bug");
+    await expect(bug).toContainText("ICE EXIT (AT 2:00)");
+    await expect(bug.locator(".int-pill")).toHaveAttribute("data-status", status);
+  });
+}
+test("the bug counts down to the machine's exit at 02:00 and then says EXITED", async ({ page }) => {
+  await open(page, { intermission: true, clock: "5:00" });
+  await expect(rink(page).locator(".int-exit b")).toHaveText(/^[23]:\d\d$/, { timeout: 30000 });
+  await open(page, { intermission: true, clock: "1:30" });
+  await expect(rink(page).locator(".int-exit b")).toHaveText("EXITED", { timeout: 30000 });
 });

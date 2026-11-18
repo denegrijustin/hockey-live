@@ -13,7 +13,9 @@ export type Pt = { x: number; y: number };
 export type Pose = { x: number; y: number; heading: number; bx: number; by: number };
 /** What the scene needs from a plan: where the machine is at route distance s, and the ground the blade covered between two distances. */
 export type PlanApi = { poseAt(s: number): Pose; sweptQuads(from: number, to: number, step?: number): Pt[][]; enterEnd: number };
-export type Frame = { phase: string; s: number; clean: number; bladeDown: number };
+/** What is on the ice besides the machine: the slush pile (0..1) and, while they are on the ice, the two ice-crew members (see siteAt in ice-plan.mjs). */
+export type Site = { pile: number; pileAt: Pt; crew: { x: number; y: number; heading: number; digging: number } | null };
+export type Frame = { phase: string; s: number; clean: number; bladeDown: number; site?: Site };
 export type Quality = "high" | "low";
 
 const W = 200, H = 85, R = 28, GATE = { x: 181, y: 83.5, half: 6.5 };
@@ -71,6 +73,7 @@ export class Ice3D {
   private iceMat!: THREE.MeshStandardMaterial; private dirtyTex!: THREE.CanvasTexture; private cleanTex!: THREE.CanvasTexture;
   private vehicle = new THREE.Group(); private parts: Record<string, THREE.Object3D> = {}; private ready = false; private shadow!: THREE.Mesh;
   private wet!: THREE.Mesh; private wetCap = 0;
+  private slush!: THREE.Mesh; private crew = new THREE.Group(); private crewParts: { shovel: THREE.Object3D; legs: THREE.Object3D[] }[] = []; private crewLast: Pt | null = null;
   private cleaned: number; private lastS = 0; private odo = 0;
   private cssW = 0; private cssH = 0; private disposed = false;
   // the camera: the whole rink while the machine is off the ice, a close follow shot while it works (so its artwork can be read)
@@ -122,6 +125,7 @@ export class Ice3D {
     wg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(this.wetCap * 3), 3)); wg.setAttribute("color", new THREE.BufferAttribute(new Float32Array(this.wetCap * 4), 4));
     this.wet = new THREE.Mesh(wg, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.NormalBlending }));
     this.wet.frustumCulled = false; this.wet.position.y = 0.05; this.scene.add(this.wet);
+    this.buildSite();
     this.ready = true;
   }
 
@@ -145,6 +149,50 @@ export class Ice3D {
         .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n// the worn surface is slightly pitted, the fresh one is flat\n");
     };
     const ice = new THREE.Mesh(geo, m); ice.position.y = 0; ice.receiveShadow = false; this.scene.add(ice);
+  }
+
+  /** The slush pile the machine dumps at the gate, and the two ice-crew members who shovel it into a blue bin. Simple, low-poly figures: they are a few feet tall in a picture of a whole rink. */
+  private buildSite() {
+    const std = (color: number, rough = 0.7, metal = 0) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
+    const lump = new THREE.SphereGeometry(1, 28, 16); const pos = lump.attributes.position;
+    for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), n = 1 + 0.12 * Math.sin(x * 7.3 + z * 5.1) * Math.cos(z * 6.7 - y * 3.9); pos.setXYZ(i, x * n, Math.max(y * n, -0.05), z * n); }
+    lump.computeVertexNormals();
+    this.slush = new THREE.Mesh(lump, std(0xf1f6fb, 0.96)); this.slush.visible = false; this.slush.frustumCulled = false; this.scene.add(this.slush);
+    const person = (jersey: number) => {
+      const g = new THREE.Group(), legs: THREE.Object3D[] = [];
+      for (const z of [-0.45, 0.45]) { const leg = new THREE.Group(); const l = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.24, 2.7, 10), std(0x1b2433)); l.position.y = 1.55; const skate = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.25, 0.32), std(0x20262f, 0.4, 0.6)); skate.position.set(0.3, 0.12, 0); leg.add(l, skate); leg.position.z = z; g.add(leg); legs.push(leg); }
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.56, 1.9, 12), std(jersey, 0.6)); torso.position.y = 3.9;
+      const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.635, 0.635, 0.32, 12), std(0xc8202f, 0.6)); stripe.position.y = 4.2;
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 14, 12), std(0xe8bf99, 0.65)); head.position.y = 5.25;
+      const hair = new THREE.Mesh(new THREE.SphereGeometry(0.43, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), std(0x5a3a22, 0.8)); hair.position.y = 5.3; hair.rotation.x = -0.35;
+      g.add(torso, stripe, head, hair); return { g, legs };
+    };
+    const shovelObj = () => { const sv = new THREE.Group(); const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 4.6, 8), std(0xd9b06a, 0.6)); shaft.rotation.z = Math.PI / 2 - 0.55; shaft.position.set(1.0, 0.6, 0); const blade = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.12, 1.5), std(0xf2c230, 0.5)); blade.position.set(2.45, -1.55, 0); blade.rotation.z = 0.5; sv.add(shaft, blade); sv.position.set(0.6, 3.6, 0); return sv; };
+    const a = person(0x1a2c5b), b = person(0x1a2c5b);
+    const sv = shovelObj(); a.g.add(sv); a.g.position.set(0, 0, -2.2);
+    const bin = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.9, 2.3), std(0x2563c9, 0.55)); box.position.y = 2.1; const lid = new THREE.Mesh(new THREE.BoxGeometry(2.25, 0.18, 2.45), std(0x1d4ea3, 0.5)); lid.position.y = 3.6;
+    for (const z of [-0.9, 0.9]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 12), std(0x111111)); w.rotation.x = Math.PI / 2; w.position.set(-0.7, 0.3, z); bin.add(w); }
+    bin.add(box, lid); bin.position.set(2.6, 0, 2.0);
+    b.g.position.set(0.2, 0, 2.2);
+    this.crew.add(a.g, b.g, bin); this.crewParts = [{ shovel: sv, legs: a.legs }, { shovel: new THREE.Group(), legs: b.legs }];
+    this.crew.visible = false; this.crew.traverse((o) => { (o as THREE.Mesh).frustumCulled = false; }); this.scene.add(this.crew);
+  }
+
+  /** Place the slush pile (it grows while the machine dumps and shrinks as the crew shovels it) and the crew (walking in, scooping, walking out). */
+  private updateSite(site: Site | undefined, now: number) {
+    const pile = site?.pile ?? 0;
+    this.slush.visible = pile > 0.01;
+    if (this.slush.visible && site) { const k = Math.min(1, pile); this.slush.scale.set(3.6 * k, 1.25 * k, 2.6 * k); this.slush.position.set(site.pileAt.x, 0, site.pileAt.y); }
+    const c = site?.crew ?? null;
+    this.crew.visible = !!c;
+    if (!c) { this.crewLast = null; return; }
+    this.crew.position.set(c.x, 0, c.y); this.crew.rotation.y = -c.heading;
+    const moved = this.crewLast ? Math.hypot(c.x - this.crewLast.x, c.y - this.crewLast.y) : 0; this.crewLast = { x: c.x, y: c.y };
+    const t = now / 1000, walking = moved > 0.002;
+    for (const [i, part] of this.crewParts.entries()) {
+      part.legs.forEach((leg, j) => { leg.rotation.z = walking ? Math.sin(t * 7 + j * Math.PI + i) * 0.35 : 0; });
+      if (i === 0) part.shovel.rotation.z = c.digging ? -0.15 + Math.max(0, Math.sin(t * 3.2)) * 0.5 : 0.2;
+    }
   }
 
   private clearMask() {
@@ -261,7 +309,7 @@ export class Ice3D {
     const target = Math.max(this.cleaned, state.clean);
     if (target > this.cleaned) { this.paint(this.cleaned, target); this.cleaned = target; }
     const pose = this.plan.poseAt(state.s);
-    const on = state.phase === "enter" || state.phase === "clean" || state.phase === "exit";
+    const on = state.phase === "enter" || state.phase === "clean" || state.phase === "approach" || state.phase === "dump" || state.phase === "exit";
     this.vehicle.visible = on; this.shadow.visible = on;
     if (on) {
       this.vehicle.position.set(pose.x, 0, pose.y); this.vehicle.rotation.y = -pose.heading;
@@ -276,7 +324,9 @@ export class Ice3D {
       const cond = this.parts.conditioner; if (cond) cond.rotation.z = -(1 - Math.max(0, Math.min(1, state.bladeDown))) * 0.28;
       this.updateWet(state);
     } else this.wet.visible = false;
-    this.placeCamera(on, pose.x, pose.y, pose.heading);
+    this.updateSite(state.site, performance.now());
+    const crew = state.site?.crew ?? null; // with the machine gone, the close shot stays with the crew at the gate
+    this.placeCamera(on || !!crew, on || !crew ? pose.x : crew.x, on || !crew ? pose.y : crew.y, on || !crew ? pose.heading : crew.heading);
     this.renderer.render(this.scene, this.camera);
     // where the machine is in the picture (CSS px), for a label that follows it
     if (on) { const v = new THREE.Vector3(pose.x, 6, pose.y).project(this.camera); this.machineAt = { x: (v.x * 0.5 + 0.5) * this.cssW, y: (-v.y * 0.5 + 0.5) * this.cssH, w: this.cssW, h: this.cssH }; } else this.machineAt = null;

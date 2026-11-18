@@ -12,7 +12,10 @@ export const BLADE_BACK = 9;            // blade trails the vehicle's reference 
 export const VEHICLE = { len: 14.5, wid: 7 };
 export const GATE_X = 181;              // centre of the service gate in the near boards
 export const GATE_HALF = 6;
-export const FINISH_LEFT = 45;          // cleaning is complete, and the machine starts to leave, with this many seconds left
+export const DUMP_LEFT = 128;           // the machine reaches the gate and dumps its slush with this many seconds left (02:08)...
+export const EXIT_LEFT = 120;           // ...and leaves the ice with this many (02:00); the ice crew then clears the pile
+export const FINISH_LEFT = DUMP_LEFT;   // (the old name: the cleaning is complete and the machine starts to leave)
+export const CREW_S = 55;               // the ice crew is on the ice from 02:00 to 01:05
 export const ENTER_S = 18;              // drive in
 export const INTERMISSION_S = 18 * 60;
 export const PREGAME_S = 20 * 60;
@@ -101,7 +104,14 @@ export function route() {
   let s = 0;
   const out = pts.map((p, i) => { if (i) s += Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y); return { x: p.x, y: p.y, s }; });
   const idxAtX = (x, from) => { for (let i = from; i < out.length; i++) if (out[i].x <= x) return i; return from; };
-  cached = { pts: out, length: s, enterEnd: out[enterEnd].s, cleanStart: out[cleanStart].s, spiralEnd: out[spiralEnd].s, idxAtX, count: out.length };
+  // 6. the dump point: where the machine's own reference point reaches the boards line, in the gate, with the blade (and the pile it dumps) just inside
+  let dumpIdx = spiralEnd;
+  for (let i = spiralEnd + 1; i < out.length - 1; i++) {
+    const hd = Math.atan2(out[i + 1].y - out[i - 1].y, out[i + 1].x - out[i - 1].x);
+    dumpIdx = i;
+    if (out[i].y + BLADE_BACK * Math.sin(hd) >= RINK.h + 1.5) break; // the nose is in the gate, the blade still on the ice
+  }
+  cached = { pts: out, length: s, enterEnd: out[enterEnd].s, cleanStart: out[cleanStart].s, spiralEnd: out[spiralEnd].s, dumpS: out[dumpIdx].s, dumpAt: { x: out[dumpIdx].x, y: out[dumpIdx].y }, idxAtX, count: out.length };
   return cached;
 }
 
@@ -170,25 +180,49 @@ const hermite = (L, T, v0, v1, t) => {
 
 /**
  * The plan for an intermission (or the pregame ice preparation) of `total` seconds from its start to the moment play begins.
- * left = seconds still to go. Phases: wait (before it starts), enter, clean, exit, gone. Speeds are continuous at every boundary.
+ * left = seconds still to go. Phases: wait (before it starts), enter, clean, approach (blade up, slowing toward the gate), dump (stopped at the gate with
+ * 02:08 to 02:00 left, the slush coming off), exit (through the gate), gone. Speeds are continuous at every boundary. `site` is everything else on the ice:
+ * the slush pile (0..1), the ice crew's position, and the broadcast status line.
  */
 export function stateAt(left, total = INTERMISSION_S) {
   const r = route();
-  const T = Math.max(total, ENTER_S + FINISH_LEFT + 60);
-  const tEnterEnd = T - ENTER_S, tCleanEnd = FINISH_LEFT;
-  const cleanLen = r.spiralEnd - r.enterEnd, cleanTime = tEnterEnd - tCleanEnd;
-  const v = cleanLen / cleanTime;                                   // the working speed, steady through every lap
-  const exitLen = r.length - r.spiralEnd, vOut = 4.5;
-  const exitWindow = exitLen / ((v + vOut) / 2);
+  const T = Math.max(total, ENTER_S + DUMP_LEFT + 60);
+  const tEnterEnd = T - ENTER_S;
+  const cleanLen = r.spiralEnd - r.enterEnd, apprLen = r.dumpS - r.spiralEnd, exitLen = r.length - r.dumpS, vOut = 4.5;
+  // one working speed, chosen so the machine arrives at the gate (after slowing to rest over the approach) exactly DUMP_LEFT seconds from the end
+  const v = (cleanLen + 2 * apprLen) / (tEnterEnd - DUMP_LEFT);
+  const apprTime = (2 * apprLen) / v, tCleanEnd = DUMP_LEFT + apprTime, exitTime = (2 * exitLen) / vOut;
   let phase, s;
   if (left > T) { phase = "wait"; s = 0; }
   else if (left > tEnterEnd) { phase = "enter"; s = hermite(r.enterEnd, ENTER_S, 0, v, T - left); }
   else if (left > tCleanEnd) { phase = "clean"; s = r.enterEnd + v * (tEnterEnd - left); }
-  else if (left > tCleanEnd - exitWindow) { phase = "exit"; s = r.spiralEnd + hermite(exitLen, exitWindow, v, vOut, tCleanEnd - left); }
+  else if (left > DUMP_LEFT) { phase = "approach"; s = r.spiralEnd + hermite(apprLen, apprTime, v, 0, tCleanEnd - left); }
+  else if (left > EXIT_LEFT) { phase = "dump"; s = r.dumpS; }
+  else if (left > EXIT_LEFT - exitTime) { phase = "exit"; s = r.dumpS + hermite(exitLen, exitTime, 0, vOut, EXIT_LEFT - left); }
   else { phase = "gone"; s = r.length; }
   // how far the blade is lowered (0 up, 1 down): lowered at the start of the centre pass, raised over 1.5 s at the end of the cleaning
-  const down = phase === "clean" ? Math.min(1, (tEnterEnd - left) / 1 + 0) : phase === "exit" ? Math.max(0, 1 - (FINISH_LEFT - left) / 1.5) : 0;
-  return { phase, s: Math.min(s, r.length), speed: v, clean: Math.max(r.enterEnd, Math.min(s, r.spiralEnd)), bladeDown: down, cleanTotal: cleanLen, window: { tEnterEnd, tCleanEnd, exitWindow } };
+  const down = phase === "clean" ? Math.min(1, (tEnterEnd - left) / 1 + 0) : phase === "approach" ? Math.max(0, 1 - (tCleanEnd - left) / 1.5) : 0;
+  return { phase, s: Math.min(s, r.length), speed: v, clean: Math.max(r.enterEnd, Math.min(s, r.spiralEnd)), bladeDown: down, cleanTotal: cleanLen, window: { tEnterEnd, tCleanEnd, exitTime }, site: siteAt(left, exitTime) };
+}
+
+const ease = (t) => t * t * (3 - 2 * t);
+/**
+ * What is on the ice besides the machine at `left` seconds to go. `pile`: the slush at the gate, 0..1 (it grows while the machine dumps, 02:08 to 02:00, and the crew
+ * shovels it away). `crew`: the two ice-crew members' shared position and heading while they are on the ice (02:00 to 01:05), else null; `digging` is 1 while they scoop.
+ * `status`: the broadcast status line. `exitIn`: seconds until the machine's exit time (02:00).
+ */
+export function siteAt(left, exitTime = 12) {
+  const r = route(), at = r.dumpAt, tau = EXIT_LEFT - left;
+  const pile = left > DUMP_LEFT ? 0 : left > EXIT_LEFT ? (DUMP_LEFT - left) / (DUMP_LEFT - EXIT_LEFT) : tau < 7 ? 1 : tau < CREW_S - 8 ? Math.max(0, 1 - (tau - 7) / (CREW_S - 15)) : 0;
+  let crew = null;
+  if (tau >= 0 && tau <= CREW_S) {
+    const walkIn = tau < 7, walkOut = tau > CREW_S - 8;
+    const k = walkIn ? ease(tau / 7) : walkOut ? 1 - ease((tau - (CREW_S - 8)) / 8) : 1;
+    const from = { x: GATE_X, y: RINK.h + 10 }, to = { x: at.x + 1, y: at.y + 3.5 };
+    crew = { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k, heading: walkOut ? Math.PI / 2 : -Math.PI / 2, digging: !walkIn && !walkOut ? 1 : 0 };
+  }
+  const status = left > DUMP_LEFT ? "RESURFACING" : left > EXIT_LEFT - exitTime ? "SLUSH DUMP" : crew || pile > 0 ? "ICE CREW" : "ICE READY";
+  return { pile, crew, status, exitIn: Math.max(0, left - EXIT_LEFT), pileAt: { x: at.x, y: at.y - 1 } };
 }
 
 /**

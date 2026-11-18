@@ -147,7 +147,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       if (tag) {
         if (viewRef.current === "overview" && at) {
           const cw = el.clientWidth || at.w, ch = el.clientHeight || at.h, mx = (at.x / at.w) * cw, my = (at.y / at.h) * ch; // the picture is shown at its CSS size, which is capped on wide screens
-          const half = tag.offsetWidth / 2 || 70, x = Math.max(half + 4, Math.min(cw - half - 4, mx)), y = Math.max(tag.offsetHeight + 8, Math.min(ch, my) - 12);
+          const half = tag.offsetWidth / 2 || 70, th = tag.offsetHeight || 28, x = Math.max(half + 4, Math.min(cw - half - 4, mx)), y = Math.max(th + 8, Math.min(ch, my) - 12); // (a hidden label has no size yet: use its usual height so the first frame is already inside the picture)
           tag.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`; tag.hidden = false;
         } else tag.hidden = true;
       }

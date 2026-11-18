@@ -130,8 +130,9 @@ export const gated = (process.env.QA_AFTER ? test : test.fixme) as typeof test;
 export const NEEDS = "needs ui-close/ui-gauge";
 
 /** Every gauge's accessible label plus its leader flag, per pane: the fingerprint of the gauge calculations. */
+/** The head-to-head gauges' labels and leader flags. (The watchability bar, `.gc-watch`, is one score and not a gauge calculation, so it is left out.) */
 export async function gaugeFingerprint(page: Page, scope: string = GAME_DIALOG) {
-  return page.locator(`${scope} .gauge, ${scope} .gr-period, ${scope} .split-row`).evaluateAll((figs) => figs.filter((f) => f.getClientRects().length).map((f) => `${f.getAttribute("aria-label")}|${f.getAttribute("data-leader")}`).sort());
+  return page.locator(`${scope} .gauge, ${scope} .gr-period, ${scope} .split-row`).evaluateAll((figs) => figs.filter((f) => f.getClientRects().length && !f.classList.contains("gc-watch")).map((f) => `${f.getAttribute("aria-label")}|${f.getAttribute("data-leader")}`).sort());
 }
 
 /** Labels the redesign moved from dials to text-first rows (`.gr-period`, goalie `.split-row`): their numbers must still equal the baseline, only the leader flag may go. */

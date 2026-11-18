@@ -241,3 +241,12 @@
   .gx-team .team-logo { width: 64px; height: 64px; }
   .gc-tabs [role="tab"] { min-height: 44px; }
 }
+
+/* The TV pill in the header grows with its logos (it used to be capped at half the column and the logos spilled out of it). */
+.game-dialog .gx-net.tv-network { max-width: 100%; width: max-content; justify-content: center; padding: 6px 14px; }
+.game-dialog .gx-net .network-logos { flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 100%; }
+.game-dialog .gx-net .network-logo { flex: none; }
+/* The watchability bar over the projected score. */
+.gc-watch { margin: 0 0 10px; padding: 8px 12px 10px; border: 1px solid color-mix(in srgb, var(--face-accent, #ff9ec7) 55%, transparent); border-radius: 14px; background: color-mix(in srgb, #000 22%, transparent); }
+.gc-watch .gt-vals b.h { font-size: clamp(1rem, 1.6vw, 1.25rem); }
+.gc-watch .gt-vals b.h { color: #fff; }

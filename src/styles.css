@@ -3770,3 +3770,11 @@ body {
 
 /* My team: its row stays marked even when every team is highlighted as a favorite. */
 .standings-table tr.mine td:first-child, .tm-card.mine, .po-row.mine .po-btn { box-shadow: inset 3px 0 0 var(--mint-5); }
+
+/* The Projected view has one more column: on a phone its heading is short ("Proj") and the streak goes, so every column fits inside the panel instead of running off its right edge. */
+.standings-table .st-h-short { display: none; }
+@media (max-width: 600px) {
+  .standings-table .st-h-long { display: none; } .standings-table .st-h-short { display: inline; }
+}
+@media (max-width: 480px) { .standings-table.st-proj .st-strk { display: none; } }
+@media (max-width: 340px) { .standings-table .st-diff { display: none; } }

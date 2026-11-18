@@ -140,7 +140,7 @@ export function Standings({
         <td><strong>{s.pts}</strong></td>
         {mode === "projected" && <td><strong>{projected[t.id].projected.toFixed(1)}</strong></td>}
         <td>{pct == null ? "—" : (pct * 100).toFixed(1) + "%"}</td>
-        <td className={s.gf - s.ga >= 0 ? "positive" : "negative"}>{signed(s.gf - s.ga)}</td>
+        <td className={`st-diff ${s.gf - s.ga >= 0 ? "positive" : "negative"}`}>{signed(s.gf - s.ga)}</td>
         <td className="st-l10" title="Record over the last 10 games, W-L-OTL">{l10 ? l10.label : "—"}</td>
         <td className="st-strk" title="Current streak; OT is an overtime or shootout loss">{sk ? sk.label : "—"}</td>
         <td className="st-gih" title={`Games in hand versus the most-played team (${refGp} GP)`}>{gih ?? "—"}</td>
@@ -168,9 +168,9 @@ export function Standings({
         <th scope="col" className="st-wlo" title="Overtime or shootout losses">OTL</th>
         <th scope="col" className="st-rec">W–L–OTL</th>
         <th scope="col">PTS</th>
-        {mode === "projected" && <th scope="col">Projected PTS</th>}
+        {mode === "projected" && <th scope="col" aria-label="Projected PTS" title="Projected points at the end of the season"><span className="st-h-long">Projected PTS</span><span className="st-h-short" aria-hidden="true">Proj</span></th>}
         <th scope="col" title="Points percentage: points / (2 × games played)">P%</th>
-        <th scope="col" title="Goal differential">DIFF</th>
+        <th scope="col" className="st-diff" title="Goal differential">DIFF</th>
         <th scope="col" className="st-l10" title="Last 10 games, W-L-OTL">L10</th>
         <th scope="col" className="st-strk" title="Current streak">STRK</th>
         <th scope="col" className="st-gih" title="Games in hand versus the most-played team">GIH</th>
@@ -197,7 +197,7 @@ export function Standings({
       <div key={code}>
         <h3>{CONF_NAME[code]}{mode === "projected" ? " — projected picture" : ""}</h3>
         <div className="table-scroll st-fit">
-          <table className="standings-table st-wc">
+          <table className={`standings-table st-wc${mode === "projected" ? " st-proj" : ""}`}>
             {caption(`${CONF_NAME[code]} playoff picture: top three in each division, two wild cards, then the teams outside`)}
             {head}
             {secs.map(([d, ids]) => section(`${d} top 3`, ids, d, 1, "div"))}
@@ -247,7 +247,7 @@ export function Standings({
               <div key={sec.key}>
                 {sec.heading && <h3>{sec.heading}</h3>}
                 <div className="table-scroll st-fit">
-                  <table className="standings-table">
+                  <table className={`standings-table${mode === "projected" ? " st-proj" : ""}`}>
                     {caption(`${sec.heading ?? "League"} standings, ${mode === "projected" ? "projected" : "current"}, in NHL order`)}
                     {head}
                     <tbody>

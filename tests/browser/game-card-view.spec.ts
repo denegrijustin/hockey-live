@@ -165,3 +165,12 @@ test("a live row card is just the score until it is expanded, and Details shows 
   await btn.click();
   await expect(row.locator(".sb-venue")).toBeHidden();
 });
+
+test("a collapsed row card on a phone is a short strip", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await open(page, "/");
+  const row = page.locator(`.gcv-row[data-game="${G.live.id}"]`).first();
+  await expect(row).toBeVisible({ timeout: 30000 });
+  const h = (await row.boundingBox())!.height;
+  expect(h, `collapsed card is ${Math.round(h)}px tall`).toBeLessThan(240);
+});

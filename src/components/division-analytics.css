@@ -77,12 +77,12 @@
   .an-scroll { margin-top: 8px; }
   .an-table { min-width: 700px; }
   .an-table .an-num { position: sticky; left: 0; z-index: 2; width: 42px; background: #071427; }
-  .an-table .an-team { position: sticky; left: 42px; z-index: 2; min-width: 132px; max-width: 132px; background: #071427; box-shadow: 8px 0 8px -6px #000a; }
-  .an-th.an-num, .an-th.an-team { position: sticky; z-index: 3; background: #08172e; } .an-th.an-num { left: 0; } .an-th.an-team { left: 42px; min-width: 132px; box-shadow: 8px 0 8px -6px #000a; }
+  .an-table .an-team { position: sticky; left: 42px; z-index: 2; width: 172px; min-width: 172px; max-width: 172px; overflow: hidden; background: #071427; box-shadow: 8px 0 8px -6px #000a; }
+  .an-th.an-num, .an-th.an-team { position: sticky; z-index: 3; background: #08172e; } .an-th.an-num { left: 0; } .an-th.an-team { left: 42px; width: 172px; min-width: 172px; box-shadow: 8px 0 8px -6px #000a; }
   .an-chip { width: 32px; height: 30px; font-size: 1rem; }
   .an-table td.an-pts strong { font-size: 1.375rem; } .an-th.an-pts { min-width: 54px; }
   .an-tile { min-width: 74px; }
-  .an-tm { gap: 8px; } .an-tm .team-logo { width: 34px !important; height: 34px !important; } .an-tm b { font-size: .9375rem; } .an-tm small { font-size: .6875rem; }
+  .an-tm { gap: 8px; width: 160px; } .an-tm span { flex: 1 1 0; } .an-tm .team-logo { width: 32px !important; height: 32px !important; } .an-tm b, .an-tm b a, .an-tm b button { font-size: .875rem; line-height: 1.15; white-space: normal; overflow-wrap: anywhere; } .an-tm small { font-size: .6875rem; white-space: nowrap; }
   .an-table tr.mine td.an-num, .an-table tr.mine td.an-team { background: #0a1c38; }
   .an-legend { grid-template-columns: minmax(0, 1fr); }
   .an-note { border-left: 0; border-top: 1.5px solid #2a4a74; }

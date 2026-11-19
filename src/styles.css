@@ -1,5 +1,10 @@
+/* Termina Black: one family, mapped onto every weight so the whole app renders in it. It is a licensed typeface, so it is used where installed
+   or once the font file is added (see public/fonts/README.md); until then the system stack below applies. */
+@font-face { font-family: "Termina"; font-weight: 100 900; font-style: normal; font-display: swap; src: local("Termina Black"), local("Termina-Black"), local("TerminaBlack"); }
+:root { --font-termina: "Termina"; }
 :root {
   font-family:
+    var(--font-termina),
     system-ui,
     -apple-system,
     BlinkMacSystemFont,

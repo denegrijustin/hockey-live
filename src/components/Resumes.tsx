@@ -18,7 +18,8 @@ export function Chip({ m, win }: { m: Meet; win: boolean }) {
   return (
     <li className={`rs-chip${m.bad ? " bad" : ""}`} title={`${win ? "Won" : "Lost"} ${win ? m.gf : m.gf}–${m.ga}${m.end ? ` (${m.end})` : ""} ${m.home ? "at home against" : "on the road against"} the #${m.oppRank} team${m.bad ? ". A bad loss: the opponent is in the bottom ten." : ""}`}>
       <TeamLogo id={m.opp} size={22} />
-      <span className="rs-chip-s"><b>{m.gf}–{m.ga}</b>{m.end ? <small>{m.end}</small> : null}</span>
+      <b className="rs-chip-s">{m.gf}–{m.ga}</b>
+      <small className="rs-chip-e">{m.end}</small>
       <span className="rs-chip-w">{m.home ? "vs" : "at"} #{m.oppRank}</span>
       {m.bad && <em className="rs-bad">BAD</em>}
     </li>

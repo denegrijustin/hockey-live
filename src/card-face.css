@@ -114,3 +114,5 @@
 /* The card's note when the score and the deserved win disagree. */
 .gcv-why { margin: 8px 0 0; font-size: .875rem; line-height: 1.45; color: #ffffffd9; }
 .gcv-why b { color: #fff; font-weight: 800; }
+/* the card is the score until it is expanded: the rest sits in .gcv-more */
+.gcv-row .gcv-more { display: grid; gap: inherit; } .gcv-row .gcv-more[hidden] { display: none; }

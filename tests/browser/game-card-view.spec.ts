@@ -149,3 +149,19 @@ test.describe("Home row (GameCardView, variant row)", () => {
     expect((await page.locator(".sb-row .team-logo:not(.int-who .team-logo)").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))])).length).toBe(1); // one logo size on every row
   });
 });
+
+test("a live row card is just the score until it is expanded, and Details shows the rest", async ({ page }) => {
+  await open(page, "/");
+  const row = page.locator(`.gcv-row[data-game="${G.live.id}"]`).first();
+  await expect(row).toBeVisible({ timeout: 30000 });
+  await expect(row.locator(".sb-venue")).toBeHidden();
+  await expect(row.getByTestId("card-metrics")).toBeHidden();
+  await expect(row.locator(".sb-score").first()).toBeVisible();
+  const btn = row.locator(".gcv-details");
+  await expect(btn).toHaveAttribute("aria-expanded", "false");
+  await btn.click();
+  await expect(btn).toHaveAttribute("aria-expanded", "true");
+  await expect(row.locator(".sb-venue")).toBeVisible();
+  await btn.click();
+  await expect(row.locator(".sb-venue")).toBeHidden();
+});

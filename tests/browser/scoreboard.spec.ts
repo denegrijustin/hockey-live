@@ -221,6 +221,7 @@ test.describe("scoreboard home", () => {
     await open(page, "/", [many]);
     const row = page.locator('.sb-row[data-game="9211"]');
     await expect(row).toBeVisible();
+    await row.locator(".gcv-details").click(); // the venue and the bar are in the expanded part of the card
     const box = (l: ReturnType<typeof row.locator>) => l.boundingBox();
     const tv = (await box(row.locator(".tv-network")))!, gc = (await box(row.getByRole("button", { name: /Open Game Center/ })))!;
     expect(tv.x + tv.width, "TV pill ends before the GC button").toBeLessThanOrEqual(gc.x + 1);

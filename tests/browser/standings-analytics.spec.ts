@@ -147,3 +147,18 @@ test("without the MoneyPuck numbers the standings columns still show and the pag
   await expect(page.locator("[data-testid=an-table] tbody td[data-metric=gd] .an-tile").first()).not.toHaveClass(/none/); // goal differential comes from the standings
   await expect(page.locator("[data-testid=an-table] tbody td[data-metric=xg] .an-tile.none").first()).toHaveText("—");
 });
+
+for (const width of [360, 390, 430]) {
+  test(`phone ${width}px: no team name or record runs into the PTS column, in any division`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page);
+    for (const d of ["Atlantic", "Metropolitan", "Central", "Pacific"]) {
+      await page.locator(".an-divs").getByRole("button", { name: d, exact: true }).click();
+      const bad = await page.locator("[data-testid=an-table] tbody tr").evaluateAll((trs) => trs.filter((tr) => {
+        const cell = tr.querySelector(".an-team")!.getBoundingClientRect();
+        return [...tr.querySelectorAll(".an-tm b, .an-tm small")].some((e) => { const r = e.getBoundingClientRect(); return r.right > cell.right + 0.5; });
+      }).length);
+      expect(bad, d).toBe(0);
+    }
+  });
+}

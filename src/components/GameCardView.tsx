@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, type ReactNode } from "react";
+import { lazy, Suspense, useRef, useState, type ReactNode } from "react";
 import { useTimeKey } from "../lib/display";
 import { FavoriteMark } from "./FavoriteStar";
 import type { Game, Team } from "../types";
@@ -76,6 +76,7 @@ const stateOf = (kind: string) => (kind === "live" || kind === "intermission" ? 
 
 export function GameCardView(p: GameCardViewProps) {
   const { game, away, home, variant, ranks, record, rating, onOpen } = p;
+  const [moreOpen, setMore] = useState(false);
   useTimeKey();
   const st = gameStatus(game);
   const ref = useRef<HTMLElement>(null);
@@ -152,6 +153,8 @@ export function GameCardView(p: GameCardViewProps) {
   }
 
   const scoredNow = !!(p.scored?.away || p.scored?.home);
+  const hasMore = !!(p.metrics || p.venue !== false || p.extras || p.probRow || p.context || p.insight);
+  const more = moreOpen || !!p.open;
   // The card sits on the home team's own colour, framed in a bright accent (its second colour when that is bright, else a tint of the first).
   const { bg: base, accent } = faceColors(away, home);
   const liveNow = st.live && !st.stale;
@@ -179,13 +182,19 @@ export function GameCardView(p: GameCardViewProps) {
           {teams}
         </button>
       </div>
-      {p.metrics}
-      {p.venue !== false && <p className="sb-venue"><Icon name="pin" size={20} />{game.venue || "Venue unavailable"}</p>}
-      {p.extras}
-      {p.probRow}
-      {p.context && <div className="gcv-context">{p.context}</div>}
-      {p.insight && <div className="gcv-insight">{p.insight}</div>}
-      <button type="button" className="gcv-details" aria-expanded={!!p.open} aria-label={`${p.open ? "Hide" : "Show"} details for ${away.name} at ${home.name}`} onClick={() => onOpen(game)}>Details <Icon name="chevron" size={22} /></button>
+      {hasMore && (
+        <>
+          <div id={`gcv-more-${game.id}`} className="gcv-more" hidden={!more}>
+            {p.metrics}
+            {p.venue !== false && <p className="sb-venue"><Icon name="pin" size={20} />{game.venue || "Venue unavailable"}</p>}
+            {p.extras}
+            {p.probRow}
+            {p.context && <div className="gcv-context">{p.context}</div>}
+            {p.insight && <div className="gcv-insight">{p.insight}</div>}
+          </div>
+          <button type="button" className="gcv-details" aria-expanded={more} aria-controls={`gcv-more-${game.id}`} aria-label={`${more ? "Hide" : "Show"} details for ${away.name} at ${home.name}`} onClick={() => setMore((v) => !v)}>{more ? "Hide details" : "Details"} <Icon name="chevron" size={22} /></button>
+        </>
+      )}
       {p.below}
     </article>
   );

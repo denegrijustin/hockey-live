@@ -89,6 +89,8 @@ test.describe("home personal", () => {
     await seedPrefs(page, { favorites: ["MIN"] });
     await mockApis(page, { games });
     await page.goto("/");
+    await expect(page.locator(`${sec("upcoming")} .sb-venue`).first()).toBeHidden(); // a card is the score until it is expanded
+    await page.locator(`${sec("upcoming")} .gcv-details`).first().click();
     await expect(page.locator(`${sec("upcoming")} .sb-venue`).first()).toBeVisible();
     await page.getByRole("button", { name: "Compact game cards" }).click();
     await expect(page.locator(`${sec("upcoming")} .sb-venue`)).toHaveCount(0);
@@ -179,6 +181,7 @@ test.describe("home personal", () => {
     });
     await page.setViewportSize({ width: 1700, height: 1000 });
     await page.goto("/");
+    await page.locator(".gcv-details").first().click();
     await expect(page.locator("[data-testid=card-injuries] .gcv-pillrow")).toHaveCount(2);
     await page.locator("[data-testid=card-injuries]").first().evaluate((el) => { (el.closest(".gcv-row") as HTMLElement).style.cssText += ";width:900px;max-width:none;justify-self:start"; });
     const wide = await geo();
@@ -186,6 +189,7 @@ test.describe("home personal", () => {
     expect(Math.abs(wide.pills[0].w - wide.pills[1].w), "equal width").toBeLessThan(2);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
+    await page.locator(".gcv-details").first().click();
     await expect(page.locator("[data-testid=card-injuries] .gcv-pillrow")).toHaveCount(2);
     const narrow = await geo();
     expect(narrow.pills[1].y, "stacked").toBeGreaterThan(narrow.pills[0].y + 10);

@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Game, Team } from "../types";
 import { buildResumes } from "../lib/resumes.mjs";
 import { TeamLogo } from "./TeamLogo";
 import { TeamLink } from "./TeamProfile";
+import { Icon } from "./icons";
 import "./resumes.css";
 
 type Meet = { id: number; opp: string; oppRank: number; home: boolean; gf: number; ga: number; end: string; bad?: boolean };
@@ -37,27 +38,32 @@ function Cell({ label, rank, size, sub }: { label: string; rank: number; size: n
 /** Every team's resumé: best wins, losses, schedule strength, offense and defense, in the order of the standings. */
 export function Resumes({ teams, table, games }: { teams: Team[]; table: Record<string, any>; games: Game[] }) {
   const rows = useMemo(() => buildResumes({ teams, table, games }) as Row[], [teams, table, games]);
+  const [openTeam, setOpenTeam] = useState<string | null>(null);
   const shortOf = (id: string) => teams.find((t) => t.id === id)?.short ?? id;
   const nameOf = (id: string) => teams.find((t) => t.id === id)?.name ?? id;
   if (!rows.length) return <p className="detail-note">Resumés appear once teams have played.</p>;
   return (
     <div className="rs" data-testid="resumes">
       <p className="rs-key">
-        Order is the standings, by points percentage. <b>Best wins</b> are ranked by how good the opponent is now; <b>vs</b> is at home, <b>at</b> is on the road, <b>#</b> is the opponent’s rank. <b>SOS</b>, <b>OFF</b> and <b>DEF</b> are ranks among {rows.length} teams (1 is best):
-        schedule strength is the opponents’ average points %, offense is goals per game, defense is goals against per game. <b className="rs-bad-key">BAD</b> is a loss to a team ranked 23rd or lower. Regular season only.
+        Order is the standings, by points percentage. <b>SOS</b>, <b>OFF</b> and <b>DEF</b> are each team’s rank among {rows.length} teams (1 is best); tap a row’s arrow for its best wins and losses. <b>Best wins</b> are ranked by how good the opponent is now; <b>vs</b> is at home, <b>at</b> is on the road, <b>#</b> is the opponent’s rank. Schedule strength is the opponents’ average points %, offense is goals per game, defense is goals against per game. <b className="rs-bad-key">BAD</b> is a loss to a team ranked 23rd or lower. Regular season only.
       </p>
       <ol className="rs-list">
         {rows.map((r) => (
-          <li key={r.team} className="rs-row" data-team={r.team}>
+          <li key={r.team} className={`rs-row${openTeam === r.team ? " open" : ""}`} data-team={r.team}>
             <span className="rs-rank">{r.rank}</span>
-            <span className="rs-team"><TeamLogo id={r.team} size={30} /><span><b title={nameOf(r.team)}><TeamLink id={r.team}>{shortOf(r.team)}</TeamLink></b><small>{r.record} · {r.pts} pts</small></span></span>
-            <div className="rs-wins"><h4>Best wins</h4>{r.bestWins.length ? <ul>{r.bestWins.map((m) => <Chip key={m.id} m={m} win />)}</ul> : <p className="rs-none">No wins yet</p>}</div>
-            <div className="rs-losses"><h4>Losses</h4>{r.lossCount ? <ul>{r.losses.map((m) => <Chip key={m.id} m={m} win={false} />)}{r.moreLosses > 0 && <li className="rs-more">+{r.moreLosses} more</li>}</ul> : <p className="rs-none">Unbeaten</p>}</div>
+            <span className="rs-team"><TeamLogo id={r.team} size={30} /><span><b title={nameOf(r.team)}><TeamLink id={r.team}>{shortOf(r.team)}</TeamLink></b><small>{r.record} · {r.pts}<span className="rs-pts"> pts</span></small></span></span>
             <span className="rs-cells">
               <Cell label="SOS" rank={r.sos.rank} size={rows.length} sub="" />
               <Cell label="OFF" rank={r.off.rank} size={rows.length} sub={r.off.value.toFixed(1)} />
               <Cell label="DEF" rank={r.def.rank} size={rows.length} sub={r.def.value.toFixed(1)} />
             </span>
+            <button type="button" className="rs-more-btn" aria-expanded={openTeam === r.team} aria-label={`${openTeam === r.team ? "Hide" : "Show"} best wins and losses for ${nameOf(r.team)}`} onClick={() => setOpenTeam(openTeam === r.team ? null : r.team)}><Icon name="chevron" size={20} /></button>
+            {openTeam === r.team && (
+              <div className="rs-detail">
+                <div className="rs-wins"><h4>Best wins</h4>{r.bestWins.length ? <ul>{r.bestWins.map((m) => <Chip key={m.id} m={m} win />)}</ul> : <p className="rs-none">No wins yet</p>}</div>
+                <div className="rs-losses"><h4>Losses</h4>{r.lossCount ? <ul>{r.losses.map((m) => <Chip key={m.id} m={m} win={false} />)}{r.moreLosses > 0 && <li className="rs-more">+{r.moreLosses} more</li>}</ul> : <p className="rs-none">Unbeaten</p>}</div>
+              </div>
+            )}
           </li>
         ))}
       </ol>

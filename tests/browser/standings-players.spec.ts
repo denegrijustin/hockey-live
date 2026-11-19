@@ -62,9 +62,11 @@ for (const [label, width] of [["a 360px phone", 360], ["a laptop", 1280], ["a wi
     await expect(rows).toHaveCount(32);
     await expect(rows.first().locator(".rs-rank")).toHaveText("1");
     await expect(rows.first().locator(".rs-cell")).toHaveCount(3);
-    const wins = await rows.evaluateAll((els) => els.map((e) => e.querySelectorAll(".rs-wins .rs-chip").length));
-    expect(Math.max(...wins)).toBeLessThanOrEqual(3);
-    expect(wins.some((n) => n > 0)).toBe(true); // the season has games
+    // the wins and losses are behind each row's arrow
+    await rows.first().locator(".rs-more-btn").click();
+    const wins = await rows.first().locator(".rs-wins .rs-chip").count();
+    expect(wins).toBeGreaterThan(0); // the season has games
+    expect(wins).toBeLessThanOrEqual(3);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     // The table view is still there behind the other tab.
     await page.getByRole("button", { name: "Standings table" }).click();

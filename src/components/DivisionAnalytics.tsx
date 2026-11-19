@@ -31,6 +31,7 @@ export function DivisionAnalytics({ teams, rowsMap, season, myTeam }: { teams: T
   const [division, setDivision] = useState<string>(mine && DIVISIONS.includes(mine as never) ? mine : "Pacific");
   const [sort, setSort] = useState<{ key: SortKey; reverse: boolean }>({ key: "pos", reverse: false });
   const { data, state } = useMoneyPuck(season, "summary");
+  const shortOf = (id: string) => teams.find((t) => t.id === id)?.short ?? id;
   const nameOf = (id: string) => teams.find((t) => t.id === id)?.name ?? id;
   const all = useMemo(() => analyticsRows(teams, rowsMap, data), [teams, rowsMap, data]);
   const view = useMemo(() => divisionView(all, division, (a: string, b: string) => compareStandings({ ...rowsMap[a], name: nameOf(a) }, { ...rowsMap[b], name: nameOf(b) })), [all, division, rowsMap]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -81,7 +82,7 @@ export function DivisionAnalytics({ teams, rowsMap, season, myTeam }: { teams: T
                   <td className="an-team">
                     <div className="an-tm">
                       <TeamLogo id={r.id} size={46} />
-                      <span><b><TeamLink id={r.id}>{r.name}</TeamLink></b><small>{r.gp} GP · {r.ptsPct == null ? "—" : r.ptsPct.toFixed(3)} pts%</small></span>
+                      <span><b><TeamLink id={r.id}><span className="an-long">{r.name}</span><span className="an-short" aria-hidden="true">{shortOf(r.id)}</span></TeamLink></b><small>{r.gp} GP<span className="an-pp"> · {r.ptsPct == null ? "—" : r.ptsPct.toFixed(3)} pts%</span></small></span>
                     </div>
                   </td>
                   <td className="an-pts"><strong>{r.pts}</strong></td>

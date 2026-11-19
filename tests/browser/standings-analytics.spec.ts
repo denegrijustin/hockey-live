@@ -162,3 +162,11 @@ for (const width of [360, 390, 430]) {
     }
   });
 }
+
+test("phone 390px: the pinned position and team columns take under 55% of the card, leaving room to scroll", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await open(page);
+  const [scroll, team] = await Promise.all([page.locator(".an-scroll").boundingBox(), page.locator("[data-testid=an-table] tbody tr").first().locator(".an-team").boundingBox()]);
+  const ratio = (team!.x + team!.width - scroll!.x) / scroll!.width;
+  expect(ratio, JSON.stringify({ scroll, team })).toBeLessThan(0.55);
+});

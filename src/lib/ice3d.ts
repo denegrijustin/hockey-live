@@ -241,14 +241,58 @@ export class Ice3D {
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(110, 1.6), new THREE.MeshBasicMaterial({ map: label(look.homeName, 110, 1.6), transparent: true, depthWrite: false }));
     sign.position.set(100, 3.1, 0.2); this.scene.add(sign);
     const sign2 = sign.clone(); sign2.position.set(70, 3.1, H + 0.3); sign2.scale.set(0.9, 1, 1); this.scene.add(sign2);
-    // no stands: the picture is the ice and the boards, on a plain dark floor
-    // the floor beyond the boards, with the dark rubber mat leading to the service gate
+    // the floor beyond the boards (no separate dark mat at the gate: it read as a black square), and the stands and fans behind the boards
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 400), new THREE.MeshStandardMaterial({ color: 0x0c1019, roughness: 0.95 })); floor.rotation.x = -Math.PI / 2; floor.position.set(100, -0.1, 100); this.scene.add(floor);
-    const mat = new THREE.Mesh(new THREE.PlaneGeometry(16, 60), new THREE.MeshStandardMaterial({ color: 0x090b0f, roughness: 0.95 })); mat.rotation.x = -Math.PI / 2; mat.position.set(GATE.x, 0, 105); this.scene.add(mat);
+    this.buildStands(team);
     // gate frame
     const post = new THREE.MeshStandardMaterial({ color: 0xcfd6de, metalness: 0.5, roughness: 0.4 });
     for (const sx of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.4, 0.5), post); p.position.set(GATE.x + sx * GATE.half, 2.2, 86.5); this.scene.add(p); }
     this.scene.background = hex("#0a1322");
+  }
+
+  /** Tiered stands round the rink with a crowd in them. They sit back from the boards in dark, low-contrast tones so the ice stays the picture; a corridor is kept clear at the service gate for the machine and the crew. */
+  private buildStands(team: THREE.Color) {
+    const dense = (off: number, spacing: number) => {
+      const base = perimeter(), out: { x: number; y: number; nx: number; ny: number }[] = [];
+      for (let i = 0; i < base.length; i++) {
+        const a = base[i], b = base[(i + 1) % base.length], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1, nx = dy / l, ny = -dx / l;
+        const k = Math.max(1, Math.round(l / spacing));
+        for (let j = 0; j < k; j++) { const t = j / k; out.push({ x: a.x + dx * t + nx * off, y: a.y + dy * t + ny * off, nx, ny }); }
+      }
+      return out;
+    };
+    const inGate = (x: number, y: number) => Math.abs(x - GATE.x) < GATE.half + 7 && y > H / 2;
+    const tiers = 7, tread = 3.4, rise = 1.7, first = 9;
+    const pos: number[] = [], idx: number[] = []; let n = 0;
+    const quad = (o0: number, y0: number, o1: number, y1: number) => {
+      const a = dense(o0, 5), b = dense(o1, 5);
+      for (let i = 0; i < a.length; i++) {
+        const j = (i + 1) % a.length;
+        if (inGate(a[i].x, a[i].y)) continue;
+        pos.push(a[i].x, y0, a[i].y, a[j].x, y0, a[j].y, b[j].x, y1, b[j].y, b[i].x, y1, b[i].y);
+        idx.push(n, n + 1, n + 2, n, n + 2, n + 3); n += 4;
+      }
+    };
+    for (let t = 0; t < tiers; t++) {
+      const o = first + t * tread, y = 3 + (t + 1) * rise;
+      quad(o, y - rise, o, y);               // the riser
+      quad(o, y, o + tread, y);              // the tread
+    }
+    quad(first + tiers * tread, 3 + tiers * rise, first + tiers * tread, 0); // the back wall
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    this.scene.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x182235, roughness: 0.9, side: THREE.DoubleSide })));
+    // the crowd: small figures, mostly in muted team colour, white and grey, with gaps
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const spots: { x: number; y: number; z: number }[] = [];
+    for (let t = 0; t < tiers; t++) for (const p of dense(first + t * tread + tread * 0.55, 3.1)) { if (inGate(p.x, p.y) || rnd() < 0.16) continue; spots.push({ x: p.x, y: 3 + (t + 1) * rise + 1.05, z: p.y }); }
+    const fan = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.75, 0.9, 3, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }), spots.length);
+    const m4 = new THREE.Matrix4(), col = new THREE.Color(), dull = new THREE.Color(0x1b2434), light = new THREE.Color(0xc9d3e0);
+    spots.forEach((p, i) => {
+      m4.makeTranslation(p.x, p.y, p.z); fan.setMatrixAt(i, m4);
+      const r = rnd(); col.copy(r < 0.4 ? team : r < 0.55 ? light : r < 0.8 ? dull : new THREE.Color().setHSL(rnd(), 0.25, 0.3)).lerp(dull, 0.35 + rnd() * 0.25);
+      fan.setColorAt(i, col);
+    });
+    fan.instanceMatrix.needsUpdate = true; if (fan.instanceColor) fan.instanceColor.needsUpdate = true; fan.frustumCulled = false; this.scene.add(fan);
   }
 
   private buildLights() {

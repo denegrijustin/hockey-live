@@ -6,12 +6,6 @@ import { TeamLogo } from "./TeamLogo";
 import "./gsax.css";
 
 const signed = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(1)}`;
-/** Blue for goals saved, red for goals let in, deeper the further from zero. */
-const tint = (v: number, max: number) => {
-  const t = max > 0 ? Math.min(1, Math.abs(v) / max) : 0;
-  return { background: `color-mix(in srgb, ${v >= 0 ? "#4aa3ff" : "#e0566e"} ${Math.round(14 + t * 72)}%, var(--surface-3))` };
-};
-
 /** The league ranked by goals saved above expected (all situations), the way the hockeystats graphic lays it out: three columns, best at the top left. */
 export function GsaxBoard({ season, teams, current = true }: { season: number; teams: Team[]; current?: boolean }) {
   const { data, state, updated } = useMoneyPuck(season, "summary", { watchAge: current });
@@ -37,7 +31,9 @@ export function GsaxBoard({ season, teams, current = true }: { season: number; t
               <li key={r.team} data-team={r.team} title={`${nameOf(r.team)}: ${r.xGA.toFixed(1)} expected goals against, ${r.GA} allowed${r.gp ? ` in ${r.gp} games` : ""}`}>
                 <span className="gx-rank">{r.rank}</span>
                 <TeamLogo id={r.team} size={30} />
-                <span className="gx-val" style={tint(r.gsax, max)}>{signed(r.gsax)}</span>
+                <b className="gx-id">{r.team}</b>
+                <span className="gx-bar" aria-hidden="true"><i className={r.gsax >= 0 ? "pos" : "neg"} style={{ width: `${max > 0 ? Math.max(2, (Math.abs(r.gsax) / max) * 50) : 0}%` }} /></span>
+                <span className={`gx-val ${r.gsax >= 0 ? "pos" : "neg"}`}>{signed(r.gsax)}</span>
               </li>
             ))}
           </ol>

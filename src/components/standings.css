@@ -32,3 +32,12 @@
   .standings-table .table-team { gap: 4px; } .standings-table .table-team .team-logo { width: 22px !important; height: 22px !important; }
   .standings-table .table-team b { font-size: .75rem; } .standings-table td strong { font-size: .8125rem; }
 }
+/* the right end of each card-row is its last visible cell, which depends on the width */
+@media (min-width: 861px) and (max-width: 1099px) { .standings-table tbody tr td.st-gap { border-radius: 0 12px 12px 0; padding-right: 10px; } }
+@media (min-width: 481px) and (max-width: 860px) { .standings-table tbody tr td.st-l5 { border-radius: 0 12px 12px 0; padding-right: 10px; } }
+@media (max-width: 480px) { .standings-table tbody tr td.st-strk { border-radius: 0 12px 12px 0; padding-right: 8px; } }
+/* the controls above the table in the app's own style: a plain note instead of an outlined pill, rounded filled selects */
+.st-controls { margin: 8px 0 4px; }
+.st-mode-badge { padding: 0; border: 0; border-radius: 0; color: var(--muted); font-weight: 500; }
+.st-mode-badge.st-mode-projected { color: var(--amber-5); }
+.chart-filters select { border: 0; border-radius: 12px; background: var(--surface-6); }

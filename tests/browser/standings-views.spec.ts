@@ -109,3 +109,13 @@ for (const width of [360, 390]) {
     });
   });
 }
+
+test("the standings rows are plain card-rows: selecting every team does not tint them all", async ({ page }) => {
+  await page.goto("/?view=games");
+  await page.getByRole("button", { name: "Standings", exact: true }).click();
+  const rows = page.locator(".standings-table tbody tr[data-team]:not(.mine)");
+  await expect(rows.first()).toBeVisible({ timeout: 30000 });
+  const fills = await rows.evaluateAll((trs) => [...new Set(trs.map((t) => getComputedStyle(t.querySelectorAll("td")[1]).backgroundColor))]);
+  expect(fills.length).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

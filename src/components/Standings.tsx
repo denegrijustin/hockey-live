@@ -12,6 +12,7 @@ import { Resumes } from "./Resumes";
 import { DivisionAnalytics } from "./DivisionAnalytics";
 import { TeamLink } from "./TeamProfile";
 import { PageHeader } from "./PageHeader";
+import "./standings.css";
 
 type View = "league" | "conference" | "east" | "west" | "division" | "wildcard";
 type Mode = "current" | "projected";
@@ -128,7 +129,7 @@ export function Standings({
         <td>
           <div className="table-team">
             <TeamLogo id={t.id} size={28} />
-            <b><TeamLink id={t.id}><span className="st-full">{t.name}</span><span className="st-abbr" title={t.name}>{t.id}</span></TeamLink><FavoriteMark id={t.id} sr />{s.gp ? <small className="st-sub">{spots[t.id] ? <span className="st-sub-spot">{SPOT_LABEL[spots[t.id]!.status]}{(mode === "current" && clinch[t.id]?.status) ? (clinch[t.id].status === "clinched" ? " ✓" : " ✗") : ""} · </span> : null}{signed(s.pts - entryLine(table, t.id, teams))} line</small> : null}</b>
+            <b><TeamLink id={t.id}><span className="st-full">{t.name}</span><span className="st-abbr" title={t.name}>{t.id}</span></TeamLink><FavoriteMark id={t.id} sr />{s.gp ? <small className="st-sub">{spots[t.id] ? <span className="st-sub-spot">{SPOT_LABEL[spots[t.id]!.status]}{(mode === "current" && clinch[t.id]?.status) ? (clinch[t.id].status === "clinched" ? " ✓" : " ✗") : ""}</span> : null}<span className="st-line">{spots[t.id] ? " · " : ""}{signed(s.pts - entryLine(table, t.id, teams))} line</span></small> : null}</b>
           </div>
         </td>
         <td className="st-div">{t.division}</td>

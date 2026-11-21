@@ -36,6 +36,15 @@ export const BOARDS = {
   OTT: { ribbon: [181, 290, 345, 40], panels: [[118, 60, 473, 42]] },
   TBL: { ribbon: [68, 300, 567, 40], panels: [[70, 86, 112, 210], [523, 86, 112, 210]] },
   TOR: { ribbon: [156, 262, 395, 44] },
+  // Metropolitan
+  CAR: { ribbon: [84,  286,  540,  36], panels: [[80,  108,  100,  148],  [524,  108,  102,  148]] },
+  CBJ: { ribbon: [84,  292,  540,  36], panels: [[84,  108,  116,  184],  [508,  108,  116,  184]] },
+  NJD: { ribbon: [70,  302,  562,  36], panels: [[72,  86,  108,  212],  [524,  86,  108,  212]] },
+  NYI: { ribbon: [156,  262,  395,  44] },
+  NYR: { ribbon: [84,  286,  540,  36], panels: [[78,  108,  104,  148],  [524,  108,  104,  148]] },
+  PHI: { ribbon: [84,  292,  540,  36], panels: [[84,  108,  116,  184],  [508,  108,  116,  184]] },
+  PIT: { ribbon: [70,  302,  562,  36], panels: [[72,  86,  108,  212],  [524,  86,  108,  212]] },
+  WSH: { ribbon: [160,  300,  388,  44] },
 };
 
 /** The board for a home team: its artwork and overlay boxes as percentages of the picture, or null (a drawn board). */

@@ -20,10 +20,10 @@ for (const width of [1440, 390]) {
     const [s, art] = [await strip.boundingBox(), await edm.locator(".jb-art").boundingBox()];
     expect(s!.x).toBeGreaterThanOrEqual(art!.x - 1); expect(s!.x + s!.width).toBeLessThanOrEqual(art!.x + art!.width + 1); expect(s!.y + s!.height).toBeLessThanOrEqual(art!.y + art!.height + 1);
     expect(Number.parseFloat(await strip.locator(".jb-score").first().evaluate((e) => getComputedStyle(e).fontSize))).toBeGreaterThanOrEqual(16);
-    // a team with no artwork yet: a board drawn in its colours, with the arena's name
-    const dal = page.locator('.sb-row[data-game="9802"] [data-testid=arena-board]');
-    await expect(dal).toHaveAttribute("data-board", "drawn");
-    await expect(dal.locator(".jb-marquee")).toHaveText("Prudential Center");
+    // every team now has its arena's artwork
+    const nj = page.locator('.sb-row[data-game="9802"] [data-testid=arena-board]');
+    await expect(nj).toHaveAttribute("data-board", "art");
+    await expect(nj.locator(".jb-art > img")).toHaveAttribute("src", "/scoreboards/NJD.webp");
     await strip.click();
     await expect(page.locator("dialog.game-dialog[open]")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

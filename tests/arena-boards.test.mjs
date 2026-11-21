@@ -10,6 +10,7 @@ test("every board with artwork has its picture, and its overlays sit inside it",
     const f = boardFor(id); assert.ok(f.ribbon.width > 35, `${id} score strip wide enough to carry the score`);
   }
   assert.equal(boardFor("XXX"), null);
+  assert.equal(Object.keys(BOARDS).length, 32, "all 32 teams");
   assert.equal(arenaOf("EDM"), "Rogers Place");
 });
 

@@ -102,7 +102,8 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
     const look: Look = { homeId: home.id, homeName: home.name, color: color || "#1d428a", accent: "#f1b82c", seed: hashOf(`${game.id}`), logo: null, scouts: null };
     let scene: Ice3D | null = null;
     const dpr = () => Math.min(2.5, window.devicePixelRatio || 1);
-    const quality = compact || window.matchMedia?.("(max-width: 700px)").matches ? "low" : "high";
+    // texture detail follows the picture's real size: a wide card (a Home card on a desktop is over 1000px) needs the full-size ice and mask, or the whole-rink view looks soft
+    const quality = (host.clientWidth || 0) * Math.min(2, window.devicePixelRatio || 1) >= 900 ? "high" : "low";
     let alive = true;
     host.dataset.render = "loading";
     let started = false, holdsSlot = false;

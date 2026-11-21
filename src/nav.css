@@ -666,7 +666,12 @@ main#main:focus { outline: none; }
 @media (min-width: 1000px) { .logo-toggle { display: inline-flex; } }
 
 /* One pane of a multi view: the Game Center cannot be closed from inside it, and the page chrome under it stays out of the way. */
-html[data-embed] .gc-close-wrap, html[data-embed] .game-center-multi { display: none; }
-html[data-embed] .game-dialog { padding-inline: 12px; }
+html[data-embed] .gc-close-wrap, html[data-embed] .game-center-multi, html[data-embed] .tab-bar { display: none !important; }
+html[data-embed] .game-dialog { padding: 6px 12px 12px; }
 html[data-embed] .game-dialog { animation: none !important; }
 html[data-embed] .game-dialog .dialog-toolbar { display: none; }
+/* a pane of the multi view is a fraction of the screen: everything in its Game Center a size smaller, more so in a narrow pane */
+html[data-embed] { --ez: .85; }
+@media (max-width: 560px), (max-height: 520px) { html[data-embed] { --ez: .75; } }
+html[data-embed] body { zoom: var(--ez); }
+html[data-embed] .game-dialog { height: calc(100dvh / var(--ez)) !important; max-height: none !important; } /* (viewport units shrink with the zoom: the pane still fills its frame) */

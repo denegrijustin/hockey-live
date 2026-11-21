@@ -6,6 +6,7 @@ const games = [
   mk.live(9701, "COL", "WPG", { period: 2, clock: "10:00", score: [2, 1] }),
   mk.live(9702, "CHI", "EDM", { period: 3, clock: "05:00", score: [0, 1] }),
   mk.upcoming(9703, "MIN", "DAL", { time: "01:00" }),
+  mk.live(9704, "TOR", "BOS", { period: 1, clock: "12:00", score: [1, 1] }),
 ];
 
 test("multi-view: two Game Centers side by side, each scrolling on its own", async ({ page }) => {
@@ -65,4 +66,37 @@ test("a multi-view link opens straight into two panes, and bad ids are ignored",
   await expect(page.getByTestId("mv-frame-1")).toBeVisible();
   await page.getByRole("button", { name: "Close multi-view" }).click();
   await expect(page.getByTestId("multi-view")).toHaveCount(0);
+});
+
+test("up to four games: Add a game opens a third and fourth pane in a grid, and a pane can be removed", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await seedPrefs(page, {});
+  await mockApis(page, { games });
+  await page.goto("/?multi=9701,9702");
+  const mv = page.getByTestId("multi-view");
+  await expect(mv).toBeVisible();
+  await page.getByTestId("mv-add").click();
+  await expect(page.getByTestId("mv-empty")).toBeVisible();
+  // the picker offers only games not already shown
+  const offered = await page.getByTestId("mv-pick-2").locator("option").evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value).filter(Boolean));
+  expect(offered.sort()).toEqual(["9703", "9704"]);
+  await page.getByTestId("mv-pick-2").selectOption("9703");
+  expect(page.url()).toContain("multi=9701%2C9702%2C9703");
+  await page.getByTestId("mv-add").click();
+  await page.getByTestId("mv-pick-3").selectOption("9704");
+  expect(page.url()).toContain("multi=9701%2C9702%2C9703%2C9704");
+  await expect(page.getByTestId("mv-add")).toHaveCount(0); // four is the most
+  // a 2 x 2 grid: two columns, two rows
+  const boxes = await Promise.all([0, 1, 2, 3].map((i) => page.getByTestId(`mv-frame-${i}`).boundingBox()));
+  expect(new Set(boxes.map((b) => Math.round(b!.x))).size).toBe(2);
+  expect(new Set(boxes.map((b) => Math.round(b!.y))).size).toBe(2);
+  for (const b of boxes) { expect(b!.width).toBeGreaterThan(400); expect(b!.height).toBeGreaterThan(250); }
+  // each pane draws its Game Center a size smaller
+  const f3 = page.frameLocator("[data-testid=mv-frame-3]");
+  await expect(f3.locator("dialog.game-dialog[open]")).toBeVisible({ timeout: 30_000 });
+  expect(Number(await f3.locator("body").evaluate((b) => getComputedStyle(b).zoom))).toBeLessThan(1);
+  await page.getByRole("button", { name: "Remove the third game" }).click();
+  expect(page.url()).toContain("multi=9701%2C9702%2C9704");
+  await expect(page.getByTestId("mv-frame-2")).toBeVisible();
 });

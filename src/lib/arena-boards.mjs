@@ -4,6 +4,7 @@
 // Artwork is 704 x 384. `ribbon` is the score strip (x, y, w, h in artwork pixels); `panels` are the side tables the art draws with made-up
 // numbers, covered by real ones. A team with no artwork yet gets a board drawn in its colours (see ArenaBoard).
 import arenas from "./arenas.json" with { type: "json" };
+import { buildRecap } from "./game-recap.mjs";
 
 export const ART = { w: 704, h: 384 };
 
@@ -79,9 +80,30 @@ export function boardStats(feed, game) {
     { label: "BLK", away: count(plays, "blocked-shot", A), home: count(plays, "blocked-shot", H) },
     { label: "PIM", away: pim(A), home: pim(H) },
   ];
+  // the deeper lines for the table under the board (the side screens already show SOG, FO%, hits and blocks)
+  const miss = (t) => count(plays, "missed-shot", t);
+  const blockedBy = (t) => count(plays, "blocked-shot", t);          // a blocked-shot event belongs to the blocking team
+  const att = { a: sog(A) + miss(A) + blockedBy(H), h: sog(H) + miss(H) + blockedBy(A) };
+  const pct = (x, y) => (x + y ? `${Math.round((100 * x) / (x + y))}%` : "—");
+  // power play: goals scored with more skaters than the other side, out of the minor and major penalties the other side took
+  const sk = (p) => { const m = /^(\d)(\d)(\d)(\d)$/.exec(p.sit ?? ""); return m ? { a: +m[2], h: +m[3] } : null; };
+  const ppGoals = (side) => plays.filter((p) => p.type === "goal" && p.periodType !== "SO" && p.team === (side === "a" ? A : H)).filter((p) => { const k = sk(p); return k && (side === "a" ? k.a > k.h : k.h > k.a); }).length;
+  const chances = (t) => plays.filter((p) => p.type === "penalty" && p.team === t && [2, 4, 5].includes(p.duration ?? 0)).length;
+  const ga = (t) => plays.filter((p) => p.type === "goal" && p.periodType !== "SO" && p.team !== t && p.goalie).length; // goals against with a goalie in net
+  const sv = (t, shots) => (shots ? (Math.max(0, shots - ga(t)) / shots).toFixed(3).replace(/^0/, "") : "—");
+  let xg = null;
+  try { xg = buildRecap({ game: feed, mp: null })?.xg ?? null; } catch { xg = null; }
+  const deep = [
+    { label: "SHOT ATT", away: att.a, home: att.h },
+    { label: "CORSI %", away: pct(att.a, att.h), home: pct(att.h, att.a) },
+    ...(xg ? [{ label: "xGOALS", away: xg.away.toFixed(2), home: xg.home.toFixed(2) }] : []),
+    { label: "POWER PLAY", away: `${ppGoals("a")}/${chances(H)}`, home: `${ppGoals("h")}/${chances(A)}` },
+    { label: "SAVE %", away: sv(A, sog(H)), home: sv(H, sog(A)) },
+    { label: "TAKE / GIVE", away: `${count(plays, "takeaway", A)} / ${count(plays, "giveaway", A)}`, home: `${count(plays, "takeaway", H)} / ${count(plays, "giveaway", H)}` },
+  ];
   const ord = (n) => (n <= 3 ? `P${n}` : n === 4 ? "OT" : `${n - 3}OT`);
   const goals = plays.filter((p) => p.type === "goal" && p.periodType !== "SO").map((p) => ({ side: p.team === H ? "home" : "away", team: p.team, who: p.player ?? "", when: `${ord(p.period)} ${p.time}` })).reverse();
   const s = feed.situation;
   const pp = s?.homePowerPlay ? "home" : s?.awayPowerPlay ? "away" : null;
-  return { rows, goals, pp };
+  return { rows, deep, goals, pp };
 }

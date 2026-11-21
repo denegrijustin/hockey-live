@@ -30,3 +30,23 @@ test("board stats count shots on goal, faceoffs won, hits, blocks and penalty mi
   assert.equal(s.pp, "home");
   assert.equal(boardStats(null, game), null);
 });
+
+test("the deeper lines: shot attempts and Corsi, power play goals out of chances, save % and takeaways / giveaways", () => {
+  const game = { away: "CAR", home: "EDM" };
+  const G = { id: 1, name: "G" };
+  const plays = [
+    { type: "shot-on-goal", team: "EDM", period: 1 }, { type: "shot-on-goal", team: "EDM", period: 1 }, { type: "missed-shot", team: "EDM", period: 1 }, { type: "blocked-shot", team: "CAR", period: 1 },
+    { type: "shot-on-goal", team: "CAR", period: 1 },
+    { type: "penalty", team: "CAR", duration: 2, period: 1 }, { type: "penalty", team: "CAR", duration: 10, period: 1 },
+    { type: "goal", team: "EDM", sit: "1451", goalie: G, period: 1, time: "05:00", player: "A" },
+    { type: "takeaway", team: "EDM" }, { type: "giveaway", team: "CAR" },
+  ];
+  const s = boardStats({ plays }, game);
+  const row = (l) => s.deep.find((r) => r.label === l);
+  assert.deepEqual([row("SHOT ATT").away, row("SHOT ATT").home], [1, 5], "home: 3 SOG (goal counts), 1 miss, 1 blocked by CAR");
+  assert.equal(row("CORSI %").home, "83%");
+  assert.deepEqual([row("POWER PLAY").away, row("POWER PLAY").home], ["0/0", "1/1"], "a misconduct is not a power play");
+  assert.deepEqual([row("SAVE %").away, row("SAVE %").home], [".667", "1.000".replace(/^1\.000$/, "1.000")]);
+  assert.deepEqual([row("TAKE / GIVE").away, row("TAKE / GIVE").home], ["0 / 1", "1 / 0"]);
+  assert.ok(!s.deep.some((r) => ["SOG", "FO%", "HITS", "BLK"].includes(r.label)), "no repeats of the side screens");
+});

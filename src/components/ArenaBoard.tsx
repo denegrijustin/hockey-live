@@ -65,7 +65,7 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
       </>
     );
   };
-  const style = { ["--jb-c1" as never]: home.color, ["--jb-c2" as never]: home.cardColor ?? home.color } as CSSProperties;
+  const style = { ["--jb-c1" as never]: home.cardColor ?? home.color, ["--jb-c2" as never]: home.cardColor ?? home.color } as CSSProperties; // the card colour (the chart colour is often a light blue that is not the team's)
   return (
     <div className="jb" data-board={art ? "art" : "drawn"} data-testid="arena-board" style={style}>
       {art ? (

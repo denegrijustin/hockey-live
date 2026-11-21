@@ -75,11 +75,15 @@ export interface GameCardViewProps {
   rootRef?: (el: HTMLElement | null) => void;
 }
 
+/** Cards whose Details are open, kept outside the card so a card rebuilt (a list re-render, a section change) stays open. */
+const openDetails = new Set<number>();
+
 const stateOf = (kind: string) => (kind === "live" || kind === "intermission" ? "live" : kind === "final" ? "final" : "soon");
 
 export function GameCardView(p: GameCardViewProps) {
   const { game, away, home, variant, ranks, record, rating, onOpen } = p;
-  const [moreOpen, setMore] = useState(false);
+  const [moreOpen, setMoreState] = useState(() => openDetails.has(p.game.id));
+  const setMore = (f: (v: boolean) => boolean) => setMoreState((v) => { const n = f(v); if (n) openDetails.add(p.game.id); else openDetails.delete(p.game.id); return n; });
   useTimeKey();
   const st = gameStatus(game);
   const ref = useRef<HTMLElement>(null);

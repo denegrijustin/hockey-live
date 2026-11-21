@@ -255,7 +255,8 @@ test("on a live card the team names never run under the score", async ({ page })
     const m = await rows.evaluateAll((els) => els.flatMap((row) => [...row.querySelectorAll<HTMLElement>(".sb-team")].map((t) => {
       const n = t.querySelector<HTMLElement>(".sb-name")!, s = t.querySelector<HTMLElement>(".sb-score")!;
       const rg = document.createRange(); rg.selectNodeContents(n);
-      return { who: n.textContent, runUnder: Math.max(...[...rg.getClientRects()].map((r) => r.right)) - s.getBoundingClientRect().left };
+      const sb = s.getBoundingClientRect(); // the name's text must not overlap its score (on the arena board the home side is mirrored: score, then name)
+      return { who: n.textContent, runUnder: Math.max(0, ...[...rg.getClientRects()].filter((r) => r.width > 0 && r.bottom > sb.top && r.top < sb.bottom).map((r) => Math.min(r.right, sb.right) - Math.max(r.left, sb.left))) };
     })));
     for (const x of m) {
       expect(x.runUnder, `${x.who} runs under its score at ${width}px`).toBeLessThanOrEqual(1);

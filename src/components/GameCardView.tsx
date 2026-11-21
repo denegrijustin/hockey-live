@@ -8,6 +8,7 @@ import { usePauseOffscreen } from "../motion";
 import { TeamLogo } from "./TeamLogo";
 import { Icon } from "./icons";
 import { WinSplash, isSplashWin } from "./WinSplash";
+import { ArenaBoard } from "./ArenaBoard";
 import { faceColors } from "../lib/face";
 import "../game-card-view.css";
 import "../card-face.css";
@@ -54,6 +55,8 @@ export interface GameCardViewProps {
   extras?: ReactNode;
   /** Row: the pregame win-probability bar, above the Details button. */
   probRow?: ReactNode;
+  /** Row: draw the home arena's scoreboard instead of the two team lines, with these stat lines (null before the game has a feed). */
+  board?: { stats: Parameters<typeof ArenaBoard>[0]["stats"] } | null;
   /** Row: show the venue line (default true). */
   venue?: boolean;
   /** Row: show the built-in "GC" Game Center button beside `actions` (default true). */
@@ -159,7 +162,7 @@ export function GameCardView(p: GameCardViewProps) {
   const { bg: base, accent } = faceColors(away, home);
   const liveNow = st.live && !st.stale;
   return (
-    <article ref={set as never} data-face="1" style={{ ["--face-bg" as never]: base, ["--face-accent" as never]: accent } as never} className={`gcv gcv-row sb-row${isSplashWin(game) ? " la-win-card" : ""} ${state}${pill ? ` ${st.kind}` : ""}${upset ? " upset-won" : ""}${p.open ? " open" : ""}${p.hot ? " hot" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>
+    <article ref={set as never} data-face="1" style={{ ["--face-bg" as never]: base, ["--face-accent" as never]: accent } as never} className={`gcv gcv-row sb-row${p.board ? " has-board" : ""}${isSplashWin(game) ? " la-win-card" : ""} ${state}${pill ? ` ${st.kind}` : ""}${upset ? " upset-won" : ""}${p.open ? " open" : ""}${p.hot ? " hot" : ""}${p.state ? ` ${p.state}` : ""}${p.className ? ` ${p.className}` : ""}`} data-game={game.id}>
       <WinSplash game={game} />
       {scoredNow && <span className="pulse-ring" aria-hidden="true" />}
       {p.banner && <div className="gcv-banner late-flag">{p.banner}</div>}
@@ -177,11 +180,15 @@ export function GameCardView(p: GameCardViewProps) {
           </span>
         </span>
       </div>
-      <div className="sb-body">
-        <button type="button" className="sb-main" aria-haspopup="dialog" aria-label={name} onClick={() => onOpen(game)}>
-          {teams}
-        </button>
-      </div>
+      {p.board ? (
+        <ArenaBoard game={game} away={away} home={home} st={st} name={name} onOpen={onOpen} scored={p.scored} ranks={ranks} winner={winner} hasScore={hasScore} stats={p.board.stats} />
+      ) : (
+        <div className="sb-body">
+          <button type="button" className="sb-main" aria-haspopup="dialog" aria-label={name} onClick={() => onOpen(game)}>
+            {teams}
+          </button>
+        </div>
+      )}
       {hasMore && (
         <>
           <div id={`gcv-more-${game.id}`} className="gcv-more" hidden={!more}>

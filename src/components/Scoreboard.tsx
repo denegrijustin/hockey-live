@@ -16,6 +16,7 @@ import { CompactGameFlow, useCardFeed } from "./GameData";
 import { GameCardView } from "./GameCardView";
 import { InjuryRow, MetricTrio, ModelPills, ProbRow } from "./CardFace";
 import { deserve, modelLine, momentum } from "../lib/card-metrics.mjs";
+import { boardStats } from "../lib/arena-boards.mjs";
 import { DateStrip, DayHeading, fullDate } from "./DateStrip";
 import { InsightLine } from "./InsightLine";
 import { CompletedStrip } from "./home/CompletedStrip";
@@ -390,6 +391,7 @@ function ScoreRow({ game, away, home, before, baseline, allGames, rating, ranks,
       extras={kind !== "final" && !compact ? <><InjuryRow away={away} home={home} season={game.season} /><ModelPills away={away} home={home} line={line} score={projection?.score ?? null} /></> : null}
       probRow={kind === "soon" && !compact && homePct != null ? <ProbRow away={away} home={home} homePct={homePct} /> : null}
       scored={{ away: awayScored, home: homeScored }} onOpen={() => onFull()}
+      board={compact ? null : { stats: boardStats(feed, game) }}
       ariaExtra={cl.both ? "close and late" : undefined}
       actions={!game.broadcasts?.length ? null : <span className="tv-network"><NetworkLogos broadcasts={[...new Set(game.broadcasts)]} game={game} /></span>}
       context={kind === "live" && rating?.upset ? <span className="sb-brew">Upset brewing: the underdog is ahead late</span> : undefined}

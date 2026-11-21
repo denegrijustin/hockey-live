@@ -7,7 +7,7 @@ test("every board with artwork has its picture, and its overlays sit inside it",
   for (const [id, b] of Object.entries(BOARDS)) {
     assert.ok(existsSync(`public/scoreboards/${id}.webp`), `${id} artwork`);
     for (const [x, y, w, h] of [b.ribbon, ...(b.panels ?? [])]) assert.ok(x >= 0 && y >= 0 && x + w <= ART.w && y + h <= ART.h, `${id} overlay inside`);
-    const f = boardFor(id); assert.ok(f.ribbon.width > 50 && f.ribbon.top > 60, `${id} strip across the bottom`);
+    const f = boardFor(id); assert.ok(f.ribbon.width > 35, `${id} score strip wide enough to carry the score`);
   }
   assert.equal(boardFor("XXX"), null);
   assert.equal(arenaOf("EDM"), "Rogers Place");

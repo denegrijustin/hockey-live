@@ -62,3 +62,9 @@
 }
 @container (max-width: 380px) { .gcv-row .jb .jb-name .sb-rank { display: none; } }
 @media (max-width: 520px) { .gcv-row .jb .jb-drawn .jb-ribbon { --rh: 44px; min-height: 44px; } .jb-screen { min-height: 84px; } .jb-screen .team-logo { width: 72px !important; height: 72px !important; } .jb-banner { font-size: .9375rem; } }
+/* a thin score ring above the board (Florida, Ottawa): the score line again */
+.jb-panel.jb-ring { display: flex; align-items: center; justify-content: center; gap: 1.2em; padding: 0 1em; font-size: calc(var(--rh) * .42); }
+.jb-panel.jb-ring b { font-weight: 900; } .jb-panel.jb-ring .jb-rs { color: #ffd75e; font-size: 1.25em; }
+.jb-panel.jb-ring span { padding: 0 .6em; border-radius: .25em; background: #000; font-weight: 800; color: #ff5a6a; white-space: nowrap; }
+/* a strip narrower than its content (Florida's small board) grows to fit, centred on the art's own */
+@container (min-width: 521px) { .gcv-row .jb .jb-art .jb-ribbon { min-width: 52%; } }

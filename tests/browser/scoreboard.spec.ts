@@ -203,7 +203,7 @@ test.describe("scoreboard home", () => {
     expect(gc!.y + gc!.height).toBeLessThanOrEqual(main!.y + 1);
     // (a game that is about to start, or has just, also carries its ice-preparation rink: that is measured separately and capped)
     const rinkBox = (await row.getByTestId("intermission").count()) > 0 ? await row.getByTestId("intermission").boundingBox() : null; // boundingBox() waits for an element that may not exist
-    expect(r!.height - (rinkBox?.height ?? 0)).toBeLessThan(430); // the face card also carries the venue, the injury line, the model pills and the win bar
+    expect(r!.height - (rinkBox?.height ?? 0)).toBeLessThan(520); // the card is the home arena's scoreboard picture, then the Details button
     if (rinkBox) expect(rinkBox.height, "a rink in a row stays a sensible size on a wide screen").toBeLessThan(340);
     const second = await page.locator(".sb-row.soon").nth(1).boundingBox();
     expect(second!.x).toBeGreaterThan(r!.x + r!.width - 1); // the second game sits beside the first

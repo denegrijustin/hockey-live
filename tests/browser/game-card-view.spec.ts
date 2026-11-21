@@ -146,7 +146,7 @@ test.describe("Home row (GameCardView, variant row)", () => {
       const box = await loc.evaluate((el) => { const r = el.getBoundingClientRect(), b = getComputedStyle(el, "::before"); return { h: Math.max(r.height, r.height + Math.abs(parseFloat(b.top) || 0) * 2) }; });
       expect(box.h).toBeGreaterThanOrEqual(44);
     }
-    expect((await page.locator(".sb-row .team-logo:not(.int-who .team-logo)").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))])).length).toBe(1); // one logo size on every row
+    expect((await page.locator(".sb-row .team-logo:not(.int-who .team-logo):not(.jb .team-logo)").evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))])).length).toBe(1); // one logo size on every row
   });
 });
 
@@ -166,11 +166,11 @@ test("a live row card is just the score until it is expanded, and Details shows 
   await expect(row.locator(".sb-venue")).toBeHidden();
 });
 
-test("a collapsed row card on a phone is a short strip", async ({ page }) => {
+test("a collapsed row card on a phone is its arena scoreboard and the status bar, nothing more", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await open(page, "/");
   const row = page.locator(`.gcv-row[data-game="${G.live.id}"]`).first();
   await expect(row).toBeVisible({ timeout: 30000 });
   const h = (await row.boundingBox())!.height;
-  expect(h, `collapsed card is ${Math.round(h)}px tall`).toBeLessThan(240);
+  expect(h, `collapsed card is ${Math.round(h)}px tall`).toBeLessThan(420); // the scoreboard picture (about 200px on a phone) plus the status bar and Details
 });

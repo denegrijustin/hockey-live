@@ -7,7 +7,8 @@ import { FavoriteMark } from "./FavoriteStar";
 import "../arena-board.css";
 
 type Box = { left: number; top: number; width: number; height: number };
-type Stats = { rows: { label: string; away: number | string; home: number | string }[]; goals: { side: string; team: string; who: string; when: string }[]; pp: string | null } | null;
+type Row = { label: string; away: number | string; home: number | string };
+type Stats = { rows: Row[]; deep?: Row[]; goals: { side: string; team: string; who: string; when: string }[]; pp: string | null } | null;
 type Status = { kind: string; label: string; short?: string; live: boolean; final: boolean; upcoming: boolean };
 
 const at = (b: Box): CSSProperties => ({ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%`, ["--rh" as never]: `${(b.height * 384) / 704}cqw`, ["--bt" as never]: `${100 - b.top - b.height}%` });
@@ -90,7 +91,7 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
           <table>
             <caption className="sr-only">Game stats, {away.name} and {home.name}</caption>
             <thead><tr><th scope="col">{away.id}</th><th scope="col"><span className="sr-only">Stat</span></th><th scope="col">{home.id}</th></tr></thead>
-            <tbody>{stats.rows.map((r) => <tr key={r.label}><td>{r.away}</td><th scope="row">{r.label}</th><td>{r.home}</td></tr>)}</tbody>
+            <tbody>{(art?.panels.some((p: Box) => p.width / p.height <= 5) && stats.deep ? stats.deep : [stats.rows[0], ...(stats.deep ?? stats.rows.slice(1))]).map((r: Row) => <tr key={r.label}><td>{r.away}</td><th scope="row">{r.label}</th><td>{r.home}</td></tr>)}</tbody>
           </table>
           {stats.goals.length > 0 && (
             <ol className="jb-goals" aria-label="Goals, newest first">

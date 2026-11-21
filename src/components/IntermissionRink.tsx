@@ -58,7 +58,7 @@ type Labels = { k: string; l: string; cap: string };
 const STATUS_TEXT: Record<string, string> = { "NETS OFF": "NETS OFF • ZAMBONI NEXT", "NETS IN": "NETS IN • PEGGING THE GOALS", RESURFACING: "ON ICE • RESURFACING", "SLUSH DUMP": "SLUSH DUMP • EXITING GATE", "ICE CREW": "ICE CREW • CLEARING THE SLUSH", "ICE READY": "ICE READY" };
 function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, phase: string, away: Team, home: Team, status = ""): Labels {
   const next = game.period ? (game.period >= 3 ? "overtime" : `period ${game.period + 1}`) : "the next period";
-  const working = phase === "enter" || phase === "clean" || phase === "approach" || phase === "wait";
+  const working = phase === "enter" || phase === "clean" || phase === "approach" || phase === "wait" || phase === "nets";
   const dumping = phase === "dump";
   const leaving = phase === "exit";
   const crew = phase === "gone" && status === "ICE CREW";

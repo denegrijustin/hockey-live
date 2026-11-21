@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BLADE, CREW_S, DUMP_LEFT, EXIT_LEFT, FINISH_LEFT, GATE_HALF, GATE_X, INTERMISSION_S, PREGAME_S, RINK, siteAt, icePrepActive, poseAt, route, smoothLeft, stateAt, sweptQuads } from "../src/lib/ice-plan.mjs";
+import { BLADE, CREW_S, DUMP_LEFT, ENTER_S, EXIT_LEFT, FINISH_LEFT, GATE_HALF, GATE_X, GOAL_X, INTERMISSION_S, NETS_OFF_S, NETS_ON_LEFT, PREGAME_S, RINK, netsAt, siteAt, icePrepActive, poseAt, route, smoothLeft, stateAt, sweptQuads } from "../src/lib/ice-plan.mjs";
 
 const rinkCell = (x, y) => { const R = RINK.corner, ix = Math.min(x, RINK.w - x), iy = Math.min(y, RINK.h - y); return ix < R && iy < R ? Math.hypot(R - ix, R - iy) <= R - 0.3 : ix > 0.3 && iy > 0.3; };
 
@@ -38,8 +38,9 @@ test("the timeline: in through the gate, steady working speed, every inch cleane
   const r = route();
   let prev = -1;
   for (let left = INTERMISSION_S; left >= 0; left -= 0.1) { const st = stateAt(left); assert.ok(st.s >= prev - 1e-9, "never backwards"); prev = st.s; }
-  assert.equal(stateAt(INTERMISSION_S).phase, "enter");
-  assert.equal(stateAt(INTERMISSION_S - 30).phase, "clean");
+  assert.equal(stateAt(INTERMISSION_S).phase, "nets", "the nets come off first");
+  assert.equal(stateAt(INTERMISSION_S - NETS_OFF_S - 1).phase, "enter", "then the machine drives in");
+  assert.equal(stateAt(INTERMISSION_S - NETS_OFF_S - ENTER_S - 5).phase, "clean");
   const done = stateAt(stateAt(1).window.tCleanEnd - 0.01);
   assert.equal(done.phase, "approach"); assert.ok(Math.abs(done.clean - r.spiralEnd) < 0.5, "every inch is clean when it turns for the gate");
   assert.ok(stateAt(1).window.tCleanEnd > DUMP_LEFT && stateAt(1).window.tCleanEnd < DUMP_LEFT + 6, "the approach takes a few seconds");
@@ -74,7 +75,7 @@ test("the site: the pile grows while it dumps, the crew shovels it away between 
   assert.equal(siteAt(EXIT_LEFT - CREW_S - 1).crew, null, "gone by 01:05");
   assert.equal(siteAt(EXIT_LEFT - CREW_S - 1).pile, 0);
   const walkIn = siteAt(EXIT_LEFT - 0.2).crew; assert.ok(walkIn.y > RINK.h, "they come in through the gate");
-  assert.deepEqual([DUMP_LEFT + 5, DUMP_LEFT - 2, EXIT_LEFT - 20, EXIT_LEFT - CREW_S - 5].map((l) => siteAt(l).status), ["RESURFACING", "SLUSH DUMP", "ICE CREW", "ICE READY"]);
+  assert.deepEqual([INTERMISSION_S - 5, DUMP_LEFT + 5, DUMP_LEFT - 2, EXIT_LEFT - 20, NETS_ON_LEFT - 10, 5].map((l) => siteAt(l).status), ["NETS OFF", "RESURFACING", "SLUSH DUMP", "ICE CREW", "NETS IN", "ICE READY"]);
   assert.equal(siteAt(EXIT_LEFT + 30).exitIn, 30);
   assert.equal(siteAt(EXIT_LEFT - 5).exitIn, 0);
 });
@@ -82,15 +83,17 @@ test("the site: the pile grows while it dumps, the crew shovels it away between 
 test("speed is continuous at every boundary (no jerk entering, working or slowing to the gate)", () => {
   const v = (l) => (stateAt(l - 0.01).s - stateAt(l + 0.01).s) / 0.02;
   const work = v(500);
-  assert.ok(Math.abs(v(INTERMISSION_S - 18) - work) < 0.15);
+  assert.ok(Math.abs(v(INTERMISSION_S - NETS_OFF_S - ENTER_S) - work) < 0.15);
   assert.ok(Math.abs(v(stateAt(1).window.tCleanEnd) - work) < 0.15);
   assert.ok(Math.abs(v(DUMP_LEFT)) < 0.15, "it has stopped when the dump starts");
   assert.ok(Math.abs(v(EXIT_LEFT)) < 0.15, "and sets off from rest");
-  assert.ok(v(INTERMISSION_S - 0.5) < work, "it starts from rest at the gate");
+  assert.ok(v(INTERMISSION_S - NETS_OFF_S - 0.5) < work, "it starts from rest at the gate");
+  assert.equal(v(INTERMISSION_S - 10), 0, "and waits at the gate while the nets come off");
 });
 
 test("a pregame is the same plan over 20 minutes", () => {
-  assert.equal(stateAt(PREGAME_S, PREGAME_S).phase, "enter");
+  assert.equal(stateAt(PREGAME_S, PREGAME_S).phase, "nets");
+  assert.equal(stateAt(PREGAME_S - NETS_OFF_S - 1, PREGAME_S).phase, "enter");
   assert.ok(Math.abs(stateAt(FINISH_LEFT + 0.01, PREGAME_S).clean - route().spiralEnd) < 1);
 });
 
@@ -114,4 +117,16 @@ test("the ice-preparation window opens 20 minutes before puck drop and closes wh
   assert.equal(icePrepActive(g(), start + 46 * 60_000), false, "a game still not started 45 minutes late is not shown a rink");
   assert.equal(icePrepActive(g(), start + 4 * 3600_000), false);
   assert.equal(icePrepActive(g({ start: "nope" }), start), false);
+});
+
+test("the nets: on their goal lines, wheeled off through the gate before the machine comes on, and pegged back after it has gone", () => {
+  const onLine = (n, side) => n && Math.abs(n.x - (side ? RINK.w - GOAL_X : GOAL_X)) < 0.01 && Math.abs(n.y - RINK.h / 2) < 0.01;
+  const start = netsAt(INTERMISSION_S + 5).nets; assert.ok(onLine(start[0], 0) && onLine(start[1], 1), "in place before the intermission");
+  const off = netsAt(INTERMISSION_S - NETS_OFF_S + 0.5); assert.deepEqual(off.nets, [null, null], "both off the ice before the machine drives in"); assert.equal(off.staff.length, 0);
+  const moving = netsAt(INTERMISSION_S - 12); assert.ok(moving.staff.length >= 1, "a staff member pushes each net");
+  for (let l = INTERMISSION_S - NETS_OFF_S; l > NETS_ON_LEFT; l -= 5) assert.deepEqual(netsAt(l).nets, [null, null], `nothing in the machine's way at ${l}`);
+  const back = netsAt(NETS_ON_LEFT - 20); assert.ok(back.nets.every(Boolean), "both are on their way back");
+  const done = netsAt(5); assert.ok(onLine(done.nets[0], 0) && onLine(done.nets[1], 1), "pegged on the goal lines before play resumes"); assert.equal(done.staff.length, 0, "and the staff have gone");
+  for (let l = NETS_ON_LEFT; l >= 0; l -= 0.5) for (const n of netsAt(l).nets) if (n) assert.ok(n.x > 0 && n.x < RINK.w && n.y > 0, "a net stays on the ice or goes out through the gate");
+  assert.equal(siteAt(EXIT_LEFT - 20).crew && netsAt(EXIT_LEFT - 20).staff.length, 0, "the nets wait until the crew has cleared the slush");
 });

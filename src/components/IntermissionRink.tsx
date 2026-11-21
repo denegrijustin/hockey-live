@@ -55,22 +55,23 @@ const loadImage = (src: string) => new Promise<HTMLImageElement | null>((resolve
 
 type Labels = { k: string; l: string; cap: string };
 /** The broadcast status line under the clock (the pill), by the plan's status. */
-const STATUS_TEXT: Record<string, string> = { RESURFACING: "ON ICE • RESURFACING", "SLUSH DUMP": "SLUSH DUMP • EXITING GATE", "ICE CREW": "ICE CREW • CLEARING THE SLUSH", "ICE READY": "ICE READY" };
+const STATUS_TEXT: Record<string, string> = { "NETS OFF": "NETS OFF • ZAMBONI NEXT", "NETS IN": "NETS IN • PEGGING THE GOALS", RESURFACING: "ON ICE • RESURFACING", "SLUSH DUMP": "SLUSH DUMP • EXITING GATE", "ICE CREW": "ICE CREW • CLEARING THE SLUSH", "ICE READY": "ICE READY" };
 function labelsFor(mode: "intermission" | "pregame", game: Game, left: number, phase: string, away: Team, home: Team, status = ""): Labels {
   const next = game.period ? (game.period >= 3 ? "overtime" : `period ${game.period + 1}`) : "the next period";
   const working = phase === "enter" || phase === "clean" || phase === "approach" || phase === "wait";
   const dumping = phase === "dump";
   const leaving = phase === "exit";
   const crew = phase === "gone" && status === "ICE CREW";
+  const netsOff = phase === "nets", netsIn = phase === "gone" && status === "NETS IN";
   if (mode === "pregame") {
     return working || leaving
-      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${dumping ? "the Zamboni is dumping its slush at the gate" : leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
-      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: crew ? "the ice crew is clearing the slush" : `the ice is ready` };
+      ? { k: "PREGAME · ICE PREPARATION", l: left > 0 ? "until puck drop" : "puck drop", cap: `${netsOff ? "the nets are coming off the ice for the Zamboni" : dumping ? "the Zamboni is dumping its slush at the gate" : leaving ? "the Zamboni is leaving the ice" : "the Zamboni is preparing the ice"}` }
+      : { k: "ICE READY · AWAITING PUCK DROP", l: left > 0 ? "until scheduled puck drop" : "waiting for the game to start", cap: crew ? "the ice crew is clearing the slush" : netsIn ? "the nets are going back on" : `the ice is ready` };
   }
   return {
     k: `INTERMISSION${game.period ? ` · END OF P${game.period}` : ""}`,
     l: left > 0 ? `until ${next}` : `${next} about to start`,
-    cap: `${working ? "the Zamboni is resurfacing the ice" : dumping ? "the Zamboni is dumping its slush at the gate" : leaving ? "the Zamboni is leaving the ice" : crew ? "the ice crew is clearing the slush" : "fresh ice for the next period"}`,
+    cap: `${netsOff ? "the nets are coming off the ice for the Zamboni" : netsIn ? "the nets are going back on and being pegged to the goal lines" : working ? "the Zamboni is resurfacing the ice" : dumping ? "the Zamboni is dumping its slush at the gate" : leaving ? "the Zamboni is leaving the ice" : crew ? "the ice crew is clearing the slush" : "fresh ice for the next period"}`,
   };
 }
 
@@ -86,7 +87,7 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
   const viewRef = useRef(view); viewRef.current = view;
   const canvas = useRef<HTMLCanvasElement>(null);
   const root = useRef<HTMLElement>(null);
-  const tagRef = useRef<HTMLDivElement>(null), kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), xRef = useRef<HTMLElement>(null), pRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
+  const kRef = useRef<HTMLSpanElement>(null), tRef = useRef<HTMLElement>(null), lRef = useRef<HTMLSpanElement>(null), xRef = useRef<HTMLElement>(null), pRef = useRef<HTMLSpanElement>(null), capRef = useRef<HTMLParagraphElement>(null);
   const gameRef = useRef(game); gameRef.current = game;
   const teams = useRef({ home, away }); teams.current = { home, away };
   const session = sessionKey(mode, game.id, game.period);
@@ -109,21 +110,23 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       if (started || !alive) return;
       if (!takeSlot()) { host.dataset.render = "none"; waiting.add(tryStartIfSeen); return; }
       started = true; holdsSlot = true;
+      const images = Promise.all([loadImage(logoUrl(home.id)), loadImage(SCOUTS)]);
       try {
         // the 3D scene (Three.js) loads only when a rink is on screen, and only once the browser has painted what the person just asked for (a Game Center opening, say)
         await new Promise<void>((done) => { const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback; if (ric) ric(() => done(), { timeout: 1500 }); else setTimeout(done, 300); });
         if (!alive) return;
         const { Ice3D: Scene } = await import("../lib/ice3d");
         if (!alive) return;
-        const sc = new Scene(el, look, { poseAt, sweptQuads, enterEnd: route().enterEnd }, quality);
+        const [homeLogo, scouts] = await images;
+        if (!alive) return;
+        const full = { ...look, logo: homeLogo, scouts };
+        const sc = new Scene(el, full, { poseAt, sweptQuads, enterEnd: route().enterEnd }, quality);
         await sc.init("/models/zamboni.glb");
         if (!alive) { sc.dispose(); return; }
         sc.resize(host.clientWidth || 600, Math.round((host.clientWidth || 600) * ASPECT), dpr());
         sc.setView(viewRef.current);
-        scene = sc; sceneRef.current = sc; lookRef.current = look;
+        scene = sc; sceneRef.current = sc; lookRef.current = full;
         host.dataset.render = "webgl";
-        const [homeLogo, scouts] = await Promise.all([loadImage(logoUrl(home.id)), loadImage(SCOUTS)]);
-        if (alive) { lookRef.current = { ...look, logo: homeLogo, scouts }; sc.setLook(lookRef.current); }
       } catch {
         host.dataset.render = "none"; // no WebGL: the countdown and the labels still work
         if (holdsSlot) { holdsSlot = false; freeSlot(); }
@@ -142,15 +145,6 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       display = shown;
       const st = stateAt(shown, total);
       scene?.render(st);
-      // in the whole-rink view the lettering on the machine is too small to read, so a label rides above it
-      const tag = tagRef.current, at = scene?.machineAt;
-      if (tag) {
-        if (viewRef.current === "overview" && at) {
-          const cw = el.clientWidth || at.w, ch = el.clientHeight || at.h, mx = (at.x / at.w) * cw, my = (at.y / at.h) * ch; // the picture is shown at its CSS size, which is capped on wide screens
-          const half = tag.offsetWidth / 2 || 70, th = tag.offsetHeight || 28, x = Math.max(half + 4, Math.min(cw - half - 4, mx)), y = Math.max(th + 8, Math.min(ch, my) - 12); // (a hidden label has no size yet: use its usual height so the first frame is already inside the picture)
-          tag.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`; tag.hidden = false;
-        } else tag.hidden = true;
-      }
       // what the animation is showing, for tests and for anyone inspecting it
       const r = route(), pose = poseAt(st.s);
       host.dataset.phase = st.phase; host.dataset.status = st.site.status; host.dataset.pile = st.site.pile.toFixed(2); host.dataset.crew = st.site.crew ? "on" : "off";
@@ -218,7 +212,6 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
       </div>
       <div className="ice-stage">
         <canvas ref={canvas} className="ice-canvas" aria-hidden="true" data-logos={logos} />
-        <div className="ice-tag" ref={tagRef} hidden aria-hidden="true"><img src="/logos/kc-scouts.png" alt="" width="20" height="20" /><span>BRING <b>NHL</b> TO KC</span></div>
         <button type="button" className="ice-view-btn" aria-label={view === "follow" ? "Show the whole rink" : "Show the close-up that follows the Zamboni"} onClick={() => setView(view === "follow" ? "overview" : "follow")}>
           <span aria-hidden="true">{view === "follow" ? "⤢ Full rink" : "⌖ Close-up"}</span>
         </button>

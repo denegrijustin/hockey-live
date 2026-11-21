@@ -60,7 +60,7 @@ test("with no clock in the feed it counts 18 minutes from first sight, and a gam
 // One shared timeline: the machine, its blade and the cleaned ice all come from the countdown, so each moment can be checked from the countdown alone.
 const MOMENTS: [string, string, number, number][] = [
   // clock, phase, min clean %, max clean %
-  ["17:50", "enter|clean", 0, 3], ["16:00", "clean", 1, 15], ["9:00", "clean", 40, 60], ["2:20", "clean|approach", 96, 100], ["2:04", "dump", 100, 100], ["1:55", "exit", 100, 100], ["1:20", "gone", 100, 100], ["0:20", "gone", 100, 100],
+  ["17:50", "nets", 0, 0], ["17:10", "enter|clean", 0, 3], ["16:00", "clean", 1, 15], ["9:00", "clean", 40, 60], ["2:20", "clean|approach", 96, 100], ["2:04", "dump", 100, 100], ["1:55", "exit", 100, 100], ["1:20", "gone", 100, 100], ["0:20", "gone", 100, 100],
 ];
 for (const [clock, phase, lo, hi] of MOMENTS) {
   test(`at ${clock} the rink shows the "${phase}" stage with ${lo}–${hi}% of the ice clean, from the first frame (opened midway)`, async ({ page }) => {
@@ -162,7 +162,7 @@ test("at 20 minutes the card shows PREGAME · ICE PREPARATION with a live countd
   await expect(int.locator(".int-t")).toHaveText(/^(19|20):\d\d$/);
   await expect(int).not.toContainText(/live|period 1/i);
   await expect(int).toHaveAttribute("data-mode", "pregame");
-  await expect(int).toHaveAttribute("data-phase", "enter", { timeout: 30000 });
+  await expect(int).toHaveAttribute("data-phase", /^(nets|enter)$/, { timeout: 30000 }); // the nets come off first, then the machine drives in
 });
 test("opened midway through the preparation it shows the machine and the cleaned ice at once; at 45 seconds the ice is ready and the machine is leaving", async ({ page }) => {
   await openPregame(page, upcoming(10));
@@ -245,29 +245,24 @@ test("a toggle on the rink switches between the close-up and the whole rink; the
   await expect(rink(page)).toHaveAttribute("data-view", "follow");
 });
 
-test("in the whole-rink view a BRING NHL TO KC label with the KC Scouts logo rides above the machine and stays inside the picture; the close-up has no label", async ({ page }) => {
-  test.slow();
+test("the whole-rink view has no floating label over the machine (its own artwork carries the branding)", async ({ page }) => {
+  await open(page, { intermission: true, clock: "9:00" });
+  await settled(page);
+  await rink(page).locator(".ice-view-btn").click();
+  await expect(rink(page)).toHaveAttribute("data-view", "overview");
+  await expect(rink(page).locator(".ice-tag")).toHaveCount(0);
+});
+
+test("the picture appears once its first frame is drawn, already on the right shot", async ({ page }) => {
   await open(page, { intermission: true, clock: "9:00" });
   await settled(page);
   test.skip((await rink(page).getAttribute("data-render")) !== "webgl", "no WebGL in this browser");
-  const tag = rink(page).locator(".ice-tag");
-  await expect(rink(page)).toHaveAttribute("data-view", "follow");
-  await expect(tag).toBeHidden(); // the lettering on the machine can be read in the close-up
-  await rink(page).locator(".ice-view-btn").click();
-  await expect(tag).toBeVisible({ timeout: 15000 });
-  await expect(tag).toContainText("BRING NHL TO KC");
-  await expect(tag.locator("img")).toHaveAttribute("src", "/logos/kc-scouts.png");
-  const [t, c] = await Promise.all([tag.boundingBox(), rink(page).locator("canvas").boundingBox()]);
-  expect(t!.x, "inside the picture on the left").toBeGreaterThanOrEqual(c!.x - 1);
-  expect(t!.x + t!.width, "inside the picture on the right").toBeLessThanOrEqual(c!.x + c!.width + 1);
-  expect(t!.y, "inside the picture at the top").toBeGreaterThanOrEqual(c!.y - 1);
-  expect(t!.y + t!.height, "above the bottom of the picture").toBeLessThanOrEqual(c!.y + c!.height);
-  await rink(page).locator(".ice-view-btn").click();
-  await expect(tag).toBeHidden();
+  await expect(rink(page).locator("canvas")).toHaveAttribute("data-ready", "1");
+  await expect(rink(page).locator("canvas")).toHaveCSS("opacity", "1");
 });
 
 // the end of the intermission: the machine dumps its slush at the gate (02:08), leaves (02:00), the ice crew clears the pile (02:00 to 01:05)
-for (const [clock, status, pile, crew] of [["2:04", "SLUSH DUMP", /^0\.[3-9]|^1\.00/, "off"], ["1:30", "ICE CREW", /^[01]\.\d\d$/, "on"], ["0:40", "ICE READY", /^0\.00$/, "off"]] as const) {
+for (const [clock, status, pile, crew] of [["2:04", "SLUSH DUMP", /^0\.[3-9]|^1\.00/, "off"], ["1:30", "ICE CREW", /^[01]\.\d\d$/, "on"], ["0:50", "NETS IN", /^0\.00$/, "off"], ["0:08", "ICE READY", /^0\.00$/, "off"], ["17:45", "NETS OFF", /^0\.00$/, "off"]] as const) {
   test(`at ${clock} the status is ${status} (crew ${crew}), with the broadcast bug showing it`, async ({ page }) => {
     await open(page, { intermission: true, clock });
     await expect(rink(page)).toHaveAttribute("data-status", status, { timeout: 30000 });

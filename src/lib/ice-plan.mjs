@@ -16,7 +16,11 @@ export const DUMP_LEFT = 128;           // the machine reaches the gate and dump
 export const EXIT_LEFT = 120;           // ...and leaves the ice with this many (02:00); the ice crew then clears the pile
 export const FINISH_LEFT = DUMP_LEFT;   // (the old name: the cleaning is complete and the machine starts to leave)
 export const CREW_S = 55;               // the ice crew is on the ice from 02:00 to 01:05
-export const ENTER_S = 18;              // drive in
+export const ENTER_S = 22;              // drive in (slow enough to watch it come through the gate)
+export const NETS_OFF_S = 40;           // the first 40 s: two staff wheel the nets off through the gate; the machine comes on after them
+export const NETS_ON_LEFT = 62;         // with 01:02 left (the crew has cleared the slush) the nets come back on and are pegged to the goal lines
+export const GOAL_X = 11;               // the goal lines, 11 ft from the end boards
+const PUSH_V = 6, PEG_S = 3, WALK_V = 5;
 export const INTERMISSION_S = 18 * 60;
 export const PREGAME_S = 20 * 60;
 export const DELAY_GRACE_S = 45 * 60;   // how long past the scheduled puck drop a game that has not started keeps its "ice ready" rink
@@ -186,15 +190,16 @@ const hermite = (L, T, v0, v1, t) => {
  */
 export function stateAt(left, total = INTERMISSION_S) {
   const r = route();
-  const T = Math.max(total, ENTER_S + DUMP_LEFT + 60);
-  const tEnterEnd = T - ENTER_S;
+  const T = Math.max(total, NETS_OFF_S + ENTER_S + DUMP_LEFT + 60);
+  const tEnterStart = T - NETS_OFF_S, tEnterEnd = tEnterStart - ENTER_S;
   const cleanLen = r.spiralEnd - r.enterEnd, apprLen = r.dumpS - r.spiralEnd, exitLen = r.length - r.dumpS, vOut = 4.5;
   // one working speed, chosen so the machine arrives at the gate (after slowing to rest over the approach) exactly DUMP_LEFT seconds from the end
   const v = (cleanLen + 2 * apprLen) / (tEnterEnd - DUMP_LEFT);
   const apprTime = (2 * apprLen) / v, tCleanEnd = DUMP_LEFT + apprTime, exitTime = (2 * exitLen) / vOut;
   let phase, s;
   if (left > T) { phase = "wait"; s = 0; }
-  else if (left > tEnterEnd) { phase = "enter"; s = hermite(r.enterEnd, ENTER_S, 0, v, T - left); }
+  else if (left > tEnterStart) { phase = "nets"; s = 0; }
+  else if (left > tEnterEnd) { phase = "enter"; s = hermite(r.enterEnd, ENTER_S, 0, v, tEnterStart - left); }
   else if (left > tCleanEnd) { phase = "clean"; s = r.enterEnd + v * (tEnterEnd - left); }
   else if (left > DUMP_LEFT) { phase = "approach"; s = r.spiralEnd + hermite(apprLen, apprTime, v, 0, tCleanEnd - left); }
   else if (left > EXIT_LEFT) { phase = "dump"; s = r.dumpS; }
@@ -202,7 +207,7 @@ export function stateAt(left, total = INTERMISSION_S) {
   else { phase = "gone"; s = r.length; }
   // how far the blade is lowered (0 up, 1 down): lowered at the start of the centre pass, raised over 1.5 s at the end of the cleaning
   const down = phase === "clean" ? Math.min(1, (tEnterEnd - left) / 1 + 0) : phase === "approach" ? Math.max(0, 1 - (tCleanEnd - left) / 1.5) : 0;
-  return { phase, s: Math.min(s, r.length), speed: v, clean: Math.max(r.enterEnd, Math.min(s, r.spiralEnd)), bladeDown: down, cleanTotal: cleanLen, window: { tEnterEnd, tCleanEnd, exitTime }, site: siteAt(left, exitTime) };
+  return { phase, s: Math.min(s, r.length), speed: v, clean: Math.max(r.enterEnd, Math.min(s, r.spiralEnd)), bladeDown: down, cleanTotal: cleanLen, window: { tEnterEnd, tCleanEnd, exitTime }, site: siteAt(left, exitTime, T) };
 }
 
 const ease = (t) => t * t * (3 - 2 * t);
@@ -211,7 +216,7 @@ const ease = (t) => t * t * (3 - 2 * t);
  * shovels it away). `crew`: the two ice-crew members' shared position and heading while they are on the ice (02:00 to 01:05), else null; `digging` is 1 while they scoop.
  * `status`: the broadcast status line. `exitIn`: seconds until the machine's exit time (02:00).
  */
-export function siteAt(left, exitTime = 12) {
+export function siteAt(left, exitTime = 12, total = INTERMISSION_S) {
   const r = route(), at = r.dumpAt, tau = EXIT_LEFT - left;
   const pile = left > DUMP_LEFT ? 0 : left > EXIT_LEFT ? (DUMP_LEFT - left) / (DUMP_LEFT - EXIT_LEFT) : tau < 7 ? 1 : tau < CREW_S - 8 ? Math.max(0, 1 - (tau - 7) / (CREW_S - 15)) : 0;
   let crew = null;
@@ -221,8 +226,56 @@ export function siteAt(left, exitTime = 12) {
     const from = { x: GATE_X, y: RINK.h + 10 }, to = { x: at.x + 1, y: at.y + 3.5 };
     crew = { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k, heading: walkOut ? Math.PI / 2 : -Math.PI / 2, digging: !walkIn && !walkOut ? 1 : 0 };
   }
-  const status = left > DUMP_LEFT ? "RESURFACING" : left > EXIT_LEFT - exitTime ? "SLUSH DUMP" : crew || pile > 0 ? "ICE CREW" : "ICE READY";
-  return { pile, crew, status, exitIn: Math.max(0, left - EXIT_LEFT), pileAt: { x: at.x, y: at.y - 1 } };
+  const { nets, staff } = netsAt(left, total);
+  const T = Math.max(total, NETS_OFF_S + ENTER_S + DUMP_LEFT + 60);
+  const status = left > T - NETS_OFF_S && left <= T ? "NETS OFF" : left > DUMP_LEFT ? "RESURFACING" : left > EXIT_LEFT - exitTime ? "SLUSH DUMP" : crew || pile > 0 ? "ICE CREW" : staff.length ? "NETS IN" : "ICE READY";
+  return { pile, crew, status, exitIn: Math.max(0, left - EXIT_LEFT), pileAt: { x: at.x, y: at.y - 1 }, nets, staff };
+}
+
+/** The path a net is wheeled along between its goal line and the service gate (off the ice past the near boards). Left net: index 0, right: 1. */
+export function netPath(side) {
+  const mouth = { x: side ? RINK.w - GOAL_X : GOAL_X, y: RINK.h / 2 };
+  const pts = side ? [mouth, { x: 187, y: 70 }, { x: GATE_X, y: RINK.h - 4 }, { x: GATE_X, y: RINK.h + 14 }]
+    : [mouth, { x: 28, y: 70 }, { x: 168, y: 77 }, { x: GATE_X, y: RINK.h - 4 }, { x: GATE_X, y: RINK.h + 14 }];
+  let len = 0; const seg = pts.slice(1).map((p, i) => { const l = Math.hypot(p.x - pts[i].x, p.y - pts[i].y); len += l; return l; });
+  const at = (d) => { let k = Math.max(0, Math.min(len, d)); for (let i = 0; i < seg.length; i++) { if (k <= seg[i] || i === seg.length - 1) { const f = seg[i] ? Math.min(1, k / seg[i]) : 0; return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * f, y: pts[i].y + (pts[i + 1].y - pts[i].y) * f, dir: Math.atan2(pts[i + 1].y - pts[i].y, pts[i + 1].x - pts[i].x) }; } k -= seg[i]; } const e = pts[pts.length - 1]; return { x: e.x, y: e.y, dir: Math.PI / 2 }; };
+  return { mouth, len, at };
+}
+
+/**
+ * The two nets and the staff who move them. At the start (the first NETS_OFF_S seconds) each net is lifted off its pegs and wheeled out through the gate, a staff member
+ * pushing behind it; from NETS_ON_LEFT they are wheeled back, pegged on the goal lines and the staff walk off. `nets`: each net's ground position and facing
+ * (null while it is off the ice); `staff`: the people on the ice, with `work` 1 while they lift or peg a net.
+ */
+export function netsAt(left, total = INTERMISSION_S) {
+  const T = Math.max(total, NETS_OFF_S + ENTER_S + DUMP_LEFT + 60), nets = [], staff = [];
+  for (const side of [0, 1]) {
+    const p = netPath(side), face = side ? Math.PI : 0, push = p.len / PUSH_V;
+    const off = T - left, on = NETS_ON_LEFT - side * 7 - left; // the far net goes first; the near one follows it through the gate
+    if (left > T || (on >= 0 && on > push + PEG_S) || (off < 0 && on < 0)) {
+      // in place on the goal line (before the intermission starts, and once pegged back); after pegging, the staff member walks off to the near boards
+      nets.push({ x: p.mouth.x, y: p.mouth.y, heading: face });
+      const w = on - push - PEG_S, dist = RINK.h + 6 - p.mouth.y;
+      if (on >= 0 && w <= dist / WALK_V) staff.push({ x: p.mouth.x + (side ? 4 : -4), y: p.mouth.y + Math.min(dist, w * WALK_V), heading: Math.PI / 2, work: 0 });
+      continue;
+    }
+    if (off >= 0 && off <= NETS_OFF_S) {
+      if (off < PEG_S) { nets.push({ x: p.mouth.x, y: p.mouth.y, heading: face }); const d = p.at(0); staff.push({ x: p.mouth.x - Math.cos(d.dir) * 4, y: p.mouth.y - Math.sin(d.dir) * 4, heading: d.dir, work: 1 }); continue; }
+      const d = off - PEG_S;
+      if (d > push) { nets.push(null); continue; }                       // wheeled off: out of sight past the gate
+      const q = p.at(d * PUSH_V); nets.push({ x: q.x, y: q.y, heading: face });
+      staff.push({ x: q.x - Math.cos(q.dir) * 4, y: q.y - Math.sin(q.dir) * 4, heading: q.dir, work: 0 });
+      continue;
+    }
+    if (on >= 0) {
+      if (on <= push) { const q = p.at(p.len - on * PUSH_V); nets.push({ x: q.x, y: q.y, heading: face }); const b = q.dir + Math.PI; staff.push({ x: q.x - Math.cos(b) * 4, y: q.y - Math.sin(b) * 4, heading: b, work: 0 }); continue; }
+      nets.push({ x: p.mouth.x, y: p.mouth.y, heading: face }); const d = p.at(0), b = d.dir + Math.PI;
+      staff.push({ x: p.mouth.x - Math.cos(b) * 4, y: p.mouth.y - Math.sin(b) * 4, heading: b, work: 1 });
+      continue;
+    }
+    nets.push(null);                                                      // off the ice while the machine works
+  }
+  return { nets, staff };
 }
 
 /**

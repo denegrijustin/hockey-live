@@ -14,7 +14,7 @@ export type Pose = { x: number; y: number; heading: number; bx: number; by: numb
 /** What the scene needs from a plan: where the machine is at route distance s, and the ground the blade covered between two distances. */
 export type PlanApi = { poseAt(s: number): Pose; sweptQuads(from: number, to: number, step?: number): Pt[][]; enterEnd: number };
 /** What is on the ice besides the machine: the slush pile (0..1) and, while they are on the ice, the two ice-crew members (see siteAt in ice-plan.mjs). */
-export type Site = { pile: number; pileAt: Pt; crew: { x: number; y: number; heading: number; digging: number } | null };
+export type Site = { pile: number; pileAt: Pt; crew: { x: number; y: number; heading: number; digging: number } | null; nets?: ({ x: number; y: number; heading: number } | null)[]; staff?: { x: number; y: number; heading: number; work: number }[] };
 export type Frame = { phase: string; s: number; clean: number; bladeDown: number; site?: Site };
 export type Quality = "high" | "low";
 
@@ -73,6 +73,7 @@ export class Ice3D {
   private iceMat!: THREE.MeshStandardMaterial; private dirtyTex!: THREE.CanvasTexture; private cleanTex!: THREE.CanvasTexture;
   private vehicle = new THREE.Group(); private parts: Record<string, THREE.Object3D> = {}; private ready = false; private shadow!: THREE.Mesh;
   private wet!: THREE.Mesh; private wetCap = 0;
+  private nets: THREE.Group[] = []; private staff: { g: THREE.Group; legs: THREE.Object3D[]; arms: THREE.Object3D; last: Pt | null }[] = [];
   private slush!: THREE.Mesh; private crew = new THREE.Group(); private crewParts: { shovel: THREE.Object3D; legs: THREE.Object3D[] }[] = []; private crewLast: Pt | null = null;
   private cleaned: number; private lastS = 0; private odo = 0;
   private cssW = 0; private cssH = 0; private disposed = false;
@@ -101,6 +102,9 @@ export class Ice3D {
     const pmrem = new THREE.PMREMGenerator(r);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; this.scene.environment = env; this.scene.environmentIntensity = 0.5; pmrem.dispose();
     await yieldNow(); if (this.disposed) return;
+    const k = this.quality === "high" ? 8 : 5;
+    this.dirtyTex = new THREE.CanvasTexture(dirtyTexture(W * k, H * k, k, this.look)); await yieldNow(); if (this.disposed) return;
+    this.cleanTex = new THREE.CanvasTexture(cleanTexture(W * k, H * k, k, this.look)); await yieldNow(); if (this.disposed) return;
     this.buildIce(); await yieldNow(); if (this.disposed) return;
     this.buildRink(); this.buildLights(); await yieldNow(); if (this.disposed) return;
     this.maskRT = new THREE.WebGLRenderTarget(this.quality === "high" ? 2048 : 1024, this.quality === "high" ? 870 : 435, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false, format: THREE.RGBAFormat });
@@ -126,13 +130,15 @@ export class Ice3D {
     this.wet = new THREE.Mesh(wg, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.NormalBlending }));
     this.wet.frustumCulled = false; this.wet.position.y = 0.05; this.scene.add(this.wet);
     this.buildSite();
+    // upload the textures and compile every shader now (off the visible frames): the first frames on screen would otherwise stall on both
+    await yieldNow(); if (this.disposed) return;
+    for (const t of [this.dirtyTex, this.cleanTex]) r.initTexture(t);
+    try { await r.compileAsync(this.scene, this.camera); } catch { /* older drivers: shaders compile on the first frame instead */ }
     this.ready = true;
   }
 
   // --------------------------------------------------------------------------------------------------------------- ice
   private buildIce() {
-    const k = this.quality === "high" ? 8 : 5;
-    this.dirtyTex = new THREE.CanvasTexture(dirtyTexture(W * k, H * k, k, this.look)); this.cleanTex = new THREE.CanvasTexture(cleanTexture(W * k, H * k, k, this.look));
     for (const t of [this.dirtyTex, this.cleanTex]) { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; }
     const geo = new THREE.ShapeGeometry(rounded(W, H, R), 40);
     const p = geo.attributes.position, uv = geo.attributes.uv;
@@ -176,10 +182,36 @@ export class Ice3D {
     b.g.position.set(0.2, 0, 2.2);
     this.crew.add(a.g, b.g, bin); this.crewParts = [{ shovel: sv, legs: a.legs }, { shovel: new THREE.Group(), legs: b.legs }];
     this.crew.visible = false; this.crew.traverse((o) => { (o as THREE.Mesh).frustumCulled = false; }); this.scene.add(this.crew);
+    // the two nets (6 ft wide, 4 ft high, the mouth facing out along +x in their own frame) and the staff who wheel them on and off
+    const red = std(0xd21f2b, 0.45, 0.2), mesh = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    const tube = (a: THREE.Vector3, b: THREE.Vector3, r = 0.11) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, a.distanceTo(b), 8), red); m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return m; };
+    const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    for (let i = 0; i < 2; i++) {
+      const g = new THREE.Group();
+      g.add(tube(V(0, 0, -3), V(0, 4, -3)), tube(V(0, 0, 3), V(0, 4, 3)), tube(V(0, 4, -3), V(0, 4, 3)));        // posts and crossbar
+      g.add(tube(V(0, 4, -3), V(-1.6, 3.2, -2.6), 0.07), tube(V(0, 4, 3), V(-1.6, 3.2, 2.6), 0.07));             // the top frame running back
+      g.add(tube(V(0, 0.05, -3), V(-3.6, 0.05, -1.8), 0.08), tube(V(-3.6, 0.05, -1.8), V(-3.6, 0.05, 1.8), 0.08), tube(V(-3.6, 0.05, 1.8), V(0, 0.05, 3), 0.08)); // the base frame
+      const net = new THREE.BufferGeometry();
+      const P = [V(0, 4, -3), V(0, 0, -3), V(-3.6, 0, -1.8), V(-1.6, 3.2, -2.6), V(0, 4, 3), V(0, 0, 3), V(-3.6, 0, 1.8), V(-1.6, 3.2, 2.6)];
+      net.setFromPoints([0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 3, 2, 6, 3, 6, 7, 0, 3, 7, 0, 7, 4].map((k) => P[k])); net.computeVertexNormals();
+      g.add(new THREE.Mesh(net, mesh));
+      g.traverse((o) => { (o as THREE.Mesh).frustumCulled = false; }); g.visible = false; this.scene.add(g); this.nets.push(g);
+      const p = person(0x111827); const arms = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.28, 1.5), std(0x111827, 0.6)); arms.position.set(0.8, 3.9, 0); p.g.add(arms);
+      p.g.traverse((o) => { (o as THREE.Mesh).frustumCulled = false; }); p.g.visible = false; this.scene.add(p.g); this.staff.push({ g: p.g, legs: p.legs, arms, last: null });
+    }
   }
 
   /** Place the slush pile (it grows while the machine dumps and shrinks as the crew shovels it) and the crew (walking in, scooping, walking out). */
   private updateSite(site: Site | undefined, now: number) {
+    const t0 = now / 1000;
+    this.nets.forEach((g, i) => { const n = site?.nets?.[i] ?? (site?.nets ? null : { x: i ? W - 11 : 11, y: H / 2, heading: i ? Math.PI : 0 }); g.visible = !!n; if (n) { g.position.set(n.x, 0, n.y); g.rotation.y = -n.heading; } });
+    this.staff.forEach((s, i) => {
+      const p = site?.staff?.[i]; s.g.visible = !!p; if (!p) { s.last = null; return; }
+      s.g.position.set(p.x, 0, p.y); s.g.rotation.y = -p.heading;
+      const walking = !!s.last && Math.hypot(p.x - s.last.x, p.y - s.last.y) > 0.002; s.last = { x: p.x, y: p.y };
+      s.legs.forEach((leg, j) => { leg.rotation.z = walking ? Math.sin(t0 * 7 + j * Math.PI + i) * 0.35 : 0; });
+      s.arms.position.y = p.work ? 3.3 + Math.max(0, Math.sin(t0 * 2.5)) * 0.4 : 3.9;
+    });
     const pile = site?.pile ?? 0;
     this.slush.visible = pile > 0.01;
     if (this.slush.visible && site) { const k = Math.min(1, pile); this.slush.scale.set(3.6 * k, 1.25 * k, 2.6 * k); this.slush.position.set(site.pileAt.x, 0, site.pileAt.y); }
@@ -326,8 +358,8 @@ export class Ice3D {
    */
   private placeCamera(machineOn: boolean, x: number, z: number, heading: number) {
     const on = machineOn && this.viewMode === "follow";
-    const now = performance.now(), dt = this.camClock ? Math.min(0.5, (now - this.camClock) / 1000) : 1; this.camClock = now;
-    this.zoom += ((on ? 1 : 0) - this.zoom) * (1 - Math.exp(-dt * 2.4));
+    const now = performance.now(), first = !this.camClock, dt = first ? 1 : Math.min(0.5, (now - this.camClock) / 1000); this.camClock = now;
+    this.zoom = first ? (on ? 1 : 0) : this.zoom + ((on ? 1 : 0) - this.zoom) * (1 - Math.exp(-dt * 2.4)); // the first frame starts on the right shot instead of swooping into it
     if (this.zoom < 0.002) this.zoom = 0;
     if (on) {
       // lead a little along the heading so the blade's boundary and the ice ahead are both in view
@@ -372,6 +404,7 @@ export class Ice3D {
     const crew = state.site?.crew ?? null; // with the machine gone, the close shot stays with the crew at the gate
     this.placeCamera(on || !!crew, on || !crew ? pose.x : crew.x, on || !crew ? pose.y : crew.y, on || !crew ? pose.heading : crew.heading);
     this.renderer.render(this.scene, this.camera);
+    if (!this.canvas.dataset.ready) this.canvas.dataset.ready = "1"; // the picture fades in once there is one
     // where the machine is in the picture (CSS px), for a label that follows it
     if (on) { const v = new THREE.Vector3(pose.x, 6, pose.y).project(this.camera); this.machineAt = { x: (v.x * 0.5 + 0.5) * this.cssW, y: (-v.y * 0.5 + 0.5) * this.cssH, w: this.cssW, h: this.cssH }; } else this.machineAt = null;
     const i = this.renderer.info; this.stats.frames++; this.stats.drawCalls = i.render.calls; this.stats.triangles = i.render.triangles; this.stats.geometries = i.memory.geometries; this.stats.textures = i.memory.textures;

@@ -41,3 +41,7 @@
 .intermission .int-pill { display: inline-flex; align-items: center; padding: 4px 14px; border-radius: 10px; background: #f1b82c; color: #0a1322; font-size: .8125rem; font-weight: 850; letter-spacing: .08em; }
 .intermission .int-pill[data-status="SLUSH DUMP"] { background: #ff9d2e; } .intermission .int-pill[data-status="ICE CREW"] { background: #7fc4ff; } .intermission .int-pill[data-status="ICE READY"] { background: #6ee7a8; }
 .intermission.compact .int-bug { display: none; }
+/* the picture appears once its first frame is drawn (the scene builds behind it), not as a stutter of half-built frames */
+.intermission .ice-canvas { opacity: 0; transition: opacity .3s ease-out; }
+.intermission .ice-canvas[data-ready] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .intermission .ice-canvas { transition: none; } }

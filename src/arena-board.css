@@ -13,14 +13,15 @@
 .gcv-row .jb .jb-home { flex-direction: row-reverse; text-align: right; }
 .gcv-row .jb .jb-team .team-logo { width: calc(var(--rh) * .62) !important; height: calc(var(--rh) * .62) !important; padding: 2px; border-radius: 22%; background: #fff !important; flex: none; box-shadow: none; }
 .gcv-row .jb .jb-name { display: grid !important; flex: 1; min-width: 0; gap: 0; font-size: 1em !important; line-height: 1.05; }
-.gcv-row .jb .jb-name b { font-size: 1em; font-weight: 900; letter-spacing: .02em; }
+.gcv-row .jb .jb-name { overflow: hidden; }
+.gcv-row .jb .jb-name b { font-size: 1em; font-weight: 900; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gcv-row .jb .jb-name small { display: flex; gap: .4em; font-size: .5em; font-weight: 800; letter-spacing: .08em; color: #ffffffb3; white-space: nowrap; overflow: hidden; }
 .gcv-row .jb .jb-home .jb-name small { justify-content: flex-end; }
 .gcv-row .jb .jb-name .sb-rank { order: 0; padding: 0; border: 0; background: none; font-size: 1em; color: #ffffffb3; }
 .jb-pp { font-style: normal; color: #ffd23f; }
 .scoreboard .sb-row.gcv-row[data-face][data-face] .jb .jb-score, .gcv-row .jb .jb-score { margin: 0 !important; font-size: 1.85em !important; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; color: #ffd75e; min-width: 1ch; text-align: center; }
 .scoreboard .sb-row.gcv-row[data-face][data-face] .jb .jb-team.lost .jb-score, .gcv-row .jb .jb-team.lost .jb-score { color: #ffffff99; font-weight: 700; }
-.jb-clock { display: grid; justify-items: center; min-width: 4.2em; padding: .15em .6em; border-radius: .3em; background: #000; box-shadow: inset 0 0 0 1px #ffffff2e; line-height: 1.05; }
+.jb-clock { display: grid; justify-items: center; min-width: 3.4em; padding: .15em .6em; border-radius: .3em; background: #000; box-shadow: inset 0 0 0 1px #ffffff2e; line-height: 1.05; }
 .jb-clock b { font-size: 1.2em; font-weight: 900; font-variant-numeric: tabular-nums; color: #fff; white-space: nowrap; }
 .jb-clock small { font-size: .5em; font-weight: 800; letter-spacing: .1em; color: #ffffffb3; text-transform: uppercase; white-space: nowrap; }
 .jb-clock.is-live b { color: #ff5a6a; }
@@ -56,7 +57,8 @@
 /* a narrow card: the score strip keeps a readable minimum size (it may grow past the artwork's own strip, centred on it) */
 .gcv-row .jb .jb-art .jb-ribbon { left: 50% !important; transform: translateX(-50%); }
 @container (max-width: 520px) {
-  .gcv-row .jb .jb-art .jb-ribbon { min-width: 90%; min-height: 44px; font-size: max(11px, calc(var(--rh) * .34)); }
+  .gcv-row .jb .jb-art .jb-ribbon { top: auto !important; bottom: var(--bt) !important; min-width: 90%; min-height: 44px; font-size: max(11px, calc(var(--rh) * .34)); }
   .jb-panel { font-size: max(7.5px, 1.9cqw); }
 }
-@media (max-width: 520px) { .jb-screen { min-height: 84px; } .jb-screen .team-logo { width: 72px !important; height: 72px !important; } .jb-banner { font-size: .9375rem; } }
+@container (max-width: 380px) { .gcv-row .jb .jb-name .sb-rank { display: none; } }
+@media (max-width: 520px) { .gcv-row .jb .jb-drawn .jb-ribbon { --rh: 44px; min-height: 44px; } .jb-screen { min-height: 84px; } .jb-screen .team-logo { width: 72px !important; height: 72px !important; } .jb-banner { font-size: .9375rem; } }

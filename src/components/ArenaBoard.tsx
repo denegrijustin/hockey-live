@@ -10,7 +10,7 @@ type Box = { left: number; top: number; width: number; height: number };
 type Stats = { rows: { label: string; away: number | string; home: number | string }[]; goals: { side: string; team: string; who: string; when: string }[]; pp: string | null } | null;
 type Status = { kind: string; label: string; short?: string; live: boolean; final: boolean; upcoming: boolean };
 
-const at = (b: Box): CSSProperties => ({ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%`, ["--rh" as never]: `${(b.height * 384) / 704}cqw` });
+const at = (b: Box): CSSProperties => ({ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%`, ["--rh" as never]: `${(b.height * 384) / 704}cqw`, ["--bt" as never]: `${100 - b.top - b.height}%` });
 
 /** The clock box: big line (clock, start time, FINAL) and the small line under it (period, "TODAY"). */
 function clockOf(game: Game, st: Status): [string, string] {
@@ -35,9 +35,9 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
     const rank = ranks?.[t.id];
     return (
       <span className={`sb-team jb-team jb-${side}${winner ? (winner === side ? " won" : " lost") : ""}`}>
-        <TeamLogo id={t.id} size={28} /><FavoriteMark id={t.id} />
+        <TeamLogo id={t.id} size={28} /><FavoriteMark id={t.id} /><span className="sr-only">{t.name} </span>
         <span className="sb-name jb-name" title={t.name}>
-          <b>{t.id}</b><span className="sr-only"> {t.name}</span>
+          <b>{t.id}</b>
           <small>{stats?.pp === side ? <i className="jb-pp">POWER PLAY</i> : side === "home" ? "HOME" : "AWAY"}{rank && <span className="sb-rank" title={rankTitle(rank)}>#{rank.league}</span>}</small>
         </span>
         <span className={`sb-score jb-score${scored?.[side] ? " scored" : ""}`}><span className="ts-num">{hasScore ? score : ""}</span></span>

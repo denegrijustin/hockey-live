@@ -53,7 +53,7 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
   );
   // the artwork's side tables: real numbers instead of its made-up ones (the home side's line first, then the visitors')
   const panel = (i: number, n: number) => {
-    const side: "home" | "away" = n === 2 ? (i === 0 ? "home" : "away") : "home";
+    const side: "home" | "away" = i % 2 === 0 ? "home" : "away"; // pairs of tables: the home side's on the left, the visitors' on the right
     const t = side === "home" ? home : away;
     const lines = stats?.rows.slice(0, 4) ?? [];
     const goals = stats?.goals.filter((g) => n === 1 || g.side === side).slice(0, 3) ?? [];
@@ -72,7 +72,10 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
         <div className="jb-art">
           <img src={art.src} alt={`${arenaOf(home.id) || home.name} scoreboard`} width={704} height={384} loading="lazy" decoding="async" />
           {ribbon}
-          {art.panels.map((p: Box, i: number) => <div key={i} className="jb-panel" style={at(p)}>{panel(i, art.panels.length)}</div>)}
+          {art.panels.map((p: Box, i: number) => p.width / p.height > 5
+            // a long, thin ring (the score ring above the board): the score line again, as the arena shows it
+            ? <div key={i} className="jb-panel jb-ring" style={at(p)} aria-hidden="true"><b>{away.id}</b><b className="jb-rs">{hasScore ? game.awayScore : ""}</b><span>{big}{small ? ` · ${small}` : ""}</span><b className="jb-rs">{hasScore ? game.homeScore : ""}</b><b>{home.id}</b></div>
+            : <div key={i} className="jb-panel" style={at(p)}>{panel(i, art.panels.length)}</div>)}
         </div>
       ) : (
         <div className="jb-drawn">

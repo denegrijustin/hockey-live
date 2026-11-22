@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
 import { filterGames, selectAllTeams } from "./controls";
+import { mk, mockApis } from "./fixtures-games";
+import { seedPrefs } from "./prefs";
 import fixture from "../fixtures/live-game.json" with { type: "json" };
 import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "json" };
 
@@ -278,4 +280,19 @@ test("the bug counts down to the machine's exit at 02:00 and then says EXITED", 
   await expect(rink(page).locator(".int-exit b")).toHaveText(/^[23]:\d\d$/, { timeout: 30000 });
   await open(page, { intermission: true, clock: "1:30" });
   await expect(rink(page).locator(".int-exit b")).toHaveText("EXITED", { timeout: 30000 });
+});
+
+test("with more games in intermission than 3D scenes, the rink on screen gets one: rinks scrolled away give theirs back", async ({ page }) => {
+  test.slow();
+  await page.setViewportSize({ width: 1200, height: 700 });
+  const games = [["WSH", "BOS"], ["TOR", "OTT"], ["MTL", "DET"], ["NYR", "PHI"]].map(([a, h], i) => mk.intermission(9601 + i, a, h, { period: 2, clock: "15:50" }));
+  await seedPrefs(page, {}); await mockApis(page, { games, live: games });
+  await page.goto("/");
+  const rinks = page.getByTestId("intermission");
+  await expect(rinks).toHaveCount(4, { timeout: 30000 });
+  for (let i = 0; i < 4; i++) { await rinks.nth(i).scrollIntoViewIfNeeded(); await page.waitForTimeout(i < 3 ? 5500 : 0); }
+  await expect(rinks.nth(3)).not.toHaveAttribute("data-render", "loading", { timeout: 30000 });
+  test.skip((await rinks.nth(3).getAttribute("data-render")) === "none" && !(await page.evaluate(() => !!document.createElement("canvas").getContext("webgl2"))), "no WebGL in this browser");
+  await expect(rinks.nth(3)).toHaveAttribute("data-render", "webgl", { timeout: 30000 });
+  await expect(rinks.nth(3).locator("canvas")).toHaveAttribute("data-ready", "1", { timeout: 30000 });
 });

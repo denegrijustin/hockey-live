@@ -25,7 +25,11 @@ export function useCardFeed(game: Game, enabled = true) {
   const { ref, visible } = useVisible();
   const played = ["LIVE", "CRIT", "OFF", "FINAL"].includes(game.state);
   const { data } = useGameFeedData(enabled && visible && played ? game : null);
-  return { ref, data };
+  // keep the last feed while the card is off screen: dropping it collapsed the chart and the board's numbers, which moved the card, which brought it
+  // back on screen (a flicker loop while scrolling). Polling still stops off screen; only the last numbers stay.
+  const last = useRef<{ id: number; data: typeof data } | null>(null);
+  if (data) last.current = { id: game.id, data };
+  return { ref, data: data ?? (enabled && played && last.current?.id === game.id ? last.current.data : null) };
 }
 
 export function CompactGameFlow({ data, home, away }: { data: GameFeed | null; home: Team; away: Team }) {

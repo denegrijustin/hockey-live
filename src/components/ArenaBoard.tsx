@@ -127,6 +127,13 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
       )}
       {stats && (
         <div className={`jb-data${liveBoard && art?.screen ? " goals-only" : ""}`} data-testid="board-stats">
+          {liveBoard && art?.screen && (
+            <table className="jb-alt">
+              <caption className="sr-only">Live game stats, {away.name} and {home.name}</caption>
+              <thead><tr><th scope="col">{away.id}</th><th scope="col"><span className="sr-only">Stat</span></th><th scope="col">{home.id}</th></tr></thead>
+              <tbody>{liveBoard.map((r) => <tr key={r.label}><td>{r.away}</td><th scope="row">{r.label}</th><td>{r.home}</td></tr>)}</tbody>
+            </table>
+          )}
           {!(liveBoard && art?.screen) && <table>
             <caption className="sr-only">Game stats, {away.name} and {home.name}</caption>
             <thead><tr><th scope="col">{away.id}</th><th scope="col"><span className="sr-only">Stat</span></th><th scope="col">{home.id}</th></tr></thead>

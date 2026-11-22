@@ -63,8 +63,26 @@
 @container (max-width: 380px) { .gcv-row .jb .jb-name .sb-rank { display: none; } }
 @media (max-width: 520px) { .gcv-row .jb .jb-drawn .jb-ribbon { --rh: 44px; min-height: 44px; } .jb-screen { min-height: 84px; } .jb-screen .team-logo { width: 72px !important; height: 72px !important; } .jb-banner { font-size: .9375rem; } }
 /* a thin score ring above the board (Florida, Ottawa): the score line again */
-.jb-panel.jb-ring { display: flex; align-items: center; justify-content: center; gap: 1.2em; padding: 0 1em; font-size: calc(var(--rh) * .42); }
-.jb-panel.jb-ring b { font-weight: 900; } .jb-panel.jb-ring .jb-rs { color: #ffd75e; font-size: 1.25em; }
-.jb-panel.jb-ring span { padding: 0 .6em; border-radius: .25em; background: #000; font-weight: 800; color: #ff5a6a; white-space: nowrap; }
+.jb-panel.jb-ring { display: flex; align-items: center; justify-content: center; gap: 1.6em; padding: 0 1em; font-size: calc(var(--rh) * .3); white-space: nowrap; overflow: hidden; }
+.jb-rt { display: inline-flex; align-items: baseline; gap: .35em; font-weight: 700; color: #ffffffd9; }
+.jb-rt em { font-style: normal; font-weight: 900; letter-spacing: .08em; color: #ffd75e; }
+.jb-rt b { font-weight: 900; color: #fff; }
 /* a strip narrower than its content (Florida's small board) grows to fit, centred on the art's own */
-@container (min-width: 521px) { .gcv-row .jb .jb-art .jb-ribbon { min-width: 52%; } }
+@container (min-width: 521px) { .gcv-row .jb .jb-art .jb-ribbon { min-width: 58%; } }
+/* the big video screen while the game is live: the game's numbers, LED-board style */
+.jb-screen-live { position: absolute; display: grid; place-items: center; padding: 2% 3%; border-radius: 4px; background: radial-gradient(90% 90% at 50% 40%, #0d1626f2, #03060cf7); box-shadow: inset 0 0 0 1px #ffffff2e, 0 0 12px #0008; overflow: hidden; }
+.jb-screen-live table { width: 100%; height: 100%; border-collapse: collapse; color: #fff; font-variant-numeric: tabular-nums; font-size: clamp(8px, min(2.05cqw, calc(var(--rh) * .92 / var(--rows))), 17px); line-height: 1.1; } /* sized so every row fits the screen */
+.jb-screen-live th, .jb-screen-live td { padding: 0 .3em; border: 0; text-align: center; white-space: nowrap; }
+.jb-screen-live thead th { font-size: 1.05em; font-weight: 900; letter-spacing: .06em; color: #ffd75e; }
+.jb-sh { display: inline-flex; align-items: center; gap: .35em; }
+.jb-screen-live thead th .team-logo { display: inline-block; width: 1.3em !important; height: 1.3em !important; border-radius: 4px; background: #fff; padding: 1px; }
+.jb-screen-live tbody th { font-size: .78em; font-weight: 800; letter-spacing: .1em; color: #ffffffa6; }
+.jb-screen-live td { font-size: 1.1em; font-weight: 900; }
+.jb-data.goals-only { grid-template-columns: minmax(0, 1fr); }
+.jb-data.goals-only .jb-goals { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); column-gap: 18px; }
+/* a curved ring: the band and its text drawn along the arc */
+.jb-panel.jb-ring.is-curved { padding: 0; background: none; box-shadow: none; }
+.jb-ring-svg { width: 100%; height: 100%; overflow: visible; }
+.jb-ring-band { fill: #0b1220; stroke: #ffffff33; stroke-width: 1; }
+.jb-ring-text { fill: #fff; font-weight: 800; letter-spacing: .04em; }
+.jb-ring-text .k { fill: #ffd75e; font-weight: 900; }

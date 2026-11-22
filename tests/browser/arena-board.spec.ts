@@ -29,3 +29,24 @@ for (const width of [1440, 390]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
+
+test("live, on a phone: the stats go under the board (the video screen is too small), and scrolling never drops them (no flicker)", async ({ page }) => {
+  const { normalizeGameFeed } = await import("../../src/lib/game-data.mjs");
+  const raw = JSON.parse((await import("node:fs")).readFileSync("tests/fixtures/gc/real-reg.json", "utf8").replace(/"COL"/g, '"BOS"').replace(/"SEA"/g, '"WSH"'));
+  const feed = normalizeGameFeed(raw);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const g = mk.live(9901, "WSH", "BOS", { period: 3, clock: "19:54", score: [4, 5] });
+  await seedPrefs(page, {}); await mockApis(page, { games: [g, mk.upcoming(9902, "TOR", "DAL", { time: "03:00" })], live: [g], gameDetail: () => ({ ...feed, ...g, state: "LIVE" }) });
+  await page.goto("/");
+  const row = page.locator('.sb-row[data-game="9901"]');
+  await expect(row.locator(".jb-alt")).toBeVisible({ timeout: 30000 });
+  await expect(row.getByTestId("board-screen")).toBeHidden();
+  const [screen, strip] = [await row.locator(".jb-art").boundingBox(), await row.locator(".jb-ribbon").boundingBox()];
+  expect(strip!.y + strip!.height).toBeLessThanOrEqual(screen!.y + screen!.height + 1);
+  // the feed watcher is near the bottom of the card: scroll it out of view and the numbers stay, so the card does not change height
+  await row.locator(".jb-art").scrollIntoViewIfNeeded();
+  const h = (await row.boundingBox())!.height;
+  await page.mouse.wheel(0, 150); await page.waitForTimeout(600);
+  await expect(row.locator(".jb-alt")).toBeVisible();
+  expect(Math.abs((await row.boundingBox())!.height - h)).toBeLessThan(2);
+});

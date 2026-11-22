@@ -1,5 +1,5 @@
 /* The arena scoreboard on a Home card: the home arena's artwork with the real score strip and side tables laid over its own, then the board's stat lines. */
-.gcv-row .jb { display: grid; gap: 8px; padding: 0; justify-items: center; }
+.gcv-row .jb { display: grid; gap: 8px; padding: 0; justify-items: center; container: jb / inline-size; }
 .gcv-row .jb > * { width: 100%; max-width: 820px; }
 .jb-art { position: relative; container-type: inline-size; border-radius: 16px; overflow: hidden; background: #000; }
 .jb-art img { display: block; width: 100%; height: auto; aspect-ratio: 704 / 384; }
@@ -86,3 +86,10 @@
 .jb-ring-band { fill: #0b1220; stroke: #ffffff33; stroke-width: 1; }
 .jb-ring-text { fill: #fff; font-weight: 800; letter-spacing: .04em; }
 .jb-ring-text .k { fill: #ffd75e; font-weight: 900; }
+/* a narrow board (a phone): the video screen is too small for the stats, so they go in the table under the board instead */
+.jb-data .jb-alt { display: none; }
+@container jb (max-width: 600px) {
+  .jb-screen-live { display: none !important; }
+  .jb-data .jb-alt { display: table; }
+  .jb-data.goals-only { grid-template-columns: minmax(0, 1fr); }
+}

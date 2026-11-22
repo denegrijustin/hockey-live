@@ -106,35 +106,45 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
     const quality = (host.clientWidth || 0) * Math.min(2, window.devicePixelRatio || 1) >= 900 ? "high" : "low";
     let alive = true;
     host.dataset.render = "loading";
-    let started = false, holdsSlot = false;
+    let started = false, holdsSlot = false, gen = 0;
     const tryStart = async () => {
       if (started || !alive) return;
       if (!takeSlot()) { host.dataset.render = "none"; waiting.add(tryStartIfSeen); return; }
       started = true; holdsSlot = true;
+      const my = ++gen, live = () => alive && my === gen; // a rink that scrolls away mid-build drops this build
       const images = Promise.all([loadImage(logoUrl(home.id)), loadImage(SCOUTS)]);
       try {
         // the 3D scene (Three.js) loads only when a rink is on screen, and only once the browser has painted what the person just asked for (a Game Center opening, say)
         await new Promise<void>((done) => { const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback; if (ric) ric(() => done(), { timeout: 1500 }); else setTimeout(done, 300); });
-        if (!alive) return;
+        if (!live()) return;
         const { Ice3D: Scene } = await import("../lib/ice3d");
-        if (!alive) return;
+        if (!live()) return;
         const [homeLogo, scouts] = await images;
-        if (!alive) return;
+        if (!live()) return;
         const full = { ...look, logo: homeLogo, scouts };
         const sc = new Scene(el, full, { poseAt, sweptQuads, enterEnd: route().enterEnd }, quality);
         await sc.init("/models/zamboni.glb");
-        if (!alive) { sc.dispose(); return; }
+        if (!live()) { sc.dispose(); return; }
         sc.resize(host.clientWidth || 600, Math.round((host.clientWidth || 600) * ASPECT), dpr());
         sc.setView(viewRef.current);
         scene = sc; sceneRef.current = sc; lookRef.current = full;
         host.dataset.render = "webgl";
       } catch {
         host.dataset.render = "none"; // no WebGL: the countdown and the labels still work
-        if (holdsSlot) { holdsSlot = false; freeSlot(); }
+        if (holdsSlot && my === gen) { holdsSlot = false; freeSlot(); }
       }
     };
+    // A rink that has been off screen for a few seconds gives its scene back, so the rink being looked at can have one (only MAX_SCENES run at once);
+    // it builds again when it comes back, and the cleaned ice is redrawn from the countdown.
+    let hideTimer = 0;
+    const stop = () => {
+      gen++; started = false;
+      scene?.dispose(); scene = null; sceneRef.current = null;
+      if (holdsSlot) { holdsSlot = false; freeSlot(); }
+      host.dataset.render = "none";
+    };
     let seen = typeof IntersectionObserver === "undefined";
-    const tryStartIfSeen = () => { if (seen) void tryStart(); };
+    const tryStartIfSeen = () => { if (seen && visible) void tryStart(); };
     const total = (() => { const first = (deadline.current - Date.now()) / 1000; return Math.max(mode === "pregame" ? PREGAME_S : INTERMISSION_S, first); })();
     let display: number | null = null, last = performance.now(), raf = 0, visible = typeof IntersectionObserver === "undefined", lastSecond = -1, lastPhase = "";
     const reduced = motionOff();
@@ -180,14 +190,19 @@ export function IntermissionRink({ game, home, away, compact = false, mode = "in
     tick(performance.now()); // the first reading is always taken (labels, stage, countdown), even for a rink that is not on screen yet
     if (!reduced) raf = requestAnimationFrame(loop);
     const slow = reduced ? window.setInterval(() => tick(performance.now()), 1000) : 0;
-    const io = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) { display = null; seen = true; void tryStart(); } });
+    const io = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      clearTimeout(hideTimer);
+      if (visible) { display = null; seen = true; void tryStart(); }
+      else if (started) hideTimer = window.setTimeout(stop, 4000);
+    });
     io?.observe(host);
     if (!io) void tryStart();
     const onShow = () => { if (!document.hidden) { display = null; last = performance.now(); } };
     document.addEventListener("visibilitychange", onShow);
     const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => { const w = host.clientWidth || 600; scene?.resize(w, Math.round(w * ASPECT), dpr()); });
     ro?.observe(host);
-    return () => { alive = false; waiting.delete(tryStartIfSeen); scene?.dispose(); sceneRef.current = null; if (holdsSlot) freeSlot(); cancelAnimationFrame(raf); clearInterval(slow); io?.disconnect(); ro?.disconnect(); document.removeEventListener("visibilitychange", onShow); };
+    return () => { alive = false; clearTimeout(hideTimer); waiting.delete(tryStartIfSeen); scene?.dispose(); sceneRef.current = null; if (holdsSlot) freeSlot(); cancelAnimationFrame(raf); clearInterval(slow); io?.disconnect(); ro?.disconnect(); document.removeEventListener("visibilitychange", onShow); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, home.id, color, mode]);
 

@@ -50,3 +50,12 @@ test("the deeper lines: shot attempts and Corsi, power play goals out of chances
   assert.deepEqual([row("TAKE / GIVE").away, row("TAKE / GIVE").home], ["0 / 1", "1 / 0"]);
   assert.ok(!s.deep.some((r) => ["SOG", "FO%", "HITS", "BLK"].includes(r.label)), "no repeats of the side screens");
 });
+
+test("every board knows where its big video screen is (live stats go there), and the curved rings bend", () => {
+  for (const [id, b] of Object.entries(BOARDS)) {
+    const [x, y, w, h] = b.screen;
+    assert.ok(x >= 0 && y >= 0 && x + w <= ART.w && y + h <= ART.h && w > 200 && h > 100, `${id} screen`);
+  }
+  const fla = boardFor("FLA").panels[0];
+  assert.ok(fla.bend < 0 && fla.w / fla.h > 5, "Florida's ring rises in the middle and is a thin ring");
+});

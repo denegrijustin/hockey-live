@@ -6,7 +6,7 @@ import { TeamLogo } from "./TeamLogo";
 import { FavoriteMark } from "./FavoriteStar";
 import "../arena-board.css";
 
-type Box = { left: number; top: number; width: number; height: number };
+type Box = { left: number; top: number; width: number; height: number; bend?: number; w?: number; h?: number };
 type Row = { label: string; away: number | string; home: number | string };
 type Stats = { rows: Row[]; deep?: Row[]; goals: { side: string; team: string; who: string; when: string }[]; pp: string | null } | null;
 type Status = { kind: string; label: string; short?: string; live: boolean; final: boolean; upcoming: boolean };
@@ -67,18 +67,35 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
     );
   };
   // the thin ring above some boards: a stats line (the score is already on the board's own strip), or the arena before the game has numbers
-  const ring = () => {
+  const ringItems = (): [string, string][] => {
     const get = (l: string) => [...(stats?.rows ?? []), ...(stats?.deep ?? [])].find((r) => r.label === l);
-    const bits = ["SOG", "POWER PLAY", "FO%"].map(get).filter(Boolean) as Row[];
+    const bits = (["SOG", "POWER PLAY"].map(get).filter(Boolean) as Row[]).map((r): [string, string] => [r.label === "POWER PLAY" ? "PP" : r.label, `${r.away}–${r.home}`]);
     const last = stats?.goals[0];
-    if (!bits.length) return <span className="jb-rt">{arenaOf(home.id) || home.name}</span>;
+    if (!bits.length) return [["", arenaOf(home.id) || home.name]];
+    return last ? [...bits, ["LAST GOAL", `${last.team} ${last.who.replace(/^.* /, "")} ${last.when}`]] : bits;
+  };
+  const ring = (p: Box) => {
+    const items = ringItems();
+    if (!p.bend || !p.w || !p.h) return items.map(([k, v], i) => <span key={i} className="jb-rt">{k && <em>{k}</em>} <b>{v}</b></span>);
+    // a curved ring: the band and its text follow an arc that rises (or sags) by `bend` in the middle
+    const b = Math.abs(p.bend), up = p.bend < 0, w = p.w, h = p.h, H = h + b;
+    const y0 = up ? b : 0, yc = up ? -b : 2 * b;                     // ends at y0, the quadratic's control point puts the middle at y0 -/+ b
+    const band = `M0 ${y0} Q${w / 2} ${yc} ${w} ${y0} L${w} ${y0 + h} Q${w / 2} ${yc + h} 0 ${y0 + h} Z`;
+    const mid = `M0 ${y0 + h * 0.62} Q${w / 2} ${yc + h * 0.62} ${w} ${y0 + h * 0.62}`;
+    const id = `jbr-${game.id}`;
     return (
-      <>
-        {bits.map((r) => <span key={r.label} className="jb-rt"><em>{r.label === "POWER PLAY" ? "PP" : r.label}</em> {away.id} <b>{r.away}</b> · {home.id} <b>{r.home}</b></span>)}
-        {last && <span className="jb-rt"><em>LAST GOAL</em> {last.who} <b>{last.when}</b></span>}
-      </>
+      <svg className="jb-ring-svg" viewBox={`0 0 ${w} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+        <defs><path id={id} d={mid} /></defs>
+        <path d={band} className="jb-ring-band" />
+        <text className="jb-ring-text" fontSize={h * 0.46}><textPath href={`#${id}`} startOffset="50%" textAnchor="middle">
+          {items.map(([k, v], i) => <tspan key={i}>{i ? "      " : ""}{k && <tspan className="k">{k} </tspan>}{v}</tspan>)}
+        </textPath></text>
+      </svg>
     );
   };
+  // while the game is live, the big video screen carries the game's numbers (the logo is shown before and after)
+  const sideTables = !!art?.panels.some((p: Box) => (p.w ?? 0) / (p.h ?? 1) <= 5);
+  const liveBoard = st.live && stats ? (stats.deep ? (sideTables ? stats.deep : [stats.rows[0], ...stats.deep]) : stats.rows) : null;
   const style = { ["--jb-c1" as never]: home.cardColor ?? home.color, ["--jb-c2" as never]: home.cardColor ?? home.color } as CSSProperties; // the card colour (the chart colour is often a light blue that is not the team's)
   return (
     <div className="jb" data-board={art ? "art" : "drawn"} data-testid="arena-board" style={style}>
@@ -86,9 +103,18 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
         <div className="jb-art">
           <img src={art.src} alt={`${arenaOf(home.id) || home.name} scoreboard`} width={704} height={384} loading="lazy" decoding="async" />
           {ribbon}
-          {art.panels.map((p: Box, i: number) => p.width / p.height > 5
+          {liveBoard && art.screen && (
+            <div className="jb-screen-live" style={{ ...at(art.screen), ["--rows" as never]: liveBoard.length + 1.4 }} data-testid="board-screen">
+              <table>
+                <caption className="sr-only">Live game stats, {away.name} and {home.name}</caption>
+                <thead><tr><th scope="col"><span className="jb-sh"><TeamLogo id={away.id} size={20} />{away.id}</span></th><th scope="col"><span className="sr-only">Stat</span></th><th scope="col"><span className="jb-sh">{home.id}<TeamLogo id={home.id} size={20} /></span></th></tr></thead>
+                <tbody>{liveBoard.map((r) => <tr key={r.label}><td>{r.away}</td><th scope="row">{r.label}</th><td>{r.home}</td></tr>)}</tbody>
+              </table>
+            </div>
+          )}
+          {art.panels.map((p: Box, i: number) => (p.w ?? 0) / (p.h ?? 1) > 5
             // a long, thin ring (the score ring above the board): the score line again, as the arena shows it
-            ? <div key={i} className="jb-panel jb-ring" style={at(p)} aria-hidden="true">{ring()}</div>
+            ? <div key={i} className={`jb-panel jb-ring${p.bend ? " is-curved" : ""}`} style={at(p)} aria-hidden="true">{ring(p)}</div>
             : <div key={i} className="jb-panel" style={at(p)}>{panel(i, art.panels.length)}</div>)}
         </div>
       ) : (
@@ -100,12 +126,12 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
         </div>
       )}
       {stats && (
-        <div className="jb-data" data-testid="board-stats">
-          <table>
+        <div className={`jb-data${liveBoard && art?.screen ? " goals-only" : ""}`} data-testid="board-stats">
+          {!(liveBoard && art?.screen) && <table>
             <caption className="sr-only">Game stats, {away.name} and {home.name}</caption>
             <thead><tr><th scope="col">{away.id}</th><th scope="col"><span className="sr-only">Stat</span></th><th scope="col">{home.id}</th></tr></thead>
-            <tbody>{(art?.panels.some((p: Box) => p.width / p.height <= 5) && stats.deep ? stats.deep : [stats.rows[0], ...(stats.deep ?? stats.rows.slice(1))]).map((r: Row) => <tr key={r.label}><td>{r.away}</td><th scope="row">{r.label}</th><td>{r.home}</td></tr>)}</tbody>
-          </table>
+            <tbody>{(art?.panels.some((p: Box) => (p.w ?? 0) / (p.h ?? 1) <= 5) && stats.deep ? stats.deep : [stats.rows[0], ...(stats.deep ?? stats.rows.slice(1))]).map((r: Row) => <tr key={r.label}><td>{r.away}</td><th scope="row">{r.label}</th><td>{r.home}</td></tr>)}</tbody>
+          </table>}
           {stats.goals.length > 0 && (
             <ol className="jb-goals" aria-label="Goals, newest first">
               {stats.goals.slice(0, 6).map((g, k) => <li key={k} className={`jb-g-${g.side}`}><TeamLogo id={g.team} size={16} /><b>{g.who}</b><small>{g.when}</small></li>)}

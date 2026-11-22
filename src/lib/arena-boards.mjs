@@ -8,44 +8,44 @@ import { buildRecap } from "./game-recap.mjs";
 
 export const ART = { w: 704, h: 384 };
 
-/** Teams with arena artwork, by division as the art arrives. */
+/** Teams with arena artwork. `ribbon` the score strip, `screen` the big video screen (live stats go there during a game), `panels` the side tables and rings. */
 export const BOARDS = {
   // Pacific
-  ANA: { ribbon: [108, 308, 494, 50] },
-  CGY: { ribbon: [88, 314, 532, 54] },
-  EDM: { ribbon: [148, 305, 408, 52] },
-  LAK: { ribbon: [80, 296, 548, 58], panels: [[522, 228, 122, 70]] },
-  SJS: { ribbon: [144, 306, 424, 56] },
-  SEA: { ribbon: [124, 292, 458, 54], panels: [[124, 54, 88, 184], [494, 54, 88, 184]] },
-  VAN: { ribbon: [98, 296, 544, 58] },
-  VGK: { ribbon: [140, 288, 428, 54] },
+  ANA: { ribbon: [108, 308, 494, 50], screen: [205, 82, 295, 172] },
+  CGY: { ribbon: [88, 314, 532, 54], screen: [195, 82, 316, 172] },
+  EDM: { ribbon: [148, 305, 408, 52], screen: [170, 90, 365, 206] },
+  LAK: { ribbon: [80, 296, 548, 58], screen: [192, 88, 320, 190], panels: [[522, 228, 122, 70]] },
+  SJS: { ribbon: [144, 306, 424, 56], screen: [146, 74, 414, 206] },
+  SEA: { ribbon: [124, 292, 458, 54], screen: [214, 60, 278, 226], panels: [[124, 54, 88, 184], [494, 54, 88, 184]] },
+  VAN: { ribbon: [98, 296, 544, 58], screen: [182, 98, 340, 190] },
+  VGK: { ribbon: [140, 288, 428, 54], screen: [146, 74, 418, 206] },
   // Central
-  CHI: { ribbon: [205, 292, 292, 32], panels: [[115, 243, 88, 78], [500, 243, 85, 78]] },
-  COL: { ribbon: [196, 290, 330, 40], panels: [[52, 92, 120, 198], [536, 92, 120, 198]] },
-  DAL: { ribbon: [208, 74, 290, 44] },
-  MIN: { ribbon: [198, 293, 322, 36], panels: [[114, 104, 78, 186], [514, 104, 78, 186], [54, 258, 66, 40], [584, 258, 62, 40]] },
-  NSH: { ribbon: [205, 296, 292, 34] },
-  STL: { ribbon: [196, 290, 330, 40], panels: [[52, 92, 120, 198], [536, 92, 120, 198]] },
-  UTA: { ribbon: [208, 74, 290, 44] },
-  WPG: { ribbon: [198, 293, 320, 38], panels: [[114, 104, 78, 186], [514, 104, 78, 186], [52, 256, 68, 44], [586, 256, 64, 44]] },
+  CHI: { ribbon: [205, 292, 292, 32], screen: [205, 150, 295, 140], panels: [[115, 243, 88, 78], [500, 243, 85, 78]] },
+  COL: { ribbon: [196, 290, 330, 40], screen: [176, 92, 356, 196], panels: [[52, 92, 120, 198], [536, 92, 120, 198]] },
+  DAL: { ribbon: [208, 74, 290, 44], screen: [210, 128, 285, 172] },
+  MIN: { ribbon: [198, 293, 322, 36], screen: [196, 104, 318, 182], panels: [[114, 104, 78, 186], [514, 104, 78, 186], [54, 258, 66, 40], [584, 258, 62, 40]] },
+  NSH: { ribbon: [205, 296, 292, 34], screen: [168, 98, 367, 198] },
+  STL: { ribbon: [196, 290, 330, 40], screen: [176, 92, 356, 196], panels: [[52, 92, 120, 198], [536, 92, 120, 198]] },
+  UTA: { ribbon: [208, 74, 290, 44], screen: [210, 128, 285, 172] },
+  WPG: { ribbon: [198, 293, 320, 38], screen: [196, 104, 318, 182], panels: [[114, 104, 78, 186], [514, 104, 78, 186], [52, 256, 68, 44], [586, 256, 64, 44]] },
   // Atlantic
-  BOS: { ribbon: [100, 277, 505, 47] },
-  BUF: { ribbon: [131, 276, 445, 54] },
-  DET: { ribbon: [88, 276, 524, 66] },
-  FLA: { ribbon: [196, 276, 316, 54], panels: [[84, 40, 540, 38]] },
-  MTL: { ribbon: [75, 284, 555, 46] },
-  OTT: { ribbon: [181, 290, 345, 40], panels: [[118, 60, 473, 42]] },
-  TBL: { ribbon: [68, 300, 567, 40], panels: [[70, 86, 112, 210], [523, 86, 112, 210]] },
-  TOR: { ribbon: [156, 262, 395, 44] },
+  BOS: { ribbon: [100, 277, 505, 47], screen: [150, 100, 370, 170] },
+  BUF: { ribbon: [131, 276, 445, 54], screen: [178, 96, 348, 176] },
+  DET: { ribbon: [88, 276, 524, 66], screen: [140, 88, 425, 186] },
+  FLA: { ribbon: [196, 276, 316, 54], screen: [176, 100, 355, 170], panels: [[80, 76, 545, 30, -34]] },
+  MTL: { ribbon: [75, 284, 555, 46], screen: [168, 105, 372, 178] },
+  OTT: { ribbon: [181, 290, 345, 40], screen: [206, 112, 294, 176], panels: [[118, 70, 474, 37, -6]] },
+  TBL: { ribbon: [68, 300, 567, 40], screen: [184, 80, 338, 210], panels: [[70, 86, 112, 210], [523, 86, 112, 210]] },
+  TOR: { ribbon: [156, 262, 395, 44], screen: [204, 80, 300, 176] },
   // Metropolitan
-  CAR: { ribbon: [84,  286,  540,  36], panels: [[80,  108,  100,  148],  [524,  108,  102,  148]] },
-  CBJ: { ribbon: [84,  292,  540,  36], panels: [[84,  108,  116,  184],  [508,  108,  116,  184]] },
-  NJD: { ribbon: [70,  302,  562,  36], panels: [[72,  86,  108,  212],  [524,  86,  108,  212]] },
-  NYI: { ribbon: [156,  262,  395,  44] },
-  NYR: { ribbon: [84,  286,  540,  36], panels: [[78,  108,  104,  148],  [524,  108,  104,  148]] },
-  PHI: { ribbon: [84,  292,  540,  36], panels: [[84,  108,  116,  184],  [508,  108,  116,  184]] },
-  PIT: { ribbon: [70,  302,  562,  36], panels: [[72,  86,  108,  212],  [524,  86,  108,  212]] },
-  WSH: { ribbon: [160,  300,  388,  44] },
+  CAR: { ribbon: [84, 286, 540, 36], screen: [184, 110, 340, 172], panels: [[80, 108, 100, 148], [524, 108, 102, 148]] },
+  CBJ: { ribbon: [84, 292, 540, 36], screen: [200, 110, 306, 180], panels: [[84, 108, 116, 184], [508, 108, 116, 184]] },
+  NJD: { ribbon: [70, 302, 562, 36], screen: [184, 88, 338, 200], panels: [[72, 86, 108, 212], [524, 86, 108, 212]] },
+  NYI: { ribbon: [156, 262, 395, 44], screen: [204, 118, 300, 128] },
+  NYR: { ribbon: [84, 286, 540, 36], screen: [182, 106, 342, 178], panels: [[78, 108, 104, 148], [524, 108, 104, 148]] },
+  PHI: { ribbon: [84, 292, 540, 36], screen: [200, 108, 306, 182], panels: [[84, 108, 116, 184], [508, 108, 116, 184]] },
+  PIT: { ribbon: [70, 302, 562, 36], screen: [184, 88, 338, 206], panels: [[72, 86, 108, 212], [524, 86, 108, 212]] },
+  WSH: { ribbon: [160, 300, 388, 44], screen: [162, 116, 380, 176] },
 };
 
 /** The board for a home team: its artwork and overlay boxes as percentages of the picture, or null (a drawn board). */
@@ -53,7 +53,9 @@ export function boardFor(teamId) {
   const b = BOARDS[teamId];
   if (!b) return null;
   const pct = ([x, y, w, h]) => ({ left: (100 * x) / ART.w, top: (100 * y) / ART.h, width: (100 * w) / ART.w, height: (100 * h) / ART.h });
-  return { src: `/scoreboards/${teamId}.webp`, ribbon: pct(b.ribbon), panels: (b.panels ?? []).map(pct) };
+  // a panel's fifth number bends it: the middle rises (negative) or sags by that many pixels, like the curved ring it covers
+  const panel = ([x, y, w, h, bend = 0]) => ({ ...pct([x, y - Math.max(0, -bend), w, h + Math.abs(bend)]), bend, w, h });
+  return { src: `/scoreboards/${teamId}.webp`, ribbon: pct(b.ribbon), screen: b.screen ? pct(b.screen) : null, panels: (b.panels ?? []).map(panel) };
 }
 
 /** The home arena's name, for the marquee of a drawn board. */

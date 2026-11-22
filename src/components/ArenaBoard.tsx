@@ -66,6 +66,19 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
       </>
     );
   };
+  // the thin ring above some boards: a stats line (the score is already on the board's own strip), or the arena before the game has numbers
+  const ring = () => {
+    const get = (l: string) => [...(stats?.rows ?? []), ...(stats?.deep ?? [])].find((r) => r.label === l);
+    const bits = ["SOG", "POWER PLAY", "FO%"].map(get).filter(Boolean) as Row[];
+    const last = stats?.goals[0];
+    if (!bits.length) return <span className="jb-rt">{arenaOf(home.id) || home.name}</span>;
+    return (
+      <>
+        {bits.map((r) => <span key={r.label} className="jb-rt"><em>{r.label === "POWER PLAY" ? "PP" : r.label}</em> {away.id} <b>{r.away}</b> · {home.id} <b>{r.home}</b></span>)}
+        {last && <span className="jb-rt"><em>LAST GOAL</em> {last.who} <b>{last.when}</b></span>}
+      </>
+    );
+  };
   const style = { ["--jb-c1" as never]: home.cardColor ?? home.color, ["--jb-c2" as never]: home.cardColor ?? home.color } as CSSProperties; // the card colour (the chart colour is often a light blue that is not the team's)
   return (
     <div className="jb" data-board={art ? "art" : "drawn"} data-testid="arena-board" style={style}>
@@ -75,7 +88,7 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
           {ribbon}
           {art.panels.map((p: Box, i: number) => p.width / p.height > 5
             // a long, thin ring (the score ring above the board): the score line again, as the arena shows it
-            ? <div key={i} className="jb-panel jb-ring" style={at(p)} aria-hidden="true"><b>{away.id}</b><b className="jb-rs">{hasScore ? game.awayScore : ""}</b><span>{big}{small ? ` · ${small}` : ""}</span><b className="jb-rs">{hasScore ? game.homeScore : ""}</b><b>{home.id}</b></div>
+            ? <div key={i} className="jb-panel jb-ring" style={at(p)} aria-hidden="true">{ring()}</div>
             : <div key={i} className="jb-panel" style={at(p)}>{panel(i, art.panels.length)}</div>)}
         </div>
       ) : (

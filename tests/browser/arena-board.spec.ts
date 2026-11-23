@@ -50,3 +50,19 @@ test("live, on a phone: the stats go under the board (the video screen is too sm
   await expect(row.locator(".jb-alt")).toBeVisible();
   expect(Math.abs((await row.boundingBox())!.height - h)).toBeLessThan(2);
 });
+
+test("the side tables sit on the same sides as the teams on the score strip: the visitors on the left, the home team on the right", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await seedPrefs(page, {}); await mockApis(page, { games: [mk.live(9803, "EDM", "STL", { period: 2, clock: "11:15", score: [1, 0] })] });
+  await page.goto("/");
+  const board = page.locator('.sb-row[data-game="9803"] .jb-art');
+  await expect(board).toBeVisible({ timeout: 30000 });
+  const panels = board.locator(".jb-panel .jb-ph");
+  await expect(panels).toHaveCount(2);
+  await expect(panels.nth(0)).toHaveText("EDM"); // away, left
+  await expect(panels.nth(1)).toHaveText("STL"); // home, right
+  const [a, b, strip] = [await panels.nth(0).boundingBox(), await panels.nth(1).boundingBox(), await board.locator(".jb-ribbon").boundingBox()];
+  expect(a!.x).toBeLessThan(strip!.x + strip!.width / 2);
+  expect(b!.x).toBeGreaterThan(strip!.x + strip!.width / 2);
+  await expect(board.locator(".jb-ribbon .jb-away")).toContainText("EDM"); // the strip's left side is the visitors too
+});

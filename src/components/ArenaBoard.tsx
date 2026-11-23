@@ -54,7 +54,7 @@ export function ArenaBoard({ game, away, home, st, name, onOpen, scored, ranks, 
   );
   // the artwork's side tables: real numbers instead of its made-up ones (the home side's line first, then the visitors')
   const panel = (i: number, n: number) => {
-    const side: "home" | "away" = i % 2 === 0 ? "home" : "away"; // pairs of tables: the home side's on the left, the visitors' on the right
+    const side: "home" | "away" = i % 2 === 0 ? "away" : "home"; // pairs of tables sit like the score strip: the visitors on the left, the home team on the right
     const t = side === "home" ? home : away;
     const lines = stats?.rows.slice(0, 4) ?? [];
     const goals = stats?.goals.filter((g) => n === 1 || g.side === side).slice(0, 3) ?? [];

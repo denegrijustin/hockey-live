@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motionOff } from "../motion";
 import type { Game, Team } from "../types";
-import { INTERMISSION_MS, clockText, firstSeenAt, parseClock } from "../lib/intermission.mjs";
+import { INTERMISSION_EXTRA_MS, INTERMISSION_MS, clockText, firstSeenAt, parseClock } from "../lib/intermission.mjs";
 import { EXIT_LEFT, FINISH_LEFT, INTERMISSION_S, PREGAME_S, icePrepActive, poseAt, route, sessionKey, smoothLeft, stateAt, sweptQuads } from "../lib/ice-plan.mjs";
 import type { Ice3D } from "../lib/ice3d";
 import type { Look } from "../lib/ice-textures";
@@ -18,7 +18,7 @@ const hashOf = (id: number | string) => { let h = 2166136261; for (const ch of S
 
 /**
  * The seconds left to the next period (or to puck drop) as a plain function of the clock, so the animation can ask for it every frame without
- * a React re-render. Intermission: the feed's clock, run on between polls (or 18 minutes from when it was first seen). Pregame: the scheduled start.
+ * a React re-render. Intermission: the feed's clock plus 90 seconds, run on between polls (or 18 minutes plus 90 seconds from when it was first seen). Pregame: the scheduled start.
  */
 function useDeadline(game: Game, mode: "intermission" | "pregame") {
   const base = mode === "intermission" ? parseClock(game.clock) : null;
@@ -26,7 +26,7 @@ function useDeadline(game: Game, mode: "intermission" | "pregame") {
   if (reading.current.base !== base) reading.current = { base, at: Date.now() };
   const [seenAt] = useState(() => (mode === "intermission" ? firstSeenAt(() => localStorage, SEEN(game), Date.now()) : Date.now()));
   const deadline = useRef(0);
-  deadline.current = mode === "pregame" ? Date.parse(game.start) : reading.current.base != null ? reading.current.at + reading.current.base * 1000 : seenAt + INTERMISSION_MS;
+  deadline.current = mode === "pregame" ? Date.parse(game.start) : reading.current.base != null ? reading.current.at + reading.current.base * 1000 + INTERMISSION_EXTRA_MS : seenAt + INTERMISSION_MS + INTERMISSION_EXTRA_MS;
   return deadline;
 }
 

@@ -1,5 +1,8 @@
 /** NHL intermissions run 18 minutes. */
 export const INTERMISSION_MS = 18 * 60_000;
+/** The countdown shown is the feed's clock plus this: the puck drops about a minute and a half after the clock reaches zero (the teams come out, the warm-up). */
+export const INTERMISSION_EXTRA_S = 90;
+export const INTERMISSION_EXTRA_MS = INTERMISSION_EXTRA_S * 1000;
 
 /** "13:48" -> seconds, or null when the feed gave no usable clock. */
 export function parseClock(text) {
@@ -10,11 +13,11 @@ export const clockText = (sec) => `${Math.floor(Math.max(0, sec) / 60)}:${String
 
 /**
  * Seconds left of an intermission. During an intermission the feed's clock is the time remaining, but it only refreshes every poll,
- * so the countdown runs from the last reading (`base` seconds, read at `at`). With no clock in the feed it counts 18 minutes from `seenAt`.
+ * so the countdown runs from the last reading (`base` seconds, read at `at`) plus INTERMISSION_EXTRA_S. With no clock in the feed it counts 18 minutes (plus the extra) from `seenAt`.
  */
 export function intermissionLeft({ base, at, seenAt, now }) {
-  if (base != null) return Math.max(0, base - (now - at) / 1000);
-  return Math.max(0, (INTERMISSION_MS - (now - seenAt)) / 1000);
+  if (base != null) return Math.max(0, base + INTERMISSION_EXTRA_S - (now - at) / 1000);
+  return Math.max(0, (INTERMISSION_MS + INTERMISSION_EXTRA_MS - (now - seenAt)) / 1000);
 }
 
 /**

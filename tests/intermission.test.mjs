@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { INTERMISSION_MS, clockText, intermissionLeft, parseClock, firstSeenAt, SEEN_PREFIX, SEEN_TTL_MS } from "../src/lib/intermission.mjs";
+import { INTERMISSION_EXTRA_S, INTERMISSION_MS, clockText, intermissionLeft, parseClock, firstSeenAt, SEEN_PREFIX, SEEN_TTL_MS } from "../src/lib/intermission.mjs";
 
 test("an intermission is 18 minutes", () => assert.equal(INTERMISSION_MS, 18 * 60_000));
 test("the feed's clock is read as minutes and seconds", () => {
@@ -13,14 +13,16 @@ test("the feed's clock is read as minutes and seconds", () => {
 });
 test("the countdown runs on from the last reading between polls and never goes below zero", () => {
   const at = 1_000_000;
-  assert.equal(intermissionLeft({ base: 828, at, seenAt: at, now: at }), 828);
-  assert.equal(intermissionLeft({ base: 828, at, seenAt: at, now: at + 30_000 }), 798);
-  assert.equal(intermissionLeft({ base: 5, at, seenAt: at, now: at + 60_000 }), 0);
+  assert.equal(INTERMISSION_EXTRA_S, 90);
+  assert.equal(intermissionLeft({ base: 828, at, seenAt: at, now: at }), 828 + 90, "the feed's clock plus 90 seconds");
+  assert.equal(intermissionLeft({ base: 828, at, seenAt: at, now: at + 30_000 }), 798 + 90);
+  assert.equal(intermissionLeft({ base: 5, at, seenAt: at, now: at + 60_000 }), 35, "it runs 90 seconds past the feed's zero");
+  assert.equal(intermissionLeft({ base: 5, at, seenAt: at, now: at + 100_000 }), 0);
 });
-test("with no clock in the feed it counts 18 minutes from when the intermission was first seen", () => {
+test("with no clock in the feed it counts 18 minutes plus the extra 90 seconds from when the intermission was first seen", () => {
   const t = 5_000_000;
-  assert.equal(intermissionLeft({ base: null, at: t, seenAt: t, now: t }), 1080);
-  assert.equal(intermissionLeft({ base: null, at: t, seenAt: t, now: t + 60_000 }), 1020);
+  assert.equal(intermissionLeft({ base: null, at: t, seenAt: t, now: t }), 1170);
+  assert.equal(intermissionLeft({ base: null, at: t, seenAt: t, now: t + 60_000 }), 1110);
   assert.equal(intermissionLeft({ base: null, at: t, seenAt: t, now: t + 20 * 60_000 }), 0);
 });
 

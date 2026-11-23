@@ -10,7 +10,24 @@ import scoreboardFixture from "../fixtures/live-scoreboard.json" with { type: "j
 test.use({ reducedMotion: "no-preference" });
 
 const base = scoreboardFixture.games.find((g) => g.id === fixture.id)!;
+const EXTRA = 90; // the countdown shown is the feed's clock plus 90 seconds
+/**
+ * `clock` in these specs is the countdown the viewer SEES ("2:04" is 02:04 on the rink). It reaches the page as the feed's clock minus the extra 90 seconds;
+ * under 1:30 there is no feed clock that can show it (the feed sits at 0:00), so the page is told when the intermission was first seen instead.
+ */
 async function open(page: Page, extra: Record<string, unknown>) {
+  let shown: number | null = null;
+  if (extra.intermission && typeof extra.clock === "string") {
+    const m = /^(\d+):(\d{2})$/.exec(extra.clock); shown = m ? Number(m[1]) * 60 + Number(m[2]) : null;
+  }
+  if (shown != null) {
+    if (shown >= EXTRA) { const f = shown - EXTRA; extra = { ...extra, clock: `${Math.floor(f / 60)}:${String(f % 60).padStart(2, "0")}` }; }
+    else {
+      const seen = Date.now() - (18 * 60 + EXTRA - shown) * 1000, key = `iceboard-int-${base.id}-${extra.period ?? 1}`;
+      await page.addInitScript(([k, v]) => { try { localStorage.setItem(k as string, String(v)); } catch { /* storage unavailable */ } }, [key, seen]);
+      extra = { ...extra, clock: "" };
+    }
+  }
   const game = { ...base, state: "LIVE", period: 1, periodType: "REG", ...extra };
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: game.date, games: [game] } }));
   await page.route("**/api/game/*", (route) => route.fulfill({ json: { ...fixture, state: "LIVE", plays: [] } }));
@@ -52,7 +69,7 @@ test("the countdown runs down between polls", async ({ page }) => {
 test("with no clock in the feed it counts 18 minutes from first sight, and a game in play shows no rink", async ({ page }) => {
   await page.clock.install();
   const card = await open(page, { intermission: true, clock: null });
-  await expect(card.locator(".int-t")).toHaveText(/^1[78]:\d\d$/);
+  await expect(card.locator(".int-t")).toHaveText(/^19:\d\d$/); // 18 minutes plus the extra 90 seconds
   await page.unroute("**/api/live");
   await page.route("**/api/live", (route) => route.fulfill({ json: { updatedAt: new Date().toISOString(), date: today(), games: [{ ...base, date: today(), state: "LIVE", period: 2, intermission: false, clock: "12:30" }] } }));
   await page.clock.fastForward(35_000);
@@ -125,7 +142,7 @@ test("when WebGL draws it, fresh ice is brighter than worn ice and the Zamboni's
   const worn = await iceBrightness();
   // the same rink again after the machine has gone, opened fresh with the same helper (a clean profile, so the team and filter pickers start from their defaults)
   await page.evaluate(() => { try { localStorage.clear(); } catch { /* ignore */ } });
-  await open(page, { intermission: true, clock: "0:20" });
+  await open(page, { intermission: true, clock: "0:08" }); // (the nets are pegged and the staff have walked off by now: nothing dark on the ice)
   await settled(page);
   const fresh = await iceBrightness();
   console.log("ice brightness worn", worn.toFixed(1), "fresh", fresh.toFixed(1));
